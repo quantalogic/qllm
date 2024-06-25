@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "cli": "ts-node src/cli.ts"
   },
   "keywords": [],
   "author": "",
@@ -13,11 +14,17 @@
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.10.0",
     "@types/node": "^20.14.8",
+    "@types/prompts": "^2.4.9",
+    "cli-spinner": "^0.2.10",
+    "commander": "^12.1.0",
     "dotenv": "^16.4.5",
+    "prompts": "^2.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2"
   },
   "devDependencies": {
-    "@types/dotenv": "^8.2.0"
+    "@types/cli-spinner": "^0.2.3",
+    "@types/dotenv": "^8.2.0",
+    "@types/inquirer": "^9.0.7"
   }
 }
