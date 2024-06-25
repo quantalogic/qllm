@@ -1,0 +1,23 @@
+{
+  "name": "anthropic-bedrock-project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@anthropic-ai/bedrock-sdk": "^0.10.0",
+    "@types/node": "^20.14.8",
+    "dotenv": "^16.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0"
+  }
+}
