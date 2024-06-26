@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/index.ts",
+    "start": "ts-node src/cli.ts",
     "cli": "ts-node src/cli.ts"
   },
   "keywords": [],
@@ -24,7 +24,6 @@
   },
   "devDependencies": {
     "@types/cli-spinner": "^0.2.3",
-    "@types/dotenv": "^8.2.0",
-    "@types/inquirer": "^9.0.7"
+    "@types/dotenv": "^8.2.0"
   }
 }
