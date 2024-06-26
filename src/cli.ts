@@ -10,6 +10,7 @@ import { getCredentials } from './credentials';
 import { createAnthropicClient } from './anthropic-client';
 import { AWS_PROFILE, AWS_REGION, MODEL_ALIASES, DEFAULT_MODEL_ALIAS, resolveModel } from './config';
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
+import { logInfo, logError } from './utils';
 
 // Load environment variables
 dotenv.config();
@@ -29,25 +30,18 @@ program
 const maxTokensOption = new Option('-t, --max-tokens <number>', 'Maximum number of tokens to generate')
   .default(256)
   .argParser(parseInt);
-
 const temperatureOption = new Option('--temperature <number>', 'Temperature for response generation')
   .default(0.7)
   .argParser(parseFloat);
-
 const topPOption = new Option('--top-p <number>', 'Top P for response generation')
   .default(1)
   .argParser(parseFloat);
-
 const topKOption = new Option('--top-k <number>', 'Top K for response generation')
   .default(250)
   .argParser(parseInt);
-
 const systemOption = new Option('-s, --system <message>', 'System message to set context');
-
 const fileOption = new Option('-f, --file <path>', 'Path to input file');
-
 const outputOption = new Option('-o, --output <path>', 'Path to output file');
-
 const formatOption = new Option('--format <format>', 'Output format (json, markdown, text)')
   .choices(['json', 'markdown', 'text'])
   .default('text');
@@ -69,11 +63,11 @@ async function createMessage(client: AnthropicBedrock, options: any, messages: a
       messages: messages
     });
     spinner.stop(true);
-    console.log('Response generated');
+    logInfo('Response generated');
     return message;
   } catch (error) {
     spinner.stop(true);
-    console.error('Failed to generate response');
+    logError('Failed to generate response');
     throw error;
   }
 }
@@ -94,7 +88,7 @@ function formatOutput(message: any, format: string): string {
 async function writeOutput(output: string, filePath: string | undefined): Promise<void> {
   if (filePath) {
     await fs.writeFile(filePath, output);
-    console.log(`Response written to ${filePath}`);
+    logInfo(`Response written to ${filePath}`);
   } else {
     console.log(output);
   }
@@ -117,10 +111,12 @@ program
     try {
       const credentials = await getCredentials();
       const client = createAnthropicClient(credentials);
+
       let input = question;
       if (options.file) {
         input = await fs.readFile(options.file, 'utf-8');
       }
+
       const messages = [];
       if (options.system) {
         messages.push({ role: 'system', content: options.system });
@@ -129,13 +125,13 @@ program
 
       const globalOptions = command.optsWithGlobals();
       const resolvedModel = resolveModel(globalOptions.modelid, globalOptions.model);
-      console.log(`Using model: ${resolvedModel}`);
+      logInfo(`Using model: ${resolvedModel}`);
 
       const message = await createMessage(client, { ...options, ...globalOptions, model: resolvedModel }, messages);
       const output = formatOutput(message, options.format);
       await writeOutput(output, options.output);
     } catch (error) {
-      console.error('An error occurred:', error);
+      logError(`An error occurred: ${error}`);
     }
   });
 
@@ -152,12 +148,13 @@ program
     try {
       const credentials = await getCredentials();
       const client = createAnthropicClient(credentials);
+
       const messages = [];
       if (options.system) {
         messages.push({ role: 'system', content: options.system });
       }
 
-      console.log('Starting chat session. Type "exit" to end the session.');
+      logInfo('Starting chat session. Type "exit" to end the session.');
 
       while (true) {
         const response = await prompts({
@@ -175,13 +172,14 @@ program
         const globalOptions = command.optsWithGlobals();
         const resolvedModel = resolveModel(globalOptions.modelid, globalOptions.model);
         const message = await createMessage(client, { ...options, ...globalOptions, model: resolvedModel }, messages);
+
         console.log('LLM:', message.content[0].text);
         messages.push({ role: 'assistant', content: message.content[0].text });
       }
 
-      console.log('Chat session ended.');
+      logInfo('Chat session ended.');
     } catch (error) {
-      console.error('An error occurred:', error);
+      logError(`An error occurred: ${error}`);
     }
   });
 
@@ -202,19 +200,21 @@ program
     try {
       const credentials = await getCredentials();
       const client = createAnthropicClient(credentials);
+
       let input = question;
       if (options.file) {
         input = await fs.readFile(options.file, 'utf-8');
       }
-      const messages = [];
 
+      const messages = [];
       messages.push({ role: 'user', content: input });
 
       const formattedMessages = messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content }));
 
       const globalOptions = command.optsWithGlobals();
       const resolvedModel = resolveModel(globalOptions.modelid, globalOptions.model);
-      console.log(`Using model: ${resolvedModel}`);
+      logInfo(`Using model: ${resolvedModel}`);
+
       const stream = client.messages.stream({
         model: resolvedModel,
         max_tokens: options.maxTokens,
@@ -225,7 +225,7 @@ program
         messages: formattedMessages
       });
 
-      console.log('Streaming response:');
+      logInfo('Streaming response:');
       let fullResponse = '';
       stream.on('text', (text) => {
         process.stdout.write(text);
@@ -240,7 +240,7 @@ program
         await writeOutput(output, options.output);
       }
     } catch (error) {
-      console.error('An error occurred:', error);
+      logError(`An error occurred: ${error}`);
     }
   });
 
@@ -255,12 +255,12 @@ program
   .option('--set-model <model>', 'Set model alias', Object.keys(MODEL_ALIASES))
   .action(async (options) => {
     if (options.show) {
-      console.log('Current configuration:');
-      console.log(`AWS Profile: ${process.env.AWS_PROFILE || AWS_PROFILE}`);
-      console.log(`AWS Region: ${process.env.AWS_REGION || AWS_REGION}`);
-      console.log(`Model ID: ${process.env.MODEL_ID || 'Not set'}`);
-      console.log(`Available model aliases: ${Object.keys(MODEL_ALIASES).join(', ')}`);
-      console.log(`Default model alias: ${DEFAULT_MODEL_ALIAS}`);
+      logInfo('Current configuration:');
+      logInfo(`AWS Profile: ${process.env.AWS_PROFILE || AWS_PROFILE}`);
+      logInfo(`AWS Region: ${process.env.AWS_REGION || AWS_REGION}`);
+      logInfo(`Model ID: ${process.env.MODEL_ID || 'Not set'}`);
+      logInfo(`Available model aliases: ${Object.keys(MODEL_ALIASES).join(', ')}`);
+      logInfo(`Default model alias: ${DEFAULT_MODEL_ALIAS}`);
     } else if (options.setProfile || options.setRegion || options.setModelid || options.setModel) {
       const envPath = path.resolve(__dirname, '../.env');
       let envContent = await fs.readFile(envPath, 'utf-8');
@@ -272,7 +272,7 @@ program
         envContent = envContent.replace(/AWS_REGION=.*/, `AWS_REGION=${options.setRegion}`);
       }
       if (options.setModelid && options.setModel) {
-        console.error('Cannot set both model ID and model alias. Please use only one.');
+        logError('Cannot set both model ID and model alias. Please use only one.');
         return;
       }
       if (options.setModelid) {
@@ -284,9 +284,9 @@ program
       }
 
       await fs.writeFile(envPath, envContent);
-      console.log('Configuration updated. Please restart the CLI for changes to take effect.');
+      logInfo('Configuration updated. Please restart the CLI for changes to take effect.');
     } else {
-      console.log('Use --help to see available options for config command.');
+      logInfo('Use --help to see available options for config command.');
     }
   });
 
