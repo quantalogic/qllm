@@ -30,18 +30,25 @@ program
 const maxTokensOption = new Option('-t, --max-tokens <number>', 'Maximum number of tokens to generate')
   .default(256)
   .argParser(parseInt);
+
 const temperatureOption = new Option('--temperature <number>', 'Temperature for response generation')
   .default(0.7)
   .argParser(parseFloat);
+
 const topPOption = new Option('--top-p <number>', 'Top P for response generation')
   .default(1)
   .argParser(parseFloat);
+
 const topKOption = new Option('--top-k <number>', 'Top K for response generation')
   .default(250)
   .argParser(parseInt);
+
 const systemOption = new Option('-s, --system <message>', 'System message to set context');
+
 const fileOption = new Option('-f, --file <path>', 'Path to input file');
+
 const outputOption = new Option('-o, --output <path>', 'Path to output file');
+
 const formatOption = new Option('--format <format>', 'Output format (json, markdown, text)')
   .choices(['json', 'markdown', 'text'])
   .default('text');
@@ -98,7 +105,7 @@ async function writeOutput(output: string, filePath: string | undefined): Promis
 program
   .command('ask')
   .description('Ask a question to the LLM')
-  .argument('<question>', 'The question to ask')
+  .option('--model <model>', 'Model alias to use')
   .addOption(maxTokensOption)
   .addOption(temperatureOption)
   .addOption(topPOption)
@@ -107,14 +114,23 @@ program
   .addOption(fileOption)
   .addOption(outputOption)
   .addOption(formatOption)
-  .action(async (question, options, command) => {
+  .allowExcessArguments(true)
+  .action(async (options, command) => {
     try {
       const credentials = await getCredentials();
       const client = createAnthropicClient(credentials);
 
-      let input = question;
+      let input;
       if (options.file) {
         input = await fs.readFile(options.file, 'utf-8');
+      } else {
+        // Join all remaining arguments as the question
+        input = command.args.join(' ');
+      }
+
+      if (!input) {
+        logError('No question provided. Please provide a question or use the --file option.');
+        return;
       }
 
       const messages = [];
@@ -124,7 +140,7 @@ program
       messages.push({ role: 'user', content: input });
 
       const globalOptions = command.optsWithGlobals();
-      const resolvedModel = resolveModel(globalOptions.modelid, globalOptions.model);
+      const resolvedModel = resolveModel(globalOptions.modelid, options.model || globalOptions.model);
       logInfo(`Using model: ${resolvedModel}`);
 
       const message = await createMessage(client, { ...options, ...globalOptions, model: resolvedModel }, messages);
@@ -170,7 +186,7 @@ program
         messages.push({ role: 'user', content: response.input });
 
         const globalOptions = command.optsWithGlobals();
-        const resolvedModel = resolveModel(globalOptions.modelid, globalOptions.model);
+        const resolvedModel = resolveModel(globalOptions.modelid, options.model || globalOptions.model);
         const message = await createMessage(client, { ...options, ...globalOptions, model: resolvedModel }, messages);
 
         console.log('LLM:', message.content[0].text);
@@ -187,7 +203,7 @@ program
 program
   .command('stream')
   .description('Stream a response from the LLM')
-  .argument('<question>', 'The question to ask')
+  .option('--model <model>', 'Model alias to use')
   .addOption(maxTokensOption)
   .addOption(temperatureOption)
   .addOption(topPOption)
@@ -196,14 +212,23 @@ program
   .addOption(fileOption)
   .addOption(outputOption)
   .addOption(formatOption)
-  .action(async (question, options, command) => {
+  .allowExcessArguments(true)
+  .action(async (options, command) => {
     try {
       const credentials = await getCredentials();
       const client = createAnthropicClient(credentials);
 
-      let input = question;
+      let input;
       if (options.file) {
         input = await fs.readFile(options.file, 'utf-8');
+      } else {
+        // Join all remaining arguments as the question
+        input = command.args.join(' ');
+      }
+
+      if (!input) {
+        logError('No question provided. Please provide a question or use the --file option.');
+        return;
       }
 
       const messages = [];
@@ -212,7 +237,7 @@ program
       const formattedMessages = messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content }));
 
       const globalOptions = command.optsWithGlobals();
-      const resolvedModel = resolveModel(globalOptions.modelid, globalOptions.model);
+      const resolvedModel = resolveModel(globalOptions.modelid, options.model || globalOptions.model);
       logInfo(`Using model: ${resolvedModel}`);
 
       const stream = client.messages.stream({
@@ -227,6 +252,7 @@ program
 
       logInfo('Streaming response:');
       let fullResponse = '';
+
       stream.on('text', (text) => {
         process.stdout.write(text);
         fullResponse += text;

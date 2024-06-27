@@ -16,7 +16,7 @@ export const AWS_REGION = process.env.AWS_REGION || 'us-west-2';
 
 export const MODEL_ALIASES = {
   'sonnet': 'anthropic.claude-3-sonnet-20240229-v1:0',
-  'sonnet35': 'anthropic.claude-3-sonnet-20240229-v1:0',
+  'sonnet35': 'anthropic.claude-3-5-sonnet-20240620-v1:0',
   'haiku': 'anthropic.claude-3-haiku-20240307-v1:0',
   'opus': 'anthropic.claude-3-opus-20240229-v1:0'
 };
