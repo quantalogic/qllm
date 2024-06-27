@@ -152,6 +152,7 @@ program
   });
 
 // Chat command
+// Chat command
 program
   .command('chat')
   .description('Start an interactive chat session with the LLM')
@@ -164,20 +165,13 @@ program
     try {
       const credentials = await getCredentials();
       const client = createAnthropicClient(credentials);
-
       const messages = [];
-      if (options.system) {
-        messages.push({ role: 'system', content: options.system });
-      }
+
 
       logInfo('Starting chat session. Type "exit" to end the session.');
 
       while (true) {
-        const response = await prompts({
-          type: 'text',
-          name: 'input',
-          message: 'You:',
-        });
+        const response = await prompts({ type: 'text', name: 'input', message: 'You:' });
 
         if (response.input.toLowerCase() === 'exit') {
           break;
@@ -187,10 +181,31 @@ program
 
         const globalOptions = command.optsWithGlobals();
         const resolvedModel = resolveModel(globalOptions.modelid, options.model || globalOptions.model);
-        const message = await createMessage(client, { ...options, ...globalOptions, model: resolvedModel }, messages);
 
-        console.log('LLM:', message.content[0].text);
-        messages.push({ role: 'assistant', content: message.content[0].text });
+        logInfo(`Using model: ${resolvedModel}`);
+
+        const stream = client.messages.stream({
+          model: resolvedModel,
+          max_tokens: options.maxTokens,
+          temperature: options.temperature,
+          top_p: options.topP,
+          top_k: options.topK,
+          system: options.system,
+          messages: messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })),
+        });
+
+        logInfo('🤖:');
+        let fullResponse = '';
+
+        stream.on('text', (text) => {
+          process.stdout.write(text);
+          fullResponse += text;
+        });
+
+        await stream.finalMessage();
+        console.log(); // Add a newline after the stream ends
+
+        messages.push({ role: 'assistant', content: fullResponse });
       }
 
       logInfo('Chat session ended.');
@@ -198,6 +213,7 @@ program
       logError(`An error occurred: ${error}`);
     }
   });
+
 
 // Stream command
 program
@@ -250,7 +266,7 @@ program
         messages: formattedMessages
       });
 
-      logInfo('Streaming response:');
+      logInfo('🤖:');
       let fullResponse = '';
 
       stream.on('text', (text) => {
