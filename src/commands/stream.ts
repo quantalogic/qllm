@@ -4,7 +4,16 @@ import { getCredentials } from '../credentials';
 import { createAnthropicClient } from '../anthropic-client';
 import { resolveModel } from '../config';
 import { logInfo, logError } from '../utils';
-import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption, fileOption, outputOption, formatOption } from '../options';
+import {
+    maxTokensOption,
+    temperatureOption,
+    topPOption,
+    topKOption,
+    systemOption,
+    fileOption,
+    outputOption,
+    formatOption
+} from '../options';
 import { formatOutput, writeOutput } from '../helpers/outputHelper';
 
 export function createStreamCommand(): Command {
@@ -24,20 +33,19 @@ export function createStreamCommand(): Command {
             try {
                 const credentials = await getCredentials();
                 const client = createAnthropicClient(credentials);
-                let input;
-                if (options.file) {
-                    input = await fs.readFile(options.file, 'utf-8');
-                } else {
-                    input = command.args.join(' ');
-                    if (!input) {
-                        logError('No question provided. Please provide a question or use the --file option.');
-                        return;
-                    }
+
+                const input = await getInput(options, command);
+                if (!input) {
+                    logError('No question provided. Please provide a question or use the --file option.');
+                    return;
                 }
+
                 const messages = [{ role: 'user', content: input }];
                 const globalOptions = command.optsWithGlobals();
                 const resolvedModel = resolveModel(globalOptions.modelid, options.model || globalOptions.model);
+
                 logInfo(`Using model: ${resolvedModel}`);
+
                 const stream = client.messages.stream({
                     model: resolvedModel,
                     max_tokens: options.maxTokens,
@@ -47,21 +55,49 @@ export function createStreamCommand(): Command {
                     system: options.system,
                     messages: messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })),
                 });
+
                 logInfo('🤖:');
                 let fullResponse = '';
+
                 stream.on('text', (text) => {
                     process.stdout.write(text);
                     fullResponse += text;
                 });
+
                 await stream.finalMessage();
                 console.log();
+
                 if (options.output) {
                     const output = formatOutput({ content: [{ text: fullResponse }] }, options.format);
                     await writeOutput(output, options.output);
                 }
             } catch (error) {
-                logError(`An error occurred: ${error}`);
+                if (error instanceof Error) {
+                    logError(`An error occurred: ${error.message}`);
+                }
+                else {
+                    logError(`An error occurred: ${error}`);
+                }
             }
         });
+
     return streamCommand;
+}
+
+async function getInput(options: any, command: Command): Promise<string | null> {
+    if (options.file) {
+        try {
+            return await fs.readFile(options.file, 'utf-8');
+        } catch (error) {
+            if (error instanceof Error) {
+                logError(`Failed to read file: ${error.message}`);
+            } else {
+                logError(`Failed to read file: ${error}`);
+            }
+            return null;
+        }
+    } else {
+        const input = command.args.join(' ');
+        return input || null;
+    }
 }
