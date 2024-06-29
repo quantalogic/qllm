@@ -1,0 +1,10 @@
+# Code Summary
+
+{% for file in files %}
+## {{ file.path }}
+
+```{{ file.language }}
+{{ file.content }}
+```
+
+{% endfor %}
