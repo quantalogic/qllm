@@ -8,6 +8,7 @@ export interface ProviderConfig {
   type: ProviderType;
   region?: string;
   apiKey?: string;
+  model?: string;
 }
 
 export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {

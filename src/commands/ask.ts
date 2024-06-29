@@ -10,7 +10,7 @@ import { Message } from '../providers/types';
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
     .description('Ask a question to the LLM')
-    .option('--provider <name>', 'LLM provider to use')
+    .option('--provider <provider>', 'LLM provider to use')
     .addOption(maxTokensOption)
     .addOption(temperatureOption)
     .addOption(topPOption)
@@ -21,7 +21,9 @@ export function createAskCommand(): Command {
     .addOption(formatOption)
     .action(async (options, command) => {
       try {
-        const providerConfig = getProviderConfig(options.provider);
+        const globalOptions = command.parent.opts();
+        const providerConfig = getProviderConfig(options.provider || globalOptions.provider);
+        providerConfig.model = globalOptions.resolvedModel;
         const provider = await ProviderFactory.createProvider(providerConfig);
 
         let input: string;
@@ -29,18 +31,16 @@ export function createAskCommand(): Command {
           input = await fs.readFile(options.file, 'utf-8');
         } else {
           input = command.args.join(' ');
-        }
-
-        if (!input) {
-          logError('No question provided. Please provide a question or use the --file option.');
-          return;
+          if (!input) {
+            logError('No question provided. Please provide a question or use the --file option.');
+            return;
+          }
         }
 
         const messages: Message[] = [{ role: 'user', content: input }];
-        
-        logInfo(`🤖 Using provider: ${providerConfig.type}`);
-        logInfo(`🤖 Using model ${options.model}`);
 
+        logInfo(`🤖 Using provider: ${providerConfig.type}`);
+        logInfo(`🤖 Using model: ${providerConfig.model}`);
 
         const response = await provider.generateMessage(messages, {
           maxTokens: options.maxTokens,

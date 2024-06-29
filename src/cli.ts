@@ -8,6 +8,7 @@ import { createStreamCommand } from './commands/stream';
 import { createChatCommand } from './commands/chat';
 import { DEFAULT_PROVIDER } from './config/provider_config';
 import { logError } from './utils';
+import { resolveModel } from './config';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -18,11 +19,15 @@ const program = new Command();
 program
   .version('1.0.0')
   .description('Multi-Provider LLM Command CLI')
-  .option('-p, --profile <name>', 'AWS profile to use', process.env.AWS_PROFILE)
-  .option('-r, --region <name>', 'AWS region to use', process.env.AWS_REGION)
-  .option('--provider <name>', 'LLM provider to use', DEFAULT_PROVIDER)
-  .option('--modelid <id>', 'Specific model ID to use')
-  .option('--model <alias>', 'Model alias to use');
+  .option('-p, --profile <profile>', 'AWS profile to use', process.env.AWS_PROFILE)
+  .option('-r, --region <region>', 'AWS region to use', process.env.AWS_REGION)
+  .option('--provider <provider>', 'LLM provider to use', DEFAULT_PROVIDER)
+  .option('--modelid <modelid>', 'Specific model ID to use')
+  .option('--model <model>', 'Model alias to use')
+  .hook('preAction', (thisCommand) => {
+    const options = thisCommand.opts();
+    options.resolvedModel = resolveModel(options.modelid, options.model);
+  });
 
 // Register commands
 program.addCommand(createAskCommand());
