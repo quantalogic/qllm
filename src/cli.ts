@@ -7,7 +7,7 @@ import { createConfigCommand } from './commands/config';
 import { createStreamCommand } from './commands/stream';
 import { createChatCommand } from './commands/chat';
 import { DEFAULT_PROVIDER } from './config/provider_config';
-import { logError } from './utils';
+import { logger } from './utils/logger';
 import { resolveModel } from './config';
 
 // Load environment variables
@@ -24,9 +24,11 @@ program
   .option('--provider <provider>', 'LLM provider to use', DEFAULT_PROVIDER)
   .option('--modelid <modelid>', 'Specific model ID to use')
   .option('--model <model>', 'Model alias to use')
+  .option('--log-level <level>', 'Set log level (error, warn, info, debug)', 'info')
   .hook('preAction', (thisCommand) => {
     const options = thisCommand.opts();
     options.resolvedModel = resolveModel(options.modelid, options.model);
+    logger.setLogLevel(options.logLevel);
   });
 
 // Register commands
@@ -37,7 +39,7 @@ program.addCommand(createChatCommand());
 
 // Error handling for unknown commands
 program.on('command:*', () => {
-  logError(`Invalid command: ${program.args.join(' ')}\nSee --help for a list of available commands.`);
+  logger.error(`Invalid command: ${program.args.join(' ')}\nSee --help for a list of available commands.`);
   process.exit(1);
 });
 

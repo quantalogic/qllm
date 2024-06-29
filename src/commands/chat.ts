@@ -2,29 +2,25 @@ import { Command } from 'commander';
 import prompts from 'prompts';
 import { ProviderFactory } from '../providers/provider_factory';
 import { getProviderConfig } from '../config/provider_config';
-import { logInfo, logError } from '../utils';
-import { 
-  maxTokensOption, 
-  temperatureOption, 
-  topPOption, 
-  topKOption, 
-  systemOption 
-} from '../options';
-import { createStreamOutputHandler } from '../helpers/output_helper';
+import { logger } from '../utils/logger';
+import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption } from '../options';
 import { LLMProviderOptions, Message } from '../providers/types';
+import { handleStreamWithSpinner } from '../helpers/stream_helper';
 
 export function createChatCommand(): Command {
   const chatCommand = new Command('chat')
     .description('Start an interactive chat session with the LLM')
-    .option('--provider <name>', 'LLM provider to use')
+    .option('--provider <provider>', 'LLM provider to use')
     .addOption(maxTokensOption)
     .addOption(temperatureOption)
     .addOption(topPOption)
     .addOption(topKOption)
     .addOption(systemOption)
-    .action(async (options) => {
+    .action(async (options, command) => {
       try {
-        const providerConfig = getProviderConfig(options.provider);
+        const globalOptions = command.parent.opts();
+        const providerConfig = getProviderConfig(options.provider || globalOptions.provider);
+        providerConfig.model = globalOptions.resolvedModel;
         const provider = await ProviderFactory.createProvider(providerConfig);
 
         const messages: Message[] = [];
@@ -32,7 +28,7 @@ export function createChatCommand(): Command {
           messages.push({ role: 'system', content: options.system });
         }
 
-        logInfo('Starting chat session. Type "exit" to end the session.');
+        logger.info('Starting chat session. Type "exit" to end the session.');
 
         while (true) {
           const response = await prompts({
@@ -42,7 +38,7 @@ export function createChatCommand(): Command {
           });
 
           if (response.input.toLowerCase() === 'exit') {
-            logInfo('Chat session ended.');
+            logger.info('Chat session ended.');
             break;
           }
 
@@ -53,33 +49,21 @@ export function createChatCommand(): Command {
             temperature: options.temperature,
             topP: options.topP,
             topK: options.topK,
+            system: options.system,
           };
 
-          logInfo(`Using provider: ${providerConfig.type}`);
-          logInfo('🤖:');
+          logger.info(`Using provider: ${providerConfig.type}`);
+          logger.info(`Using model: ${providerConfig.model}`);
+          logger.info('🤖:');
 
-          const outputHandler = await createStreamOutputHandler();
-
-          try {
-            for await (const chunk of provider.streamMessage(messages, providerOptions)) {
-              await outputHandler.handleChunk(chunk);
-            }
-          } catch (error) {
-            logError(`Error during streaming: ${error}`);
-            continue;
-          }
-
-          await outputHandler.finalize();
-          console.log(); // Add a newline after the response
-
-          const fullResponse = outputHandler.getFullResponse();
+          const fullResponse = await handleStreamWithSpinner(provider, messages, providerOptions);
           messages.push({ role: 'assistant', content: fullResponse });
         }
       } catch (error) {
         if (error instanceof Error) {
-          logError(`An error occurred: ${error.message}`);
+          logger.error(`An error occurred: ${error.message}`);
         } else {
-          logError(`An error occurred: ${error}`);
+          logger.error(`An error occurred: ${error}`);
         }
       }
     });

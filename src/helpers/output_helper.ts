@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { LLMResponse, OutputFormat } from '../providers/types';
-import { logInfo, logError } from '../utils';
+import { logger } from '../utils/logger';
 
 /**
  * Formats the LLM response based on the specified output format.
@@ -29,9 +29,9 @@ export async function writeOutput(output: string, filePath?: string): Promise<vo
   if (filePath) {
     try {
       await fs.writeFile(filePath, output);
-      logInfo(`Response written to ${filePath}`);
+      logger.info(`Response written to ${filePath}`);
     } catch (error) {
-      logError(`Failed to write output to file: ${error}`);
+      logger.error(`Failed to write output to file: ${error}`);
       console.error(output); // Fallback to console output
     }
   } else {
@@ -64,7 +64,7 @@ export class StreamOutputHandler {
       try {
         this.outputStream = await fs.open(this.filePath, 'w');
       } catch (error) {
-        logError(`Failed to open output file: ${error}`);
+        logger.error(`Failed to open output file: ${error}`);
       }
     }
   }
@@ -72,12 +72,11 @@ export class StreamOutputHandler {
   async handleChunk(chunk: string): Promise<void> {
     this.buffer += chunk;
     process.stdout.write(chunk);
-
     if (this.outputStream) {
       try {
         await this.outputStream.write(chunk);
       } catch (error) {
-        logError(`Failed to write chunk to file: ${error}`);
+        logger.error(`Failed to write chunk to file: ${error}`);
       }
     }
   }

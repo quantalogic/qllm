@@ -20,7 +20,8 @@
     "dotenv": "^16.4.5",
     "prompts": "^2.4.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.2",
+    "winston": "^3.13.0"
   },
   "devDependencies": {
     "@types/cli-spinner": "^0.2.3",
