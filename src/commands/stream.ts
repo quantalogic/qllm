@@ -1,103 +1,86 @@
 import { Command } from 'commander';
 import fs from 'fs/promises';
-import { getCredentials } from '../credentials';
-import { createAnthropicClient } from '../anthropic-client';
-import { resolveModel } from '../config';
+import { ProviderFactory } from '../providers/provider_factory';
+import { getProviderConfig } from '../config/provider_config';
 import { logInfo, logError } from '../utils';
-import {
-    maxTokensOption,
-    temperatureOption,
-    topPOption,
-    topKOption,
-    systemOption,
-    fileOption,
-    outputOption,
-    formatOption
+import { 
+  maxTokensOption, 
+  temperatureOption, 
+  topPOption, 
+  topKOption, 
+  systemOption, 
+  fileOption, 
+  outputOption, 
+  formatOption 
 } from '../options';
-import { formatOutput, writeOutput } from '../helpers/outputHelper';
+import { createStreamOutputHandler } from '../helpers/output_helper';
+import { LLMProviderOptions, Message } from '../providers/types';
+import { log } from 'console';
 
 export function createStreamCommand(): Command {
-    const streamCommand = new Command('stream')
-        .description('Stream a response from the LLM')
-        .option('--model <model>', 'Model alias to use')
-        .addOption(maxTokensOption)
-        .addOption(temperatureOption)
-        .addOption(topPOption)
-        .addOption(topKOption)
-        .addOption(systemOption)
-        .addOption(fileOption)
-        .addOption(outputOption)
-        .addOption(formatOption)
-        .allowExcessArguments(true)
-        .action(async (options, command) => {
-            try {
-                const credentials = await getCredentials();
-                const client = createAnthropicClient(credentials);
+  const streamCommand = new Command('stream')
+    .description('Stream a response from the LLM')
+    .option('--provider <name>', 'LLM provider to use')
+    .addOption(maxTokensOption)
+    .addOption(temperatureOption)
+    .addOption(topPOption)
+    .addOption(topKOption)
+    .addOption(systemOption)
+    .addOption(fileOption)
+    .addOption(outputOption)
+    .addOption(formatOption)
+    .action(async (options, command) => {
+      try {
+        const providerConfig = getProviderConfig(options.provider);
+        const provider = await ProviderFactory.createProvider(providerConfig);
 
-                const input = await getInput(options, command);
-                if (!input) {
-                    logError('No question provided. Please provide a question or use the --file option.');
-                    return;
-                }
-
-                const messages = [{ role: 'user', content: input }];
-                const globalOptions = command.optsWithGlobals();
-                const resolvedModel = resolveModel(globalOptions.modelid, options.model || globalOptions.model);
-
-                logInfo(`Using model: ${resolvedModel}`);
-
-                const stream = client.messages.stream({
-                    model: resolvedModel,
-                    max_tokens: options.maxTokens,
-                    temperature: options.temperature,
-                    top_p: options.topP,
-                    top_k: options.topK,
-                    system: options.system,
-                    messages: messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })),
-                });
-
-                logInfo('🤖:');
-                let fullResponse = '';
-
-                stream.on('text', (text) => {
-                    process.stdout.write(text);
-                    fullResponse += text;
-                });
-
-                await stream.finalMessage();
-                console.log();
-
-                if (options.output) {
-                    const output = formatOutput({ content: [{ text: fullResponse }] }, options.format);
-                    await writeOutput(output, options.output);
-                }
-            } catch (error) {
-                if (error instanceof Error) {
-                    logError(`An error occurred: ${error.message}`);
-                }
-                else {
-                    logError(`An error occurred: ${error}`);
-                }
-            }
-        });
-
-    return streamCommand;
-}
-
-async function getInput(options: any, command: Command): Promise<string | null> {
-    if (options.file) {
-        try {
-            return await fs.readFile(options.file, 'utf-8');
-        } catch (error) {
-            if (error instanceof Error) {
-                logError(`Failed to read file: ${error.message}`);
-            } else {
-                logError(`Failed to read file: ${error}`);
-            }
-            return null;
+        let input: string;
+        if (options.file) {
+          input = await fs.readFile(options.file, 'utf-8');
+        } else {
+          input = command.args.join(' ');
         }
-    } else {
-        const input = command.args.join(' ');
-        return input || null;
-    }
+
+        if (!input) {
+          logError('No input provided. Please provide input or use the --file option.');
+          return;
+        }
+
+        const messages: Message[] = [{ role: 'user', content: input }];
+        
+        logInfo(`Using provider: ${providerConfig.type}`);
+
+        const providerOptions: LLMProviderOptions = {
+          maxTokens: options.maxTokens,
+          temperature: options.temperature,
+          topP: options.topP,
+          topK: options.topK,
+          system: options.system,
+        };
+
+        const outputHandler = await createStreamOutputHandler(options.output);
+
+        logInfo('🤖 Streaming response ...');
+        for await (const chunk of provider.streamMessage(messages, providerOptions)) {
+          await outputHandler.handleChunk(chunk);
+        }
+
+        await outputHandler.finalize();
+        
+        const fullResponse = outputHandler.getFullResponse();
+        logInfo('\n🤖 Stream completed.');
+
+        if (options.output) {
+          logInfo(`Full response written to ${options.output}`);
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          logError(`An error occurred: ${error.message}`);
+        } else {
+          logError(`An error occurred: ${error}`);
+        }
+      }
+    });
+
+  return streamCommand;
 }

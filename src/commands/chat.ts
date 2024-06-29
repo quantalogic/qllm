@@ -1,75 +1,88 @@
 import { Command } from 'commander';
 import prompts from 'prompts';
-import { getCredentials } from '../credentials';
-import { createAnthropicClient } from '../anthropic-client';
-import { resolveModel } from '../config';
+import { ProviderFactory } from '../providers/provider_factory';
+import { getProviderConfig } from '../config/provider_config';
 import { logInfo, logError } from '../utils';
 import { 
-    maxTokensOption, 
-    temperatureOption, 
-    topPOption, 
-    topKOption, 
-    systemOption 
+  maxTokensOption, 
+  temperatureOption, 
+  topPOption, 
+  topKOption, 
+  systemOption 
 } from '../options';
+import { createStreamOutputHandler } from '../helpers/output_helper';
+import { LLMProviderOptions, Message } from '../providers/types';
 
 export function createChatCommand(): Command {
-    const chatCommand = new Command('chat')
-        .description('Start an interactive chat session with the LLM')
-        .addOption(maxTokensOption)
-        .addOption(temperatureOption)
-        .addOption(topPOption)
-        .addOption(topKOption)
-        .addOption(systemOption)
-        .action(async (options, command) => {
-            try {
-                const credentials = await getCredentials();
-                const client = createAnthropicClient(credentials);
-                const messages: { role: string, content: string }[] = [];
+  const chatCommand = new Command('chat')
+    .description('Start an interactive chat session with the LLM')
+    .option('--provider <name>', 'LLM provider to use')
+    .addOption(maxTokensOption)
+    .addOption(temperatureOption)
+    .addOption(topPOption)
+    .addOption(topKOption)
+    .addOption(systemOption)
+    .action(async (options) => {
+      try {
+        const providerConfig = getProviderConfig(options.provider);
+        const provider = await ProviderFactory.createProvider(providerConfig);
 
-                logInfo('Starting chat session. Type "exit" to end the session.');
+        const messages: Message[] = [];
+        if (options.system) {
+          messages.push({ role: 'system', content: options.system });
+        }
 
-                while (true) {
-                    const response = await prompts({ type: 'text', name: 'input', message: 'You:' });
+        logInfo('Starting chat session. Type "exit" to end the session.');
 
-                    if (response.input.toLowerCase() === 'exit') {
-                        logInfo('Chat session ended.');
-                        break;
-                    }
+        while (true) {
+          const response = await prompts({
+            type: 'text',
+            name: 'input',
+            message: 'You:',
+          });
 
-                    messages.push({ role: 'user', content: response.input });
+          if (response.input.toLowerCase() === 'exit') {
+            logInfo('Chat session ended.');
+            break;
+          }
 
-                    const globalOptions = command.optsWithGlobals();
-                    const resolvedModel = resolveModel(globalOptions.modelid, options.model || globalOptions.model);
+          messages.push({ role: 'user', content: response.input });
 
-                    logInfo(`Using model: ${resolvedModel}`);
+          const providerOptions: LLMProviderOptions = {
+            maxTokens: options.maxTokens,
+            temperature: options.temperature,
+            topP: options.topP,
+            topK: options.topK,
+          };
 
-                    const stream = client.messages.stream({
-                        model: resolvedModel,
-                        max_tokens: options.maxTokens,
-                        temperature: options.temperature,
-                        top_p: options.topP,
-                        top_k: options.topK,
-                        system: options.system,
-                        messages: messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })),
-                    });
+          logInfo(`Using provider: ${providerConfig.type}`);
+          logInfo('🤖:');
 
-                    logInfo('🤖:');
-                    let fullResponse = '';
+          const outputHandler = await createStreamOutputHandler();
 
-                    stream.on('text', (text) => {
-                        process.stdout.write(text);
-                        fullResponse += text;
-                    });
-
-                    await stream.finalMessage();
-                    console.log();
-
-                    messages.push({ role: 'assistant', content: fullResponse });
-                }
-            } catch (error) {
-                logError(`An error occurred: ${error}`);
+          try {
+            for await (const chunk of provider.streamMessage(messages, providerOptions)) {
+              await outputHandler.handleChunk(chunk);
             }
-        });
+          } catch (error) {
+            logError(`Error during streaming: ${error}`);
+            continue;
+          }
 
-    return chatCommand;
+          await outputHandler.finalize();
+          console.log(); // Add a newline after the response
+
+          const fullResponse = outputHandler.getFullResponse();
+          messages.push({ role: 'assistant', content: fullResponse });
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          logError(`An error occurred: ${error.message}`);
+        } else {
+          logError(`An error occurred: ${error}`);
+        }
+      }
+    });
+
+  return chatCommand;
 }

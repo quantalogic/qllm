@@ -6,7 +6,7 @@ export function logInfo(message: string): void {
     logStream.write(logMessage);
     logStream.end();
     // Also print to console, but prefix with a special character
-    console.error(`ℹ️ ${message}`);
+    console.error(`${message}`);
 }
 
 export function logError(message: string): void {
