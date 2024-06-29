@@ -7,6 +7,8 @@ import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOptio
 import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinner } from '../helpers/stream_helper';
 import { displayOptions } from '../utils/option_display';
+import { mergeOptions } from '../utils/option_merging';
+
 
 export function createStreamCommand(): Command {
   const streamCommand = new Command('stream')
@@ -39,20 +41,29 @@ export function createStreamCommand(): Command {
         }
 
         const messages: Message[] = [{ role: 'user', content: input }];
+
+
+        const defaultOptions: Partial<LLMProviderOptions> = {
+            maxTokens: 256,
+            temperature: 0.7,
+            topP: 1,
+            topK: 250,
+        };
+
+       const mergedOptions = mergeOptions(defaultOptions, options);
+
         logger.info(`Using provider: ${providerConfig.type}`);
         logger.info(`Using model: ${providerConfig.model}`);
 
-      
         const providerOptions: LLMProviderOptions = {
-          maxTokens: options.maxTokens,
-          temperature: options.temperature,
-          topP: options.topP,
-          topK: options.topK,
-          system: options.system,
+          maxTokens: mergedOptions.maxTokens,
+          temperature: mergedOptions.temperature,
+          topP: mergedOptions.topP,
+          topK: mergedOptions.topK,
+          system: mergedOptions.system,
         };
 
         displayOptions(providerOptions, 'stream');
-
 
         await handleStreamWithSpinner(provider, messages, providerOptions);
 

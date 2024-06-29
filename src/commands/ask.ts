@@ -6,8 +6,9 @@ import { logger } from '../utils/logger';
 import { Spinner } from '../utils/spinner';
 import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption, fileOption, outputOption, formatOption } from '../options';
 import { formatOutput, writeOutput } from '../helpers/output_helper';
-import { Message } from '../providers/types';
+import { LLMProviderOptions, Message } from '../providers/types';
 import { displayOptions } from '../utils/option_display';
+import { mergeOptions } from '../utils/option_merging';
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
@@ -44,24 +45,25 @@ export function createAskCommand(): Command {
         logger.debug(`🤖 Using provider: ${providerConfig.type}`);
         logger.debug(`🤖 Using model: ${providerConfig.model}`);
 
-        displayOptions(options, 'ask');
+        const defaultOptions: Partial<LLMProviderOptions> = {
+          maxTokens: 256,
+          temperature: 0.7,
+          topP: 1,
+          topK: 250,
+        };
+
+        const mergedOptions = mergeOptions(defaultOptions, options);
+        displayOptions(mergedOptions, 'ask');
 
         const spinner = new Spinner('Generating response...');
         spinner.start();
 
-        const response = await provider.generateMessage(messages, {
-          maxTokens: options.maxTokens,
-          temperature: options.temperature,
-          topP: options.topP,
-          topK: options.topK,
-          system: options.system,
-        });
+        const response = await provider.generateMessage(messages, mergedOptions);
 
         spinner.succeed('Response generated');
 
         const output = formatOutput({ content: [{ text: response }] }, options.format);
         await writeOutput(output, options.output);
-
       } catch (error) {
         logger.error(`An error occurred: ${error}`);
       }

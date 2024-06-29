@@ -9,14 +9,13 @@ export interface Message {
 
 // LLM Provider options
 export interface LLMProviderOptions {
-  maxTokens?: number;
-  temperature?: number;
-  topP?: number;
-  topK?: number;
+  maxTokens: number;
+  temperature: number;
+  topP: number;
+  topK: number;
   system?: string;
   model?: string;
 }
-
 // Output format options
 export type OutputFormat = 'json' | 'markdown' | 'text';
 
