@@ -25,7 +25,7 @@ export class Spinner {
 
   succeed(text?: string): void {
     this.stop();
-    logger.info(`✔ ${text || 'Success'}`);
+    logger.debug(`✅ ${text || 'Success'}`);
   }
 
   fail(text?: string): void {

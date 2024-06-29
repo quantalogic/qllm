@@ -7,6 +7,7 @@ import { Spinner } from '../utils/spinner';
 import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption, fileOption, outputOption, formatOption } from '../options';
 import { formatOutput, writeOutput } from '../helpers/output_helper';
 import { Message } from '../providers/types';
+import { displayOptions } from '../utils/option_display';
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
@@ -40,8 +41,10 @@ export function createAskCommand(): Command {
 
         const messages: Message[] = [{ role: 'user', content: input }];
 
-        logger.info(`🤖 Using provider: ${providerConfig.type}`);
-        logger.info(`🤖 Using model: ${providerConfig.model}`);
+        logger.debug(`🤖 Using provider: ${providerConfig.type}`);
+        logger.debug(`🤖 Using model: ${providerConfig.model}`);
+
+        displayOptions(options, 'ask');
 
         const spinner = new Spinner('Generating response...');
         spinner.start();

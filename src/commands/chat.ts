@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption } from '../options';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinner } from '../helpers/stream_helper';
+import { displayOptions } from '../utils/option_display';
 
 export function createChatCommand(): Command {
   const chatCommand = new Command('chat')
@@ -29,6 +30,8 @@ export function createChatCommand(): Command {
         }
 
         logger.info('Starting chat session. Type "exit" to end the session.');
+
+        displayOptions(options, 'chat');
 
         while (true) {
           const response = await prompts({

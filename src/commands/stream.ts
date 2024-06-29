@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption, fileOption, outputOption, formatOption } from '../options';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinner } from '../helpers/stream_helper';
+import { displayOptions } from '../utils/option_display';
 
 export function createStreamCommand(): Command {
   const streamCommand = new Command('stream')
@@ -41,6 +42,7 @@ export function createStreamCommand(): Command {
         logger.info(`Using provider: ${providerConfig.type}`);
         logger.info(`Using model: ${providerConfig.model}`);
 
+      
         const providerOptions: LLMProviderOptions = {
           maxTokens: options.maxTokens,
           temperature: options.temperature,
@@ -48,6 +50,9 @@ export function createStreamCommand(): Command {
           topK: options.topK,
           system: options.system,
         };
+
+        displayOptions(providerOptions, 'stream');
+
 
         await handleStreamWithSpinner(provider, messages, providerOptions);
 
