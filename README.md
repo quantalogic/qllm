@@ -1,8 +1,6 @@
-# Anthropic Bedrock CLI 🤖
+# Quantalogic LLM CLI qllm 🤖
 
-Anthropic Bedrock CLI Banner
-
-Anthropic Bedrock CLI is a powerful command-line interface for interacting with Anthropic's language models through AWS Bedrock. Seamlessly integrate advanced AI capabilities into your workflow with simple commands.
+qqlm is a powerful command-line interface for interacting with Anthropic's language models through AWS Bedrock. Seamlessly integrate advanced AI capabilities into your workflow with simple commands.
 
 ## 🚀 Key Features
 

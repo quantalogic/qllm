@@ -18,7 +18,7 @@ const program = new Command();
 // Global options
 program
   .version('1.0.0')
-  .description('Multi-Provider LLM Command CLI')
+  .description('Multi-Provider LLM Command CLI - qllm. Create with ❤️ by @quantalogic.')
   .option('-p, --profile <profile>', 'AWS profile to use', process.env.AWS_PROFILE)
   .option('-r, --region <region>', 'AWS region to use', process.env.AWS_REGION)
   .option('--provider <provider>', 'LLM provider to use', DEFAULT_PROVIDER)

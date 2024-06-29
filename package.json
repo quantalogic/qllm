@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/cli.ts",
-    "cli": "ts-node src/cli.ts"
+    "start": "ts-node src/qllm.ts",
+    "cli": "ts-node src/qllm.ts"
   },
   "keywords": [],
   "author": "",
