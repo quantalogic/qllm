@@ -1,31 +1,32 @@
-# Quantalogic LLM CLI qllm 🤖
+# QLLM: Multi-Provider LLM Command CLI
 
-qqlm is a powerful command-line interface for interacting with Anthropic's language models through AWS Bedrock. Seamlessly integrate advanced AI capabilities into your workflow with simple commands.
+
+QLLM is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with love by @quantalogic, QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
 
 ## 🚀 Key Features
 
-- Interactive chat sessions with AI models
-- Stream responses in real-time
-- Ask one-off questions to the AI
-- Support for multiple Anthropic models (Claude 3 Sonnet, Haiku, Opus)
-- Configurable output formats (JSON, Markdown, plain text)
-- AWS profile and region management
-- Customizable model parameters (tokens, temperature, etc.)
+- Multi-provider support (currently featuring Anthropic's Claude models)
+- Interactive chat mode for continuous conversations
+- Streaming responses for real-time output
+- Configurable model parameters (temperature, top-p, top-k, etc.)
+- File input/output support for batch processing
+- Customizable output formats (JSON, Markdown, plain text)
+- Easy-to-use configuration management
 
-## 📦 Quick Start
+## 🏁 Quick Start
 
 ### Prerequisites
 
 - Node.js (v14 or later)
-- AWS account with Bedrock access
-- AWS CLI configured with appropriate credentials
+- npm (v6 or later)
+- AWS account with Bedrock access (for Anthropic models)
 
 ### Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/anthropic-bedrock-cli.git
-   cd anthropic-bedrock-cli
+   git clone https://github.com/raphaelmansuy/qllm.git
+   cd qllm
    ```
 
 2. Install dependencies:
@@ -33,132 +34,127 @@ qqlm is a powerful command-line interface for interacting with Anthropic's langu
    npm install
    ```
 
-3. Set up your environment:
+3. Set up your AWS credentials:
    ```bash
-   cp .env.example .env
+   aws configure
    ```
-   Edit the `.env` file with your AWS profile and region.
 
-4. Run the CLI:
-   ```bash
-   npm run cli -- --help
+4. Create a `.env` file in the project root and add your configuration:
+   ```
+   AWS_PROFILE=your_profile_name
+   AWS_REGION=your_aws_region
    ```
 
 ### Basic Usage
 
-Start a chat session:
-```bash
-npm run cli -- chat
-```
-
 Ask a question:
 ```bash
-npm run cli -- ask "What is the capital of France?"
+npm run cli ask "What is the capital of France?"
+```
+
+Start an interactive chat session:
+```bash
+npm run cli chat
 ```
 
 Stream a response:
 ```bash
-npm run cli -- stream "Explain quantum computing in simple terms"
+npm run cli stream "Explain quantum computing in simple terms"
 ```
 
-## 📘 Detailed Documentation
+## 📚 Detailed Documentation
 
-### Available Commands
+### Command Structure
 
-- `chat`: Start an interactive chat session
-- `ask`: Ask a one-off question
-- `stream`: Stream a response from the AI
-- `config`: Display or update configuration
+QLLM offers four main commands:
 
-### Global Options
+1. `ask`: Ask a single question and get a response
+2. `chat`: Start an interactive chat session
+3. `stream`: Stream a response in real-time
+4. `config`: View or update configuration settings
 
-- `-p, --profile <profile>`: AWS profile to use
-- `-r, --region <region>`: AWS region to use
-- `--modelid <modelid>`: Specific model ID to use
-- `--model <model>`: Model alias to use (sonnet, sonnet35, haiku, opus)
+Each command supports various options to customize the behavior of the LLM:
 
-### Command-Specific Options
+- `--max-tokens`: Maximum number of tokens to generate (default: 256)
+- `--temperature`: Controls randomness (0-1, default: 0.7)
+- `--top-p`: Nucleus sampling parameter (0-1, default: 1)
+- `--top-k`: Top-k sampling parameter (1-1000, default: 250)
+- `--system`: System message to set context
+- `--file`: Path to input file
+- `--output`: Path to output file
+- `--format`: Output format (json, markdown, text)
 
-Most commands support the following options:
+### Configuration
 
-- `-t, --max-tokens <tokens>`: Maximum number of tokens to generate
-- `--temperature <temperature>`: Temperature for response generation
-- `--top-p <value>`: Top P for response generation
-- `--top-k <value>`: Top K for response generation
-- `-s, --system <message>`: System message to set context
-- `-f, --file <path>`: Path to input file
-- `-o, --output <path>`: Path to output file
-- `--format <format>`: Output format (json, markdown, text)
-
-For full details on each command and its options, use the `--help` flag:
+Use the `config` command to manage your QLLM settings:
 
 ```bash
-npm run cli -- <command> --help
+npm run cli config --show
+npm run cli config --set-profile your_profile
+npm run cli config --set-region your_region
+npm run cli config --set-model sonnet
 ```
+
+Available model aliases:
+- `sonnet`: Claude 3 Sonnet
+- `sonnet35`: Claude 3.5 Sonnet
+- `haiku`: Claude 3 Haiku (default)
+- `opus`: Claude 3 Opus
 
 ## 💡 Examples and Use Cases
 
-### Interactive Chat Session
+### Generate a Short Story
 
 ```bash
-npm run cli -- chat --model haiku
+npm run cli ask "Write a 100-word story about a time traveler" --max-tokens 150
 ```
 
-This starts an interactive chat session using the Claude 3 Haiku model. Type your messages and receive AI responses in real-time.
-
-### Answering Questions from a File
+### Analyze Code
 
 ```bash
-npm run cli -- ask -f questions.txt --output answers.md --format markdown
+npm run cli stream "Explain the following code:
+function fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}" --format markdown
 ```
 
-This reads questions from `questions.txt`, generates answers using the default AI model, and saves the output in Markdown format to `answers.md`.
-
-### Streaming a Long-Form Response
+### Interactive Coding Assistant
 
 ```bash
-npm run cli -- stream "Write a short story about a time traveler" --max-tokens 1000 --temperature 0.8
+npm run cli chat --system "You are a helpful coding assistant. Provide code examples and explanations."
 ```
 
-This generates a creative short story with increased randomness (higher temperature) and streams the output to the console.
-
-## 🗂️ Project Structure
+## 🗂 Project Structure
 
 ```
-anthropic-bedrock-cli/
+qllm/
 ├── src/
 │   ├── commands/
-│   │   ├── ask.ts
-│   │   ├── chat.ts
-│   │   ├── config.ts
-│   │   └── stream.ts
+│   ├── config/
 │   ├── helpers/
-│   │   ├── messageHelper.ts
-│   │   └── outputHelper.ts
-│   ├── anthropic-client.ts
-│   ├── cli.ts
-│   ├── config.ts
-│   ├── credentials.ts
-│   ├── options.ts
-│   └── utils.ts
+│   ├── providers/
+│   ├── utils/
+│   └── qllm.ts
+├── .env
 ├── package.json
-└── tsconfig.json
+└── README.md
 ```
 
-## 🛠️ Dependencies
+## 🔧 Dependencies
 
 - Node.js (v14+)
-- TypeScript
-- Commander.js
-- Anthropic Bedrock SDK
-- AWS SDK
-- dotenv
-- prompts
-- cli-spinner
+- npm packages:
+  - @anthropic-ai/bedrock-sdk
+  - commander
+  - dotenv
+  - prompts
+  - winston
+  - (see package.json for full list)
 
 ## 🤝 Contributing
 
-We welcome contributions to the Anthropic Bedrock CLI! Here's how you can help:
+We welcome contributions to QLLM! Here's how you can help:
 
 1. Fork the repository
 2. Create a new branch: `git checkout -b feature/your-feature-name`
@@ -178,20 +174,27 @@ npm test
 
 We use Jest for unit testing. Please ensure all new features are covered by tests.
 
-## 🚀 Deployment
+## 📦 Deployment
 
-This CLI tool is designed to be run locally or integrated into your own projects. There's no specific deployment process, but you can publish it to npm if desired:
+QLLM is designed to be used as a local CLI tool. However, you can package it for distribution:
 
 ```bash
-npm publish
+npm pack
 ```
 
-## 🗓️ Roadmap
+This will create a `.tgz` file that can be installed globally:
 
-- [ ] Add support for more Anthropic models as they become available
-- [ ] Implement conversation history management
-- [ ] Create a web-based UI for the CLI
-- [ ] Add support for other AI providers through Bedrock
+```bash
+npm install -g qllm-1.0.0.tgz
+```
+
+## 🗺 Roadmap
+
+- [ ] Add support for OpenAI models
+- [ ] Implement conversation memory for chat sessions
+- [ ] Create a web-based UI for QLLM
+- [ ] Add support for custom prompts and templates
+- [ ] Implement fine-tuning capabilities
 
 ## 📄 License
 
@@ -199,21 +202,15 @@ This project is licensed under the ISC License. See the [LICENSE](LICENSE) file 
 
 ## 🙏 Acknowledgments
 
-- Anthropic for their amazing AI models
-- AWS for the Bedrock platform
-- The open-source community for the various libraries used in this project
+- Thanks to the Anthropic team for their amazing Claude models
+- Inspired by various CLI tools in the AI community
 
 ## 📞 Contact
 
-For questions, suggestions, or issues, please open an issue on the GitHub repository or reach out to the maintainers:
+- Project Maintainer: [@quantalogic](https://github.com/quantalogic)
+- Project Homepage: https://github.com/raphaelmansuy/qllm
 
-- GitHub Issues: [https://github.com/yourusername/anthropic-bedrock-cli/issues](https://github.com/yourusername/anthropic-bedrock-cli/issues)
-- Email: maintainer@example.com
-
-Join our community:
-- Discord: [https://discord.gg/anthropic-bedrock-cli](https://discord.gg/anthropic-bedrock-cli)
 
 ---
 
-Happy coding with Anthropic Bedrock CLI! 🎉
-
+Made with ❤️ by the QLLM team. Happy prompting!
