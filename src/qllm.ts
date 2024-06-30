@@ -23,9 +23,15 @@ program
   .hook('preAction', (thisCommand) => {
     const options = thisCommand.opts();
     const config = configManager.getConfig();
+
+    const awsProfile = options.profile || config.awsProfile;
+
+    // Make sure the AWS_PROFILE environment variable is set
+    // AWS Bedrock SDK uses this to determine the profile to use
+    process.env.AWS_PROFILE = awsProfile;
     
     configManager.setCommandLineOptions({
-      awsProfile: options.profile || config.awsProfile,
+      awsProfile: awsProfile,
       awsRegion: options.region || config.awsRegion,
       defaultProvider: options.provider || config.defaultProvider,
       modelAlias: options.model || config.modelAlias

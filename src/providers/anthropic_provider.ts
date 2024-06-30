@@ -1,14 +1,11 @@
-import { fromIni } from "@aws-sdk/credential-providers";
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
 import { getCredentials } from '../credentials';
-import { logger } from '../utils/logger';
 
 
 export const DEFAULT_MAX_TOKENS = 1024;
 
-const credentials = fromIni({ profile: "bedrock" });
 
 export class AnthropicProvider implements LLMProvider {
 
@@ -16,12 +13,8 @@ export class AnthropicProvider implements LLMProvider {
   }
 
   async getClient() {
-    logger.debug(`Creating new Anthropic client for profile: ${this.awsProfile}, region: ${this.awsRegion}`);
-    
-    let credentials = await getCredentials(this.awsProfile,this.awsRegion);
-    logger.debug(`Got credentials for profile: ${this.awsProfile} and region: ${this.awsRegion}`);
-    logger.debug(`Session Token: ${credentials.sessionToken}`);
-    const client =  new AnthropicBedrock({
+    let credentials = await getCredentials(this.awsProfile, this.awsRegion);
+    const client = new AnthropicBedrock({
       awsSessionToken: credentials.sessionToken,
       awsRegion: this.awsRegion,
       awsAccessKey: credentials.accessKeyId,
@@ -36,7 +29,6 @@ export class AnthropicProvider implements LLMProvider {
       console.log(JSON.stringify(messages));
       console.log(JSON.stringify(options));
       const model = options.model || this.model;
-      console.log(`Using model: ${model}`)
       const client = await this.getClient();
       const response = await client.messages.create({
         model: model,
@@ -47,8 +39,6 @@ export class AnthropicProvider implements LLMProvider {
         system: options.system,
         messages: messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })),
       });
-
-      console.log(JSON.stringify(response), null, 2);
 
       return response.content && response.content.length > 0 && response.content[0].type === 'text'
         ? response.content[0].text
