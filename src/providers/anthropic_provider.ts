@@ -1,3 +1,4 @@
+import { fromIni } from "@aws-sdk/credential-providers";
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
@@ -7,6 +8,8 @@ import { logger } from '../utils/logger';
 
 export const DEFAULT_MAX_TOKENS = 1024;
 
+const credentials = fromIni({ profile: "bedrock" });
+
 export class AnthropicProvider implements LLMProvider {
 
   constructor(private awsProfile: string, private awsRegion: string, private model: string) {
@@ -14,21 +17,29 @@ export class AnthropicProvider implements LLMProvider {
 
   async getClient() {
     logger.debug(`Creating new Anthropic client for profile: ${this.awsProfile}, region: ${this.awsRegion}`);
-    let credentials = await getCredentials(this.awsProfile);
-    return new AnthropicBedrock({
-      awsAccessKey: credentials.accessKeyId,
-      awsSecretKey: credentials.secretAccessKey,
+    
+    let credentials = await getCredentials(this.awsProfile,this.awsRegion);
+    logger.debug(`Got credentials for profile: ${this.awsProfile} and region: ${this.awsRegion}`);
+    logger.debug(`Session Token: ${credentials.sessionToken}`);
+    const client =  new AnthropicBedrock({
       awsSessionToken: credentials.sessionToken,
       awsRegion: this.awsRegion,
-      timeout: 60000,
+      awsAccessKey: credentials.accessKeyId,
+      awsSecretKey: credentials.secretAccessKey,
     });
+    return client;
   }
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
     try {
+      console.log('Generating response...');
+      console.log(JSON.stringify(messages));
+      console.log(JSON.stringify(options));
+      const model = options.model || this.model;
+      console.log(`Using model: ${model}`)
       const client = await this.getClient();
       const response = await client.messages.create({
-        model: options.model || this.model,
+        model: model,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topP,
@@ -36,6 +47,8 @@ export class AnthropicProvider implements LLMProvider {
         system: options.system,
         messages: messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })),
       });
+
+      console.log(JSON.stringify(response), null, 2);
 
       return response.content && response.content.length > 0 && response.content[0].type === 'text'
         ? response.content[0].text

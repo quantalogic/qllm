@@ -21,11 +21,9 @@ export class ProviderFactory {
     if (!this.instances.has(key)) {
       let provider: LLMProvider;
 
-
       if (config.model === undefined) {
         throw new Error('Model not found in configuration');
       }
-
       const model = config.model;
 
       try {
