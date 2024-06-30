@@ -1,10 +1,10 @@
 import { LLMProvider } from './llm_provider';
 import { AnthropicProvider } from './anthropic_provider';
 import { OpenAIProvider } from './openai_provider';
-import { getCredentials, refreshCredentialsIfNeeded } from '../credentials';
-import { getConfig } from '../config/app_config';
+import { getAndRefreshCredentials } from '../credentials';
 import { ProviderName } from '../config/types';
 import { logger } from '../utils/logger';
+import { configManager } from '../utils/configuration_manager';
 
 export interface ProviderConfig {
   type: ProviderName;
@@ -17,25 +17,34 @@ export class ProviderFactory {
   static async createProvider(config: ProviderConfig): Promise<LLMProvider> {
     const key = `${config.type}-${config.model || ''}`;
 
+    const appConfig = configManager.getConfig();
+
     if (!this.instances.has(key)) {
       let provider: LLMProvider;
-      const appConfig = getConfig();
+
+
+      if (config.model === undefined) {
+        throw new Error('Model not found in configuration');
+      }
+
+      const model = config.model;
 
       try {
         switch (config.type) {
           case 'anthropic':
-            let credentials = await getCredentials();
-            credentials = await refreshCredentialsIfNeeded(credentials);
-            provider = new AnthropicProvider(credentials, config.model || appConfig.modelAlias);
+            const awsProfile = appConfig.awsProfile;
+            const awsRegion = appConfig.awsRegion;
+            let credentials = await getAndRefreshCredentials(awsProfile, awsRegion);
+            provider = new AnthropicProvider(credentials, awsRegion, model);
             break;
           // Add cases for other providers here
           case 'openai':
-          const openaiApiKey = process.env.OPENAI_API_KEY;
-          if (!openaiApiKey) {
-            throw new Error('OpenAI API key not found in environment variables');
-          }
-          provider = new OpenAIProvider(openaiApiKey, config.model || appConfig.modelAlias);
-      break; 
+            const openaiApiKey = process.env.OPENAI_API_KEY;
+            if (!openaiApiKey) {
+              throw new Error('OpenAI API key not found in environment variables');
+            }
+            provider = new OpenAIProvider(openaiApiKey, model);
+            break;
           default:
             throw new Error(`Unsupported provider type: ${config.type}`);
         }

@@ -2,23 +2,22 @@ import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
 import { AwsCredentialIdentity } from "@aws-sdk/types";
-import { configManager } from '../utils/configuration_manager';
+
 
 export const DEFAULT_MAX_TOKENS = 1024;
 
 export class AnthropicProvider implements LLMProvider {
   private client: AnthropicBedrock;
-  private model: string;
 
-  constructor(credentials: AwsCredentialIdentity, model?: string) {
-    const config = configManager.getConfig();
+  constructor(private credentials: AwsCredentialIdentity,private awsRegion: string, private model: string) {
+    console.log('credentials', JSON.stringify(this.credentials, null, 2));
+    console.log(`AWS region: ${awsRegion}`);
     this.client = new AnthropicBedrock({
-      awsAccessKey: credentials.accessKeyId,
-      awsSecretKey: credentials.secretAccessKey,
-      awsSessionToken: credentials.sessionToken,
-      awsRegion: config.awsRegion,
+      awsAccessKey: this.credentials.accessKeyId,
+      awsSecretKey: this.credentials.secretAccessKey,
+      awsSessionToken: this.credentials.sessionToken,
+      awsRegion: this.awsRegion,
     });
-    this.model = model || config.modelAlias || '';
   }
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {

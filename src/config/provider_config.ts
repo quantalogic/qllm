@@ -1,13 +1,13 @@
 // src/config/provider_config.ts
 
 import { ProviderName } from './types';
-import { getConfig } from './app_config';
 import anthropicConfig from './providers/anthropic';
+import { configManager  } from '../utils/configuration_manager';
+import openaiConfig from './providers/openai';
 
 
 export interface ProviderConfig {
   type: ProviderName;
-  region?: string;
   apiKey?: string;
   model?: string;
 }
@@ -15,13 +15,17 @@ export interface ProviderConfig {
 const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
   anthropic: {
     type: 'anthropic',
-    region: getConfig().awsRegion,
-    model: getConfig().modelAlias || anthropicConfig.defaultModel,
+    model: configManager.getConfig().modelAlias || anthropicConfig.defaultModel,
   },
   // Add configurations for other providers here as needed
+  openai: {
+    type: 'openai',
+    apiKey: '',
+    model: configManager.getConfig().modelAlias || openaiConfig.defaultModel,
+  },
 };
 
-export function getProviderConfig(providerName: ProviderName = getConfig().defaultProvider): ProviderConfig {
+export function getProviderConfig(providerName: ProviderName = configManager.getConfig().defaultProvider): ProviderConfig {
   const config = PROVIDER_CONFIGS[providerName];
   if (!config) {
     throw new Error(`Unknown provider: ${providerName}`);

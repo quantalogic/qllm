@@ -1,49 +1,110 @@
 import { fromIni } from "@aws-sdk/credential-providers";
 import { AwsCredentialIdentity } from "@aws-sdk/types";
-import { configManager } from './utils/configuration_manager';
+import { STS } from "@aws-sdk/client-sts";
 import { logger } from './utils/logger';
 
-export async function getCredentials(): Promise<AwsCredentialIdentity> {
-  try {
-    const config = configManager.getConfig();
-    logger.debug(`Retrieving credentials for AWS profile: ${config.awsProfile}`);
-    const credentials = await fromIni({ profile: config.awsProfile })();
+const CREDENTIAL_RETRIEVAL_TIMEOUT_MS = 10000;
+const CREDENTIAL_REFRESH_THRESHOLD_MS = 55 * 60 * 1000; // 55 minutes
+const SESSION_DURATION_SECONDS = 3600; // 1 hour
 
-    if (!validateCredentials(credentials)) {
-      throw new Error("Invalid or expired AWS credentials.");
+interface TemporaryCredentials extends AwsCredentialIdentity {
+  expiration: Date;
+  sessionToken: string;
+}
+
+export async function getCredentials(awsProfile: string, awsRegion: string): Promise<TemporaryCredentials> {
+  try {
+    logger.debug(`Retrieving credentials for AWS profile: ${awsProfile}`);
+
+    const initialCredentials = await Promise.race([
+      fromIni({ profile: awsProfile })(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Credential retrieval timed out')), CREDENTIAL_RETRIEVAL_TIMEOUT_MS)
+      )
+    ]);
+
+    const sessionCredentials = await getSessionToken(initialCredentials, awsRegion);
+
+    if (!await validateCredentials(sessionCredentials, awsRegion)) {
+      throw new Error(`Invalid or expired AWS credentials for profile: ${awsProfile} and region: ${awsRegion}`);
     }
 
-    logger.debug("AWS credentials retrieved successfully");
-    return credentials;
+    logger.debug("AWS session credentials retrieved successfully");
+    return sessionCredentials;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to retrieve AWS credentials.";
-    logger.error(`Error getting AWS credentials: ${errorMessage}`);
-    throw new Error("Failed to retrieve AWS credentials. Please check your configuration.");
+    if (error instanceof Error) {
+      logger.error(`Error getting AWS credentials: ${error.message} for profile: ${awsProfile} and region: ${awsRegion}`);
+    } else {
+      logger.error(`Unknown error getting AWS credentials: ${error} for profile: ${awsProfile} and region: ${awsRegion}`);
+    }
+    throw new Error(`Failed to retrieve AWS credentials. Please check your configuration for profile: ${awsProfile} and region: ${awsRegion}`);
   }
 }
 
-export function validateCredentials(credentials: AwsCredentialIdentity): boolean {
-  return !!(
-    credentials.accessKeyId &&
-    credentials.secretAccessKey &&
-    (!credentials.expiration || new Date(credentials.expiration) > new Date())
-  );
-}
+async function getSessionToken(credentials: AwsCredentialIdentity, awsRegion: string): Promise<TemporaryCredentials> {
+  const sts = new STS({ credentials, region: awsRegion });
+  const response = await sts.getSessionToken({ DurationSeconds: SESSION_DURATION_SECONDS });
 
-export async function refreshCredentialsIfNeeded(credentials: AwsCredentialIdentity): Promise<AwsCredentialIdentity> {
-  if (!credentials.expiration) {
-    return credentials;
+  if (!response.Credentials) {
+    throw new Error(`Failed to get session token from AWS STS region: ${awsRegion}`);
   }
 
+  return {
+    accessKeyId: response.Credentials.AccessKeyId!,
+    secretAccessKey: response.Credentials.SecretAccessKey!,
+    sessionToken: response.Credentials.SessionToken!,
+    expiration: new Date(response.Credentials.Expiration!)
+  };
+}
+
+async function validateCredentials(credentials: TemporaryCredentials, awsRegion: string): Promise<boolean> {
+  if (!(credentials.accessKeyId && credentials.secretAccessKey && credentials.sessionToken)) {
+    logger.error("Missing required credential components");
+    return false;
+  }
+
+  if (new Date(credentials.expiration) <= new Date()) {
+    logger.error("Temporary credentials have expired");
+    return false;
+  }
+
+  try {
+    const sts = new STS({ credentials, region: awsRegion });
+    await sts.getCallerIdentity({});
+    logger.debug("Credentials validated successfully with AWS STS");
+    return true;
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(`Failed to validate credentials with AWS STS: ${error.message}`);
+    } else {
+      logger.error(`Unknown error validating credentials with AWS STS: ${error}`);
+    }
+    return false;
+  }
+}
+
+export async function refreshCredentialsIfNeeded(credentials: TemporaryCredentials, awsProfile: string, awsRegion: string): Promise<TemporaryCredentials> {
   const expirationTime = new Date(credentials.expiration);
   const currentTime = new Date();
   const timeUntilExpiration = expirationTime.getTime() - currentTime.getTime();
-  const fiveMinutesInMs = 5 * 60 * 1000;
 
-  if (timeUntilExpiration < fiveMinutesInMs) {
-    logger.debug("Credentials are close to expiration. Refreshing...");
-    return getCredentials();
+  if (timeUntilExpiration < CREDENTIAL_REFRESH_THRESHOLD_MS) {
+    logger.debug("Temporary credentials are close to expiration. Refreshing...");
+    return getCredentials(awsProfile, awsRegion);
+  } else {
+    logger.debug(`Temporary credentials are still valid for ${timeUntilExpiration / 1000} seconds. No refresh needed.`);
+    return credentials;
   }
+}
 
-  return credentials;
+export async function getAndRefreshCredentials(awsProfile: string, awsRegion: string): Promise<TemporaryCredentials> {
+  const credentials = await getCredentials(awsProfile, awsRegion);
+  return refreshCredentialsIfNeeded(credentials, awsProfile, awsRegion);
+}
+
+export function logCredentialInfo(credentials: TemporaryCredentials) {
+  logger.info(`Temporary credentials will expire at: ${credentials.expiration.toISOString()}`);
+  logger.debug(`Access Key ID: ${credentials.accessKeyId.substring(0, 5)}...`);
+  logger.debug(`Has Secret Access Key: ${!!credentials.secretAccessKey}`);
+  logger.debug(`Has Session Token: ${!!credentials.sessionToken}`);
 }

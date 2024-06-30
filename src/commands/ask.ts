@@ -28,7 +28,7 @@ export function createAskCommand(): Command {
         const globalOptions = command.parent.opts();
         const config = configManager.getConfig();
         const providerName = options.provider || globalOptions.provider || config.defaultProvider;
-        const model = globalOptions.resolvedModel || config.modelAlias;
+        const model = globalOptions.resolvedModel || config.modelAlias || "";
 
         const provider = await ProviderFactory.getProvider(providerName, model);
 
