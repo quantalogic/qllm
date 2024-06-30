@@ -4,12 +4,15 @@ import { logger } from '../utils/logger';
 import { configManager } from '../utils/configuration_manager';
 import { getDefaultModel } from '../config/model_aliases';
 import { providerRegistry } from './provider_registry';
+import { PluginManager } from '../utils/plugin_manager';
+import { ErrorManager } from '../utils/error_manager';
 
 export class ProviderFactory {
+  private static pluginManager = new PluginManager();
+
   static async getProvider(providerName: ProviderName): Promise<LLMProvider> {
     const config = configManager.getConfig();
     const modelId = config.modelId || getDefaultModel(providerName);
-
     const options: LLMProviderOptions = {
       model: modelId,
       awsProfile: config.awsProfile,
@@ -17,7 +20,7 @@ export class ProviderFactory {
     };
 
     if (!providerRegistry.hasProvider(providerName)) {
-      throw new Error(`Unsupported provider type: ${providerName}`);
+      await this.pluginManager.loadPlugin(providerName);
     }
 
     try {
@@ -25,8 +28,12 @@ export class ProviderFactory {
       logger.debug(`Created provider instance: ${providerName}`);
       return provider;
     } catch (error) {
-      logger.error(`Failed to create provider: ${error}`);
+      ErrorManager.handleError('ProviderCreationError', `Failed to create provider: ${error}`);
       throw error;
     }
+  }
+
+  static registerProviderPlugin(name: string, initFunction: () => void): void {
+    this.pluginManager.registerPlugin(name, initFunction);
   }
 }

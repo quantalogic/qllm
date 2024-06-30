@@ -1,10 +1,8 @@
 import OpenAI from 'openai';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
-import { configManager } from '../utils/configuration_manager';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { providerRegistry } from './provider_registry';
-import { logger } from '../utils/logger';
 
 export const DEFAULT_MAX_TOKENS = 1024;
 
@@ -82,8 +80,6 @@ export class OpenAIProvider implements LLMProvider {
 }
 
 export function register() {
-
-// Register the OpenAI provider
-
-providerRegistry.registerProvider('openai', (options) => new OpenAIProvider(options));
+  // Register the OpenAI provider
+  providerRegistry.registerProvider('openai', (options) => new OpenAIProvider(options));
 }

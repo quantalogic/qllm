@@ -6,11 +6,6 @@ import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
 import { resolveModelAlias } from "./config/model_aliases";
 import { handleError } from './utils/error_handler';
-import { register as registerOpenAI } from './providers/openai_provider';
-import { register as registerAnthropic } from './providers/anthropic_provider';
-
-registerAnthropic();
-registerOpenAI();
 
 
 const program = new Command();
@@ -27,7 +22,6 @@ program
   .hook('preAction', async (thisCommand) => {
     try {
       const options = thisCommand.opts();
-
       if (options.modelAlias && options.modelId) {
         throw new Error('Cannot use both model alias and model ID. Please specify only one.');
       }
@@ -43,9 +37,8 @@ program
 
       const config = configManager.getConfig();
 
-
       if (config.modelAlias) {
-        logger.debug(`Resolving model alias: ${config.modelAlias}`)
+        logger.debug(`Resolving model alias: ${config.modelAlias}`);
         const modelId = resolveModelAlias(config.defaultProvider, config.modelAlias);
         logger.debug(`Resolved model alias to: ${modelId}`);
         configManager.updateConfig({ modelId: modelId });

@@ -54,7 +54,7 @@ class ConfigurationManager extends EventEmitter {
     const appConfigUpdates: Partial<AppConfig> = {
       awsProfile: process.env.AWS_PROFILE || 'default',
       awsRegion: process.env.AWS_REGION || 'us-east-1',
-  };
+    };
     this.updateConfig(appConfigUpdates);
   }
 
@@ -76,7 +76,13 @@ class ConfigurationManager extends EventEmitter {
     const envContent = Object.entries(this.config)
       .map(([key, value]) => `${key.toUpperCase()}=${value}`)
       .join('\n');
-    await fs.writeFile(this.envPath, envContent);
+
+    try {
+      await fs.writeFile(this.envPath, envContent);
+      logger.debug('Configuration saved to .env file');
+    } catch (error) {
+      logger.error(`Error saving configuration to .env file: ${error}`);
+    }
   }
 }
 
