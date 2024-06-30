@@ -42,7 +42,6 @@ function showCurrentConfiguration(): void {
   logger.info(`AWS Profile: ${config.awsProfile || 'Not set'}`);
   logger.info(`AWS Region: ${config.awsRegion || 'Not set'}`);
   logger.info(`Default Provider: ${config.defaultProvider || 'Not set'}`);
-  logger.info(`Model Alias: ${config.modelAlias || 'Not set'}`);
 
   Object.entries(providerConfigs).forEach(([provider, providerConfig]) => {
     logger.info(`\nProvider: ${provider}`);
