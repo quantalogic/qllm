@@ -20,6 +20,7 @@ export function displayOptions(options: LLMProviderOptions, commandName: string)
     temperature: 0.7,
     topP: 1,
     topK: 250,
+    model: '',
   };
 
   logger.debug(`Options for ${commandName} command:`);

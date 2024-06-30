@@ -6,7 +6,9 @@ export interface LLMProviderOptions {
   topP?: number;
   topK?: number;
   system?: string;
-  model?: string;
+  model: string;
+  awsRegion?: string;
+  awsProfile?: string;
 }
 
 export interface LLMProvider {

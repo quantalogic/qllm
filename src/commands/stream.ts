@@ -7,7 +7,6 @@ import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinner } from '../helpers/stream_helper';
 import { displayOptions } from '../utils/option_display';
 import { mergeOptions } from '../utils/option_merging';
-import { providerConfigDisplay } from '../utils/provider_config_display';
 import { configManager } from '../utils/configuration_manager';
 
 export function createStreamCommand(): Command {
@@ -26,7 +25,7 @@ export function createStreamCommand(): Command {
         const globalOptions = command.parent?.opts();
         const config = configManager.getConfig();
         const providerName = options.provider || globalOptions.provider || config.defaultProvider;
-        const model = globalOptions.resolvedModel || config.modelAlias || "";
+        const model = options.modelId || globalOptions.modelId || config.modelId || "";
 
         const provider = await ProviderFactory.getProvider(providerName);
 
@@ -43,7 +42,7 @@ export function createStreamCommand(): Command {
 
         const messages: Message[] = [{ role: 'user', content: input }];
 
-        providerConfigDisplay({ type: providerName, model });
+        logger.debug(`providerName:  ${providerName}`);
 
         const defaultOptions: Partial<LLMProviderOptions> = {
           maxTokens: 256,
@@ -60,6 +59,7 @@ export function createStreamCommand(): Command {
           topP: mergedOptions.topP,
           topK: mergedOptions.topK,
           system: mergedOptions.system,
+          model: model,
         };
 
         displayOptions(providerOptions, 'stream');

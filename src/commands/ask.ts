@@ -8,7 +8,6 @@ import { formatOutput, writeOutput } from '../helpers/output_helper';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { displayOptions } from '../utils/option_display';
 import { mergeOptions } from '../utils/option_merging';
-import { providerConfigDisplay } from '../utils/provider_config_display';
 import { configManager } from '../utils/configuration_manager';
 
 export function createAskCommand(): Command {
@@ -27,7 +26,7 @@ export function createAskCommand(): Command {
         const globalOptions = command.parent?.opts();
         const config = configManager.getConfig();
         const providerName = options.provider || globalOptions.provider || config.defaultProvider;
-        const model = globalOptions.resolvedModel || config.modelAlias || "";
+        const model = options.modelId || globalOptions.modelId || config.modelId || "";
 
         const provider = await ProviderFactory.getProvider(providerName);
 
@@ -44,13 +43,14 @@ export function createAskCommand(): Command {
 
         const messages: Message[] = [{ role: 'user', content: input }];
 
-        providerConfigDisplay({ type: providerName, model });
+        logger.debug(`providerName:  ${providerName}`);
 
         const defaultOptions: Partial<LLMProviderOptions> = {
           maxTokens: 256,
           temperature: 0.7,
           topP: 1,
           topK: 250,
+          model: model,
         };
 
         const mergedOptions = mergeOptions(defaultOptions, options);

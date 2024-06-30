@@ -14,7 +14,7 @@ export interface LLMProviderOptions {
   topP: number;
   topK: number;
   system?: string;
-  model?: string;
+  model: string;
 }
 // Output format options
 export type OutputFormat = 'json' | 'markdown' | 'text';

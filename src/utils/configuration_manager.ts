@@ -51,13 +51,11 @@ class ConfigurationManager extends EventEmitter {
   }
 
   private loadEnvironmentVariables(): void {
-    this.updateConfig({
-      awsProfile: process.env.AWS_PROFILE,
-      awsRegion: process.env.AWS_REGION,
-      defaultProvider: process.env.DEFAULT_PROVIDER as ProviderName,
-      modelAlias: process.env.MODEL_ALIAS,
-      modelId: process.env.MODEL_ID,
-    });
+    const appConfigUpdates: Partial<AppConfig> = {
+      awsProfile: process.env.AWS_PROFILE || 'default',
+      awsRegion: process.env.AWS_REGION || 'us-east-1',
+  };
+    this.updateConfig(appConfigUpdates);
   }
 
   public updateConfig(updates: Partial<AppConfig>): void {

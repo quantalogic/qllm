@@ -5,6 +5,13 @@ import { createChatCommand } from './commands/chat';
 import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
 import { resolveModelAlias } from "./config/model_aliases";
+import { handleError } from './utils/error_handler';
+import { register as registerOpenAI } from './providers/openai_provider';
+import { register as registerAnthropic } from './providers/anthropic_provider';
+
+registerAnthropic();
+registerOpenAI();
+
 
 const program = new Command();
 
@@ -18,43 +25,48 @@ program
   .option('--model <model>', 'Model alias to use')
   .option('--log-level <level>', 'Set log level (error, warn, info, debug)', 'info')
   .hook('preAction', async (thisCommand) => {
-    const options = thisCommand.opts();
-    await configManager.loadConfig();
-    
-    configManager.updateConfig({
-      awsProfile: options.profile,
-      awsRegion: options.region,
-      defaultProvider: options.provider,
-      modelAlias: options.model,
-      modelId: options.modelid,
-    });
+    try {
+      const options = thisCommand.opts();
+
+      if (options.modelAlias && options.modelId) {
+        throw new Error('Cannot use both model alias and model ID. Please specify only one.');
+      }
+
+      await configManager.loadConfig();
+      configManager.updateConfig({
+        awsProfile: options.profile,
+        awsRegion: options.region,
+        defaultProvider: options.provider,
+        modelAlias: options.model,
+        modelId: options.modelid,
+      });
+
+      const config = configManager.getConfig();
 
 
-    const config = configManager.getConfig();
-    
-    if (config.modelAlias && config.modelId) {
-      logger.error('Cannot use both model alias and model ID. Please specify only one.');
+      if (config.modelAlias) {
+        logger.debug(`Resolving model alias: ${config.modelAlias}`)
+        const modelId = resolveModelAlias(config.defaultProvider, config.modelAlias);
+        logger.debug(`Resolved model alias to: ${modelId}`);
+        configManager.updateConfig({ modelId: modelId });
+      }
+
+      if (config.awsProfile) {
+        logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
+        process.env.AWS_PROFILE = config.awsProfile;
+      }
+
+      if (config.awsRegion) {
+        logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
+        process.env.AWS_REGION = config.awsRegion;
+      }
+
+      logger.setLogLevel(options.logLevel);
+      logger.debug(`Configuration: ${JSON.stringify(configManager.getConfig())}`);
+    } catch (error) {
+      handleError(error);
       process.exit(1);
     }
-
-    if (config.modelAlias) {
-      config.modelId = resolveModelAlias(config.defaultProvider, config.modelAlias);
-    }
-
-    // Very important to set the AWS profile and region before creating any provider instances
-    console.log(config);
-    
-    if(config.awsProfile) {
-      logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
-      process.env.AWS_PROFILE = config.awsProfile;
-    }
-    if(config.awsRegion) {
-      logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
-      process.env.AWS_REGION = config.awsRegion;
-    }
-
-    logger.setLogLevel(options.logLevel);
-    logger.debug(`Configuration: ${JSON.stringify(config)}`);
   });
 
 // Register commands

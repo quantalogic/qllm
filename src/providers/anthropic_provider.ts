@@ -2,33 +2,39 @@ import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
 import { getCredentials } from '../credentials';
-
+import { providerRegistry } from './provider_registry';
+import { logger } from '../utils/logger';
 
 export const DEFAULT_MAX_TOKENS = 1024;
 
-
 export class AnthropicProvider implements LLMProvider {
+  private client: AnthropicBedrock | null = null;
 
-  constructor(private awsProfile: string, private awsRegion: string, private model: string) {
-  }
+  constructor(private options: LLMProviderOptions) {}
 
-  async getClient() {
-    let credentials = await getCredentials(this.awsProfile, this.awsRegion);
-    const client = new AnthropicBedrock({
-      awsSessionToken: credentials.sessionToken,
-      awsRegion: this.awsRegion,
-      awsAccessKey: credentials.accessKeyId,
-      awsSecretKey: credentials.secretAccessKey,
-    });
-    return client;
+  private async getClient(): Promise<AnthropicBedrock> {
+    if (!this.client) {
+      try {
+        const credentials = await getCredentials(this.options.awsProfile!, this.options.awsRegion!);
+        this.client = new AnthropicBedrock({
+          awsSessionToken: credentials.sessionToken,
+          awsRegion: this.options.awsRegion,
+          awsAccessKey: credentials.accessKeyId,
+          awsSecretKey: credentials.secretAccessKey,
+        });
+      } catch (error) {
+        logger.error(`Failed to initialize Anthropic client: ${error}`);
+        throw new AuthenticationError('Failed to initialize Anthropic client', 'Anthropic');
+      }
+    }
+    return this.client;
   }
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
     try {
-      const model = options.model || this.model;
       const client = await this.getClient();
       const response = await client.messages.create({
-        model: model,
+        model: options.model,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topP,
@@ -49,7 +55,7 @@ export class AnthropicProvider implements LLMProvider {
     try {
       const client = await this.getClient();
       const stream = client.messages.stream({
-        model: options.model || this.model,
+        model: options.model || this.options.model,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topP,
@@ -78,4 +84,9 @@ export class AnthropicProvider implements LLMProvider {
       throw new InvalidRequestError(`Anthropic request failed: ${error.message}`, 'Anthropic');
     }
   }
+}
+
+export function register() {
+// Register the Anthropic provider
+providerRegistry.registerProvider('anthropic', (options) => new AnthropicProvider(options));
 }
