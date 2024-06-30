@@ -1,7 +1,6 @@
 import { LLMProvider } from './llm_provider';
 import { AnthropicProvider } from './anthropic_provider';
 import { OpenAIProvider } from './openai_provider';
-import { getAndRefreshCredentials } from '../credentials';
 import { ProviderName } from '../config/types';
 import { logger } from '../utils/logger';
 import { configManager } from '../utils/configuration_manager';
@@ -15,7 +14,7 @@ export class ProviderFactory {
   private static instances: Map<string, LLMProvider> = new Map();
 
   static async createProvider(config: ProviderConfig): Promise<LLMProvider> {
-    const key = `${config.type}-${config.model || ''}`;
+    const key = `${config.type}`;
 
     const appConfig = configManager.getConfig();
 
@@ -34,8 +33,7 @@ export class ProviderFactory {
           case 'anthropic':
             const awsProfile = appConfig.awsProfile;
             const awsRegion = appConfig.awsRegion;
-            let credentials = await getAndRefreshCredentials(awsProfile, awsRegion);
-            provider = new AnthropicProvider(credentials, awsRegion, model);
+            provider = new AnthropicProvider(awsProfile, awsRegion, model);
             break;
           // Add cases for other providers here
           case 'openai':

@@ -15,6 +15,7 @@
     "@anthropic-ai/bedrock-sdk": "^0.10.0",
     "@types/node": "^20.14.8",
     "@types/prompts": "^2.4.9",
+    "aws-sdk": "^2.1651.0",
     "cli-spinner": "^0.2.10",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",

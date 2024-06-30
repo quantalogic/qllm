@@ -4,7 +4,6 @@ import { ProviderName } from '../config/types';
 import { logger } from './logger';
 import * as dotenv from 'dotenv';
 import { EventEmitter } from 'events';
-import { getDefaultModel } from '../config/model_aliases';
 
 export interface AppConfig {
   awsProfile: string;
@@ -39,11 +38,11 @@ class ConfigurationManager extends EventEmitter {
 
   private async loadEnvFile(): Promise<void> {
     try {
-      logger.debug(`Attempting to load .env file from: ${this.envPath}`);
+      //logger.debug(`Attempting to load .env file from: ${this.envPath}`);
       const envContent = await fs.readFile(this.envPath, 'utf-8');
-      logger.debug(`Successfully read .env file. Content length: ${envContent.length}`);
+      //logger.debug(`Successfully read .env file. Content length: ${envContent.length}`);
       this.envFileValues = dotenv.parse(envContent);
-      logger.debug(`Parsed .env file. Number of values: ${Object.keys(this.envFileValues).length}`);
+      //logger.debug(`Parsed .env file. Number of values: ${Object.keys(this.envFileValues).length}`);
     } catch (error) {
       logger.error(`Error loading .env file: ${error}`);
       this.envFileValues = {};

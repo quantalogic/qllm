@@ -1,28 +1,33 @@
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
-import { AwsCredentialIdentity } from "@aws-sdk/types";
+import { getAndRefreshCredentials } from '../credentials';
+import { logger } from '../utils/logger';
 
 
 export const DEFAULT_MAX_TOKENS = 1024;
 
 export class AnthropicProvider implements LLMProvider {
-  private client: AnthropicBedrock;
 
-  constructor(private credentials: AwsCredentialIdentity,private awsRegion: string, private model: string) {
-    console.log('credentials', JSON.stringify(this.credentials, null, 2));
-    console.log(`AWS region: ${awsRegion}`);
-    this.client = new AnthropicBedrock({
-      awsAccessKey: this.credentials.accessKeyId,
-      awsSecretKey: this.credentials.secretAccessKey,
-      awsSessionToken: this.credentials.sessionToken,
+  constructor(private awsProfile: string, private awsRegion: string, private model: string) {
+  }
+
+  async getClient() {
+    logger.debug(`Creating new Anthropic client for profile: ${this.awsProfile}, region: ${this.awsRegion}`);
+    let credentials = await getAndRefreshCredentials(this.awsProfile, this.awsRegion);
+    return new AnthropicBedrock({
+      awsAccessKey: credentials.accessKeyId,
+      awsSecretKey: credentials.secretAccessKey,
+      awsSessionToken: credentials.sessionToken,
       awsRegion: this.awsRegion,
+      timeout: 60000,
     });
   }
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
     try {
-      const response = await this.client.messages.create({
+      const client = await this.getClient();
+      const response = await client.messages.create({
         model: options.model || this.model,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
@@ -42,7 +47,8 @@ export class AnthropicProvider implements LLMProvider {
 
   async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
     try {
-      const stream = this.client.messages.stream({
+      const client = await this.getClient();
+      const stream = client.messages.stream({
         model: options.model || this.model,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
