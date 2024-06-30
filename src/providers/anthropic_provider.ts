@@ -2,7 +2,7 @@ import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
 import { AwsCredentialIdentity } from "@aws-sdk/types";
-import { getConfig } from '../config/app_config';
+import { configManager } from '../utils/configuration_manager';
 
 export const DEFAULT_MAX_TOKENS = 1024;
 
@@ -11,7 +11,7 @@ export class AnthropicProvider implements LLMProvider {
   private model: string;
 
   constructor(credentials: AwsCredentialIdentity, model?: string) {
-    const config = getConfig();
+    const config = configManager.getConfig();
     this.client = new AnthropicBedrock({
       awsAccessKey: credentials.accessKeyId,
       awsSecretKey: credentials.secretAccessKey,

@@ -1,11 +1,9 @@
 import { Command } from 'commander';
-import fs from 'fs/promises';
-import path from 'path';
 import { logger } from '../utils/logger';
 import { Spinner } from '../utils/spinner';
 import { ProviderName } from '../config/types';
 import { providerConfigs } from '../config/model_aliases';
-import { getConfig, initConfig } from '../config/app_config';
+import { AppConfig, configManager } from '../utils/configuration_manager';
 
 export function createConfigCommand(): Command {
   const configCommand = new Command('config')
@@ -39,8 +37,7 @@ export function createConfigCommand(): Command {
 }
 
 function showCurrentConfiguration(): void {
-  initConfig();
-  const config = getConfig();
+  const config = configManager.getConfig();
   logger.info('Current configuration:');
   logger.info(`AWS Profile: ${config.awsProfile || 'Not set'}`);
   logger.info(`AWS Region: ${config.awsRegion || 'Not set'}`);
@@ -58,22 +55,21 @@ function showCurrentConfiguration(): void {
 }
 
 async function updateConfiguration(options: any): Promise<void> {
-  const envPath = path.resolve(__dirname, '../../.env');
-  let envContent = await fs.readFile(envPath, 'utf-8');
+  const updates: Partial<AppConfig> = {};
 
   if (options.setProfile) {
-    envContent = updateEnvVariable(envContent, 'AWS_PROFILE', options.setProfile);
+    updates.awsProfile = options.setProfile;
     logger.info(`AWS Profile updated to: ${options.setProfile}`);
   }
 
   if (options.setRegion) {
-    envContent = updateEnvVariable(envContent, 'AWS_REGION', options.setRegion);
+    updates.awsRegion = options.setRegion;
     logger.info(`AWS Region updated to: ${options.setRegion}`);
   }
 
   if (options.setProvider) {
     if (isValidProvider(options.setProvider)) {
-      envContent = updateEnvVariable(envContent, 'DEFAULT_PROVIDER', options.setProvider);
+      updates.defaultProvider = options.setProvider;
       logger.info(`Default Provider updated to: ${options.setProvider}`);
     } else {
       logger.error(`Invalid provider: ${options.setProvider}`);
@@ -81,8 +77,7 @@ async function updateConfiguration(options: any): Promise<void> {
   }
 
   if (options.setModel) {
-    initConfig();
-    const config = getConfig();
+    const config = configManager.getConfig();
     const provider = config.defaultProvider;
     if (!provider) {
       logger.error('Default provider not set. Please set a default provider first.');
@@ -91,24 +86,16 @@ async function updateConfiguration(options: any): Promise<void> {
     const providerConfig = providerConfigs[provider];
     const model = providerConfig.models.find(m => m.alias === options.setModel);
     if (model) {
-      envContent = updateEnvVariable(envContent, 'MODEL_ALIAS', options.setModel);
+      updates.modelAlias = options.setModel;
       logger.info(`Default model for ${provider} updated to: ${options.setModel} (${model.modelId})`);
     } else {
       logger.error(`Invalid model alias for provider ${provider}: ${options.setModel}`);
     }
   }
 
-  await fs.writeFile(envPath, envContent);
-  logger.info('Configuration updated. Please restart the CLI for changes to take effect.');
-}
-
-function updateEnvVariable(envContent: string, variable: string, value: string): string {
-  const regex = new RegExp(`^${variable}=.*$`, 'm');
-  const newLine = `${variable}=${value}`;
-  if (envContent.match(regex)) {
-    return envContent.replace(regex, newLine);
-  } else {
-    return `${envContent}\n${newLine}`;
+  if (Object.keys(updates).length > 0) {
+    await configManager.updateConfig(updates);
+    logger.info('Configuration updated. Please restart the CLI for changes to take effect.');
   }
 }
 

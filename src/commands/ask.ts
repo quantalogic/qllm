@@ -1,7 +1,6 @@
 import { Command } from 'commander';
 import fs from 'fs/promises';
 import { ProviderFactory } from '../providers/provider_factory';
-import { getProviderConfig } from '../config/provider_config';
 import { logger } from '../utils/logger';
 import { Spinner } from '../utils/spinner';
 import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption, fileOption, outputOption, formatOption } from '../options';
@@ -10,6 +9,7 @@ import { LLMProviderOptions, Message } from '../providers/types';
 import { displayOptions } from '../utils/option_display';
 import { mergeOptions } from '../utils/option_merging';
 import { providerConfigDisplay } from '../utils/provider_config_display';
+import { configManager } from '../utils/configuration_manager';
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
@@ -26,9 +26,11 @@ export function createAskCommand(): Command {
     .action(async (options, command) => {
       try {
         const globalOptions = command.parent.opts();
-        const providerConfig = getProviderConfig(options.provider || globalOptions.provider);
-        providerConfig.model = globalOptions.resolvedModel;
-        const provider = await ProviderFactory.createProvider(providerConfig);
+        const config = configManager.getConfig();
+        const providerName = options.provider || globalOptions.provider || config.defaultProvider;
+        const model = globalOptions.resolvedModel || config.modelAlias;
+
+        const provider = await ProviderFactory.getProvider(providerName, model);
 
         let input: string;
         if (options.file) {
@@ -43,7 +45,7 @@ export function createAskCommand(): Command {
 
         const messages: Message[] = [{ role: 'user', content: input }];
 
-        providerConfigDisplay(providerConfig);
+        providerConfigDisplay({ type: providerName, model });
 
         const defaultOptions: Partial<LLMProviderOptions> = {
           maxTokens: 256,
@@ -53,6 +55,7 @@ export function createAskCommand(): Command {
         };
 
         const mergedOptions = mergeOptions(defaultOptions, options);
+
         displayOptions(mergedOptions, 'ask');
 
         const spinner = new Spinner('Generating response...');

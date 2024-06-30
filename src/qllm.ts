@@ -1,34 +1,49 @@
-#!/usr/bin/env node
+// src/qllm.ts
+
 import { Command } from 'commander';
 import { createAskCommand } from './commands/ask';
 import { createConfigCommand } from './commands/config';
 import { createStreamCommand } from './commands/stream';
 import { createChatCommand } from './commands/chat';
-import { initConfig, getConfig } from './config/app_config';
+import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
 import { resolveModelAlias } from "./config/model_aliases";
-
-initConfig();
-const config = getConfig();
 
 const program = new Command();
 
 program
   .version('1.0.0')
   .description('Multi-Provider LLM Command CLI - qllm. Created with ❤️ by @quantalogic.')
-  .option('-p, --profile <profile>', 'AWS profile to use', config.awsProfile)
-  .option('-r, --region <region>', 'AWS region to use', config.awsRegion)
-  .option('--provider <provider>', 'LLM provider to use', config.defaultProvider)
+  .option('-p, --profile <profile>', 'AWS profile to use')
+  .option('-r, --region <region>', 'AWS region to use')
+  .option('--provider <provider>', 'LLM provider to use')
   .option('--modelid <modelid>', 'Specific model ID to use')
-  .option('--model <model>', 'Model alias to use', config.modelAlias)
+  .option('--model <model>', 'Model alias to use')
   .option('--log-level <level>', 'Set log level (error, warn, info, debug)', 'info')
   .hook('preAction', (thisCommand) => {
     const options = thisCommand.opts();
+    const config = configManager.getConfig();
+    
+    configManager.setCommandLineOptions({
+      awsProfile: options.profile || config.awsProfile,
+      awsRegion: options.region || config.awsRegion,
+      defaultProvider: options.provider || config.defaultProvider,
+      modelAlias: options.model || config.modelAlias
+    });
+
+    const updatedConfig = configManager.getConfig();
+
     options.resolvedModel = resolveModelAlias(
-      options.provider,
-      options.model
+      updatedConfig.defaultProvider,
+      updatedConfig.modelAlias || "haiku"
     );
     logger.setLogLevel(options.logLevel);
+
+    logger.debug(`Using profile: ${updatedConfig.awsProfile}`);
+    logger.debug(`Using region: ${updatedConfig.awsRegion}`);
+    logger.debug(`Using provider: ${updatedConfig.defaultProvider}`);
+    logger.debug(`Using model alias: ${updatedConfig.modelAlias}`);
+    logger.debug(`Resolved model: ${options.resolvedModel}`);
   });
 
 // Register commands
