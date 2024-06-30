@@ -33,10 +33,18 @@ program
 
     const updatedConfig = configManager.getConfig();
 
-    options.resolvedModel = resolveModelAlias(
-      updatedConfig.defaultProvider,
-      updatedConfig.modelAlias || "haiku"
-    );
+    console.log(JSON.stringify(options, null, 2));
+    console.log(JSON.stringify(config, null, 2));
+
+    console.log(JSON.stringify(updatedConfig, null, 2));
+
+    if(updatedConfig.modelAlias) {
+      options.resolvedModel = resolveModelAlias(
+        updatedConfig.defaultProvider,
+        updatedConfig.modelAlias
+      );  
+    }
+
     logger.setLogLevel(options.logLevel);
 
     logger.debug(`Using profile: ${updatedConfig.awsProfile}`);

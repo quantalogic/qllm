@@ -1,14 +1,10 @@
-// src/config/model_aliases.ts
-
 import { ProviderConfig, ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
 import openaiConfig from './providers/openai';
-// Import other provider configs here
 
 export const providerConfigs: Record<ProviderName, ProviderConfig> = {
   anthropic: anthropicConfig,
   openai: openaiConfig
-  // Add other provider configs here
 };
 
 export function getProviderConfig(provider: ProviderName): ProviderConfig {

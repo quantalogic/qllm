@@ -4,6 +4,7 @@ import { ProviderName } from '../config/types';
 import { logger } from './logger';
 import * as dotenv from 'dotenv';
 import { EventEmitter } from 'events';
+import { getDefaultModel } from '../config/model_aliases';
 
 export interface AppConfig {
   awsProfile: string;
@@ -68,7 +69,8 @@ class ConfigurationManager extends EventEmitter {
   }
 
   public getConfig(): AppConfig {
-    return this.mergeConfiguration();
+    const config = this.mergeConfiguration();
+    return config;
   }
 
   public async updateConfig(updates: Partial<AppConfig>): Promise<void> {
