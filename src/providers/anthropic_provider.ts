@@ -1,7 +1,7 @@
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
-import { getAndRefreshCredentials } from '../credentials';
+import { getCredentials } from '../credentials';
 import { logger } from '../utils/logger';
 
 
@@ -14,7 +14,7 @@ export class AnthropicProvider implements LLMProvider {
 
   async getClient() {
     logger.debug(`Creating new Anthropic client for profile: ${this.awsProfile}, region: ${this.awsRegion}`);
-    let credentials = await getAndRefreshCredentials(this.awsProfile, this.awsRegion);
+    let credentials = await getCredentials(this.awsProfile);
     return new AnthropicBedrock({
       awsAccessKey: credentials.accessKeyId,
       awsSecretKey: credentials.secretAccessKey,
