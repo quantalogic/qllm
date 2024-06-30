@@ -3,9 +3,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import { logger } from '../utils/logger';
 import { Spinner } from '../utils/spinner';
-import { AWS_PROFILE, AWS_REGION } from '../config';
 import { ProviderName } from '../config/types';
 import { providerConfigs, getProviderConfig } from '../config/model_aliases';
+import { getAwsProfile, getAwsRegion } from '../config/config';
 
 export function createConfigCommand(): Command {
   const configCommand = new Command('config')
@@ -40,9 +40,8 @@ export function createConfigCommand(): Command {
 
 function showCurrentConfiguration(): void {
   logger.info('Current configuration:');
-  logger.info(`AWS Profile: ${process.env.AWS_PROFILE || AWS_PROFILE}`);
-  logger.info(`AWS Region: ${process.env.AWS_REGION || AWS_REGION}`);
-  logger.info(`Default Provider: ${process.env.DEFAULT_PROVIDER || 'Not set'}`);
+  logger.info(`AWS Profile: ${getAwsProfile() || 'Not set'}`);
+  logger.info(`AWS Region: ${getAwsRegion() || 'Not set'}`);
   
   Object.entries(providerConfigs).forEach(([provider, config]) => {
     logger.info(`\nProvider: ${provider}`);

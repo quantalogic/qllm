@@ -8,7 +8,7 @@ import { createChatCommand } from './commands/chat';
 import { getAwsProfile, getAwsRegion, getDefaultProvider, getModelAlias } from './config/config';
 import { logger } from './utils/logger';
 import { ProviderName } from './config/types';
-import { resolveModel } from './config';
+import {resolveModelAlias } from "./config/model_aliases";
 
 const program = new Command();
 
@@ -24,9 +24,8 @@ program
   .option('--log-level <level>', 'Set log level (error, warn, info, debug)', 'info')
   .hook('preAction', (thisCommand) => {
     const options = thisCommand.opts();
-    options.resolvedModel = resolveModel(
+    options.resolvedModel = resolveModelAlias(
       options.provider as ProviderName,
-      options.modelid,
       options.model
     );
     logger.setLogLevel(options.logLevel);

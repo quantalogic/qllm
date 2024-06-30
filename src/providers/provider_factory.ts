@@ -20,13 +20,13 @@ export class ProviderFactory {
 
     if (!this.instances.has(key)) {
       let provider: LLMProvider;
-      const region = getAwsRegion();
       const modelAlias = getModelAlias();
 
       try {
       
         switch (config.type) {
           case 'anthropic':
+            const region = getAwsRegion();
             let credentials = await getCredentials();
             credentials = await refreshCredentialsIfNeeded(credentials);
     
