@@ -1,9 +1,7 @@
-// src/providers/provider_factory.ts
-
 import { LLMProvider } from './llm_provider';
 import { AnthropicProvider } from './anthropic_provider';
 import { getCredentials, refreshCredentialsIfNeeded } from '../credentials';
-import { getAwsRegion, getModelAlias } from '../config/config';
+import { getConfig } from '../config/app_config';
 import { ProviderName } from '../config/types';
 import { logger } from '../utils/logger';
 
@@ -20,17 +18,14 @@ export class ProviderFactory {
 
     if (!this.instances.has(key)) {
       let provider: LLMProvider;
-      const modelAlias = getModelAlias();
+      const appConfig = getConfig();
 
       try {
-      
         switch (config.type) {
           case 'anthropic':
-            const region = getAwsRegion();
             let credentials = await getCredentials();
             credentials = await refreshCredentialsIfNeeded(credentials);
-    
-            provider = new AnthropicProvider(credentials, region, config.model || modelAlias);
+            provider = new AnthropicProvider(credentials, config.model || appConfig.modelAlias);
             break;
           // Add cases for other providers here
           default:

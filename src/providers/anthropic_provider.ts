@@ -2,22 +2,23 @@ import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
 import { AwsCredentialIdentity } from "@aws-sdk/types";
+import { getConfig } from '../config/app_config';
 
 export const DEFAULT_MAX_TOKENS = 1024;
-export const DEFAULT_MODEL_ID = 'anthropic.claude-3-haiku-20240307-v1:0';
 
 export class AnthropicProvider implements LLMProvider {
   private client: AnthropicBedrock;
   private model: string;
 
-  constructor(credentials: AwsCredentialIdentity, private region: string, model?: string) {
+  constructor(credentials: AwsCredentialIdentity, model?: string) {
+    const config = getConfig();
     this.client = new AnthropicBedrock({
       awsAccessKey: credentials.accessKeyId,
       awsSecretKey: credentials.secretAccessKey,
       awsSessionToken: credentials.sessionToken,
-      awsRegion: this.region,
+      awsRegion: config.awsRegion,
     });
-    this.model = model || DEFAULT_MODEL_ID;
+    this.model = model || config.modelAlias || '';
   }
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {

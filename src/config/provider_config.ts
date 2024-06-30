@@ -1,8 +1,9 @@
 // src/config/provider_config.ts
 
 import { ProviderName } from './types';
-import { getAwsRegion, getModelAlias } from './config';
+import { getConfig } from './app_config';
 import anthropicConfig from './providers/anthropic';
+
 
 export interface ProviderConfig {
   type: ProviderName;
@@ -14,15 +15,13 @@ export interface ProviderConfig {
 const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
   anthropic: {
     type: 'anthropic',
-    region: getAwsRegion(),
-    model: getModelAlias() || anthropicConfig.defaultModel,
+    region: getConfig().awsRegion,
+    model: getConfig().modelAlias || anthropicConfig.defaultModel,
   },
   // Add configurations for other providers here as needed
 };
 
-export const DEFAULT_PROVIDER: ProviderName = 'anthropic';
-
-export function getProviderConfig(providerName: ProviderName = DEFAULT_PROVIDER): ProviderConfig {
+export function getProviderConfig(providerName: ProviderName = getConfig().defaultProvider): ProviderConfig {
   const config = PROVIDER_CONFIGS[providerName];
   if (!config) {
     throw new Error(`Unknown provider: ${providerName}`);
@@ -40,4 +39,8 @@ export function updateProviderConfig(providerName: ProviderName, updates: Partia
 
 export function getAllProviderConfigs(): Record<ProviderName, ProviderConfig> {
   return { ...PROVIDER_CONFIGS };
+}
+
+function initConfig() {
+  throw new Error('Function not implemented.');
 }

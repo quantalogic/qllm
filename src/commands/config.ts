@@ -4,8 +4,8 @@ import path from 'path';
 import { logger } from '../utils/logger';
 import { Spinner } from '../utils/spinner';
 import { ProviderName } from '../config/types';
-import { providerConfigs, getProviderConfig } from '../config/model_aliases';
-import { getAwsProfile, getAwsRegion } from '../config/config';
+import { providerConfigs } from '../config/model_aliases';
+import { getConfig, initConfig } from '../config/app_config';
 
 export function createConfigCommand(): Command {
   const configCommand = new Command('config')
@@ -39,16 +39,20 @@ export function createConfigCommand(): Command {
 }
 
 function showCurrentConfiguration(): void {
+  initConfig();
+  const config = getConfig();
   logger.info('Current configuration:');
-  logger.info(`AWS Profile: ${getAwsProfile() || 'Not set'}`);
-  logger.info(`AWS Region: ${getAwsRegion() || 'Not set'}`);
-  
-  Object.entries(providerConfigs).forEach(([provider, config]) => {
+  logger.info(`AWS Profile: ${config.awsProfile || 'Not set'}`);
+  logger.info(`AWS Region: ${config.awsRegion || 'Not set'}`);
+  logger.info(`Default Provider: ${config.defaultProvider || 'Not set'}`);
+  logger.info(`Model Alias: ${config.modelAlias || 'Not set'}`);
+
+  Object.entries(providerConfigs).forEach(([provider, providerConfig]) => {
     logger.info(`\nProvider: ${provider}`);
-    logger.info(`Default Model: ${config.defaultModel}`);
+    logger.info(`Default Model: ${providerConfig.defaultModel}`);
     logger.info('Available models:');
-    config.models.forEach(model => {
-      logger.info(`  - ${model.alias}: ${model.modelId}`);
+    providerConfig.models.forEach(model => {
+      logger.info(` - ${model.alias}: ${model.modelId}`);
     });
   });
 }
@@ -77,15 +81,17 @@ async function updateConfiguration(options: any): Promise<void> {
   }
 
   if (options.setModel) {
-    const provider = process.env.DEFAULT_PROVIDER as ProviderName;
+    initConfig();
+    const config = getConfig();
+    const provider = config.defaultProvider;
     if (!provider) {
       logger.error('Default provider not set. Please set a default provider first.');
       return;
     }
-    const providerConfig = getProviderConfig(provider);
+    const providerConfig = providerConfigs[provider];
     const model = providerConfig.models.find(m => m.alias === options.setModel);
     if (model) {
-      envContent = updateEnvVariable(envContent, `${provider.toUpperCase()}_DEFAULT_MODEL`, model.modelId);
+      envContent = updateEnvVariable(envContent, 'MODEL_ALIAS', options.setModel);
       logger.info(`Default model for ${provider} updated to: ${options.setModel} (${model.modelId})`);
     } else {
       logger.error(`Invalid model alias for provider ${provider}: ${options.setModel}`);
