@@ -1,30 +1,43 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import { ProviderType } from '../providers/provider_factory';
+// src/config/provider_config.ts
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+import { ProviderName } from './types';
+import { getAwsRegion, getModelAlias } from './config';
+import anthropicConfig from './providers/anthropic';
 
 export interface ProviderConfig {
-  type: ProviderType;
+  type: ProviderName;
   region?: string;
   apiKey?: string;
   model?: string;
 }
 
-export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
+const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
   anthropic: {
     type: 'anthropic',
-    region: process.env.AWS_REGION || 'us-east-1',
+    region: getAwsRegion(),
+    model: getModelAlias() || anthropicConfig.defaultModel,
   },
-  // Add configurations for other providers here
+  // Add configurations for other providers here as needed
 };
 
-export const DEFAULT_PROVIDER = 'anthropic';
+export const DEFAULT_PROVIDER: ProviderName = 'anthropic';
 
-export function getProviderConfig(providerName: string = DEFAULT_PROVIDER): ProviderConfig {
+export function getProviderConfig(providerName: ProviderName = DEFAULT_PROVIDER): ProviderConfig {
   const config = PROVIDER_CONFIGS[providerName];
   if (!config) {
     throw new Error(`Unknown provider: ${providerName}`);
   }
-  return config;
+  return { ...config };
+}
+
+export function updateProviderConfig(providerName: ProviderName, updates: Partial<ProviderConfig>): void {
+  const config = PROVIDER_CONFIGS[providerName];
+  if (!config) {
+    throw new Error(`Unknown provider: ${providerName}`);
+  }
+  Object.assign(config, updates);
+}
+
+export function getAllProviderConfigs(): Record<ProviderName, ProviderConfig> {
+  return { ...PROVIDER_CONFIGS };
 }
