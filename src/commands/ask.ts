@@ -9,6 +9,7 @@ import { formatOutput, writeOutput } from '../helpers/output_helper';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { displayOptions } from '../utils/option_display';
 import { mergeOptions } from '../utils/option_merging';
+import { providerConfigDisplay } from '../utils/provider_config_display';
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
@@ -42,8 +43,7 @@ export function createAskCommand(): Command {
 
         const messages: Message[] = [{ role: 'user', content: input }];
 
-        logger.debug(`🤖 Using provider: ${providerConfig.type}`);
-        logger.debug(`🤖 Using model: ${providerConfig.model}`);
+        providerConfigDisplay(providerConfig);
 
         const defaultOptions: Partial<LLMProviderOptions> = {
           maxTokens: 256,

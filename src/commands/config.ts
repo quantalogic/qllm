@@ -3,7 +3,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import { logger } from '../utils/logger';
 import { Spinner } from '../utils/spinner';
-import { AWS_PROFILE, AWS_REGION, MODEL_ALIASES, DEFAULT_MODEL_ALIAS } from '../config';
+import { AWS_PROFILE, AWS_REGION } from '../config';
+import { ProviderName } from '../config/types';
+import { providerConfigs, getProviderConfig } from '../config/model_aliases';
 
 export function createConfigCommand(): Command {
   const configCommand = new Command('config')
@@ -11,8 +13,8 @@ export function createConfigCommand(): Command {
     .option('-s, --show', 'Show current configuration')
     .option('--set-profile <profile>', 'Set AWS profile')
     .option('--set-region <region>', 'Set AWS region')
-    .option('--set-modelid <modelid>', 'Set specific model ID')
-    .option('--set-model <model>', 'Set model alias', Object.keys(MODEL_ALIASES))
+    .option('--set-provider <provider>', 'Set default provider')
+    .option('--set-model <model>', 'Set default model for the provider')
     .action(async (options) => {
       const spinner = new Spinner('Processing configuration...');
       try {
@@ -40,9 +42,16 @@ function showCurrentConfiguration(): void {
   logger.info('Current configuration:');
   logger.info(`AWS Profile: ${process.env.AWS_PROFILE || AWS_PROFILE}`);
   logger.info(`AWS Region: ${process.env.AWS_REGION || AWS_REGION}`);
-  logger.info(`Model ID: ${process.env.MODEL_ID || 'Not set'}`);
-  logger.info(`Available model aliases: ${Object.keys(MODEL_ALIASES).join(', ')}`);
-  logger.info(`Default model alias: ${DEFAULT_MODEL_ALIAS}`);
+  logger.info(`Default Provider: ${process.env.DEFAULT_PROVIDER || 'Not set'}`);
+  
+  Object.entries(providerConfigs).forEach(([provider, config]) => {
+    logger.info(`\nProvider: ${provider}`);
+    logger.info(`Default Model: ${config.defaultModel}`);
+    logger.info('Available models:');
+    config.models.forEach(model => {
+      logger.info(`  - ${model.alias}: ${model.modelId}`);
+    });
+  });
 }
 
 async function updateConfiguration(options: any): Promise<void> {
@@ -59,24 +68,28 @@ async function updateConfiguration(options: any): Promise<void> {
     logger.info(`AWS Region updated to: ${options.setRegion}`);
   }
 
-  if (options.setModelid && options.setModel) {
-    logger.error('Cannot set both model ID and model alias. Please use only one.');
-    return;
-  }
-
-  if (options.setModelid) {
-    envContent = updateEnvVariable(envContent, 'MODEL_ID', options.setModelid);
-    logger.info(`Model ID updated to: ${options.setModelid}`);
+  if (options.setProvider) {
+    if (isValidProvider(options.setProvider)) {
+      envContent = updateEnvVariable(envContent, 'DEFAULT_PROVIDER', options.setProvider);
+      logger.info(`Default Provider updated to: ${options.setProvider}`);
+    } else {
+      logger.error(`Invalid provider: ${options.setProvider}`);
+    }
   }
 
   if (options.setModel) {
-    const resolvedModel = MODEL_ALIASES[options.setModel as keyof typeof MODEL_ALIASES];
-    if (resolvedModel) {
-      envContent = updateEnvVariable(envContent, 'MODEL_ID', resolvedModel);
-      logger.info(`Model alias set to: ${options.setModel} (${resolvedModel})`);
-    } else {
-      logger.error(`Invalid model alias: ${options.setModel}`);
+    const provider = process.env.DEFAULT_PROVIDER as ProviderName;
+    if (!provider) {
+      logger.error('Default provider not set. Please set a default provider first.');
       return;
+    }
+    const providerConfig = getProviderConfig(provider);
+    const model = providerConfig.models.find(m => m.alias === options.setModel);
+    if (model) {
+      envContent = updateEnvVariable(envContent, `${provider.toUpperCase()}_DEFAULT_MODEL`, model.modelId);
+      logger.info(`Default model for ${provider} updated to: ${options.setModel} (${model.modelId})`);
+    } else {
+      logger.error(`Invalid model alias for provider ${provider}: ${options.setModel}`);
     }
   }
 
@@ -87,10 +100,13 @@ async function updateConfiguration(options: any): Promise<void> {
 function updateEnvVariable(envContent: string, variable: string, value: string): string {
   const regex = new RegExp(`^${variable}=.*$`, 'm');
   const newLine = `${variable}=${value}`;
-
   if (envContent.match(regex)) {
     return envContent.replace(regex, newLine);
   } else {
     return `${envContent}\n${newLine}`;
   }
+}
+
+function isValidProvider(provider: string): provider is ProviderName {
+  return Object.keys(providerConfigs).includes(provider);
 }

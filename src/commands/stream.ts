@@ -8,6 +8,7 @@ import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinner } from '../helpers/stream_helper';
 import { displayOptions } from '../utils/option_display';
 import { mergeOptions } from '../utils/option_merging';
+import { providerConfigDisplay } from '../utils/provider_config_display';
 
 
 export function createStreamCommand(): Command {
@@ -44,16 +45,16 @@ export function createStreamCommand(): Command {
 
 
         const defaultOptions: Partial<LLMProviderOptions> = {
-            maxTokens: 256,
-            temperature: 0.7,
-            topP: 1,
-            topK: 250,
+          maxTokens: 256,
+          temperature: 0.7,
+          topP: 1,
+          topK: 250,
         };
 
-       const mergedOptions = mergeOptions(defaultOptions, options);
+        const mergedOptions = mergeOptions(defaultOptions, options);
 
-        logger.info(`Using provider: ${providerConfig.type}`);
-        logger.info(`Using model: ${providerConfig.model}`);
+        providerConfigDisplay(providerConfig);
+
 
         const providerOptions: LLMProviderOptions = {
           maxTokens: mergedOptions.maxTokens,

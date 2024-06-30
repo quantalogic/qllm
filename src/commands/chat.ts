@@ -8,6 +8,7 @@ import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinner } from '../helpers/stream_helper';
 import { displayOptions } from '../utils/option_display';
 import { mergeOptions } from '../utils/option_merging';
+import { providerConfigDisplay } from '../utils/provider_config_display';
 
 export function createChatCommand(): Command {
     const chatCommand = new Command('chat')
@@ -38,8 +39,8 @@ export function createChatCommand(): Command {
 
                 const mergedOptions = mergeOptions(defaultOptions, options);
 
-                logger.info(`Using provider: ${providerConfig.type}`);
-                logger.info(`Using model: ${providerConfig.model}`);
+                providerConfigDisplay(providerConfig);
+
 
                 const providerOptions: LLMProviderOptions = {
                     maxTokens: mergedOptions.maxTokens,
