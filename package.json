@@ -18,6 +18,7 @@
     "cli-spinner": "^0.2.10",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
+    "openai": "^4.52.2",
     "prompts": "^2.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2",

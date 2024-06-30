@@ -13,4 +13,4 @@ export interface ModelAlias {
   
   //export type ProviderName = 'anthropic' | 'openai' | 'google'; // Add other providers as needed
 
-export type ProviderName = 'anthropic' 
+  export type ProviderName = 'anthropic' | 'openai';

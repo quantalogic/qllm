@@ -1,5 +1,6 @@
 import { LLMProvider } from './llm_provider';
 import { AnthropicProvider } from './anthropic_provider';
+import { OpenAIProvider } from './openai_provider';
 import { getCredentials, refreshCredentialsIfNeeded } from '../credentials';
 import { getConfig } from '../config/app_config';
 import { ProviderName } from '../config/types';
@@ -28,6 +29,13 @@ export class ProviderFactory {
             provider = new AnthropicProvider(credentials, config.model || appConfig.modelAlias);
             break;
           // Add cases for other providers here
+          case 'openai':
+          const openaiApiKey = process.env.OPENAI_API_KEY;
+          if (!openaiApiKey) {
+            throw new Error('OpenAI API key not found in environment variables');
+          }
+          provider = new OpenAIProvider(openaiApiKey, config.model || appConfig.modelAlias);
+      break; 
           default:
             throw new Error(`Unsupported provider type: ${config.type}`);
         }
