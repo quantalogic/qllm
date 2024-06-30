@@ -2,9 +2,9 @@ import { ProviderConfig, ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
 import openaiConfig from './providers/openai';
 
-export const providerConfigs: Record<ProviderName, ProviderConfig> = {
+const providerConfigs: Record<ProviderName, ProviderConfig> = {
   anthropic: anthropicConfig,
-  openai: openaiConfig
+  openai: openaiConfig,
 };
 
 export function getProviderConfig(provider: ProviderName): ProviderConfig {

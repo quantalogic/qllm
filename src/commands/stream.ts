@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import fs from 'fs/promises';
 import { ProviderFactory } from '../providers/provider_factory';
 import { logger } from '../utils/logger';
-import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption, fileOption, outputOption, formatOption } from '../options';
+import { cliOptions } from '../options';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinner } from '../helpers/stream_helper';
 import { displayOptions } from '../utils/option_display';
@@ -13,23 +13,22 @@ import { configManager } from '../utils/configuration_manager';
 export function createStreamCommand(): Command {
   const streamCommand = new Command('stream')
     .description('Stream a response from the LLM')
-    .option('--provider <provider>', 'LLM provider to use')
-    .addOption(maxTokensOption)
-    .addOption(temperatureOption)
-    .addOption(topPOption)
-    .addOption(topKOption)
-    .addOption(systemOption)
-    .addOption(fileOption)
-    .addOption(outputOption)
-    .addOption(formatOption)
+    .addOption(cliOptions.maxTokensOption)
+    .addOption(cliOptions.temperatureOption)
+    .addOption(cliOptions.topPOption)
+    .addOption(cliOptions.topKOption)
+    .addOption(cliOptions.systemOption)
+    .addOption(cliOptions.fileOption)
+    .addOption(cliOptions.outputOption)
+    .addOption(cliOptions.formatOption)
     .action(async (options, command) => {
       try {
-        const globalOptions = command.parent.opts();
+        const globalOptions = command.parent?.opts();
         const config = configManager.getConfig();
         const providerName = options.provider || globalOptions.provider || config.defaultProvider;
         const model = globalOptions.resolvedModel || config.modelAlias || "";
 
-        const provider = await ProviderFactory.getProvider(providerName, model);
+        const provider = await ProviderFactory.getProvider(providerName);
 
         let input: string;
         if (options.file) {
@@ -65,10 +64,10 @@ export function createStreamCommand(): Command {
 
         displayOptions(providerOptions, 'stream');
 
-        await handleStreamWithSpinner(provider, messages, providerOptions);
+        const fullResponse = await handleStreamWithSpinner(provider, messages, providerOptions);
 
         if (options.output) {
-          await fs.writeFile(options.output, input);
+          await fs.writeFile(options.output, fullResponse);
           logger.info(`Full response written to ${options.output}`);
         }
       } catch (error) {

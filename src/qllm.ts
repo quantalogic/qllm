@@ -1,8 +1,5 @@
-// src/qllm.ts
-
 import { Command } from 'commander';
 import { createAskCommand } from './commands/ask';
-import { createConfigCommand } from './commands/config';
 import { createStreamCommand } from './commands/stream';
 import { createChatCommand } from './commands/chat';
 import { configManager } from './utils/configuration_manager';
@@ -20,45 +17,48 @@ program
   .option('--modelid <modelid>', 'Specific model ID to use')
   .option('--model <model>', 'Model alias to use')
   .option('--log-level <level>', 'Set log level (error, warn, info, debug)', 'info')
-  .hook('preAction', (thisCommand) => {
+  .hook('preAction', async (thisCommand) => {
     const options = thisCommand.opts();
-    const config = configManager.getConfig();
-
-    const awsProfile = options.profile || config.awsProfile;
-
-    // Make sure the AWS_PROFILE environment variable is set
-    // AWS Bedrock SDK uses this to determine the profile to use
-    process.env.AWS_PROFILE = awsProfile;
+    await configManager.loadConfig();
     
-    configManager.setCommandLineOptions({
-      awsProfile: awsProfile,
-      awsRegion: options.region || config.awsRegion,
-      defaultProvider: options.provider || config.defaultProvider,
-      modelAlias: options.model || config.modelAlias
+    configManager.updateConfig({
+      awsProfile: options.profile,
+      awsRegion: options.region,
+      defaultProvider: options.provider,
+      modelAlias: options.model,
+      modelId: options.modelid,
     });
 
-    const updatedConfig = configManager.getConfig();
 
+    const config = configManager.getConfig();
+    
+    if (config.modelAlias && config.modelId) {
+      logger.error('Cannot use both model alias and model ID. Please specify only one.');
+      process.exit(1);
+    }
 
-    if(updatedConfig.modelAlias) {
-      options.resolvedModel = resolveModelAlias(
-        updatedConfig.defaultProvider,
-        updatedConfig.modelAlias
-      );  
+    if (config.modelAlias) {
+      config.modelId = resolveModelAlias(config.defaultProvider, config.modelAlias);
+    }
+
+    // Very important to set the AWS profile and region before creating any provider instances
+    console.log(config);
+    
+    if(config.awsProfile) {
+      logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
+      process.env.AWS_PROFILE = config.awsProfile;
+    }
+    if(config.awsRegion) {
+      logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
+      process.env.AWS_REGION = config.awsRegion;
     }
 
     logger.setLogLevel(options.logLevel);
-
-    logger.debug(`Using profile: ${updatedConfig.awsProfile}`);
-    logger.debug(`Using region: ${updatedConfig.awsRegion}`);
-    logger.debug(`Using provider: ${updatedConfig.defaultProvider}`);
-    logger.debug(`Using model alias: ${updatedConfig.modelAlias}`);
-    logger.debug(`Resolved model: ${options.resolvedModel}`);
+    logger.debug(`Configuration: ${JSON.stringify(config)}`);
   });
 
 // Register commands
 program.addCommand(createAskCommand());
-program.addCommand(createConfigCommand());
 program.addCommand(createStreamCommand());
 program.addCommand(createChatCommand());
 

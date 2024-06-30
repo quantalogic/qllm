@@ -25,9 +25,6 @@ export class AnthropicProvider implements LLMProvider {
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
     try {
-      console.log('Generating response...');
-      console.log(JSON.stringify(messages));
-      console.log(JSON.stringify(options));
       const model = options.model || this.model;
       const client = await this.getClient();
       const response = await client.messages.create({

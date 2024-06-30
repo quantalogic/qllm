@@ -1,6 +1,5 @@
 import { Option } from 'commander';
 
-// Helper function to parse numeric values
 function parseNumeric(value: string, min: number, max: number, defaultValue: number): number {
   const parsed = parseFloat(value);
   if (isNaN(parsed) || parsed < min || parsed > max) {
@@ -25,7 +24,7 @@ export const topKOption = new Option('--top-k <number>', 'Top K for response gen
   .default(250)
   .argParser((value) => parseNumeric(value, 1, 1000, 250));
 
-export const systemOption = new Option('-s, --system <string>', 'System message to set context');
+export const systemOption = new Option('-s, --system <message>', 'System message to set context');
 
 export const fileOption = new Option('-f, --file <path>', 'Path to input file')
   .argParser((value) => {
@@ -47,7 +46,6 @@ export const formatOption = new Option('--format <format>', 'Output format')
   .choices(['json', 'markdown', 'text'])
   .default('text');
 
-// Export all options as a single object for easier importing
 export const cliOptions = {
   maxTokensOption,
   temperatureOption,
@@ -57,16 +55,4 @@ export const cliOptions = {
   fileOption,
   outputOption,
   formatOption,
-};
-
-// Export types for use in other parts of the application
-export type CliOptions = {
-  maxTokens: number;
-  temperature: number;
-  topP: number;
-  topK: number;
-  system?: string;
-  file?: string;
-  output?: string;
-  format: 'json' | 'markdown' | 'text';
 };

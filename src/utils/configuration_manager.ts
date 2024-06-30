@@ -10,23 +10,22 @@ export interface AppConfig {
   awsRegion: string;
   defaultProvider: ProviderName;
   modelAlias?: string;
+  modelId?: string;
 }
-
-type ConfigLayer = Partial<AppConfig>;
 
 class ConfigurationManager extends EventEmitter {
   private static instance: ConfigurationManager;
-  private envVariables: ConfigLayer = {};
-  private envFileValues: ConfigLayer = {};
-  private commandLineOptions: ConfigLayer = {};
+  private config: AppConfig;
   private envPath: string;
 
   private constructor() {
     super();
-    const currentPath = process.cwd();
-    this.envPath = path.resolve(currentPath, '.env');
-    this.loadEnvironmentVariables();
-    this.loadEnvFile();
+    this.envPath = path.resolve(process.cwd(), '.env');
+    this.config = {
+      awsProfile: 'default',
+      awsRegion: 'us-east-1',
+      defaultProvider: 'anthropic',
+    };
   }
 
   public static getInstance(): ConfigurationManager {
@@ -36,69 +35,50 @@ class ConfigurationManager extends EventEmitter {
     return ConfigurationManager.instance;
   }
 
+  public async loadConfig(): Promise<void> {
+    await this.loadEnvFile();
+    this.loadEnvironmentVariables();
+  }
+
   private async loadEnvFile(): Promise<void> {
     try {
-      //logger.debug(`Attempting to load .env file from: ${this.envPath}`);
       const envContent = await fs.readFile(this.envPath, 'utf-8');
-      //logger.debug(`Successfully read .env file. Content length: ${envContent.length}`);
-      this.envFileValues = dotenv.parse(envContent);
-      //logger.debug(`Parsed .env file. Number of values: ${Object.keys(this.envFileValues).length}`);
+      const envValues = dotenv.parse(envContent);
+      this.updateConfig(envValues);
     } catch (error) {
       logger.error(`Error loading .env file: ${error}`);
-      this.envFileValues = {};
     }
   }
 
   private loadEnvironmentVariables(): void {
-    this.envVariables = {
+    this.updateConfig({
       awsProfile: process.env.AWS_PROFILE,
       awsRegion: process.env.AWS_REGION,
       defaultProvider: process.env.DEFAULT_PROVIDER as ProviderName,
       modelAlias: process.env.MODEL_ALIAS,
-    };
+      modelId: process.env.MODEL_ID,
+    });
   }
 
-  private mergeConfiguration(): AppConfig {
-    return {
-      awsProfile: this.commandLineOptions.awsProfile || this.envFileValues.awsProfile || this.envVariables.awsProfile || 'default',
-      awsRegion: this.commandLineOptions.awsRegion || this.envFileValues.awsRegion || this.envVariables.awsRegion || 'us-east-1',
-      defaultProvider: this.commandLineOptions.defaultProvider || this.envFileValues.defaultProvider || this.envVariables.defaultProvider || 'anthropic',
-      modelAlias: this.commandLineOptions.modelAlias || this.envFileValues.modelAlias || this.envVariables.modelAlias,
+  public updateConfig(updates: Partial<AppConfig>): void {
+    this.config = {
+      ...this.config,
+      ...Object.fromEntries(
+        Object.entries(updates).filter(([_, value]) => value !== undefined)
+      ),
     };
+    this.emit('configUpdated', this.config);
   }
 
   public getConfig(): AppConfig {
-    const config = this.mergeConfiguration();
-    return config;
+    return { ...this.config };
   }
 
-  public async updateConfig(updates: Partial<AppConfig>): Promise<void> {
-    Object.assign(this.envFileValues, updates);
-    await this.updateEnvFile();
-    this.emit('configUpdated', this.getConfig());
-  }
-
-  private async updateEnvFile(): Promise<void> {
-    let envContent = '';
-    for (const [key, value] of Object.entries(this.envFileValues)) {
-      if (value !== undefined) {
-        const envKey = key.toUpperCase();
-        envContent += `${envKey}=${value}\n`;
-      }
-    }
+  public async saveConfig(): Promise<void> {
+    const envContent = Object.entries(this.config)
+      .map(([key, value]) => `${key.toUpperCase()}=${value}`)
+      .join('\n');
     await fs.writeFile(this.envPath, envContent);
-    await this.loadEnvFile();
-  }
-
-  public async reloadConfig(): Promise<void> {
-    this.loadEnvironmentVariables();
-    await this.loadEnvFile();
-    this.emit('configUpdated', this.getConfig());
-  }
-
-  public setCommandLineOptions(options: Partial<AppConfig>): void {
-    this.commandLineOptions = options;
-    this.emit('configUpdated', this.getConfig());
   }
 }
 

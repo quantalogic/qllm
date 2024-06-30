@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import { ProviderFactory } from '../providers/provider_factory';
 import { logger } from '../utils/logger';
 import { Spinner } from '../utils/spinner';
-import { maxTokensOption, temperatureOption, topPOption, topKOption, systemOption, fileOption, outputOption, formatOption } from '../options';
+import { cliOptions } from '../options';
 import { formatOutput, writeOutput } from '../helpers/output_helper';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { displayOptions } from '../utils/option_display';
@@ -14,23 +14,22 @@ import { configManager } from '../utils/configuration_manager';
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
     .description('Ask a question to the LLM')
-    .option('--provider <provider>', 'LLM provider to use')
-    .addOption(maxTokensOption)
-    .addOption(temperatureOption)
-    .addOption(topPOption)
-    .addOption(topKOption)
-    .addOption(systemOption)
-    .addOption(fileOption)
-    .addOption(outputOption)
-    .addOption(formatOption)
+    .addOption(cliOptions.maxTokensOption)
+    .addOption(cliOptions.temperatureOption)
+    .addOption(cliOptions.topPOption)
+    .addOption(cliOptions.topKOption)
+    .addOption(cliOptions.systemOption)
+    .addOption(cliOptions.fileOption)
+    .addOption(cliOptions.outputOption)
+    .addOption(cliOptions.formatOption)
     .action(async (options, command) => {
       try {
-        const globalOptions = command.parent.opts();
+        const globalOptions = command.parent?.opts();
         const config = configManager.getConfig();
         const providerName = options.provider || globalOptions.provider || config.defaultProvider;
         const model = globalOptions.resolvedModel || config.modelAlias || "";
 
-        const provider = await ProviderFactory.getProvider(providerName, model);
+        const provider = await ProviderFactory.getProvider(providerName);
 
         let input: string;
         if (options.file) {
@@ -68,7 +67,11 @@ export function createAskCommand(): Command {
         const output = formatOutput({ content: [{ text: response }] }, options.format);
         await writeOutput(output, options.output);
       } catch (error) {
-        logger.error(`An error occurred: ${error}`);
+        if (error instanceof Error) {
+          logger.error(`An error occurred: ${error.message}`);
+        } else {
+          logger.error(`An error occurred: ${error}`);
+        }
       }
     });
 
