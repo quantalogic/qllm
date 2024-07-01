@@ -39,7 +39,7 @@ QLLM is a command-line tool that allows you to interact with various Large Langu
 
 - Node.js (v16 or later)
 - npm (v6 or later)
-- AWS account with Bedrock access (for Anthropic models)
+- AWS account with AWS Bedrock access (for Anthropic models)
 
 ### Installation
 
