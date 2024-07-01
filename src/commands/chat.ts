@@ -41,7 +41,17 @@ export function createChatCommand(): Command {
         const mergedOptions = mergeOptions(defaultOptions, options);
 
         logger.debug(`providerName:  ${providerName}`);
-        displayOptions(mergedOptions, 'chat');
+
+        const providerOptions: LLMProviderOptions = {
+          maxTokens: mergedOptions.maxTokens,
+          temperature: mergedOptions.temperature,
+          topP: mergedOptions.topP,
+          topK: mergedOptions.topK,
+          system: mergedOptions.system,
+          model: model,
+        };
+
+        displayOptions(providerOptions, 'chat');
 
         while (true) {
           const response = await prompts({
@@ -58,7 +68,7 @@ export function createChatCommand(): Command {
           messages.push({ role: 'user', content: response.input });
 
           logger.info('🤖:');
-          const fullResponse = await handleStreamWithSpinner(provider, messages, mergedOptions);
+          const fullResponse = await handleStreamWithSpinner(provider, messages, providerOptions);
           messages.push({ role: 'assistant', content: fullResponse });
         }
       } catch (error) {

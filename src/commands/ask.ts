@@ -55,12 +55,21 @@ export function createAskCommand(): Command {
 
         const mergedOptions = mergeOptions(defaultOptions, options);
 
+        const providerOptions: LLMProviderOptions = {
+          maxTokens: mergedOptions.maxTokens,
+          temperature: mergedOptions.temperature,
+          topP: mergedOptions.topP,
+          topK: mergedOptions.topK,
+          system: mergedOptions.system,
+          model: model,
+        };
+
         displayOptions(mergedOptions, 'ask');
 
         const spinner = new Spinner('Generating response...');
         spinner.start();
 
-        const response = await provider.generateMessage(messages, mergedOptions);
+        const response = await provider.generateMessage(messages, providerOptions);
 
         spinner.succeed('Response generated');
 

@@ -63,17 +63,17 @@ QLLM is a powerful and flexible Command Line Interface (CLI) for interacting wit
 
 Ask a question:
 ```bash
-npm run cli ask "What is the capital of France?"
+ ts-node src/qllm.ts ask --max-tokens 150  --provider anthropic --profile bedrock --region us-east-1 --model haiku
 ```
 
 Start an interactive chat session:
 ```bash
-npm run cli chat
+ ts-node src/qllm.ts chat --max-tokens 150  --provider anthropic --profile bedrock --region us-east-1 --model haiku
 ```
 
 Stream a response:
 ```bash
-npm run cli stream "Explain quantum computing in simple terms"
+ ts-node src/qllm.ts stream "Write a 100-word story about a time traveler" --max-tokens 150  --provider anthropic --profile bedrock --region us-east-1 --model haiku
 ```
 
 ## 📚 Detailed Documentation
