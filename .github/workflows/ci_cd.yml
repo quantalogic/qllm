@@ -23,11 +23,10 @@ jobs:
       - name: Check if release version
         id: check_version
         run: node scripts/check_version.js
-      # Uncomment the following lines when ready to publish
-      # - name: Publish to npm
-      #   if: steps.check_version.outputs.is_release == 'true'
-      #   run: |
-      #     echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-      #     npm publish
-      #   env:
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm
+        if: steps.check_version.outputs.is_release == 'true'
+        run: |
+           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+           npm publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

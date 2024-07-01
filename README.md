@@ -31,7 +31,7 @@ QLLM is a powerful and flexible Command Line Interface (CLI) for interacting wit
 
 ### Prerequisites
 
-- Node.js (v14 or later)
+- Node.js (v16 or later)
 - npm (v6 or later)
 - AWS account with Bedrock access (for Anthropic models)
 
