@@ -1,6 +1,6 @@
 # QLLM: Multi-Provider LLM Command CLI 🚀
 
-QLLM (Quantum Logic Language Models) is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with ❤️ by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
+QLLM (QuantaLogic LLM) is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with ❤️ by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
 
 ## 🌟 Key Features
 
