@@ -15,7 +15,7 @@ export interface ProviderConfig {
 const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
   anthropic: {
     type: 'anthropic',
-    model: configManager.getConfig().modelAlias || anthropicConfig.defaultModel,
+    model: configManager.getConfig().modelAlias || anthropicConfig.defaultModel || '',
   },
   // Add configurations for other providers here as needed
   openai: {
@@ -25,7 +25,7 @@ const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
   },
 };
 
-export function getProviderConfig(providerName: ProviderName = configManager.getConfig().defaultProvider): ProviderConfig {
+export function getProviderConfig(providerName: ProviderName): ProviderConfig {
   const config = PROVIDER_CONFIGS[providerName];
   if (!config) {
     throw new Error(`Unknown provider: ${providerName}`);
