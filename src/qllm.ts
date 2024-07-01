@@ -45,11 +45,15 @@ program
       }
 
       if (config.awsProfile) {
+        // It's very important to set the AWS_PROFILE environment variable
+        // because AWS BEDROCK Anthropic uses this to determine the AWS credentials
         logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
         process.env.AWS_PROFILE = config.awsProfile;
       }
 
       if (config.awsRegion) {
+        // It's very important to set the AWS_PROFILE environment variable
+        // because AWS BEDROCK Anthropic uses this to determine the AWS credentials
         logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
         process.env.AWS_REGION = config.awsRegion;
       }

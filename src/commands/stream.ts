@@ -49,6 +49,7 @@ export function createStreamCommand(): Command {
           temperature: 0.7,
           topP: 1,
           topK: 250,
+          model: model,
         };
 
         const mergedOptions = mergeOptions(defaultOptions, options);

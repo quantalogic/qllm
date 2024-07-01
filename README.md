@@ -1,17 +1,31 @@
 # QLLM: Multi-Provider LLM Command CLI
 
-
-QLLM is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with love by @quantalogic, QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
+QLLM is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with love by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
 
 ## 🚀 Key Features
 
-- Multi-provider support (currently featuring Anthropic's Claude models)
+- Multi-provider support (currently featuring Anthropic's Claude models and OpenAI)
 - Interactive chat mode for continuous conversations
 - Streaming responses for real-time output
 - Configurable model parameters (temperature, top-p, top-k, etc.)
 - File input/output support for batch processing
 - Customizable output formats (JSON, Markdown, plain text)
 - Easy-to-use configuration management
+
+## 📚 Table of Contents
+
+- [Quick Start](#-quick-start)
+- [Detailed Documentation](#-detailed-documentation)
+- [Examples and Use Cases](#-examples-and-use-cases)
+- [Project Structure](#-project-structure)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [Testing](#-testing)
+- [Deployment](#-deployment)
+- [Roadmap](#-roadmap)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
+- [Contact](#-contact)
 
 ## 🏁 Quick Start
 
@@ -93,9 +107,12 @@ npm run cli config --show
 npm run cli config --set-profile your_profile
 npm run cli config --set-region your_region
 npm run cli config --set-model sonnet
+npm run cli config --set-provider anthropic
+
 ```
 
-Available model aliases:
+Available model aliases for AWS Bedrock Anthropic:
+
 - `sonnet`: Claude 3 Sonnet
 - `sonnet35`: Claude 3.5 Sonnet
 - `haiku`: Claude 3 Haiku (default)
@@ -112,11 +129,7 @@ npm run cli ask "Write a 100-word story about a time traveler" --max-tokens 150
 ### Analyze Code
 
 ```bash
-npm run cli stream "Explain the following code:
-function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
-}" --format markdown
+npm run cli stream "Explain the following code: function fibonacci(n) { if (n <= 1) return n; return fibonacci(n - 1) + fibonacci(n - 2); }" --format markdown
 ```
 
 ### Interactive Coding Assistant
@@ -190,15 +203,13 @@ npm install -g qllm-1.0.0.tgz
 
 ## 🗺 Roadmap
 
-- [ ] Add support for OpenAI models
-- [ ] Implement conversation memory for chat sessions
-- [ ] Create a web-based UI for QLLM
 - [ ] Add support for custom prompts and templates
-- [ ] Implement fine-tuning capabilities
+- [ ] Add support for Ollama 
+- [ ] Add support for Agents
 
 ## 📄 License
 
-This project is licensed under the ISC License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
@@ -207,9 +218,8 @@ This project is licensed under the ISC License. See the [LICENSE](LICENSE) file 
 
 ## 📞 Contact
 
-- Project Maintainer: [@quantalogic](https://github.com/quantalogic)
+- Project Maintainer: [@raphaelmansuy](https://github.com/raphaelmansuy)
 - Project Homepage: https://github.com/raphaelmansuy/qllm
-
 
 ---
 
