@@ -1,6 +1,6 @@
 {
   "name": "qllm",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "QLLM Multi-Provider LLM Command CLI",
   "main": "dist/qllm.js",
   "scripts": {
@@ -15,6 +15,9 @@
     "cli",
     "ai"
   ],
+  "bin": {
+    "qllm": "./src/qllm.ts"
+  },
   "author": "quantalogic",
   "license": "Apache-2.0",
   "dependencies": {
