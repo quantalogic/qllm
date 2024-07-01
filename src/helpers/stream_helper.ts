@@ -1,7 +1,6 @@
 import { Spinner } from '../utils/spinner';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { LLMProvider } from '../providers/llm_provider';
-import { log } from 'console';
 import { logger } from '../utils/logger';
 
 export async function handleStreamWithSpinner(
@@ -27,6 +26,7 @@ export async function handleStreamWithSpinner(
   } catch (error) {
     spinner.fail('Error during streaming');
     logger.error(`Error during streaming: ${error}`);
+    logger.debug(`Options: ${JSON.stringify(options)}`); 
     throw error;
   }
 
