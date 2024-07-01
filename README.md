@@ -2,6 +2,8 @@
 
 QLLM (QuantaLogic LLM) is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with ❤️ by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
 
+⭐ If you find QLLM useful, consider giving us a star on GitHub! It helps us reach more developers and improve the tool. ⭐
+
 ## 🌟 Key Features
 
 - 🔄 Multi-provider support (currently featuring Anthropic's Claude models and OpenAI)
