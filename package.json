@@ -1,6 +1,6 @@
 {
   "name": "qllm",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "QLLM Multi-Provider LLM Command CLI",
   "main": "dist/qllm.js",
   "scripts": {

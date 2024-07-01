@@ -3,10 +3,12 @@ import { Command } from 'commander';
 import { createAskCommand } from './commands/ask';
 import { createStreamCommand } from './commands/stream';
 import { createChatCommand } from './commands/chat';
+import { createConfigCommand} from './commands/config';
 import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
 import { resolveModelAlias } from "./config/model_aliases";
 import { handleError } from './utils/error_handler';
+import { ProviderName } from './config/types';
 
 
 const program = new Command();
@@ -40,21 +42,19 @@ program
 
       if (config.modelAlias) {
         logger.debug(`Resolving model alias: ${config.modelAlias}`);
-        const modelId = resolveModelAlias(config.defaultProvider, config.modelAlias);
+        const modelId = resolveModelAlias(config.defaultProvider as ProviderName, config.modelAlias);
         logger.debug(`Resolved model alias to: ${modelId}`);
         configManager.updateConfig({ modelId: modelId });
       }
 
       if (config.awsProfile) {
-        // It's very important to set the AWS_PROFILE environment variable
-        // because AWS BEDROCK Anthropic uses this to determine the AWS credentials
+        // This is very important for the AWS SDK to work correctly
         logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
         process.env.AWS_PROFILE = config.awsProfile;
       }
 
       if (config.awsRegion) {
-        // It's very important to set the AWS_PROFILE environment variable
-        // because AWS BEDROCK Anthropic uses this to determine the AWS credentials
+        // This is very important for the AWS SDK to work correctly
         logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
         process.env.AWS_REGION = config.awsRegion;
       }
@@ -71,6 +71,8 @@ program
 program.addCommand(createAskCommand());
 program.addCommand(createStreamCommand());
 program.addCommand(createChatCommand());
+program.addCommand(createConfigCommand());
+
 
 // Error handling for unknown commands
 program.on('command:*', () => {
