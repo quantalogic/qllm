@@ -114,6 +114,32 @@ Each command supports various options to customize the behavior of the LLM:
 > 
 > All these settings work together to help you get the exact kind of AI-generated text you're looking for, just like how different oven settings help you bake the perfect cake.
 
+
+Explanation of top-p and top-k:
+
+> ## Top-p and Top-k Sampling
+> 
+> These are methods to control text generation in language models:
+> 
+> ### Top-p (Nucleus Sampling)
+> - Selects from tokens whose cumulative probability exceeds threshold p
+> - Dynamic: adapts to probability distribution
+> - Example: p = 0.9 considers tokens up to 90% cumulative probability
+> 
+> ### Top-k Sampling
+> - Selects from k most probable tokens
+> - Fixed: always considers same number of options
+> - Example: k = 50 considers only top 50 most likely tokens
+> 
+> ### Key Differences
+> - Top-p is more flexible, adjusting to context
+> - Top-k uses a fixed cutoff regardless of probabilities
+> - Lower values: more focused output
+> - Higher values: more diverse, creative responses
+> 
+> Often used together to balance coherence and creativity in text generation.
+
+
 ### Configuration
 
 Use the `config` command to manage your QLLM settings:
