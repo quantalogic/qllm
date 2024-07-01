@@ -16,7 +16,7 @@
     "ai"
   ],
   "bin": {
-    "qllm": "./dist/qllm.js"
+    "qllm": "dist/qllm.js"
   },
   "author": "quantalogic",
   "license": "Apache-2.0",

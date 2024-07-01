@@ -25,8 +25,10 @@ jobs:
         run: node scripts/check_version.js
       - name: Publish to npm
         if: steps.check_version.outputs.is_release == 'true'
-        uses: JS-DevTools/npm-publish@v2
+        uses: actions/setup-node@v3
         with:
-          token: ${{ secrets.NPM_TOKEN }}
-          package: ./package.json
-          access: public
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
