@@ -1,8 +1,8 @@
-# QLLM: Multi-Provider LLM Command CLI
+# QLLM: Multi-Provider LLM Command CLI 🚀
 
-QLLM is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with love by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
+QLLM is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with ❤️ by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
 
-## 🚀 Key Features
+## 🌟 Key Features
 
 - Multi-provider support (currently featuring Anthropic's Claude models and OpenAI)
 - Interactive chat mode for continuous conversations
@@ -63,17 +63,17 @@ QLLM is a powerful and flexible Command Line Interface (CLI) for interacting wit
 
 Ask a question:
 ```bash
- ts-node src/qllm.ts ask --max-tokens 150  --provider anthropic --profile bedrock --region us-east-1 --model haiku
+ts-node src/qllm.ts ask "Write a 100-word story about a time traveler" --max-tokens 150 --provider anthropic --profile bedrock --region us-east-1 --model haiku
 ```
 
 Start an interactive chat session:
 ```bash
- ts-node src/qllm.ts chat --max-tokens 150  --provider anthropic --profile bedrock --region us-east-1 --model haiku
+ts-node src/qllm.ts chat --max-tokens 150 --provider anthropic --profile bedrock --region us-east-1 --model haiku
 ```
 
 Stream a response:
 ```bash
- ts-node src/qllm.ts stream "Write a 100-word story about a time traveler" --max-tokens 150  --provider anthropic --profile bedrock --region us-east-1 --model haiku
+ts-node src/qllm.ts stream "Explain quantum computing" --max-tokens 200 --provider anthropic --profile bedrock --region us-east-1 --model haiku
 ```
 
 ## 📚 Detailed Documentation
@@ -103,16 +103,14 @@ Each command supports various options to customize the behavior of the LLM:
 Use the `config` command to manage your QLLM settings:
 
 ```bash
-npm run cli config --show
-npm run cli config --set-profile your_profile
-npm run cli config --set-region your_region
-npm run cli config --set-model sonnet
-npm run cli config --set-provider anthropic
-
+ts-node src/qllm.ts config --show
+ts-node src/qllm.ts config --set-profile your_profile
+ts-node src/qllm.ts config --set-region your_region
+ts-node src/qllm.ts config --set-model sonnet
+ts-node src/qllm.ts config --set-provider anthropic
 ```
 
 Available model aliases for AWS Bedrock Anthropic:
-
 - `sonnet`: Claude 3 Sonnet
 - `sonnet35`: Claude 3.5 Sonnet
 - `haiku`: Claude 3 Haiku (default)
@@ -123,19 +121,19 @@ Available model aliases for AWS Bedrock Anthropic:
 ### Generate a Short Story
 
 ```bash
-npm run cli ask "Write a 100-word story about a time traveler" --max-tokens 150
+ts-node src/qllm.ts ask "Write a 100-word story about a time traveler" --max-tokens 150
 ```
 
 ### Analyze Code
 
 ```bash
-npm run cli stream "Explain the following code: function fibonacci(n) { if (n <= 1) return n; return fibonacci(n - 1) + fibonacci(n - 2); }" --format markdown
+ts-node src/qllm.ts stream "Explain the following code: function fibonacci(n) { if (n <= 1) return n; return fibonacci(n - 1) + fibonacci(n - 2); }" --format markdown
 ```
 
 ### Interactive Coding Assistant
 
 ```bash
-npm run cli chat --system "You are a helpful coding assistant. Provide code examples and explanations."
+ts-node src/qllm.ts chat --system "You are a helpful coding assistant. Provide code examples and explanations."
 ```
 
 ## 🗂 Project Structure
@@ -156,7 +154,7 @@ qllm/
 
 ## 🔧 Dependencies
 
-- Node.js (v14+)
+- Node.js (v16+)
 - npm packages:
   - @anthropic-ai/bedrock-sdk
   - commander
@@ -198,13 +196,13 @@ npm pack
 This will create a `.tgz` file that can be installed globally:
 
 ```bash
-npm install -g qllm-1.0.0.tgz
+npm install -g qllm-x.y.0.tgz
 ```
 
 ## 🗺 Roadmap
 
 - [ ] Add support for custom prompts and templates
-- [ ] Add support for Ollama 
+- [ ] Add support for Ollama
 - [ ] Add support for Agents
 
 ## 📄 License
