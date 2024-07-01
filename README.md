@@ -100,6 +100,19 @@ Each command supports various options to customize the behavior of the LLM:
 - `--format <type>`: Output format (json, markdown, text)
 - `--provider <name>`: LLM provider (anthropic, openai)
 - `--model <name>`: Specific model to use
+  
+
+> Imagine you're baking a cake, but instead of a regular recipe, you're using a magical oven that can create any cake you want. The parameters in AI language models are like the settings on this magical oven.
+> 
+> - The "max-tokens" is like setting a timer for how long the oven should run - it determines how much text the AI will generate.
+> - The "temperature" is like adjusting the oven's heat - higher values make the AI more creative but potentially less accurate, while lower values make it more predictable.
+> - "Top-p" and "top-k" are like filters that decide which ingredients the oven can use - they help control the variety of words the AI chooses from.
+> - The "system" message is like giving the oven a theme for the cake, setting the overall context.
+> - The "file" and "output" options are like choosing where to get your ingredients and where to put the finished cake.
+> - The "format" is like deciding if you want your cake sliced, whole, or as cupcakes - it determines how the AI's response is presented.
+> - Finally, the "provider" and "model" are like choosing which brand and type of magical oven you want to use - different ones might be better for different kinds of cakes.
+> 
+> All these settings work together to help you get the exact kind of AI-generated text you're looking for, just like how different oven settings help you bake the perfect cake.
 
 ### Configuration
 
