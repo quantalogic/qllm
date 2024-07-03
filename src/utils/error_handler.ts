@@ -8,10 +8,9 @@ export class AppError extends Error {
 }
 
 export function handleError(error: unknown): void {
-  if (error instanceof AppError) {
-    logger.error(`${error.code}: ${error.message}`);
-  } else if (error instanceof Error) {
-    logger.error(`Unhandled error: ${error.message}`);
+  if (error instanceof Error) {
+    logger.error(`Error: ${error.message}`);
+    logger.debug(`Stack trace:\n${error.stack}`);
   } else {
     logger.error(`An unknown error occurred: ${error}`);
   }
