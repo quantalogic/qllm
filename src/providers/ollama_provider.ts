@@ -9,10 +9,18 @@ export class OllamaProvider implements LLMProvider {
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
     try {
+      const ollamaMessages = this.prepareMessages(messages, options);
       const response = await ollama.chat({
         model: options.model || this.options.model,
-        messages: messages.map(msg => ({ role: msg.role, content: msg.content })),
+        messages: ollamaMessages,
+        options: {
+          num_predict: options.maxTokens,
+          temperature: options.temperature,
+          top_k: options.topK,
+          top_p: options.topP,
+        },
       });
+
       return response.message.content;
     } catch (error) {
       this.handleError(error);
@@ -21,10 +29,17 @@ export class OllamaProvider implements LLMProvider {
 
   async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
     try {
+      const ollamaMessages = this.prepareMessages(messages, options);
       const stream = await ollama.chat({
         model: options.model || this.options.model,
-        messages: messages.map(msg => ({ role: msg.role, content: msg.content })),
+        messages: ollamaMessages,
         stream: true,
+        options: {
+          num_predict: options.maxTokens,
+          temperature: options.temperature,
+          top_k: options.topK,
+          top_p: options.topP,
+        },
       });
 
       for await (const part of stream) {
@@ -33,6 +48,14 @@ export class OllamaProvider implements LLMProvider {
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  private prepareMessages(messages: Message[], options: LLMProviderOptions): Message[] {
+    const ollamaMessages = [...messages];
+    if (options.system) {
+      ollamaMessages.unshift({ role: 'system', content: options.system });
+    }
+    return ollamaMessages;
   }
 
   private handleError(error: any): never {
