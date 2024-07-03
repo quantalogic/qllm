@@ -23,6 +23,11 @@ const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
     apiKey: '',
     model: configManager.getConfig().modelAlias || openaiConfig.defaultModel,
   },
+  ollama: {
+    type: 'ollama',
+    apiKey: '',
+    model: 'mistral',
+  },
 };
 
 export function getProviderConfig(providerName: ProviderName): ProviderConfig {
