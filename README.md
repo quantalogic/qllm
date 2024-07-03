@@ -6,7 +6,7 @@ QLLM (QuantaLogic LLM) is a powerful and flexible Command Line Interface (CLI) f
 
 ## 🌟 Key Features
 
-- 🔄 Multi-provider support (currently featuring Anthropic's Claude models and OpenAI)
+- 🔄 Multi-provider support (currently featuring AWS Bedrock Anthropic's Claude models, OpenAI an [Ollama](https://ollama.com/))
 - 💬 Interactive chat mode for continuous conversations
 - 🌊 Streaming responses for real-time output
 - ⚙️ Configurable model parameters (temperature, top-p, top-k, etc.)
@@ -280,9 +280,10 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 ## 🗺 Roadmap
 
 - [ ] Add support for custom prompts and templates
-- [ ] Integrate Ollama for local model support
+- [X] Integrate Ollama for local model support
 - [ ] Implement AI agent capabilities
 - [ ] Expand provider support to include more LLM services
+- [ ] Add safe code interpreter
 - [ ] Multi-Modal Input and Output
 - [ ] Prompt libraries and sharing
 - [ ] Custom Workflows and Pipelines, Enable users to chain multiple LLM calls into a single workflow
@@ -294,6 +295,9 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 - [ ] Ethical AI Features
 
 
+## Changelog
+
+The changelog is available at [CHANGELOG](./CHANGELOG.md)
 
 ## 📄 License
 

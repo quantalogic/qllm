@@ -1,6 +1,6 @@
 {
   "name": "qllm",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "description": "QLLM Multi-Provider LLM Command CLI",
   "main": "dist/qllm.js",
   "scripts": {
@@ -29,6 +29,7 @@
     "dotenv": "^16.4.5",
     "glob": "^10.4.2",
     "lru-cache": "^10.3.0",
+    "ollama": "^0.5.2",
     "openai": "^4.52.2",
     "prompts": "^2.4.2",
     "winston": "^3.13.0"

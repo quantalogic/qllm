@@ -1,9 +1,10 @@
 import { Option } from 'commander';
+import { ErrorManager } from './utils/error_manager';
 
 function parseNumeric(value: string, min: number, max: number, defaultValue: number): number {
   const parsed = parseFloat(value);
   if (isNaN(parsed) || parsed < min || parsed > max) {
-    throw new Error(`Value must be a number between ${min} and ${max}`);
+    ErrorManager.throwError('InvalidOptionError', `Value must be a number between ${min} and ${max}`);
   }
   return parsed;
 }
@@ -29,7 +30,7 @@ export const systemOption = new Option('-s, --system <message>', 'System message
 export const fileOption = new Option('-f, --file <path>', 'Path to input file')
   .argParser((value) => {
     if (typeof value !== 'string' || value.trim().length === 0) {
-      throw new Error('File path must be a non-empty string');
+      ErrorManager.throwError('InvalidOptionError', 'File path must be a non-empty string');
     }
     return value;
   });
@@ -37,7 +38,7 @@ export const fileOption = new Option('-f, --file <path>', 'Path to input file')
 export const outputOption = new Option('-o, --output <path>', 'Path to output file')
   .argParser((value) => {
     if (typeof value !== 'string' || value.trim().length === 0) {
-      throw new Error('Output path must be a non-empty string');
+      ErrorManager.throwError('InvalidOptionError', 'Output path must be a non-empty string');
     }
     return value;
   });

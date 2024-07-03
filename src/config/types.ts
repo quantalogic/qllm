@@ -9,4 +9,4 @@ export interface ProviderConfig {
   defaultModel: string;
 }
 
-export type ProviderName = 'anthropic' | 'openai';
+export type ProviderName = 'anthropic' | 'openai' | 'ollama';
