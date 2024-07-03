@@ -9,6 +9,7 @@ import { LLMProviderOptions, Message } from '../providers/types';
 import { displayOptions } from '../utils/option_display';
 import { mergeOptions } from '../utils/option_merging';
 import { configManager } from '../utils/configuration_manager';
+import { withSpinner } from '../helpers/spinner_helper';
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
@@ -43,7 +44,7 @@ export function createAskCommand(): Command {
 
         const messages: Message[] = [{ role: 'user', content: input }];
 
-        logger.debug(`providerName:  ${providerName}`);
+        logger.debug(`providerName: ${providerName}`);
 
         const defaultOptions: Partial<LLMProviderOptions> = {
           maxTokens: 256,
@@ -54,7 +55,6 @@ export function createAskCommand(): Command {
         };
 
         const mergedOptions = mergeOptions(defaultOptions, options);
-
         const providerOptions: LLMProviderOptions = {
           maxTokens: mergedOptions.maxTokens,
           temperature: mergedOptions.temperature,
@@ -64,17 +64,16 @@ export function createAskCommand(): Command {
           model: model,
         };
 
-        displayOptions(mergedOptions, 'ask');
+        displayOptions(providerOptions, 'ask');
 
-        const spinner = new Spinner('Generating response...');
-        spinner.start();
-
-        const response = await provider.generateMessage(messages, providerOptions);
-
-        spinner.succeed('Response generated');
+        const response = await withSpinner(
+          () => provider.generateMessage(messages, providerOptions),
+          'Generating response'
+        );
 
         const output = formatOutput({ content: [{ text: response }] }, options.format);
         await writeOutput(output, options.output);
+
       } catch (error) {
         if (error instanceof Error) {
           logger.error(`An error occurred: ${error.message}`);

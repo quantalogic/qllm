@@ -19,17 +19,21 @@ export class Spinner {
     if (this.isSpinning) {
       this.isSpinning = false;
       this.spinner.stop(true);
-      process.stdout.write('\r\x1b[K'); // Clear the spinner line
     }
   }
 
-  succeed(text?: string): void {
+  clear(): void {
     this.stop();
+    process.stdout.write('\r\x1b[K'); // Clear the spinner line
+  }
+
+  succeed(text?: string): void {
+    this.clear();
     logger.debug(`✅ ${text || 'Success'}`);
   }
 
   fail(text?: string): void {
-    this.stop();
+    this.clear();
     logger.error(`✖ ${text || 'Failed'}`);
   }
 
