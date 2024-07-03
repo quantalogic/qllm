@@ -1,4 +1,4 @@
-# Simple Agent System Specification 1.0
+# Simple Agent System Specification v 1.0
 
 ## Overview
 
@@ -184,3 +184,4 @@ src/
 ## Conclusion
 
 This Simple Agent System provides users with a flexible and powerful way to interact with specialized AI agents. By allowing easy creation, management, and interaction with these agents, users can leverage AI assistance tailored to specific domains or tasks. The system's ability to switch between agents during a conversation offers a seamless experience for complex projects that may require multiple areas of expertise. As this system evolves, we can consider adding features like agent collaboration, memory persistence across sessions, and integration with external tools and data sources.
+
