@@ -67,8 +67,12 @@ export function createChatCommand(): Command {
 
           messages.push({ role: 'user', content: response.input });
 
-          logger.info('🤖:');
           const fullResponse = await handleStreamWithSpinner(provider, messages, providerOptions);
+
+          // display the response on the console
+          const formattedResponse = `🤖  : ${fullResponse}`
+          console.log(formattedResponse);
+
           messages.push({ role: 'assistant', content: fullResponse });
         }
       } catch (error) {
