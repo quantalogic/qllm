@@ -25,7 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Security update placeholder
 
-## [0.6.1] - 2024-07-01
+## [0.6.2] - 2024-07-03
+
+## Improved 
+
+- Feat: Implement spinner helper and improve stream handling
+
+## [0.6.1] - 2024-07-03
 
 ### Added
 - Implemented the ollama provider
