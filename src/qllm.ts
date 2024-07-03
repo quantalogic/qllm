@@ -14,7 +14,7 @@ import { ProviderName } from './config/types';
 const program = new Command();
 
 program
-  .version('1.0.0')
+  .version('0.6.1')
   .description('Multi-Provider LLM Command CLI - qllm. Created with ❤️ by @quantalogic.')
   .option('-p, --profile <profile>', 'AWS profile to use')
   .option('-r, --region <region>', 'AWS region to use')
