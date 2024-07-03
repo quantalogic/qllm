@@ -1,10 +1,12 @@
 import { ProviderConfig, ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
 import openaiConfig from './providers/openai';
+import ollamaConfig from './providers/ollama';
 
 const providerConfigs: Record<ProviderName, ProviderConfig> = {
   anthropic: anthropicConfig,
   openai: openaiConfig,
+  ollama: ollamaConfig
 };
 
 export function getProviderConfig(provider: ProviderName): ProviderConfig {
