@@ -12,12 +12,14 @@ import { resolveModelAlias } from "./config/model_aliases";
 import { handleError } from './utils/error_handler';
 import { ProviderName } from './config/types';
 
+const VERSION = '0.6.1';
+
 async function main() {
   try {
     const program = new Command();
 
     program
-      .version('0.6.1')
+      .version(VERSION)
       .description('Multi-Provider LLM Command CLI - qllm. Created with ❤️ by @quantalogic.')
       .option('-p, --profile <profile>', 'AWS profile to use')
       .option('-r, --region <region>', 'AWS region to use')

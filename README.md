@@ -279,7 +279,10 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 
 ## 🗺 Roadmap
 
-- [ ] Add support for custom prompts and templates
+- [X] Add support for custom prompts and templates
+   - [ ] Ask for variable in the console if the variable are not set in the template
+   - [ ] Add support for output variables
+   - [ ] Add support for worflow
 - [X] Integrate Ollama for local model support
 - [ ] Implement AI agent capabilities
 - [ ] Expand provider support to include more LLM services
