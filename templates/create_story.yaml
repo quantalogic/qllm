@@ -4,17 +4,29 @@ description: Create a nice story
 author: Raphaël MANSUY
 #provider: ollama
 #model: mistral
+input_variables:
+  subject:
+    type: string
+    description: The subject of the story
+    default: "a magical adventure"
+  genre:
+    type: string
+    description: The genre of the story
+    default: "fantasy"
 content: >
-  Create a nice story with a title and a content about {{subject}}
+  Create a {{genre}} story with a title and a content about {{subject}}
   The story must be funny and interesting
 
   The output must written using markdown format.
 
   With the structure:
 
-  # Title 
+    <story>
+    # Title 
   
     Introduction
     The hero
     The villain
     The end
+    </story>
+ 
