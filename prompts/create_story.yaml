@@ -22,9 +22,9 @@ input_variables:
     description: The language of the story
     default: "Français"
   max_length:
-    type: number
+    type: string
     description: The maximum length of the story
-    default: 100
+    default: "100"
 output_variables:
   story:
     type: string

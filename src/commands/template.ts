@@ -1,7 +1,9 @@
 // src/commands/template.ts
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import prompts from 'prompts';
 import yaml from 'js-yaml';
+import fs from 'fs/promises';
+import path from 'path';
 import { templateManager } from '../templates/template_manager';
 import { TemplateExecutor } from '../templates/template_executor';
 import { logger } from '../utils/logger';
@@ -15,7 +17,7 @@ import { resolveModelAlias } from '../config/model_aliases';
 import { ProviderName } from '../config/types';
 import { ProviderFactory } from '../providers/provider_factory';
 import { displayOptions } from '../utils/option_display';
-import { log } from 'console';
+import { OutputHandler } from '../utils/output_handler';
 
 export function createTemplateCommand(): Command {
   const templateCommand = new Command('template')
@@ -69,7 +71,9 @@ function createExecuteCommand(): Command {
     .addOption(cliOptions.topKOption)
     .addOption(cliOptions.systemOption)
     .addOption(cliOptions.streamOption)
-    .option('-v, --variable <key=value>', 'Set variable values for the template', collectVariables, {})
+    .addOption(new Option('--output [file]', 'Output file path'))
+    .addOption(new Option('--format <format>', 'Output format').choices(['json', 'xml']).default('json'))
+    .option('-v, --variable <variables...>', 'Set variable values for the template', collectVariables, {})
     .action(async (name: string, options: any) => {
       try {
         logger.debug(`Attempting to execute template: ${name}`);
@@ -77,8 +81,8 @@ function createExecuteCommand(): Command {
         if (!template) {
           throw new Error(`Template '${name}' not found`);
         }
-        logger.debug(`Template found: ${JSON.stringify(template)}`);
 
+        logger.debug(`Template found: ${JSON.stringify(template)}`);
         const variables = await templateManager.parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
@@ -101,7 +105,6 @@ function createExecuteCommand(): Command {
         };
 
         const mergedOptions = mergeOptions(defaultOptions, options);
-
         const providerOptions: LLMProviderOptions = {
           maxTokens: mergedOptions.maxTokens,
           temperature: mergedOptions.temperature,
@@ -124,17 +127,9 @@ function createExecuteCommand(): Command {
 
         const result = await TemplateExecutor.execute(executionContext);
 
-        if (!options.stream) {
-          logger.info('✨ Execution result:');
-          console.log(result.response);
-          
+        const outputHandler = new OutputHandler(options.output === true ? undefined : options.output, options.format);
+        await outputHandler.handleOutput(result.outputVariables);
 
-          // Improved to filter out 'qqlm_response' before checking the length, ensuring only additional keys trigger logging
-          if (Object.keys(result.outputVariables).filter(key => key !== 'qqlm_response').length > 0) {
-            logger.info('ℹ️ Output variables:');
-            console.log(result.outputVariables);
-          }
-        }
       } catch (error) {
         ErrorManager.handleError('ExecuteTemplateError', `Failed to execute template: ${error}`);
       }
