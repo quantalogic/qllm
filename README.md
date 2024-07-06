@@ -426,10 +426,14 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 
 ## 🗺 Roadmap
 
+- [ ] Add a command the list the available providers
+  [ ] Add a list that present the models available for a provider
+- [ ] Cost evaluation by providers
 - [ ] Add support for more LLM providers
 - [ ] Implement AI agent capabilities
 - [ ] Expand provider support to include more LLM services
 - [ ] Add safe code interpreter
+- [ ] Add tool support
 - [ ] Multi-Modal Input and Output
 - [ ] Prompt libraries and sharing
 - [ ] Custom Workflows and Pipelines, Enable users to chain multiple LLM calls into a single workflow
