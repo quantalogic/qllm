@@ -1,0 +1,17 @@
+name: improve_prompt
+version: '1.0'
+description: Improve a prompt
+author: Raphaël MANSUY
+#provider: ollama
+#model: mistral
+input_variables:
+  prompt:
+    type: string
+    description: The prompt to improve
+    default: ""
+output_variables:
+  prompt_final:
+    type: string
+    description: The improved prompt
+content: >
+  {{file:./improve_prompt.md}}
