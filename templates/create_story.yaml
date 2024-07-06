@@ -2,6 +2,19 @@ name: create_story
 version: '1.0'
 description: Create a nice story
 author: Raphaël MANSUY
-provider: ollama
-model: mistral
-content: 'Write a story a funny story about : {subject}'
+#provider: ollama
+#model: mistral
+content: >
+  Create a nice story with a title and a content about {{subject}}
+  The story must be funny and interesting
+
+  The output must written using markdown format.
+
+  With the structure:
+
+  # Title 
+  
+    Introduction
+    The hero
+    The villain
+    The end

@@ -5,7 +5,6 @@ import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error_manager';
 import fs from 'fs/promises';
 import path from 'path';
-import { exec } from 'child_process';
 
 export class TemplateExecutor {
     /**
@@ -14,13 +13,12 @@ export class TemplateExecutor {
      * @returns A promise that resolves to the generated content.
      */
     static async execute(context: ExecutionContext): Promise<string> {
-        const { template, variables, providerOptions } = context;
+        const { template, variables, providerOptions, provider } = context;
 
         try {
             logger.debug(`Executing template: ${JSON.stringify(template)}`);
             logger.debug(`Variables: ${JSON.stringify(variables)}`);
             logger.debug(`Provider options: ${JSON.stringify(providerOptions)}`);
-
 
             // Validate input variables
             this.validateInputVariables(template, variables);
@@ -29,15 +27,9 @@ export class TemplateExecutor {
             const content = await this.prepareContent(template, variables);
             const messages: Message[] = [{ role: 'user', content }];
 
-
-            const provider = context.provider;
-
             // Execute the request
             logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
-
-            const options = providerOptions;
-
-            const response = await provider.generateMessage(messages, options);
+            const response = await provider.generateMessage(messages, providerOptions);
 
             // Process output variables
             const processedResponse = this.processOutputVariables(template, response);
@@ -113,7 +105,7 @@ export class TemplateExecutor {
 
         // Replace variables in content
         for (const [key, value] of Object.entries(variables)) {
-            const regex = new RegExp(`{${key}}`, 'g');
+            const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
             content = content.replace(regex, this.formatValue(value));
         }
 
@@ -121,7 +113,7 @@ export class TemplateExecutor {
         const inputVariables = template.input_variables || {};
         for (const [key, variable] of Object.entries(inputVariables)) {
             if (!(key in variables) && 'default' in variable) {
-                const regex = new RegExp(`{${key}}`, 'g');
+                const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
                 content = content.replace(regex, this.formatValue(variable.default));
             }
         }
@@ -150,12 +142,12 @@ export class TemplateExecutor {
      * @returns A promise that resolves to the content with file inclusions processed.
      */
     private static async handleFileInclusions(content: string): Promise<string> {
-        const fileInclusionRegex = /{{file:([^}]+)}}/g;
+        const fileInclusionRegex = /{{file:\s*([^}]+)\s*}}/g;
         const matches = content.match(fileInclusionRegex);
 
         if (matches) {
             for (const match of matches) {
-                const filePath = match.slice(7, -2).trim(); // Remove '{{file:' and '}}'
+                const filePath = match.slice(8, -2).trim(); // Remove '{{file:' and '}}'
                 try {
                     const fileContent = await fs.readFile(path.resolve(process.cwd(), filePath), 'utf-8');
                     content = content.replace(match, fileContent);
