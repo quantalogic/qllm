@@ -13,12 +13,22 @@ input_variables:
     type: string
     description: The genre of the story
     default: "fantasy"
+  role:
+    type: string
+    description: The role of the user
+    default: "writer"
+  lang:
+    type: string
+    description: The language of the story
+    default: "english"
 content: >
   {{file:./role.md}}
   Create a {{genre}} story with a title and a content about {{subject}}
   The story must be funny and interesting
 
   The output must written using markdown format.
+
+  Write in language {{lang}}.
 
   With the structure:
 

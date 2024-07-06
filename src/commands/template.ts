@@ -14,311 +14,288 @@ import { cliOptions } from '../options';
 import { resolveModelAlias } from '../config/model_aliases';
 import { ProviderName } from '../config/types';
 import { ProviderFactory } from '../providers/provider_factory';
-import { TemplateValidator } from '../templates/template_validator';
 
 export function createTemplateCommand(): Command {
-  const templateCommand = new Command('template')
-    .description('Manage and execute prompt templates')
-    .addCommand(createListCommand())
-    .addCommand(createCreateCommand())
-    .addCommand(createExecuteCommand())
-    .addCommand(createDeleteCommand())
-    .addCommand(createViewCommand())
-    .addCommand(createEditCommand())
-    .addCommand(createVariablesCommand());
+    const templateCommand = new Command('template')
+        .description('Manage and execute prompt templates')
+        .addCommand(createListCommand())
+        .addCommand(createCreateCommand())
+        .addCommand(createExecuteCommand())
+        .addCommand(createDeleteCommand())
+        .addCommand(createViewCommand())
+        .addCommand(createEditCommand())
+        .addCommand(createVariablesCommand());
 
-  return templateCommand;
+    return templateCommand;
 }
 
 function createListCommand(): Command {
-  return new Command('list')
-    .description('List all available templates')
-    .action(async () => {
-      try {
-        const templates = await templateManager.listTemplates();
-        console.log('Available templates:');
-        templates.forEach(template => console.log(`- ${template}`));
-      } catch (error) {
-        ErrorManager.handleError('ListTemplatesError', `Failed to list templates: ${error}`);
-      }
-    });
+    return new Command('list')
+        .description('List all available templates')
+        .action(async () => {
+            try {
+                const templates = await templateManager.listTemplates();
+                console.log('Available templates:');
+                templates.forEach(template => console.log(`- ${template}`));
+            } catch (error) {
+                ErrorManager.handleError('ListTemplatesError', `Failed to list templates: ${error}`);
+            }
+        });
 }
 
 function createCreateCommand(): Command {
-  return new Command('create')
-    .description('Create a new template')
-    .action(async () => {
-      try {
-        const template = await promptForTemplateDetails();
-        TemplateValidator.validate(template);
-        await templateManager.saveTemplate(template);
-        logger.info(`Template ${template.name} created successfully`);
-      } catch (error) {
-        ErrorManager.handleError('CreateTemplateError', `Failed to create template: ${error}`);
-      }
-    });
+    return new Command('create')
+        .description('Create a new template')
+        .action(async () => {
+            try {
+                const template = await promptForTemplateDetails();
+                await templateManager.saveTemplate(template);
+                logger.info(`Template ${template.name} created successfully`);
+            } catch (error) {
+                ErrorManager.handleError('CreateTemplateError', `Failed to create template: ${error}`);
+            }
+        });
 }
 
 function createExecuteCommand(): Command {
-  return new Command('execute')
-    .description('Execute a template')
-    .argument('<name>', 'Name of the template to execute')
-    .addOption(cliOptions.maxTokensOption)
-    .addOption(cliOptions.temperatureOption)
-    .addOption(cliOptions.topPOption)
-    .addOption(cliOptions.topKOption)
-    .addOption(cliOptions.systemOption)
-    .addOption(cliOptions.streamOption)
-    .option('-v, --variable <key=value>', 'Set variable values for the template', collectVariables, {})
-    .action(async (name: string, options: any) => {
-      try {
-        logger.debug(`Attempting to execute template: ${name}`);
-        const template = await templateManager.getTemplate(name);
-        if (!template) {
-          throw new Error(`Template '${name}' not found`);
-        }
-        logger.debug(`Template found: ${JSON.stringify(template)}`);
+    return new Command('execute')
+        .description('Execute a template')
+        .argument('<name>', 'Name of the template to execute')
+        .addOption(cliOptions.maxTokensOption)
+        .addOption(cliOptions.temperatureOption)
+        .addOption(cliOptions.topPOption)
+        .addOption(cliOptions.topKOption)
+        .addOption(cliOptions.systemOption)
+        .addOption(cliOptions.streamOption)
+        .option('-v, --variable <key=value>', 'Set variable values for the template', collectVariables, {})
+        .action(async (name: string, options: any) => {
+            try {
+                logger.debug(`Attempting to execute template: ${name}`);
+                const template = await templateManager.getTemplate(name);
+                if (!template) {
+                    throw new Error(`Template '${name}' not found`);
+                }
+                logger.debug(`Template found: ${JSON.stringify(template)}`);
 
-        const variables = parseVariables(process.argv, template);
-        logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
+                const variables = await templateManager.parseVariables(process.argv, template);
+                logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
-        const config = configManager.getConfig();
-        const providerName = options.provider || template.provider || config.defaultProvider;
-        const modelAlias = options.model || template.model || config.modelAlias;
-        logger.debug(`Using provider: ${providerName}, model alias: ${modelAlias}`);
+                const config = configManager.getConfig();
+                const providerName = options.provider || template.provider || config.defaultProvider;
+                const modelAlias = options.model || template.model || config.modelAlias;
+                logger.debug(`Using provider: ${providerName}, model alias: ${modelAlias}`);
 
-        const model = resolveModelAlias(providerName as ProviderName, modelAlias);
-        logger.debug(`Resolved model: ${model}`);
+                const model = resolveModelAlias(providerName as ProviderName, modelAlias);
+                logger.debug(`Resolved model: ${model}`);
 
-        const provider = await ProviderFactory.getProvider(providerName as ProviderName);
+                const provider = await ProviderFactory.getProvider(providerName as ProviderName);
 
-        const defaultOptions: Partial<LLMProviderOptions> = {
-          maxTokens: template.parameters?.max_tokens,
-          temperature: template.parameters?.temperature,
-          topP: template.parameters?.top_p,
-          topK: template.parameters?.top_k,
-          model: model,
-        };
+                const defaultOptions: Partial<LLMProviderOptions> = {
+                    maxTokens: template.parameters?.max_tokens,
+                    temperature: template.parameters?.temperature,
+                    topP: template.parameters?.top_p,
+                    topK: template.parameters?.top_k,
+                    model: model,
+                };
 
-        const mergedOptions = mergeOptions(defaultOptions, options);
-        const providerOptions: LLMProviderOptions = {
-          maxTokens: mergedOptions.maxTokens,
-          temperature: mergedOptions.temperature,
-          topP: mergedOptions.topP,
-          topK: mergedOptions.topK,
-          system: mergedOptions.system,
-          model: model,
-        };
+                const mergedOptions = mergeOptions(defaultOptions, options);
+                const providerOptions: LLMProviderOptions = {
+                    maxTokens: mergedOptions.maxTokens,
+                    temperature: mergedOptions.temperature,
+                    topP: mergedOptions.topP,
+                    topK: mergedOptions.topK,
+                    system: mergedOptions.system,
+                    model: model,
+                };
 
-        logger.debug(`Provider options: ${JSON.stringify(providerOptions)}`);
+                logger.debug(`Provider options: ${JSON.stringify(providerOptions)}`);
 
-        const executionContext: ExecutionContext = {
-          template,
-          variables,
-          providerOptions,
-          provider,
-          stream: options.stream,
-        };
+                const executionContext: ExecutionContext = {
+                    template,
+                    variables,
+                    providerOptions,
+                    provider,
+                    stream: options.stream,
+                };
 
-        const result = await TemplateExecutor.execute(executionContext);
-        if (!options.stream) {
-          console.log('Execution result:');
-          console.log(result);
-        }
-      } catch (error) {
-        ErrorManager.handleError('ExecuteTemplateError', `Failed to execute template: ${error}`);
-      }
-    });
+                const result = await TemplateExecutor.execute(executionContext);
+
+                if (!options.stream) {
+                    console.log('Execution result:');
+                    console.log(result);
+                }
+            } catch (error) {
+                ErrorManager.handleError('ExecuteTemplateError', `Failed to execute template: ${error}`);
+            }
+        });
 }
 
 function createDeleteCommand(): Command {
-  return new Command('delete')
-    .description('Delete a template')
-    .argument('<name>', 'Name of the template to delete')
-    .action(async (name: string) => {
-      try {
-        await templateManager.deleteTemplate(name);
-        logger.info(`Template ${name} deleted successfully`);
-      } catch (error) {
-        ErrorManager.handleError('DeleteTemplateError', `Failed to delete template: ${error}`);
-      }
-    });
+    return new Command('delete')
+        .description('Delete a template')
+        .argument('<name>', 'Name of the template to delete')
+        .action(async (name: string) => {
+            try {
+                await templateManager.deleteTemplate(name);
+                logger.info(`Template ${name} deleted successfully`);
+            } catch (error) {
+                ErrorManager.handleError('DeleteTemplateError', `Failed to delete template: ${error}`);
+            }
+        });
 }
 
 function createViewCommand(): Command {
-  return new Command('view')
-    .description('View the contents of a template')
-    .argument('<name>', 'Name of the template to view')
-    .action(async (name: string) => {
-      try {
-        const template = await templateManager.getTemplate(name);
-        console.log(yaml.dump(template));
-      } catch (error) {
-        ErrorManager.handleError('ViewTemplateError', `Failed to view template: ${error}`);
-      }
-    });
+    return new Command('view')
+        .description('View the contents of a template')
+        .argument('<name>', 'Name of the template to view')
+        .action(async (name: string) => {
+            try {
+                const template = await templateManager.getTemplate(name);
+                console.log(yaml.dump(template));
+            } catch (error) {
+                ErrorManager.handleError('ViewTemplateError', `Failed to view template: ${error}`);
+            }
+        });
 }
 
 function createEditCommand(): Command {
-  return new Command('edit')
-    .description('Edit an existing template')
-    .argument('<name>', 'Name of the template to edit')
-    .action(async (name: string) => {
-      try {
-        const template = await templateManager.getTemplate(name);
-        if (!template) {
-          throw new Error(`Template '${name}' not found`);
-        }
-        const updatedTemplate = await promptForTemplateDetails(template);
-        TemplateValidator.validate(updatedTemplate);
-        await templateManager.saveTemplate(updatedTemplate);
-        logger.info(`Template ${name} updated successfully`);
-      } catch (error) {
-        ErrorManager.handleError('EditTemplateError', `Failed to edit template: ${error}`);
-      }
-    });
+    return new Command('edit')
+        .description('Edit an existing template')
+        .argument('<name>', 'Name of the template to edit')
+        .action(async (name: string) => {
+            try {
+                const template = await templateManager.getTemplate(name);
+                if (!template) {
+                    throw new Error(`Template '${name}' not found`);
+                }
+                const updatedTemplate = await promptForTemplateDetails(template);
+                await templateManager.saveTemplate(updatedTemplate);
+                logger.info(`Template ${name} updated successfully`);
+            } catch (error) {
+                ErrorManager.handleError('EditTemplateError', `Failed to edit template: ${error}`);
+            }
+        });
 }
 
 function createVariablesCommand(): Command {
-  return new Command('variables')
-    .description('Display all variables in a template')
-    .argument('<name>', 'Name of the template')
-    .action(async (name: string) => {
-      try {
-        const template = await templateManager.getTemplate(name);
-        if (!template) {
-          throw new Error(`Template '${name}' not found`);
-        }
-        displayTemplateVariables(template);
-      } catch (error) {
-        ErrorManager.handleError('TemplateVariablesError', `Failed to display template variables: ${error}`);
-      }
-    });
+    return new Command('variables')
+        .description('Display all variables in a template')
+        .argument('<name>', 'Name of the template')
+        .action(async (name: string) => {
+            try {
+                const template = await templateManager.getTemplate(name);
+                if (!template) {
+                    throw new Error(`Template '${name}' not found`);
+                }
+                displayTemplateVariables(template);
+            } catch (error) {
+                ErrorManager.handleError('TemplateVariablesError', `Failed to display template variables: ${error}`);
+            }
+        });
 }
 
 async function promptForTemplateDetails(existingTemplate?: TemplateDefinition): Promise<TemplateDefinition> {
-  const questions: prompts.PromptObject<string>[] = [
-    {
-      type: 'text' as const,
-      name: 'name',
-      message: 'Template name:',
-      initial: existingTemplate?.name
-    },
-    {
-      type: 'text' as const,
-      name: 'version',
-      message: 'Version:',
-      initial: existingTemplate?.version || '1.0.0'
-    },
-    {
-      type: 'text' as const,
-      name: 'description',
-      message: 'Description:',
-      initial: existingTemplate?.description
-    },
-    {
-      type: 'text' as const,
-      name: 'author',
-      message: 'Author:',
-      initial: existingTemplate?.author
-    },
-    {
-      type: 'text' as const,
-      name: 'provider',
-      message: 'Provider:',
-      initial: existingTemplate?.provider
-    },
-    {
-      type: 'text' as const,
-      name: 'model',
-      message: 'Model:',
-      initial: existingTemplate?.model
-    },
-    {
-      type: 'text' as const,
-      name: 'content',
-      message: 'Template content:',
-      initial: existingTemplate?.content
-    }
-  ];
+    const questions: prompts.PromptObject[] = [
+        {
+            type: 'text' as const,
+            name: 'name',
+            message: 'Template name:',
+            initial: existingTemplate?.name
+        },
+        {
+            type: 'text' as const,
+            name: 'version',
+            message: 'Version:',
+            initial: existingTemplate?.version || '1.0.0'
+        },
+        {
+            type: 'text' as const,
+            name: 'description',
+            message: 'Description:',
+            initial: existingTemplate?.description
+        },
+        {
+            type: 'text' as const,
+            name: 'author',
+            message: 'Author:',
+            initial: existingTemplate?.author
+        },
+        {
+            type: 'text' as const,
+            name: 'provider',
+            message: 'Provider:',
+            initial: existingTemplate?.provider
+        },
+        {
+            type: 'text' as const,
+            name: 'model',
+            message: 'Model:',
+            initial: existingTemplate?.model
+        },
+        {
+            type: 'text' as const,
+            name: 'content',
+            message: 'Template content:',
+            initial: existingTemplate?.content
+        }
+    ];
 
-  const responses = await prompts(questions);
-  return responses as TemplateDefinition;
+    const responses = await prompts(questions);
+    return responses as TemplateDefinition;
 }
 
-function parseVariables(args: string[], template: TemplateDefinition): Record<string, any> {
-  const variables: Record<string, any> = {};
-  const variablePattern = /^-v:(\w+)$/;
-
-  for (let i = 0; i < args.length; i++) {
-    const match = args[i].match(variablePattern);
-    if (match) {
-      const variableName = match[1];
-      const variableValue = args[i + 1];
-      if (variableValue && !variableValue.startsWith('-')) {
-        variables[variableName] = variableValue;
-        i++; // Skip the next argument as it's the value
-      } else {
-        logger.warn(`Missing value for variable: ${variableName}`);
-      }
-    }
-  }
-
-  return variables;
-}
-
-function collectVariables(value: string, previous: Record<string, string>) {
-  const [key, val] = value.split('=');
-  return { ...previous, [key]: val };
+function collectVariables(value: string, previous: Record<string, string>): Record<string, string> {
+    const [key, val] = value.split('=');
+    return { ...previous, [key]: val };
 }
 
 function displayTemplateVariables(template: TemplateDefinition): void {
-  console.log(`Variables for template '${template.name}':`);
-  const definedVariables = template.input_variables || {};
-  const contentVariables = extractContentVariables(template.content);
+    console.log(`Variables for template '${template.name}':`);
+    const definedVariables = template.input_variables || {};
+    const contentVariables = extractContentVariables(template.content);
 
-  if (Object.keys(definedVariables).length === 0 && contentVariables.length === 0) {
-    console.log('No variables defined in this template.');
-    return;
-  }
-
-  // Display defined variables
-  for (const [key, variable] of Object.entries(definedVariables)) {
-    console.log(`- ${key}:`);
-    console.log(`  Type: ${variable.type}`);
-    console.log(`  Description: ${variable.description}`);
-    if ('default' in variable) {
-      console.log(`  Default: ${formatDefaultValue(variable)}`);
+    if (Object.keys(definedVariables).length === 0 && contentVariables.length === 0) {
+        console.log('No variables defined in this template.');
+        return;
     }
-    console.log('');
-  }
 
-  // Display content variables not defined in input_variables
-  for (const key of contentVariables) {
-    if (!(key in definedVariables)) {
-      console.log(`- ${key}:`);
-      console.log(`  Type: undefined`);
-      console.log(`  Description: Undefined variable found in content`);
-      console.log('');
+    // Display defined variables
+    for (const [key, variable] of Object.entries(definedVariables)) {
+        console.log(`- ${key}:`);
+        console.log(`  Type: ${variable.type}`);
+        console.log(`  Description: ${variable.description}`);
+        if ('default' in variable) {
+            console.log(`  Default: ${formatDefaultValue(variable)}`);
+        }
+        console.log('');
     }
-  }
+
+    // Display content variables not defined in input_variables
+    for (const key of contentVariables) {
+        if (!(key in definedVariables)) {
+            console.log(`- ${key}:`);
+            console.log(`  Type: undefined`);
+            console.log(`  Description: Undefined variable found in content`);
+            console.log('');
+        }
+    }
 }
 
 function extractContentVariables(content: string): string[] {
-  const variableRegex = /{{(.*?)}}/g;
-  const matches = content.match(variableRegex);
-  if (!matches) return [];
-  return matches.map(match => match.slice(2, -2).trim());
+    const variableRegex = /{{(.*?)}}/g;
+    const matches = content.match(variableRegex);
+    if (!matches) return [];
+    return matches.map(match => match.slice(2, -2).trim());
 }
 
 function formatDefaultValue(variable: TemplateVariable): string {
-  if (variable.type === 'string') {
-    return `"${variable.default}"`;
-  } else if (variable.type === 'array') {
-    return JSON.stringify(variable.default);
-  } else {
-    return String(variable.default);
-  }
+    if (variable.type === 'string') {
+        return `"${variable.default}"`;
+    } else if (variable.type === 'array') {
+        return JSON.stringify(variable.default);
+    } else {
+        return String(variable.default);
+    }
 }
 
 export default createTemplateCommand;
