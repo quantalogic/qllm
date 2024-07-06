@@ -1,0 +1,7 @@
+name: create_story
+version: '1.0'
+description: Create a nice story
+author: Raphaël MANSUY
+provider: anthropic
+model: sonnet35
+content: 'Write a story a funny story about : {subject}'

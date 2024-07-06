@@ -5,6 +5,7 @@ import { createAskCommand } from './commands/ask';
 import { createStreamCommand } from './commands/stream';
 import { createChatCommand } from './commands/chat';
 import { createConfigCommand } from './commands/config';
+import { createTemplateCommand } from './commands/template';
 import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
 import { resolveModelAlias } from "./config/model_aliases";
@@ -75,6 +76,7 @@ async function main() {
     program.addCommand(createStreamCommand());
     program.addCommand(createChatCommand());
     program.addCommand(createConfigCommand());
+    program.addCommand(createTemplateCommand());
 
     // Error handling for unknown commands
     program.on('command:*', () => {
