@@ -1,4 +1,4 @@
-# QLLM: Multi-Provider LLM Command CLI 🚀
+# QLLM: Multi-Provider LLM Command CLI
 
 QLLM (QuantaLogic LLM) is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with ❤️ by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
 
@@ -6,13 +6,14 @@ QLLM (QuantaLogic LLM) is a powerful and flexible Command Line Interface (CLI) f
 
 ## 🌟 Key Features
 
-- 🔄 Multi-provider support (currently featuring AWS Bedrock Anthropic's Claude models, OpenAI an [Ollama](https://ollama.com/))
+- 🔄 Multi-provider support (currently featuring AWS Bedrock Anthropic's Claude models, OpenAI and [Ollama](https://ollama.com/))
 - 💬 Interactive chat mode for continuous conversations
 - 🌊 Streaming responses for real-time output
 - ⚙️ Configurable model parameters (temperature, top-p, top-k, etc.)
 - 📁 File input/output support for batch processing
 - 🎨 Customizable output formats (JSON, Markdown, plain text)
 - 🛠️ Easy-to-use configuration management
+- 📝 Template system for reusable prompts and workflows
 
 ## 📚 Table of Contents
 
@@ -56,107 +57,180 @@ This makes the `qllm` command available system-wide.
 ### Basic Usage
 
 1. Ask a question:
-   ```bash
-   qllm ask "Write a 100-word story about a time traveler" --max-tokens 150
-   ```
+
+```bash
+qllm ask "Write a 100-word story about a time traveler" --max-tokens 150
+```
 
 2. Start an interactive chat session:
-   ```bash
-   qllm chat --max-tokens 150 --provider anthropic --model haiku
-   ```
+
+```bash
+qllm chat --max-tokens 150 --provider anthropic --model haiku
+```
 
 3. Stream a response:
-   ```bash
-   qllm stream "Explain quantum computing" --max-tokens 200
-   ```
+
+```bash
+qllm stream "Explain quantum computing" --max-tokens 200
+```
 
 4. View configuration:
-   ```bash
-   qllm config --show
-   ```
+
+```bash
+qllm config --show
+```
+
+5. Create and use a template:
+
+```bash
+qllm template create
+qllm template execute my-template
+```
 
 ## 📚 Detailed Documentation
 
 ### Command Structure
 
-QLLM offers four main commands:
+QLLM offers several main commands:
 
 1. `ask`: Ask a single question and get a response
 2. `chat`: Start an interactive chat session
 3. `stream`: Stream a response in real-time
 4. `config`: View or update configuration settings
+5. `template`: Manage and execute prompt templates
 
 #### Common Options
 
 Each command supports various options to customize the behavior of the LLM:
 
 - `--max-tokens <number>`: Maximum number of tokens to generate (default: 256)
-- `--temperature <float>`: Controls randomness (0-1, default: 0.7)
-- `--top-p <float>`: Nucleus sampling parameter (0-1, default: 1)
+- `--temperature <number>`: Controls randomness (0-1, default: 0.7)
+- `--top-p <number>`: Nucleus sampling parameter (0-1, default: 1)
 - `--top-k <number>`: Top-k sampling parameter (1-1000, default: 250)
 - `--system <string>`: System message to set context
 - `--file <path>`: Path to input file
 - `--output <path>`: Path to output file
-- `--format <type>`: Output format (json, markdown, text)
-- `--provider <name>`: LLM provider (anthropic, openai)
-- `--model <name>`: Specific model to use
-  
+- `--format <format>`: Output format (json, markdown, text)
+- `--provider <provider>`: LLM provider (anthropic, openai, ollama)
+- `--model <model>`: Specific model to use
 
-> Imagine you're baking a cake, but instead of a regular recipe, you're using a magical oven that can create any cake you want. The parameters in AI language models are like the settings on this magical oven.
-> 
-> - The "max-tokens" is like setting a timer for how long the oven should run - it determines how much text the AI will generate.
-> - The "temperature" is like adjusting the oven's heat - higher values make the AI more creative but potentially less accurate, while lower values make it more predictable.
-> - "Top-p" and "top-k" are like filters that decide which ingredients the oven can use - they help control the variety of words the AI chooses from.
-> - The "system" message is like giving the oven a theme for the cake, setting the overall context.
-> - The "file" and "output" options are like choosing where to get your ingredients and where to put the finished cake.
-> - The "format" is like deciding if you want your cake sliced, whole, or as cupcakes - it determines how the AI's response is presented.
-> - Finally, the "provider" and "model" are like choosing which brand and type of magical oven you want to use - different ones might be better for different kinds of cakes.
-> 
-> All these settings work together to help you get the exact kind of AI-generated text you're looking for, just like how different oven settings help you bake the perfect cake.
+### Template Command
 
+The `template` command allows you to create, manage, and execute reusable prompt templates. This feature is particularly useful for standardizing prompts across your team or for complex multi-step interactions with LLMs.
 
-Explanation of top-p and top-k:
+#### Subcommands
 
-> ## Top-p and Top-k Sampling
-> 
-> These are methods to control text generation in language models:
-> 
-> ### Top-p (Nucleus Sampling)
-> - Selects from tokens whose cumulative probability exceeds threshold p
-> - Dynamic: adapts to probability distribution
-> - Example: p = 0.9 considers tokens up to 90% cumulative probability
-> 
-> ### Top-k Sampling
-> - Selects from k most probable tokens
-> - Fixed: always considers same number of options
-> - Example: k = 50 considers only top 50 most likely tokens
-> 
-> ### Key Differences
-> - Top-p is more flexible, adjusting to context
-> - Top-k uses a fixed cutoff regardless of probabilities
-> - Lower values: more focused output
-> - Higher values: more diverse, creative responses
-> 
-> Often used together to balance coherence and creativity in text generation.
+- `list`: List all available templates
+- `create`: Create a new template
+- `execute`: Execute a template
+- `delete`: Delete a template
+- `view`: View the contents of a template
+- `edit`: Edit an existing template
+- `variables`: Display all variables in a template
 
+#### Creating a Template
 
-### Configuration
-
-Use the `config` command to manage your QLLM settings:
+To create a new template:
 
 ```bash
-qllm config --show
-qllm config --set-profile <profile_name>
-qllm config --set-region <aws_region>
-qllm config --set-model <model_name>
-qllm config --set-provider <provider_name>
+qllm template create
 ```
 
-Available model aliases for AWS Bedrock Anthropic:
-- `sonnet`: Claude 3 Sonnet
-- `sonnet35`: Claude 3.5 Sonnet
-- `haiku`: Claude 3 Haiku (default)
-- `opus`: Claude 3 Opus
+You will be prompted to enter details such as the template name, description, provider, model, and content. You can also define input and output variables.
+
+#### Executing a Template
+
+To execute a template:
+
+```bash
+qllm template execute <template-name> -v:variable1=value1 -v:variable2=value2
+```
+
+You can provide values for the template variables using the `-v:` prefix.
+
+#### Template Structure
+
+A template typically includes:
+
+- Name and description
+- Provider and model specifications
+- Input variables with types and descriptions
+- Output variables (optional)
+- The main content with placeholders for variables
+
+Example template structure:
+
+```yaml
+name: summarize-article
+version: 1.0.0
+description: Summarize a given article
+author: QLLM Team
+provider: anthropic
+model: haiku
+input_variables:
+  article_text:
+    type: string
+    description: The text of the article to summarize
+  summary_length:
+    type: number
+    description: The desired length of the summary in words
+    default: 100
+output_variables:
+  summary:
+    type: string
+    description: The generated summary
+content: |
+  Please summarize the following article in approximately {{summary_length}} words:
+
+  {{article_text}}
+
+  Provide a concise and informative summary that captures the main points of the article.
+```
+
+#### File Inclusion in Templates
+
+QLLM supports including external files in your templates, allowing for modular and reusable content. To include a file, use the following syntax in your template content:
+
+```
+{{file: path/to/file.txt}}
+```
+
+The file path is relative to the template directory. This feature is useful for:
+
+- Sharing common prompts across multiple templates
+- Including large datasets or context information
+- Organizing complex templates into smaller, manageable files
+
+Example template with file inclusion:
+
+```yaml
+name: code-review
+version: 1.0.0
+description: Perform a code review
+author: QLLM Team
+provider: anthropic
+model: opus
+input_variables:
+  code:
+    type: string
+    description: The code to review
+output_variables:
+  review:
+    type: string
+    description: The code review comments
+content: |
+  {{file: prompts/code_review_instructions.txt}}
+
+  Here's the code to review:
+
+  ```
+  {{code}}
+  ```
+
+  Please provide a detailed code review based on the instructions above.
+```
+
+In this example, `code_review_instructions.txt` might contain general guidelines for code review, which can be reused across multiple templates.
 
 ## 💡 Examples and Use Cases
 
@@ -190,20 +264,89 @@ qllm ask --file input.txt --output results.json --format json
 qllm ask "Summarize the benefits of exercise" --max-tokens 100 --temperature 0.9 --format markdown
 ```
 
+### Using Templates for Consistent Prompts
+
+Create a template for generating product descriptions:
+
+```bash
+qllm template create
+# Follow the prompts to create a template named "product-description"
+```
+
+Execute the template:
+
+```bash
+qllm template execute product-description -v:product_name="Eco-friendly Water Bottle" -v:key_features="Insulated, BPA-free, 24oz capacity"
+```
+
+### Multi-step Analysis with Templates
+
+Create a template for analyzing financial data:
+
+```yaml
+name: financial-analysis
+description: Perform a multi-step financial analysis
+provider: anthropic
+model: opus
+input_variables:
+  company_name:
+    type: string
+    description: Name of the company to analyze
+  financial_data:
+    type: string
+    description: Key financial metrics of the company
+output_variables:
+  summary:
+    type: string
+    description: Summary of the financial analysis
+  recommendations:
+    type: array
+    description: List of recommendations based on the analysis
+content: |
+  Perform a comprehensive financial analysis for {{company_name}} based on the following data:
+
+  {{financial_data}}
+
+  1. Summarize the company's financial health.
+  2. Identify key strengths and weaknesses.
+  3. Provide at least three actionable recommendations.
+
+  Format your response as follows:
+
+  <summary>
+  [Your summary here]
+  </summary>
+
+  <recommendations>
+  - [Recommendation 1]
+  - [Recommendation 2]
+  - [Recommendation 3]
+  </recommendations>
+```
+
+Execute the financial analysis template:
+
+```bash
+qllm template execute financial-analysis -v:company_name="TechCorp Inc." -v:financial_data="Revenue: $100M, Profit Margin: 15%, Debt-to-Equity: 0.5" --output analysis_result.json
+```
+
+This example demonstrates how templates can be used for complex, multi-step analyses with structured output.
+
 ## 🗂 Project Structure
 
 ```
 qllm/
 ├── src/
-│   ├── commands/     # Implementation of CLI commands
-│   ├── config/       # Configuration management
-│   ├── helpers/      # Utility functions
-│   ├── providers/    # LLM provider integrations
-│   ├── utils/        # General utility functions
-│   └── qllm.ts       # Main entry point
-├── .env              # Environment variables
-├── package.json      # Project dependencies and scripts
-└── README.md         # Project documentation
+│   ├── commands/         # Implementation of CLI commands
+│   ├── config/           # Configuration management
+│   ├── helpers/          # Utility functions
+│   ├── providers/        # LLM provider integrations
+│   ├── templates/        # Template management and execution
+│   ├── utils/            # General utility functions
+│   └── qllm.ts           # Main entry point
+├── .env                  # Environment variables
+├── package.json          # Project dependencies and scripts
+└── README.md             # Project documentation
 ```
 
 ## 🔧 Dependencies
@@ -263,6 +406,7 @@ After installation, you can use QLLM commands directly from your terminal.
 - **API Key Issues**: Ensure your AWS credentials are correctly set up using `aws configure`.
 - **Model Not Found**: Verify you're using a supported model name and the correct provider.
 - **Rate Limiting**: If you encounter rate limits, try reducing the frequency of requests or upgrading your API plan.
+- **Template Errors**: Check that all required variables are provided when executing a template.
 
 For more issues, please check our GitHub Issues page or submit a new issue.
 
@@ -277,31 +421,26 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 3. **Q: Is my data secure when using QLLM?**
    A: QLLM does not store any of your prompts or responses. However, please review the privacy policies of the LLM providers you're using.
 
+4. **Q: How can I create complex workflows with templates?**
+   A: You can create multiple templates and chain them together using shell scripts or by referencing the output of one template as input to another.
+
 ## 🗺 Roadmap
 
-- [X] Add support for custom prompts and templates
-   - [X] Ask for variable in the console if the variable are not set in the template
-   - [X] Support include
-   - [ ] Add support for output variables
-   - [ ] Add support for worflow
-- [X] Integrate Ollama for local model support
+- [ ] Add support for more LLM providers
 - [ ] Implement AI agent capabilities
 - [ ] Expand provider support to include more LLM services
 - [ ] Add safe code interpreter
 - [ ] Multi-Modal Input and Output
 - [ ] Prompt libraries and sharing
 - [ ] Custom Workflows and Pipelines, Enable users to chain multiple LLM calls into a single workflow
-- [ ] API Integration 
+- [ ] API Integration
 - [ ] Advanced Analytics and Monitoring
 - [ ] Semantic Search and Knowledge Base
 - [ ] Plugin Ecosystem
 - [ ] AI-Assisted Prompt Engineering
-- [ ] Ethical AI Features
-
 ## Changelog
 
 The changelog is available at [CHANGELOG](./CHANGELOG.md)
-
 ## 📄 License
 
 This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
