@@ -1,4 +1,5 @@
 // src/utils/output_handler.ts
+
 import fs from 'fs/promises';
 import path from 'path';
 import { XMLBuilder } from 'fast-xml-parser';
@@ -10,7 +11,6 @@ export class OutputHandler {
   private outputPath: string | undefined;
   private format: 'json' | 'xml';
   private buffer: string = '';
-  private outputStream: fs.FileHandle | null = null;
 
   constructor(outputPath: string | undefined, format: 'json' | 'xml') {
     this.outputPath = outputPath;
@@ -40,13 +40,13 @@ export class OutputHandler {
    * @param outputVariables The variables to be output
    */
   async handleOutput(outputVariables: Record<string, any>): Promise<void> {
-    if (!this.outputPath || this.outputPath.trim() === '') {
-      this.displayInConsole(outputVariables);
-      return;
-    }
-
     const formattedOutput = this.formatOutput(outputVariables);
-    await this.writeToFile(formattedOutput);
+    
+    if (this.outputPath && this.outputPath.trim() !== '') {
+      await this.writeToFile(formattedOutput);
+    } else {
+      this.displayInConsole(outputVariables);
+    }
   }
 
   /**
@@ -72,7 +72,7 @@ export class OutputHandler {
     try {
       const fullPath = this.getFullPath();
       await this.ensureDirectoryExists(path.dirname(fullPath));
-
+      
       if (await this.fileExists(fullPath)) {
         const overwrite = await this.promptOverwrite(fullPath);
         if (!overwrite) {
@@ -80,7 +80,7 @@ export class OutputHandler {
           return;
         }
       }
-
+      
       await fs.writeFile(fullPath, content, 'utf-8');
       logger.info(`Output written to ${fullPath}`);
     } catch (error) {
@@ -96,14 +96,11 @@ export class OutputHandler {
     if (!this.outputPath) {
       throw new Error('Output path is not defined');
     }
-
     let fullPath = path.resolve(this.outputPath);
     const ext = path.extname(fullPath);
-
     if (!ext) {
       fullPath += `.${this.format}`;
     }
-
     return fullPath;
   }
 
@@ -153,70 +150,6 @@ export class OutputHandler {
    * @param outputVariables The variables to display
    */
   private displayInConsole(outputVariables: Record<string, any>): void {
-    logger.info('Output variables:');
     console.log(JSON.stringify(outputVariables, null, 2));
   }
-
-  /**
-   * Handles a chunk of streamed output.
-   * @param chunk The chunk of output to handle
-   */
-  async handleChunk(chunk: string): Promise<void> {
-    this.buffer += chunk;
-    process.stdout.write(chunk);
-    if (this.outputStream) {
-      try {
-        await this.outputStream.write(chunk);
-      } catch (error) {
-        logger.error(`Failed to write chunk to file: ${error}`);
-      }
-    }
-  }
-
-  /**
-   * Finalizes the output handling, closing any open streams.
-   */
-  async finalize(): Promise<void> {
-    if (this.outputStream) {
-      try {
-        await this.outputStream.close();
-        logger.info('Output stream closed');
-      } catch (error) {
-        logger.error(`Failed to close output stream: ${error}`);
-      }
-    }
-  }
-
-  /**
-   * Gets the full response accumulated in the buffer.
-   * @returns The full response as a string
-   */
-  getFullResponse(): string {
-    return this.buffer;
-  }
-
-  /**
-   * Initializes the output handler, opening the output stream if necessary.
-   */
-  async initialize(): Promise<void> {
-    if (this.outputPath && this.outputPath.trim() !== '') {
-      try {
-        this.outputStream = await fs.open(this.getFullPath(), 'w');
-      } catch (error) {
-        logger.error(`Failed to open output file: ${error}`);
-      }
-    }
-  }
-}
-
-/**
- * Creates a new OutputHandler instance and initializes it.
- * @param outputPath Optional file path for output
- * @param format The output format (json or xml)
- * @returns Initialized OutputHandler
- */
-export async function createOutputHandler(outputPath?: string, format: 'json' | 'xml' = 'json'): Promise<OutputHandler> {
-  const handler = new OutputHandler(outputPath, format);
-  await handler.initialize();
-  return handler;
 }

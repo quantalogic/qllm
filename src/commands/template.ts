@@ -73,7 +73,7 @@ function createExecuteCommand(): Command {
     .addOption(cliOptions.streamOption)
     .addOption(new Option('--output [file]', 'Output file path'))
     .addOption(new Option('--format <format>', 'Output format').choices(['json', 'xml']).default('json'))
-    .option('-v, --variable <variables...>', 'Set variable values for the template', collectVariables, {})
+    .option('-v, --variable <key=value>', 'Set variable values for the template', collectVariables, {})
     .action(async (name: string, options: any) => {
       try {
         logger.debug(`Attempting to execute template: ${name}`);
@@ -105,6 +105,7 @@ function createExecuteCommand(): Command {
         };
 
         const mergedOptions = mergeOptions(defaultOptions, options);
+
         const providerOptions: LLMProviderOptions = {
           maxTokens: mergedOptions.maxTokens,
           temperature: mergedOptions.temperature,
@@ -129,7 +130,6 @@ function createExecuteCommand(): Command {
 
         const outputHandler = new OutputHandler(options.output === true ? undefined : options.output, options.format);
         await outputHandler.handleOutput(result.outputVariables);
-
       } catch (error) {
         ErrorManager.handleError('ExecuteTemplateError', `Failed to execute template: ${error}`);
       }
