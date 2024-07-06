@@ -14,6 +14,7 @@ input_variables:
     description: The genre of the story
     default: "fantasy"
 content: >
+  {{file:./role.md}}
   Create a {{genre}} story with a title and a content about {{subject}}
   The story must be funny and interesting
 
