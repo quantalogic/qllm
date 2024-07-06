@@ -1,5 +1,4 @@
 // src/commands/template.ts
-
 import { Command } from 'commander';
 import prompts from 'prompts';
 import yaml from 'js-yaml';
@@ -67,6 +66,7 @@ function createExecuteCommand(): Command {
     .addOption(cliOptions.topPOption)
     .addOption(cliOptions.topKOption)
     .addOption(cliOptions.systemOption)
+    .addOption(cliOptions.streamOption)
     .option('-v, --variable <key=value>', 'Set variable values for the template', collectVariables, {})
     .action(async (name: string, options: any) => {
       try {
@@ -75,8 +75,8 @@ function createExecuteCommand(): Command {
         if (!template) {
           throw new Error(`Template '${name}' not found`);
         }
-        logger.debug(`Template found: ${JSON.stringify(template)}`);
 
+        logger.debug(`Template found: ${JSON.stringify(template)}`);
         const variables = parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
@@ -85,9 +85,8 @@ function createExecuteCommand(): Command {
         const modelAlias = options.model || template.model || config.modelAlias;
 
         logger.debug(`Using provider: ${providerName}, model alias: ${modelAlias}`);
-
-        const modelId = resolveModelAlias(providerName as ProviderName, modelAlias);
-        logger.debug(`Resolved model ID: ${modelId}`);
+        const model = resolveModelAlias(providerName as ProviderName, modelAlias);
+        logger.debug(`Resolved model: ${model}`);
 
         const provider = await ProviderFactory.getProvider(providerName as ProviderName);
 
@@ -96,7 +95,7 @@ function createExecuteCommand(): Command {
           temperature: template.parameters?.temperature,
           topP: template.parameters?.top_p,
           topK: template.parameters?.top_k,
-          model: modelId,
+          model: model,
         };
 
         const mergedOptions = mergeOptions(defaultOptions, options);
@@ -107,7 +106,7 @@ function createExecuteCommand(): Command {
           topP: mergedOptions.topP,
           topK: mergedOptions.topK,
           system: mergedOptions.system,
-          model: modelId,
+          model: model,
         };
 
         logger.debug(`Provider options: ${JSON.stringify(providerOptions)}`);
@@ -117,11 +116,15 @@ function createExecuteCommand(): Command {
           variables,
           providerOptions,
           provider,
+          stream: options.stream,
         };
 
         const result = await TemplateExecutor.execute(executionContext);
-        console.log('Execution result:');
-        console.log(result);
+
+        if (!options.stream) {
+          console.log('Execution result:');
+          console.log(result);
+        }
       } catch (error) {
         ErrorManager.handleError('ExecuteTemplateError', `Failed to execute template: ${error}`);
       }
@@ -194,10 +197,9 @@ function createVariablesCommand(): Command {
 
 function displayTemplateVariables(template: TemplateDefinition): void {
   console.log(`Variables for template '${template.name}':`);
-  
   const definedVariables = template.input_variables || {};
   const contentVariables = extractContentVariables(template.content);
-  
+
   if (Object.keys(definedVariables).length === 0 && contentVariables.length === 0) {
     console.log('No variables defined in this template.');
     return;

@@ -63,4 +63,6 @@ export interface ExecutionContext {
   providerOptions: LLMProviderOptions;
   /** The LLM provider instance to be used for execution. */
   provider: LLMProvider;
+  /** Whether to stream the output. */
+  stream?: boolean;
 }
