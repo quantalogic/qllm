@@ -14,6 +14,7 @@ import { cliOptions } from '../options';
 import { resolveModelAlias } from '../config/model_aliases';
 import { ProviderName } from '../config/types';
 import { ProviderFactory } from '../providers/provider_factory';
+import { TemplateValidator } from '../templates/template_validator';
 
 export function createTemplateCommand(): Command {
   const templateCommand = new Command('template')
@@ -49,6 +50,7 @@ function createCreateCommand(): Command {
     .action(async () => {
       try {
         const template = await promptForTemplateDetails();
+        TemplateValidator.validate(template);
         await templateManager.saveTemplate(template);
         logger.info(`Template ${template.name} created successfully`);
       } catch (error) {
@@ -75,8 +77,8 @@ function createExecuteCommand(): Command {
         if (!template) {
           throw new Error(`Template '${name}' not found`);
         }
-
         logger.debug(`Template found: ${JSON.stringify(template)}`);
+
         const variables = parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
@@ -119,7 +121,6 @@ function createExecuteCommand(): Command {
         };
 
         const result = await TemplateExecutor.execute(executionContext);
-
         if (!options.stream) {
           console.log('Execution result:');
           console.log(result);
@@ -169,6 +170,7 @@ function createEditCommand(): Command {
           throw new Error(`Template '${name}' not found`);
         }
         const updatedTemplate = await promptForTemplateDetails(template);
+        TemplateValidator.validate(updatedTemplate);
         await templateManager.saveTemplate(updatedTemplate);
         logger.info(`Template ${name} updated successfully`);
       } catch (error) {
@@ -265,7 +267,7 @@ function parseVariables(args: string[], template: TemplateDefinition): Record<st
   return variables;
 }
 
-function collectVariables(value: string, previous: Record<string, any>) {
+function collectVariables(value: string, previous: Record<string, string>) {
   const [key, val] = value.split('=');
   return { ...previous, [key]: val };
 }

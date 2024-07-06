@@ -35,6 +35,7 @@ export class TemplateExecutor {
 
       // Execute the request
       logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
+
       if (stream) {
         const outputHandler = await createStreamOutputHandler();
         return handleStreamWithSpinnerAndOutput(
@@ -186,4 +187,3 @@ export class TemplateExecutor {
     return response;
   }
 }
-
