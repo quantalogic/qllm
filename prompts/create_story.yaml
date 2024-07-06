@@ -8,36 +8,28 @@ input_variables:
   subject:
     type: string
     description: The subject of the story
-    default: "a magical adventure"
+    default: "Emmanuel Macron dissout l'assemblée"
   genre:
     type: string
     description: The genre of the story
-    default: "fantasy"
+    default: "Humour et satire"
   role:
     type: string
     description: The role of the user
-    default: "writer"
+    default: "Gaspar PROUST"
   lang:
     type: string
     description: The language of the story
-    default: "english"
+    default: "Français"
+  max_length:
+    type: number
+    description: The maximum length of the story
+    default: 100
+output_variables:
+  story:
+    type: string
+    description: The story
+
 content: >
-  {{file:./role.md}}
-  Create a {{genre}} story with a title and a content about {{subject}}
-  The story must be funny and interesting
-
-  The output must written using markdown format.
-
-  Write in language {{lang}}.
-
-  With the structure:
-
-    <story>
-    # Title 
-  
-    Introduction
-    The hero
-    The villain
-    The end
-    </story>
+  {{file:./story.md}}
  

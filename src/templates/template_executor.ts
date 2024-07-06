@@ -6,14 +6,16 @@ import { ErrorManager } from '../utils/error_manager';
 import { promptForMissingVariables } from '../utils/variable_prompt';
 import { createStreamOutputHandler } from "../helpers/stream_helper";
 import { handleStreamWithSpinnerAndOutput } from "../helpers/stream_helper";
+import { OutputVariableExtractor } from './output_variable_extractor';
+import { log } from 'console';
 
 export class TemplateExecutor {
     /**
      * Executes a template with the given context.
      * @param context The execution context containing the template, variables, and provider options.
-     * @returns A promise that resolves to the generated content.
+     * @returns A promise that resolves to the generated content and extracted output variables.
      */
-    static async execute(context: ExecutionContext): Promise<string> {
+    static async execute(context: ExecutionContext): Promise<{ response: string, outputVariables: Record<string, any> }> {
         const { template, variables, providerOptions, provider, stream } = context;
 
         try {
@@ -30,18 +32,22 @@ export class TemplateExecutor {
 
             logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
 
+            let response: string;
             if (stream) {
                 const outputHandler = await createStreamOutputHandler();
-                return handleStreamWithSpinnerAndOutput(
+                response = await handleStreamWithSpinnerAndOutput(
                     provider,
                     messages,
                     providerOptions,
                     outputHandler
                 );
             } else {
-                const response = await provider.generateMessage(messages, providerOptions);
-                return this.processOutputVariables(template, response);
+                response = await provider.generateMessage(messages, providerOptions);
             }
+
+            const outputVariables = this.processOutputVariables(template, response);
+
+            return { response, outputVariables };
         } catch (error) {
             logger.error(`Failed to execute template: ${error}`);
             ErrorManager.handleError('TemplateExecutionError', error instanceof Error ? error.message : String(error));
@@ -57,8 +63,8 @@ export class TemplateExecutor {
      */
     private static async resolveVariables(
         template: TemplateDefinition,
-        initialVariables: Record<string, string>
-    ): Promise<Record<string, string>> {
+        initialVariables: Record<string, any>
+    ): Promise<Record<string, any>> {
         return promptForMissingVariables(template.input_variables || {}, initialVariables);
     }
 
@@ -67,7 +73,7 @@ export class TemplateExecutor {
      * @param template The template definition.
      * @param variables The input variables.
      */
-    private static validateInputVariables(template: TemplateDefinition, variables: Record<string, string>): void {
+    private static validateInputVariables(template: TemplateDefinition, variables: Record<string, any>): void {
         const inputVariables = template.input_variables || {};
         for (const [key, variable] of Object.entries(inputVariables)) {
             if (!(key in variables) && !('default' in variable)) {
@@ -120,7 +126,7 @@ export class TemplateExecutor {
      * @param variables The resolved variables.
      * @returns A promise that resolves to the prepared content.
      */
-    private static async prepareContent(template: TemplateDefinition, variables: Record<string, string>): Promise<string> {
+    private static async prepareContent(template: TemplateDefinition, variables: Record<string, any>): Promise<string> {
         let content = template.resolved_content || template.content;
 
         for (const [key, value] of Object.entries(variables)) {
@@ -147,13 +153,16 @@ export class TemplateExecutor {
      * Processes output variables from the response.
      * @param template The template definition.
      * @param response The response from the LLM provider.
-     * @returns The processed response.
+     * @returns The extracted output variables.
      */
-    private static processOutputVariables(template: TemplateDefinition, response: string): string {
-        // TODO: Implement output variable processing logic
-        // This could involve parsing the response based on the defined output_variables
-        // and potentially transforming the data as specified in the template
-        // For now, we'll just return the raw response
-        return response;
+    private static processOutputVariables(template: TemplateDefinition, response: string): Record<string, any> {
+        if (!template.output_variables) {
+            return {
+              qqlm_response: response
+            }
+        }
+        const extractor = new OutputVariableExtractor(template);
+        //logger.debug(`Extracting output variables from response: ${response}`);
+        return { qllm_response: response, ...extractor.extractVariables(response) };
     }
 }

@@ -1,5 +1,5 @@
 // src/templates/template_validator.ts
-import { TemplateDefinition, TemplateVariable } from './types';
+import { TemplateDefinition, TemplateVariable, OutputVariable } from './types';
 import { ErrorManager } from '../utils/error_manager';
 
 export class TemplateValidator {
@@ -13,6 +13,7 @@ export class TemplateValidator {
     this.validateInputVariables(template);
     this.validateOutputVariables(template);
     this.validateContent(template);
+    this.validateParameters(template);
   }
 
   /**
@@ -36,6 +37,7 @@ export class TemplateValidator {
    */
   private static validateInputVariables(template: TemplateDefinition): void {
     if (!template.input_variables) return;
+
     for (const [key, variable] of Object.entries(template.input_variables)) {
       this.validateVariable(key, variable, 'input');
     }
@@ -48,8 +50,9 @@ export class TemplateValidator {
    */
   private static validateOutputVariables(template: TemplateDefinition): void {
     if (!template.output_variables) return;
+
     for (const [key, variable] of Object.entries(template.output_variables)) {
-      this.validateVariable(key, variable, 'output');
+      this.validateOutputVariable(key, variable);
     }
   }
 
@@ -64,14 +67,41 @@ export class TemplateValidator {
     if (!variable.type) {
       ErrorManager.throwError('TemplateValidationError', `Missing type for ${variableType} variable: ${key}`);
     }
+
     if (!['string', 'number', 'boolean', 'array'].includes(variable.type)) {
       ErrorManager.throwError('TemplateValidationError', `Invalid type for ${variableType} variable ${key}: ${variable.type}`);
     }
+
     if (!variable.description) {
       ErrorManager.throwError('TemplateValidationError', `Missing description for ${variableType} variable: ${key}`);
     }
+
     if (variableType === 'input' && 'default' in variable) {
       this.validateDefaultValue(key, variable);
+    }
+  }
+
+  /**
+   * Validates an output variable.
+   * @param key The variable key.
+   * @param variable The output variable definition.
+   * @throws {Error} If the output variable is invalid.
+   */
+  private static validateOutputVariable(key: string, variable: OutputVariable): void {
+    if (!variable.type) {
+      ErrorManager.throwError('TemplateValidationError', `Missing type for output variable: ${key}`);
+    }
+
+    if (!['string', 'integer', 'float', 'boolean', 'array', 'object'].includes(variable.type)) {
+      ErrorManager.throwError('TemplateValidationError', `Invalid type for output variable ${key}: ${variable.type}`);
+    }
+
+    if (!variable.description) {
+      ErrorManager.throwError('TemplateValidationError', `Missing description for output variable: ${key}`);
+    }
+
+    if ('default' in variable) {
+      this.validateOutputDefaultValue(key, variable);
     }
   }
 
@@ -83,6 +113,7 @@ export class TemplateValidator {
    */
   private static validateDefaultValue(key: string, variable: TemplateVariable): void {
     if (variable.default === undefined) return;
+
     switch (variable.type) {
       case 'string':
         if (typeof variable.default !== 'string') {
@@ -102,6 +133,47 @@ export class TemplateValidator {
       case 'array':
         if (!Array.isArray(variable.default)) {
           ErrorManager.throwError('TemplateValidationError', `Invalid default value for array variable ${key}`);
+        }
+        break;
+    }
+  }
+
+  /**
+   * Validates the default value of an output variable.
+   * @param key The variable key.
+   * @param variable The output variable definition.
+   * @throws {Error} If the default value is invalid.
+   */
+  private static validateOutputDefaultValue(key: string, variable: OutputVariable): void {
+    switch (variable.type) {
+      case 'string':
+        if (typeof variable.default !== 'string') {
+          ErrorManager.throwError('TemplateValidationError', `Invalid default value for string output variable ${key}`);
+        }
+        break;
+      case 'integer':
+        if (!Number.isInteger(variable.default)) {
+          ErrorManager.throwError('TemplateValidationError', `Invalid default value for integer output variable ${key}`);
+        }
+        break;
+      case 'float':
+        if (typeof variable.default !== 'number') {
+          ErrorManager.throwError('TemplateValidationError', `Invalid default value for float output variable ${key}`);
+        }
+        break;
+      case 'boolean':
+        if (typeof variable.default !== 'boolean') {
+          ErrorManager.throwError('TemplateValidationError', `Invalid default value for boolean output variable ${key}`);
+        }
+        break;
+      case 'array':
+        if (!Array.isArray(variable.default)) {
+          ErrorManager.throwError('TemplateValidationError', `Invalid default value for array output variable ${key}`);
+        }
+        break;
+      case 'object':
+        if (typeof variable.default !== 'object' || variable.default === null) {
+          ErrorManager.throwError('TemplateValidationError', `Invalid default value for object output variable ${key}`);
         }
         break;
     }
@@ -137,6 +209,41 @@ export class TemplateValidator {
     for (const variable of contentVariables) {
       if (!(variable in inputVariables)) {
         ErrorManager.throwError('TemplateValidationError', `Undefined variable ${variable} found in template content`);
+      }
+    }
+  }
+
+  /**
+   * Validates the parameters of the template.
+   * @param template The template definition to validate.
+   * @throws {Error} If any parameter is invalid.
+   */
+  private static validateParameters(template: TemplateDefinition): void {
+    if (!template.parameters) return;
+
+    const validParameters = ['max_tokens', 'temperature', 'top_p', 'top_k'];
+    for (const [key, value] of Object.entries(template.parameters)) {
+      if (!validParameters.includes(key)) {
+        ErrorManager.throwError('TemplateValidationError', `Invalid parameter: ${key}`);
+      }
+
+      switch (key) {
+        case 'max_tokens':
+          if (!Number.isInteger(value) || value <= 0) {
+            ErrorManager.throwError('TemplateValidationError', `Invalid value for max_tokens: ${value}`);
+          }
+          break;
+        case 'temperature':
+        case 'top_p':
+          if (typeof value !== 'number' || value < 0 || value > 1) {
+            ErrorManager.throwError('TemplateValidationError', `Invalid value for ${key}: ${value}`);
+          }
+          break;
+        case 'top_k':
+          if (!Number.isInteger(value) || value <= 0) {
+            ErrorManager.throwError('TemplateValidationError', `Invalid value for top_k: ${value}`);
+          }
+          break;
       }
     }
   }

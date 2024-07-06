@@ -281,6 +281,7 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 
 - [X] Add support for custom prompts and templates
    - [X] Ask for variable in the console if the variable are not set in the template
+   - [X] Support include
    - [ ] Add support for output variables
    - [ ] Add support for worflow
 - [X] Integrate Ollama for local model support
@@ -296,7 +297,6 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 - [ ] Plugin Ecosystem
 - [ ] AI-Assisted Prompt Engineering
 - [ ] Ethical AI Features
-
 
 ## Changelog
 
