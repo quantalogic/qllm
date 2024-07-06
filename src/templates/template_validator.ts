@@ -36,7 +36,6 @@ export class TemplateValidator {
    */
   private static validateInputVariables(template: TemplateDefinition): void {
     if (!template.input_variables) return;
-
     for (const [key, variable] of Object.entries(template.input_variables)) {
       this.validateVariable(key, variable, 'input');
     }
@@ -49,7 +48,6 @@ export class TemplateValidator {
    */
   private static validateOutputVariables(template: TemplateDefinition): void {
     if (!template.output_variables) return;
-
     for (const [key, variable] of Object.entries(template.output_variables)) {
       this.validateVariable(key, variable, 'output');
     }
@@ -66,15 +64,12 @@ export class TemplateValidator {
     if (!variable.type) {
       ErrorManager.throwError('TemplateValidationError', `Missing type for ${variableType} variable: ${key}`);
     }
-
     if (!['string', 'number', 'boolean', 'array'].includes(variable.type)) {
       ErrorManager.throwError('TemplateValidationError', `Invalid type for ${variableType} variable ${key}: ${variable.type}`);
     }
-
     if (!variable.description) {
       ErrorManager.throwError('TemplateValidationError', `Missing description for ${variableType} variable: ${key}`);
     }
-
     if (variableType === 'input' && 'default' in variable) {
       this.validateDefaultValue(key, variable);
     }
@@ -88,7 +83,6 @@ export class TemplateValidator {
    */
   private static validateDefaultValue(key: string, variable: TemplateVariable): void {
     if (variable.default === undefined) return;
-
     switch (variable.type) {
       case 'string':
         if (typeof variable.default !== 'string') {
@@ -123,17 +117,23 @@ export class TemplateValidator {
       ErrorManager.throwError('TemplateValidationError', 'Template content must be a non-empty string');
     }
 
-    // Check if all input variables are used in the content
+    if (template.resolved_content && typeof template.resolved_content !== 'string') {
+      ErrorManager.throwError('TemplateValidationError', 'Resolved content must be a string');
+    }
+
+    const contentToValidate = template.resolved_content || template.content;
     const inputVariables = template.input_variables || {};
+
+    // Check if all input variables are used in the content
     for (const key in inputVariables) {
       const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
-      if (!regex.test(template.content)) {
+      if (!regex.test(contentToValidate)) {
         ErrorManager.throwError('TemplateValidationError', `Input variable ${key} is not used in the template content`);
       }
     }
 
     // Check for undefined variables in content
-    const contentVariables = this.extractContentVariables(template.content);
+    const contentVariables = this.extractContentVariables(contentToValidate);
     for (const variable of contentVariables) {
       if (!(variable in inputVariables)) {
         ErrorManager.throwError('TemplateValidationError', `Undefined variable ${variable} found in template content`);
