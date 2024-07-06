@@ -83,8 +83,8 @@ function createExecuteCommand(): Command {
         const config = configManager.getConfig();
         const providerName = options.provider || template.provider || config.defaultProvider;
         const modelAlias = options.model || template.model || config.modelAlias;
-
         logger.debug(`Using provider: ${providerName}, model alias: ${modelAlias}`);
+
         const model = resolveModelAlias(providerName as ProviderName, modelAlias);
         logger.debug(`Resolved model: ${model}`);
 
@@ -99,7 +99,6 @@ function createExecuteCommand(): Command {
         };
 
         const mergedOptions = mergeOptions(defaultOptions, options);
-
         const providerOptions: LLMProviderOptions = {
           maxTokens: mergedOptions.maxTokens,
           temperature: mergedOptions.temperature,
@@ -195,6 +194,82 @@ function createVariablesCommand(): Command {
     });
 }
 
+async function promptForTemplateDetails(existingTemplate?: TemplateDefinition): Promise<TemplateDefinition> {
+  const questions: prompts.PromptObject<string>[] = [
+    {
+      type: 'text' as const,
+      name: 'name',
+      message: 'Template name:',
+      initial: existingTemplate?.name
+    },
+    {
+      type: 'text' as const,
+      name: 'version',
+      message: 'Version:',
+      initial: existingTemplate?.version || '1.0.0'
+    },
+    {
+      type: 'text' as const,
+      name: 'description',
+      message: 'Description:',
+      initial: existingTemplate?.description
+    },
+    {
+      type: 'text' as const,
+      name: 'author',
+      message: 'Author:',
+      initial: existingTemplate?.author
+    },
+    {
+      type: 'text' as const,
+      name: 'provider',
+      message: 'Provider:',
+      initial: existingTemplate?.provider
+    },
+    {
+      type: 'text' as const,
+      name: 'model',
+      message: 'Model:',
+      initial: existingTemplate?.model
+    },
+    {
+      type: 'text' as const,
+      name: 'content',
+      message: 'Template content:',
+      initial: existingTemplate?.content
+    }
+  ];
+
+  const responses = await prompts(questions);
+  return responses as TemplateDefinition;
+}
+
+function parseVariables(args: string[], template: TemplateDefinition): Record<string, any> {
+  const variables: Record<string, any> = {};
+  const variablePattern = /^-v:(\w+)$/;
+
+  for (let i = 0; i < args.length; i++) {
+    const match = args[i].match(variablePattern);
+    if (match) {
+      const variableName = match[1];
+      const variableValue = args[i + 1];
+      if (variableValue && !variableValue.startsWith('-')) {
+        variables[variableName] = variableValue;
+        i++; // Skip the next argument as it's the value
+      } else {
+        logger.warn(`Missing value for variable: ${variableName}`);
+      }
+    }
+  }
+
+  return variables;
+}
+
+function collectVariables(value: string, previous: Record<string, any>) {
+  const [key, val] = value.split('=');
+  return { ...previous, [key]: val };
+}
+
 function displayTemplateVariables(template: TemplateDefinition): void {
   console.log(`Variables for template '${template.name}':`);
   const definedVariables = template.input_variables || {};
@@ -242,82 +317,6 @@ function formatDefaultValue(variable: TemplateVariable): string {
   } else {
     return String(variable.default);
   }
-}
-
-async function promptForTemplateDetails(existingTemplate?: TemplateDefinition): Promise<TemplateDefinition> {
-  const questions: prompts.PromptObject[] = [
-    {
-      type: 'text',
-      name: 'name',
-      message: 'Template name:',
-      initial: existingTemplate?.name
-    },
-    {
-      type: 'text',
-      name: 'version',
-      message: 'Version:',
-      initial: existingTemplate?.version || '1.0.0'
-    },
-    {
-      type: 'text',
-      name: 'description',
-      message: 'Description:',
-      initial: existingTemplate?.description
-    },
-    {
-      type: 'text',
-      name: 'author',
-      message: 'Author:',
-      initial: existingTemplate?.author
-    },
-    {
-      type: 'text',
-      name: 'provider',
-      message: 'Provider:',
-      initial: existingTemplate?.provider
-    },
-    {
-      type: 'text',
-      name: 'model',
-      message: 'Model:',
-      initial: existingTemplate?.model
-    },
-    {
-      type: 'text',
-      name: 'content',
-      message: 'Template content:',
-      initial: existingTemplate?.content
-    }
-  ];
-
-  const responses = await prompts(questions);
-  return responses as TemplateDefinition;
-}
-
-function parseVariables(args: string[], template: TemplateDefinition): Record<string, string> {
-  const variables: Record<string, string> = {};
-  const variablePattern = /^-v:(\w+)$/;
-
-  for (let i = 0; i < args.length; i++) {
-    const match = args[i].match(variablePattern);
-    if (match) {
-      const variableName = match[1];
-      const variableValue = args[i + 1];
-      if (variableValue && !variableValue.startsWith('-')) {
-        variables[variableName] = variableValue;
-        i++; // Skip the next argument as it's the value
-      } else {
-        logger.warn(`Missing value for variable: ${variableName}`);
-      }
-    }
-  }
-
-  return variables;
-}
-
-function collectVariables(value: string, previous: Record<string, string>) {
-  const [key, val] = value.split('=');
-  return { ...previous, [key]: val };
 }
 
 export default createTemplateCommand;

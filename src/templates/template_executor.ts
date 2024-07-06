@@ -5,8 +5,9 @@ import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error_manager';
 import fs from 'fs/promises';
 import path from 'path';
-import {createStreamOutputHandler } from '../helpers/output_helper';
-import { handleStreamWithSpinnerAndOutput } from '../helpers/stream_helper';
+import { promptForMissingVariables } from '../utils/variable_prompt';
+import { createStreamOutputHandler } from "../helpers/stream_helper";
+import { handleStreamWithSpinnerAndOutput } from "../helpers/stream_helper";
 
 export class TemplateExecutor {
   /**
@@ -16,22 +17,24 @@ export class TemplateExecutor {
    */
   static async execute(context: ExecutionContext): Promise<string> {
     const { template, variables, providerOptions, provider, stream } = context;
+
     try {
       logger.debug(`Executing template: ${JSON.stringify(template)}`);
-      logger.debug(`Variables: ${JSON.stringify(variables)}`);
-      logger.debug(`Provider options: ${JSON.stringify(providerOptions)}`);
+      logger.debug(`Initial variables: ${JSON.stringify(variables)}`);
+
+      // Prompt for missing variables
+      const resolvedVariables = await promptForMissingVariables(template.input_variables || {}, variables);
+      logger.debug(`Resolved variables: ${JSON.stringify(resolvedVariables)}`);
 
       // Validate input variables
-      this.validateInputVariables(template, variables);
+      this.validateInputVariables(template, resolvedVariables);
 
       // Prepare content
-      const content = await this.prepareContent(template, variables);
-
+      const content = await this.prepareContent(template, resolvedVariables);
       const messages: Message[] = [{ role: 'user', content }];
 
       // Execute the request
       logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
-
       if (stream) {
         const outputHandler = await createStreamOutputHandler();
         return handleStreamWithSpinnerAndOutput(
@@ -183,3 +186,4 @@ export class TemplateExecutor {
     return response;
   }
 }
+
