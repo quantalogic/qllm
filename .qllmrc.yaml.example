@@ -3,5 +3,5 @@ awsRegion: us-east-1
 defaultProvider: anthropic
 promptDirectory: ./prompts
 logLevel: info
-defaultModel: haiku
+defaultModelAlias: haiku
 defaultMaxTokens: 2048

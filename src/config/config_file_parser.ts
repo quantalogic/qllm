@@ -15,6 +15,8 @@ export function parseConfigFile(filePath: string): Partial<AppConfig> {
         logger.debug(`Parsing config file: ${filePath}`);
         const fileContents = fs.readFileSync(filePath, 'utf8');
         const config = yaml.load(fileContents) as Partial<AppConfig>;
+
+        config.configFile = filePath;
         
         // Validate the parsed configuration
         validateConfig(config);

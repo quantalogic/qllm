@@ -35,7 +35,7 @@ export function createConfigCommand(): Command {
 function showConfig(): void {
     const config = configManager.getConfig();
     config.configFile = config.configFile || 'Not set';
-    logger.info(`Current configuration: from file ${config.configFile}`);
+    console.info('Current configuration:');
     Object.entries(config).forEach(([key, value]) => {
         if (key.toLowerCase().includes('secret')) {
             console.info(`${key}: [HIDDEN]`);

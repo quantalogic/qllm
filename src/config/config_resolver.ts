@@ -7,6 +7,7 @@ import { parseConfigFile } from './config_file_parser';
 import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error_manager';
 import { DEFAULT_CONFIG } from './default_config';
+import { log } from 'console';
 
 
 
@@ -29,6 +30,7 @@ export async function resolveConfig(cliOptions: Partial<AppConfig>, envConfig: P
 
         let fileConfig: Partial<AppConfig> = {};
         for (const configPath of configFilePaths) {
+            logger.debug(`Checking configuration file: ${configPath}`);
             if (await fileExists(configPath)) {
                 logger.debug(`Loading configuration from: ${configPath}`);
                 const parsedConfig = await parseConfigFile(configPath);
