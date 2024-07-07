@@ -11,8 +11,14 @@ export class ProviderFactory {
   private static pluginManager = new PluginManager();
 
   static async getProvider(providerName: ProviderName): Promise<LLMProvider> {
+
     const config = configManager.getConfig();
     const modelId = config.defaultModelId || getDefaultModel(providerName);
+
+    if(!modelId) {
+      ErrorManager.throwError('ModelError', `No default model set for provider: ${providerName}`);
+    }
+
     const options: LLMProviderOptions = {
       model: modelId,
       awsProfile: config.awsProfile,

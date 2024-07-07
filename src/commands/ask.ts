@@ -1,15 +1,17 @@
+// src/commands/ask.ts
+
 import { Command } from 'commander';
 import fs from 'fs/promises';
 import { ProviderFactory } from '../providers/provider_factory';
 import { logger } from '../utils/logger';
-import { Spinner } from '../utils/spinner';
 import { cliOptions } from '../options';
 import { formatOutput, writeOutput } from '../helpers/output_helper';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { displayOptions } from '../utils/option_display';
-import { mergeOptions } from '../utils/option_merging';
 import { configManager } from '../utils/configuration_manager';
 import { withSpinner } from '../helpers/spinner_helper';
+import { ErrorManager } from '../utils/error_manager';
+import { getModelProvider } from '../utils/get_model_provider';
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
@@ -22,23 +24,28 @@ export function createAskCommand(): Command {
     .addOption(cliOptions.fileOption)
     .addOption(cliOptions.outputOption)
     .addOption(cliOptions.formatOption)
+
     .action(async (options, command) => {
       try {
-        const globalOptions = command.parent?.opts();
-        const config = configManager.getConfig();
-        const providerName = options.provider || globalOptions.provider || config.defaultProvider;
-        const model = options.modelId || globalOptions.modelId || config.defaultModelId || "";
+
+        const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
+
+        const { providerName, modelId } = getModelProvider();
+
+        logger.debug(`providerName: ${providerName}`);
+        logger.debug(`modelId: ${modelId}`);
+        logger.debug(`maxTokens: ${maxTokens}`);
 
         const provider = await ProviderFactory.getProvider(providerName);
 
+        // Handle input from file or command line
         let input: string;
         if (options.file) {
           input = await fs.readFile(options.file, 'utf-8');
         } else {
           input = command.args.join(' ');
           if (!input) {
-            logger.error('No question provided. Please provide a question or use the --file option.');
-            return;
+            ErrorManager.throwError('InputError', 'No question provided. Please provide a question or use the --file option.');
           }
         }
 
@@ -46,42 +53,32 @@ export function createAskCommand(): Command {
 
         logger.debug(`providerName: ${providerName}`);
 
-        const defaultOptions: Partial<LLMProviderOptions> = {
-          maxTokens: 256,
-          temperature: 0.7,
-          topP: 1,
-          topK: 250,
-          model: model,
+        // Prepare provider options
+        const llmOptions: LLMProviderOptions = {
+          maxTokens: maxTokens,
+          temperature: options.temperature,
+          topP: options.topP,
+          topK: options.topK,
+          model: modelId,
         };
 
-        const mergedOptions = mergeOptions(defaultOptions, options);
-        const providerOptions: LLMProviderOptions = {
-          maxTokens: mergedOptions.maxTokens,
-          temperature: mergedOptions.temperature,
-          topP: mergedOptions.topP,
-          topK: mergedOptions.topK,
-          system: mergedOptions.system,
-          model: model,
-        };
+        displayOptions(llmOptions, 'ask');
 
-        displayOptions(providerOptions, 'ask');
-
+        // Generate response with spinner
         const response = await withSpinner(
-          () => provider.generateMessage(messages, providerOptions),
+          () => provider.generateMessage(messages, llmOptions),
           'Generating response'
         );
 
+        // Format and write output
         const output = formatOutput({ content: [{ text: response }] }, options.format);
         await writeOutput(output, options.output);
-
       } catch (error) {
-        if (error instanceof Error) {
-          logger.error(`An error occurred: ${error.message}`);
-        } else {
-          logger.error(`An error occurred: ${error}`);
-        }
+        ErrorManager.handleError('AskCommandError', error instanceof Error ? error.message : String(error));
       }
     });
 
   return askCommand;
 }
+
+

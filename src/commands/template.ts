@@ -2,22 +2,19 @@
 import { Command, Option } from 'commander';
 import prompts from 'prompts';
 import yaml from 'js-yaml';
-import fs from 'fs/promises';
-import path from 'path';
 import { templateManager } from '../templates/template_manager';
 import { TemplateExecutor } from '../templates/template_executor';
 import { logger } from '../utils/logger';
 import { ExecutionContext, TemplateDefinition, TemplateVariable } from '../templates/types';
 import { ErrorManager } from '../utils/error_manager';
 import { LLMProviderOptions } from '../providers/types';
-import { mergeOptions } from '../utils/option_merging';
 import { configManager } from '../utils/configuration_manager';
 import { cliOptions } from '../options';
-import { resolveModelAlias } from '../config/model_aliases';
-import { ProviderName } from '../config/types';
+
 import { ProviderFactory } from '../providers/provider_factory';
 import { displayOptions } from '../utils/option_display';
 import { OutputHandler } from '../utils/output_handler';
+import { getModelProvider } from '../utils/get_model_provider';
 
 export function createTemplateCommand(): Command {
   const templateCommand = new Command('template')
@@ -79,7 +76,7 @@ function createExecuteCommand(): Command {
     .addOption(cliOptions.streamOption)
     .addOption(new Option('--output [file]', 'Output file path'))
     .addOption(new Option('--format <format>', 'Output format').choices(['json', 'xml']).default('json'))
-    .option('-v, --variable <variable...>', 'Set variable values for the template', collectVariables, {})
+    .option('-v, --variable <key>=<value>', 'Set variable values for the template', collectVariables, {})
     .action(async (name: string, options: any) => {
       try {
         logger.debug(`Attempting to execute template: ${name}`);
@@ -92,42 +89,31 @@ function createExecuteCommand(): Command {
         const variables = await templateManager.parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
-        const config = configManager.getConfig();
-        const providerName = options.provider || template.provider || config.defaultProvider;
-        const modelAlias = options.model || template.model || config.defaultModelAlias;
-        logger.debug(`Using provider: ${providerName}, model alias: ${modelAlias}`);
 
-        const model = resolveModelAlias(providerName as ProviderName, modelAlias);
-        logger.debug(`Resolved model: ${model}`);
+        const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
 
-        const provider = await ProviderFactory.getProvider(providerName as ProviderName);
+        const { providerName, modelId } = getModelProvider();
 
-        const defaultOptions: Partial<LLMProviderOptions> = {
-          maxTokens: template.parameters?.max_tokens,
-          temperature: template.parameters?.temperature,
-          topP: template.parameters?.top_p,
-          topK: template.parameters?.top_k,
-          model: model,
+        logger.debug(`providerName: ${providerName}`);
+        logger.debug(`modelId: ${modelId}`);
+        logger.debug(`maxTokens: ${maxTokens}`);
+
+        const provider = await ProviderFactory.getProvider(providerName);
+
+        const llmOptions: LLMProviderOptions = {
+          maxTokens: maxTokens,
+          temperature: options.temperature,
+          topP: options.topP,
+          topK: options.topK,
+          model: modelId,
         };
 
-        const mergedOptions = mergeOptions(defaultOptions, options);
-
-        const providerOptions: LLMProviderOptions = {
-          maxTokens: mergedOptions.maxTokens,
-          temperature: mergedOptions.temperature,
-          topP: mergedOptions.topP,
-          topK: mergedOptions.topK,
-          system: mergedOptions.system,
-          model: model,
-        };
-
-        logger.debug(`Provider options: ${JSON.stringify(providerOptions)}`);
-        displayOptions(providerOptions, 'execute');
+        displayOptions(llmOptions, 'execute');
 
         const executionContext: ExecutionContext = {
           template,
           variables,
-          providerOptions,
+          providerOptions: llmOptions,
           provider,
           stream: options.stream,
         };
@@ -315,3 +301,4 @@ function formatDefaultValue(variable: TemplateVariable): string {
 }
 
 export default createTemplateCommand;
+

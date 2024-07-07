@@ -20,7 +20,6 @@ function parseNumeric(value: string, min: number, max: number, defaultValue: num
 
 // Option for maximum number of tokens to generate
 export const maxTokensOption = new Option('-t, --max-tokens <number>', 'Maximum number of tokens to generate')
-  .default(256)
   .argParser((value) => parseNumeric(value, 1, 8192, 256));
 
 // Option for temperature in response generation
@@ -67,6 +66,7 @@ export const formatOption = new Option('--format <format>', 'Output format')
 // Option for streaming output
 export const streamOption = new Option('--stream', 'Stream the output')
   .default(false);
+
 
 // Exporting all CLI options
 export const cliOptions = {

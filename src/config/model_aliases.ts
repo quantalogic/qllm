@@ -1,6 +1,6 @@
 // src/config/model_aliases.ts
 
-import { ProviderConfig, ProviderName } from './types';
+import { ModelAlias, ProviderConfig, ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
 import openaiConfig from './providers/openai';
 import ollamaConfig from './providers/ollama';
@@ -30,24 +30,20 @@ export function getProviderConfig(provider: ProviderName): ProviderConfig {
  * Resolves a model alias to its corresponding model ID for a specific provider.
  * @param provider The name of the provider.
  * @param modelAlias The alias of the model to resolve.
- * @returns The model ID corresponding to the given alias.
- * @throws Error if the model alias is invalid for the specified provider.
+ * @returns The model ID corresponding to the given alias or undefined if not found.
  */
-export function resolveModelAlias(provider: ProviderName, modelAlias: string): string {
+export function resolveModelAlias(provider: ProviderName, modelAlias: string): string | undefined {
   const config = getProviderConfig(provider);
   const model = config.models.find(m => m.alias === modelAlias);
-  if (!model) {
-    throw new Error(`Invalid model alias for provider ${provider}: ${modelAlias}`);
-  }
-  return model.modelId;
+  return model?.modelId;
 }
 
 /**
  * Retrieves the default model for a specific provider.
  * @param provider The name of the provider.
- * @returns The model ID of the default model for the specified provider.
+ * @returns The model ID of the default model for the specified provider or undefined if not found.
  */
-export function getDefaultModel(provider: ProviderName): string {
+export function getDefaultModel(provider: ProviderName): string | undefined {
   const config = getProviderConfig(provider);
   return resolveModelAlias(provider, config.defaultModel);
 }
