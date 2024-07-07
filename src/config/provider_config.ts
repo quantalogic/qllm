@@ -38,18 +38,5 @@ export function getProviderConfig(providerName: ProviderName): ProviderConfig {
   return { ...config };
 }
 
-export function updateProviderConfig(providerName: ProviderName, updates: Partial<ProviderConfig>): void {
-  const config = PROVIDER_CONFIGS[providerName];
-  if (!config) {
-    throw new Error(`Unknown provider: ${providerName}`);
-  }
-  Object.assign(config, updates);
-}
 
-export function getAllProviderConfigs(): Record<ProviderName, ProviderConfig> {
-  return { ...PROVIDER_CONFIGS };
-}
 
-function initConfig() {
-  throw new Error('Function not implemented.');
-}

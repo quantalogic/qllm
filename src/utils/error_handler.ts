@@ -81,11 +81,3 @@ export function handleError(error: unknown): void {
   }
 }
 
-/**
- * Throws an AppError with the given message and code.
- * @param code The error code.
- * @param message The error message.
- */
-export function throwAppError(code: string, message: string): never {
-  throw new AppError(code, message);
-}
