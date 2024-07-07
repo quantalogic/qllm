@@ -14,7 +14,7 @@ import { ProviderFactory } from './providers/provider_factory';
 import { ProviderName } from './config/types';
 import { templateManager } from './templates/template_manager';
 
-const VERSION = '0.9.0'; // Updated version number
+const VERSION = '1.0.0'; 
 
 async function main() {
   try {
@@ -28,7 +28,7 @@ async function main() {
       .option('--provider <provider>', 'LLM provider to use')
       .option('--modelid <modelid>', 'Specific model ID to use')
       .option('--model <model>', 'Model alias to use')
-      .option('--log-level <level>', 'Set log level (error, warn, info, debug)', 'info')
+      .option('--log-level <level>', 'Set log level (error, warn, info, debug)')
       .option('--prompts-dir <dir>', 'Set the directory for prompt templates')
       .option('--config <path>', 'Path to configuration file');
 
@@ -39,6 +39,8 @@ async function main() {
         // Load configuration
         await configManager.loadConfig(options);
         const config = configManager.getConfig();
+
+        logger.setLogLevel(config.logLevel || 'info');
 
         // Initialize template manager
         if (options.promptsDir) {
@@ -56,14 +58,7 @@ async function main() {
           defaultModelId: options.modelid,
         });
 
-        // Resolve model alias if provided
-        if (config.defaultModelAlias && !config.defaultModelId) {
-          logger.debug(`Resolving model alias: ${config.defaultModelAlias}`);
-          const modelId = resolveModelAlias(config.defaultProvider as ProviderName, config.defaultModelAlias);
-          logger.debug(`Resolved model alias to: ${modelId}`);
-          configManager.updateConfig({ defaultModelId: modelId });
-        }
-
+  
         // Set AWS environment variables if provided
         if (config.awsProfile) {
           logger.debug(`Setting AWS profile: ${config.awsProfile}`);

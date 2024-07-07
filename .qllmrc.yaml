@@ -1,6 +1,6 @@
 awsProfile: bedrock
-awsRegion: eu-east-1
-defaultProvider: anthropic
+awsRegion: us-east-1
+defaultProvider: ''
 defaultModel: haiku
 logLevel: info
 defaultMaxTokens: 2048

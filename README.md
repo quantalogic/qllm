@@ -86,22 +86,73 @@ qllm config --show
 qllm template create
 qllm template execute my-template
 ```
-
 ## Configuration
 
-The QLLM project uses a `.env` file to manage environment-specific configuration settings. This file should be located in the root directory of the project and is not tracked by version control to protect sensitive information. The `.env` file supports the following key-value pairs:
+QLLM uses a configuration file to manage various settings. The default configuration file is named `.qllmrc.yaml` and is located in the user's home directory.
 
-- `AWS_PROFILE`: Specifies the AWS profile to use for authentication (default: 'default').
-- `AWS_REGION`: Sets the AWS region for API calls (default: 'us-east-1').
-- `DEFAULT_PROVIDER`: Defines the default LLM provider to use (e.g., 'anthropic', 'openai', 'ollama').
-- `MODEL_ALIAS`: Specifies the default model alias to use with the chosen provider.
-- `MODEL_ID`: Allows setting a specific model ID, overriding the model alias if both are provided.
-- `OPENAI_API_KEY`: Required when using the OpenAI provider, stores the API key for authentication.
-- `PROMPT_DIRECTORIES`: A comma-separated list of directories to search for prompt templates.
-- `ACTIVE_PROMPT_SET`: Specifies the currently active prompt set for template management.
+### Global Configuration
 
-Users should create their own `.env` file based on the provided `.env.example` template, filling in the appropriate values for their environment. The Configuration Manager in the application reads these values at runtime to configure the QLLM tool's behavior.
+You can view and modify the global configuration using the `config` command:
 
+```bash
+qllm config --show
+qllm config --set-profile <profile>
+qllm config --set-region <region>
+qllm config --set-provider <provider>
+qllm config --set-model <model>
+qllm config --set-log-level <level>
+qllm config --set-max-tokens <tokens>
+qllm config --set-prompts-dir <directory>
+```
+
+#### Configuration File Format
+
+The configuration file (`.qllmrc.yaml`) uses YAML format. Here's an example of its structure:
+
+```yaml
+awsProfile: default
+awsRegion: us-east-1
+defaultProvider: anthropic
+defaultModel: haiku
+logLevel: info
+defaultMaxTokens: 2048
+promptDirectory: ~/qllm/prompts
+```
+
+#### Configuration Resolution
+
+QLLM resolves configuration in the following order of precedence:
+
+1. Command-line arguments
+2. Template-specific configuration (for template commands)
+3. Global configuration from `.qllmrc.yaml`
+4. Default values
+
+This allows for flexible configuration management, from global defaults to template-specific overrides and per-command customization.
+
+### Environment Variables
+
+You can also use environment variables to set configuration options. The variable names should be prefixed with `QLLM_`. For example:
+
+```bash
+export QLLM_DEFAULT_PROVIDER=openai
+export QLLM_DEFAULT_MODEL=gpt-3.5-turbo
+```
+
+Mapping Env variable configuration.
+
+```plain
+  'QLLM_AWS_PROFILE': 'awsProfile',
+  'QLLM_AWS_REGION': 'awsRegion',
+  'QLLM_DEFAULT_PROVIDER': 'defaultProvider',
+  'QLLM_DEFAULT_MODEL': 'defaultModel',
+  'QLLM_DEFAULT_MAX_TOKENS': 'defaultMaxTokens',
+  'QLLM_PROMPT_DIRECTORY': 'promptDirectory',
+  'QLLM_CONFIG_FILE': 'configFile',
+  'QLLM_LOG_LEVEL': 'logLevel'
+```
+
+Environment variables take precedence over the configuration file but are overridden by command-line arguments.
 
 ## 📚 Detailed Documentation
 
@@ -159,7 +210,7 @@ You will be prompted to enter details such as the template name, description, pr
 To execute a template:
 
 ```bash
-qllm template execute <template-name> -v:variable1=value1 -v:variable2=value2
+qllm template execute template-name -v:variable1=value1 -v:variable2=value2
 ```
 
 You can provide values for the template variables using the `-v:` prefix.
@@ -239,9 +290,9 @@ content: |
 
   Here's the code to review:
 
-  ```
+  
   {{code}}
-  ```
+  
 
   Please provide a detailed code review based on the instructions above.
 ```
