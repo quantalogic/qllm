@@ -1,7 +1,6 @@
 // src/utils/variable_prompt.ts
 import prompts from 'prompts';
 import { TemplateVariable } from '../templates/types';
-import { logger } from './logger';
 
 /**
  * Prompts for missing variables based on the template definition.
