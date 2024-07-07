@@ -9,10 +9,11 @@ import { createTemplateCommand } from './commands/template';
 import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
 import { resolveModelAlias } from "./config/model_aliases";
-import { handleError } from './utils/error_handler';
+import { ErrorManager } from './utils/error_manager';
 import { ProviderName } from './config/types';
+import { templateManager } from './templates/template_manager';
 
-const VERSION = '0.6.1';
+const VERSION = '0.7.0';
 
 async function main() {
   try {
@@ -27,51 +28,59 @@ async function main() {
       .option('--modelid <modelid>', 'Specific model ID to use')
       .option('--model <model>', 'Model alias to use')
       .option('--log-level <level>', 'Set log level (error, warn, info, debug)', 'info')
-      .hook('preAction', async (thisCommand) => {
-        try {
-          const options = thisCommand.opts();
+      .option('--prompts-dir <directory>', 'Set the directory for prompt templates');
 
-          if (options.modelAlias && options.modelId) {
-            throw new Error('Cannot use both model alias and model ID. Please specify only one.');
-          }
-
-          await configManager.loadConfig();
-          configManager.updateConfig({
-            awsProfile: options.profile,
-            awsRegion: options.region,
-            defaultProvider: options.provider,
-            modelAlias: options.model,
-            modelId: options.modelid,
-          });
-
-          const config = configManager.getConfig();
-
-          if (config.modelAlias) {
-            logger.debug(`Resolving model alias: ${config.modelAlias}`);
-            const modelId = resolveModelAlias(config.defaultProvider as ProviderName, config.modelAlias);
-            logger.debug(`Resolved model alias to: ${modelId}`);
-            configManager.updateConfig({ modelId: modelId });
-          }
-
-          if (config.awsProfile) {
-            // This is very important for the AWS SDK to work correctly
-            logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
-            process.env.AWS_PROFILE = config.awsProfile;
-          }
-
-          if (config.awsRegion) {
-            // This is very important for the AWS SDK to work correctly
-            logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
-            process.env.AWS_REGION = config.awsRegion;
-          }
-
-          logger.setLogLevel(options.logLevel);
-          logger.debug(`Configuration: ${JSON.stringify(configManager.getConfig())}`);
-        } catch (error) {
-          handleError(error);
-          process.exit(1);
+    program.hook('preAction', async (thisCommand) => {
+      try {
+        const options = thisCommand.opts();
+        if (options.modelAlias && options.modelId) {
+          throw new Error('Cannot use both model alias and model ID. Please specify only one.');
         }
-      });
+
+        await configManager.loadConfig();
+
+        if (options.promptsDir) {
+          await templateManager.setPromptDirectory(options.promptsDir);
+        }
+
+        await templateManager.init();
+
+        configManager.updateConfig({
+          awsProfile: options.profile,
+          awsRegion: options.region,
+          defaultProvider: options.provider,
+          modelAlias: options.model,
+          modelId: options.modelid,
+        });
+
+        const config = configManager.getConfig();
+
+        if (config.modelAlias) {
+          logger.debug(`Resolving model alias: ${config.modelAlias}`);
+          const modelId = resolveModelAlias(config.defaultProvider as ProviderName, config.modelAlias);
+          logger.debug(`Resolved model alias to: ${modelId}`);
+          configManager.updateConfig({ modelId: modelId });
+        }
+
+        if (config.awsProfile) {
+          // This is very important for the AWS SDK to work correctly
+          logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
+          process.env.AWS_PROFILE = config.awsProfile;
+        }
+
+        if (config.awsRegion) {
+          // This is very important for the AWS SDK to work correctly
+          logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
+          process.env.AWS_REGION = config.awsRegion;
+        }
+
+        logger.setLogLevel(options.logLevel);
+        logger.debug(`Configuration: ${JSON.stringify(configManager.getConfig())}`);
+      } catch (error) {
+        ErrorManager.handleError('PreActionError', error instanceof Error ? error.message : String(error));
+        process.exit(1);
+      }
+    });
 
     // Register commands
     program.addCommand(createAskCommand());
@@ -94,7 +103,7 @@ async function main() {
       program.outputHelp();
     }
   } catch (error) {
-    handleError(error);
+    ErrorManager.handleError('MainError', error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }

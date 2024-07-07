@@ -1,17 +1,12 @@
+// src/utils/configuration_manager.ts
 import fs from 'fs/promises';
 import path from 'path';
 import { EventEmitter } from 'events';
-import { logger } from './logger';
-import { ProviderName } from '../config/types';
 import dotenv from 'dotenv';
-
-export interface AppConfig {
-  awsProfile: string;
-  awsRegion: string;
-  defaultProvider: ProviderName | undefined | string;
-  modelAlias?: string;
-  modelId?: string;
-}
+import os from 'os';
+import { logger } from './logger';
+import { AppConfig, ProviderName } from '../config/types';
+import { ErrorManager } from './error_manager';
 
 const CONFIG_MAP: Record<string, keyof AppConfig> = {
   'AWS_PROFILE': 'awsProfile',
@@ -19,6 +14,8 @@ const CONFIG_MAP: Record<string, keyof AppConfig> = {
   'DEFAULT_PROVIDER': 'defaultProvider',
   'MODEL_ALIAS': 'modelAlias',
   'MODEL_ID': 'modelId',
+  'PROMPT_DIRECTORIES': 'promptDirectories',
+  'ACTIVE_PROMPT_SET': 'activePromptSet',
 };
 
 class ConfigurationManager extends EventEmitter {
@@ -33,6 +30,8 @@ class ConfigurationManager extends EventEmitter {
       awsProfile: 'default',
       awsRegion: 'us-east-1',
       defaultProvider: 'anthropic',
+      promptDirectories: [this.getDefaultPromptDirectory()],
+      activePromptSet: 'default',
     };
   }
 
@@ -44,8 +43,14 @@ class ConfigurationManager extends EventEmitter {
   }
 
   public async loadConfig(): Promise<void> {
-    this.loadEnvironmentVariables();
-    await this.loadEnvFile();
+    try {
+      logger.debug('Loading configuration...');
+      this.loadEnvironmentVariables();
+      await this.loadEnvFile();
+      logger.debug('Configuration loaded successfully');
+    } catch (error) {
+      ErrorManager.handleError('ConfigLoadError', `Failed to load configuration: ${error}`);
+    }
   }
 
   private async loadEnvFile(): Promise<void> {
@@ -54,7 +59,6 @@ class ConfigurationManager extends EventEmitter {
       const envContent = await fs.readFile(this.envPath, 'utf-8');
       const envValues = dotenv.parse(envContent);
       const configUpdates = this.mapEnvToConfig(envValues);
-      
       if (Object.keys(configUpdates).length > 0) {
         this.updateConfig(configUpdates);
         logger.debug('Configuration updated from .env file');
@@ -62,29 +66,42 @@ class ConfigurationManager extends EventEmitter {
         logger.debug('No configuration changes from .env file');
       }
     } catch (error) {
-      logger.error(`Error loading .env file: ${error} at path: ${this.envPath}`);
+      logger.error(`Error loading .env file: ${error}`);
     }
   }
 
   private mapEnvToConfig(envValues: Record<string, string>): Partial<AppConfig> {
     const configUpdates: Partial<AppConfig> = {};
-    if (envValues.AWS_PROFILE) configUpdates.awsProfile = envValues.AWS_PROFILE;
-    if (envValues.AWS_REGION) configUpdates.awsRegion = envValues.AWS_REGION;
-    if(envValues.MODEL_ALIAS) configUpdates.modelAlias = envValues.MODEL_ALIAS;
-    if (envValues.DEFAULT_PROVIDER) configUpdates.defaultProvider = envValues.DEFAULT_PROVIDER as ProviderName;
+    for (const [envKey, configKey] of Object.entries(CONFIG_MAP)) {
+      if (envValues[envKey] !== undefined) {
+        if (configKey === 'promptDirectories') {
+          configUpdates[configKey] = this.parsePromptDirectories(envValues[envKey]);
+        } else if (configKey === 'defaultProvider') {
+          configUpdates[configKey] = envValues[envKey] as ProviderName;
+        } else {
+          (configUpdates[configKey] as any) = envValues[envKey];
+        }
+      }
+    }
     return configUpdates;
   }
-  
 
   private loadEnvironmentVariables(): void {
     const envUpdates: Partial<AppConfig> = {};
-    if (process.env.AWS_PROFILE) envUpdates.awsProfile = process.env.AWS_PROFILE;
-    if (process.env.AWS_REGION) envUpdates.awsRegion = process.env.AWS_REGION;
-    if(process.env.MODEL_ALIAS) envUpdates.modelAlias = process.env.MODEL_ALIAS;
-    if (process.env.DEFAULT_PROVIDER) envUpdates.defaultProvider = process.env.DEFAULT_PROVIDER as ProviderName;
+    for (const [envKey, configKey] of Object.entries(CONFIG_MAP)) {
+      if (process.env[envKey] !== undefined) {
+        if (configKey === 'promptDirectories') {
+          envUpdates[configKey] = this.parsePromptDirectories(process.env[envKey]!);
+        } else if (configKey === 'defaultProvider') {
+          envUpdates[configKey] = process.env[envKey] as ProviderName;
+        } else {
+          (envUpdates[configKey] as any) = process.env[envKey];
+        }
+      }
+    }
     this.updateConfig(envUpdates);
   }
-  
+
   public getConfig(): AppConfig {
     return { ...this.config };
   }
@@ -93,7 +110,13 @@ class ConfigurationManager extends EventEmitter {
     const envContent = Object.entries(CONFIG_MAP)
       .map(([envKey, configKey]) => {
         const value = this.config[configKey];
-        return value !== undefined ? `${envKey}=${value}` : null;
+        if (value !== undefined) {
+          if (Array.isArray(value)) {
+            return `${envKey}=${value.join(',')}`;
+          }
+          return `${envKey}=${value}`;
+        }
+        return null;
       })
       .filter(line => line !== null)
       .join('\n');
@@ -102,8 +125,7 @@ class ConfigurationManager extends EventEmitter {
       await fs.writeFile(this.envPath, envContent);
       logger.debug(`Configuration saved to .env file at: ${this.envPath}`);
     } catch (error) {
-      logger.error(`Error saving configuration to .env file: ${error} at path: ${this.envPath}`);
-      throw error;
+      ErrorManager.handleError('ConfigSaveError', `Error saving configuration to .env file: ${error}`);
     }
   }
 
@@ -118,11 +140,36 @@ class ConfigurationManager extends EventEmitter {
     logger.debug(`Configuration updated. Old: ${JSON.stringify(oldConfig)}, New: ${JSON.stringify(this.config)}`);
     this.emit('configUpdated', this.config);
   }
-  
 
   public validateConfig(): boolean {
     // Add validation logic here if needed
     return true;
+  }
+
+  private getDefaultPromptDirectory(): string {
+    const homeDir = os.homedir();
+    return path.join(homeDir, '.config', 'qllm', 'prompts');
+  }
+
+  public setPromptDirectories(directories: string[]): void {
+    this.updateConfig({ promptDirectories: directories });
+  }
+
+  public setActivePromptSet(setName: string): void {
+    this.updateConfig({ activePromptSet: setName });
+  }
+
+  private parsePromptDirectories(value: string): string[] {
+    return value.split(',')
+      .map(dir => dir.trim())
+      .map(dir => this.expandHomeDir(dir));
+  }
+
+  private expandHomeDir(dir: string): string {
+    if (dir.startsWith('~/') || dir === '~') {
+      return path.join(os.homedir(), dir.slice(1));
+    }
+    return dir;
   }
 }
 

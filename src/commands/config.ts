@@ -1,7 +1,7 @@
 import { Command, Option } from 'commander';
-import { AppConfig, configManager } from '../utils/configuration_manager';
+import { configManager } from '../utils/configuration_manager';
 import { logger } from '../utils/logger';
-import { ProviderName } from '../config/types';
+import { AppConfig, ProviderName } from '../config/types';
 
 export function createConfigCommand(): Command {
   const config_command = new Command('config')

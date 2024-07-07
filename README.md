@@ -87,6 +87,22 @@ qllm template create
 qllm template execute my-template
 ```
 
+## Configuration
+
+The QLLM project uses a `.env` file to manage environment-specific configuration settings. This file should be located in the root directory of the project and is not tracked by version control to protect sensitive information. The `.env` file supports the following key-value pairs:
+
+- `AWS_PROFILE`: Specifies the AWS profile to use for authentication (default: 'default').
+- `AWS_REGION`: Sets the AWS region for API calls (default: 'us-east-1').
+- `DEFAULT_PROVIDER`: Defines the default LLM provider to use (e.g., 'anthropic', 'openai', 'ollama').
+- `MODEL_ALIAS`: Specifies the default model alias to use with the chosen provider.
+- `MODEL_ID`: Allows setting a specific model ID, overriding the model alias if both are provided.
+- `OPENAI_API_KEY`: Required when using the OpenAI provider, stores the API key for authentication.
+- `PROMPT_DIRECTORIES`: A comma-separated list of directories to search for prompt templates.
+- `ACTIVE_PROMPT_SET`: Specifies the currently active prompt set for template management.
+
+Users should create their own `.env` file based on the provided `.env.example` template, filling in the appropriate values for their environment. The Configuration Manager in the application reads these values at runtime to configure the QLLM tool's behavior.
+
+
 ## 📚 Detailed Documentation
 
 ### Command Structure

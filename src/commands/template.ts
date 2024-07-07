@@ -28,7 +28,8 @@ export function createTemplateCommand(): Command {
     .addCommand(createDeleteCommand())
     .addCommand(createViewCommand())
     .addCommand(createEditCommand())
-    .addCommand(createVariablesCommand());
+    .addCommand(createVariablesCommand())
+    .addCommand(createSetPromptDirCommand())
 
   return templateCommand;
 }
@@ -38,9 +39,15 @@ function createListCommand(): Command {
     .description('List all available templates')
     .action(async () => {
       try {
+        logger.debug('Executing list command');
         const templates = await templateManager.listTemplates();
+        logger.debug(`Found ${templates.length} templates`);
         console.log('Available templates:');
-        templates.forEach(template => console.log(`- ${template}`));
+        if (templates.length === 0) {
+          console.log('No templates found.');
+        } else {
+          templates.forEach(template => console.log(`- ${template}`));
+        }
       } catch (error) {
         ErrorManager.handleError('ListTemplatesError', `Failed to list templates: ${error}`);
       }
@@ -73,7 +80,7 @@ function createExecuteCommand(): Command {
     .addOption(cliOptions.streamOption)
     .addOption(new Option('--output [file]', 'Output file path'))
     .addOption(new Option('--format <format>', 'Output format').choices(['json', 'xml']).default('json'))
-    .option('-v, --variable <key=value>', 'Set variable values for the template', collectVariables, {})
+    .option('-v, --variable <variable...>', 'Set variable values for the template', collectVariables, {})
     .action(async (name: string, options: any) => {
       try {
         logger.debug(`Attempting to execute template: ${name}`);
@@ -81,8 +88,8 @@ function createExecuteCommand(): Command {
         if (!template) {
           throw new Error(`Template '${name}' not found`);
         }
-
         logger.debug(`Template found: ${JSON.stringify(template)}`);
+
         const variables = await templateManager.parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
@@ -128,7 +135,7 @@ function createExecuteCommand(): Command {
 
         const result = await TemplateExecutor.execute(executionContext);
 
-        const outputHandler = new OutputHandler(options.output === true ? undefined : options.output, options.format);
+        const outputHandler = new OutputHandler(options.output, options.format);
         await outputHandler.handleOutput(result.outputVariables);
       } catch (error) {
         ErrorManager.handleError('ExecuteTemplateError', `Failed to execute template: ${error}`);
@@ -199,6 +206,22 @@ function createVariablesCommand(): Command {
       }
     });
 }
+
+function createSetPromptDirCommand(): Command {
+  return new Command('set-dir')
+    .description('Set prompt directory')
+    .argument('<directory>', 'Directory path')
+    .action(async (directory: string) => {
+      try {
+        await templateManager.setPromptDirectory(directory);
+        logger.info(`Prompt directory set to: ${directory}`);
+      } catch (error) {
+        ErrorManager.handleError('SetPromptDirError', `Failed to set prompt directory: ${error}`);
+      }
+    });
+}
+
+
 
 async function promptForTemplateDetails(existingTemplate?: TemplateDefinition): Promise<TemplateDefinition> {
   const questions: prompts.PromptObject[] = [
