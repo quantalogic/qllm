@@ -94,7 +94,7 @@ function createExecuteCommand(): Command {
 
         const config = configManager.getConfig();
         const providerName = options.provider || template.provider || config.defaultProvider;
-        const modelAlias = options.model || template.model || config.modelAlias;
+        const modelAlias = options.model || template.model || config.defaultModelAlias;
         logger.debug(`Using provider: ${providerName}, model alias: ${modelAlias}`);
 
         const model = resolveModelAlias(providerName as ProviderName, modelAlias);

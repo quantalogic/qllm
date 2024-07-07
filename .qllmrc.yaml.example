@@ -1,0 +1,7 @@
+awsProfile: bedrock
+awsRegion: us-east-1
+defaultProvider: anthropic
+promptDirectory: ./prompts
+logLevel: info
+defaultModel: haiku
+defaultMaxTokens: 2048

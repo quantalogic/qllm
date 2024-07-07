@@ -1,36 +1,37 @@
 // src/utils/configuration_manager.ts
+import yaml from 'js-yaml';
 import fs from 'fs/promises';
 import path from 'path';
-import { EventEmitter } from 'events';
-import dotenv from 'dotenv';
 import os from 'os';
-import { logger } from './logger';
+import { EventEmitter } from 'events';
 import { AppConfig, ProviderName } from '../config/types';
+import { logger } from './logger';
 import { ErrorManager } from './error_manager';
+import { DEFAULT_CONFIG } from '../config/default_config';
 
+const CONFIG_FILE_NAME = '.qllmrc.yaml';
+
+// Mapping between environment variables and config keys
 const CONFIG_MAP: Record<string, keyof AppConfig> = {
-  'AWS_PROFILE': 'awsProfile',
-  'AWS_REGION': 'awsRegion',
-  'DEFAULT_PROVIDER': 'defaultProvider',
-  'MODEL_ALIAS': 'modelAlias',
-  'MODEL_ID': 'modelId',
-  'PROMPT_DIRECTORY': 'promptDirectory',
+  'QLLM_AWS_PROFILE': 'awsProfile',
+  'QLLM_AWS_REGION': 'awsRegion',
+  'QLLM_DEFAULT_PROVIDER': 'defaultProvider',
+  'QLLM_DEFAULT_MODEL': 'defaultModel',
+  'QLLM_DEFAULT_MAX_TOKENS': 'defaultMaxTokens',
+  'QLLM_PROMPT_DIRECTORY': 'promptDirectory',
+  'QLLM_CONFIG_FILE': 'configFile',
+  'QLLM_LOG_LEVEL': 'logLevel',
 };
 
-class ConfigurationManager extends EventEmitter {
+export class ConfigurationManager extends EventEmitter {
   private static instance: ConfigurationManager;
   private config: AppConfig;
-  private envPath: string;
+  private configFilePath: string;
 
   private constructor() {
     super();
-    this.envPath = path.resolve(process.cwd(), '.env');
-    this.config = {
-      awsProfile: 'default',
-      awsRegion: 'us-east-1',
-      defaultProvider: 'anthropic',
-      promptDirectory: this.getDefaultPromptDirectory(),
-    };
+    this.configFilePath = path.join(process.cwd(), CONFIG_FILE_NAME);
+    this.config = { ...DEFAULT_CONFIG };
   }
 
   public static getInstance(): ConfigurationManager {
@@ -40,48 +41,56 @@ class ConfigurationManager extends EventEmitter {
     return ConfigurationManager.instance;
   }
 
-  public async loadConfig(): Promise<void> {
+  public async loadConfig(options?: Partial<AppConfig>): Promise<void> {
     try {
       logger.debug('Loading configuration...');
+      await this.loadConfigFile();
       this.loadEnvironmentVariables();
-      await this.loadEnvFile();
-      logger.debug('Configuration loaded successfully');
+      if (options) {
+        this.updateConfig(options);
+      }
+      logger.debug(`Configuration loaded: ${JSON.stringify(this.config)}`);
     } catch (error) {
       ErrorManager.handleError('ConfigLoadError', `Failed to load configuration: ${error}`);
     }
   }
 
-  private async loadEnvFile(): Promise<void> {
+  private async loadConfigFile(): Promise<void> {
     try {
-      logger.debug(`Loading configuration from .env file: ${this.envPath}`);
-      const envContent = await fs.readFile(this.envPath, 'utf-8');
-      const envValues = dotenv.parse(envContent);
-      const configUpdates = this.mapEnvToConfig(envValues);
-      if (Object.keys(configUpdates).length > 0) {
-        this.updateConfig(configUpdates);
-        logger.debug('Configuration updated from .env file');
+      logger.debug(`Attempting to load config file from: ${this.configFilePath}`);
+      if (await this.fileExists(this.configFilePath)) {
+        const configContent = await fs.readFile(this.configFilePath, 'utf-8');
+        logger.debug(`Config file content: ${configContent}`);
+        const configData = yaml.load(configContent) as Partial<AppConfig>;
+        logger.debug(`Parsed config data: ${JSON.stringify(configData)}`);
+        this.updateConfig(configData);
+        logger.debug(`Configuration loaded from ${this.configFilePath}`);
       } else {
-        logger.debug('No configuration changes from .env file');
+        // If not found, check in the home directory
+        const homeConfigPath = path.join(os.homedir(), CONFIG_FILE_NAME);
+        if (await this.fileExists(homeConfigPath)) {
+          const configContent = await fs.readFile(homeConfigPath, 'utf-8');
+          const configData = yaml.load(configContent) as Partial<AppConfig>;
+          this.updateConfig(configData);
+          logger.debug(`Configuration loaded from ${homeConfigPath}`);
+        } else {
+          logger.debug('No configuration file found. Using default configuration.');
+        }
       }
     } catch (error) {
-      logger.error(`Error loading .env file: ${error}`);
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        logger.error(`Error loading config file: ${error}`);
+      }
     }
   }
 
-  private mapEnvToConfig(envValues: Record<string, string>): Partial<AppConfig> {
-    const configUpdates: Partial<AppConfig> = {};
-    for (const [envKey, configKey] of Object.entries(CONFIG_MAP)) {
-      if (envValues[envKey] !== undefined) {
-        if (configKey === 'promptDirectory') {
-          configUpdates[configKey] = this.expandHomeDir(envValues[envKey]);
-        } else if (configKey === 'defaultProvider') {
-          configUpdates[configKey] = envValues[envKey] as ProviderName;
-        } else {
-          (configUpdates[configKey] as any) = envValues[envKey];
-        }
-      }
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
     }
-    return configUpdates;
   }
 
   private loadEnvironmentVariables(): void {
@@ -92,6 +101,8 @@ class ConfigurationManager extends EventEmitter {
           envUpdates[configKey] = this.expandHomeDir(process.env[envKey]!);
         } else if (configKey === 'defaultProvider') {
           envUpdates[configKey] = process.env[envKey] as ProviderName;
+        } else if (configKey === 'defaultMaxTokens') {
+          envUpdates[configKey] = parseInt(process.env[envKey]!, 10);
         } else {
           (envUpdates[configKey] as any) = process.env[envKey];
         }
@@ -105,22 +116,12 @@ class ConfigurationManager extends EventEmitter {
   }
 
   public async saveConfig(): Promise<void> {
-    const envContent = Object.entries(CONFIG_MAP)
-      .map(([envKey, configKey]) => {
-        const value = this.config[configKey];
-        if (value !== undefined) {
-          return `${envKey}=${value}`;
-        }
-        return null;
-      })
-      .filter(line => line !== null)
-      .join('\n');
-
+    const configContent = yaml.dump(this.config);
     try {
-      await fs.writeFile(this.envPath, envContent);
-      logger.debug(`Configuration saved to .env file at: ${this.envPath}`);
+      await fs.writeFile(this.configFilePath, configContent, 'utf-8');
+      logger.debug(`Configuration saved to ${this.configFilePath}`);
     } catch (error) {
-      ErrorManager.handleError('ConfigSaveError', `Error saving configuration to .env file: ${error}`);
+      ErrorManager.handleError('ConfigSaveError', `Error saving configuration to file: ${error}`);
     }
   }
 
@@ -141,20 +142,15 @@ class ConfigurationManager extends EventEmitter {
     return true;
   }
 
-  private getDefaultPromptDirectory(): string {
-    const homeDir = os.homedir();
-    return path.join(homeDir, '.config', 'qllm', 'prompts');
-  }
-
-  public setPromptDirectory(directory: string): void {
-    this.updateConfig({ promptDirectory: this.expandHomeDir(directory) });
-  }
-
   private expandHomeDir(dir: string): string {
     if (dir.startsWith('~/') || dir === '~') {
       return path.join(os.homedir(), dir.slice(1));
     }
     return dir;
+  }
+
+  public setPromptDirectory(directory: string): void {
+    this.updateConfig({ promptDirectory: this.expandHomeDir(directory) });
   }
 }
 

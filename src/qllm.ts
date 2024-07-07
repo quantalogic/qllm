@@ -10,10 +10,11 @@ import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
 import { resolveModelAlias } from "./config/model_aliases";
 import { ErrorManager } from './utils/error_manager';
+import { ProviderFactory } from './providers/provider_factory';
 import { ProviderName } from './config/types';
 import { templateManager } from './templates/template_manager';
 
-const VERSION = '0.7.0';
+const VERSION = '0.9.0'; // Updated version number
 
 async function main() {
   try {
@@ -28,54 +29,59 @@ async function main() {
       .option('--modelid <modelid>', 'Specific model ID to use')
       .option('--model <model>', 'Model alias to use')
       .option('--log-level <level>', 'Set log level (error, warn, info, debug)', 'info')
-      .option('--prompts-dir <directory>', 'Set the directory for prompt templates');
+      .option('--prompts-dir <dir>', 'Set the directory for prompt templates')
+      .option('--config <path>', 'Path to configuration file');
 
     program.hook('preAction', async (thisCommand) => {
       try {
         const options = thisCommand.opts();
-        if (options.modelAlias && options.modelId) {
-          throw new Error('Cannot use both model alias and model ID. Please specify only one.');
-        }
 
-        await configManager.loadConfig();
+        // Load configuration
+        await configManager.loadConfig(options);
+        const config = configManager.getConfig();
 
+        // Initialize template manager
         if (options.promptsDir) {
           await templateManager.setPromptDirectory(options.promptsDir);
         }
-        
-        logger.debug(`Using prompts directory: ${configManager.getConfig().promptDirectory}`)
-
+        logger.debug(`Using prompts directory: ${config.promptDirectory}`);
         await templateManager.init();
 
+        // Update configuration with CLI options
         configManager.updateConfig({
           awsProfile: options.profile,
           awsRegion: options.region,
-          defaultProvider: options.provider,
-          modelAlias: options.model,
-          modelId: options.modelid,
+          defaultProvider: options.provider as ProviderName,
+          defaultModelAlias: options.model,
+          defaultModelId: options.modelid,
         });
 
-        const config = configManager.getConfig();
-
-        if (config.modelAlias) {
-          logger.debug(`Resolving model alias: ${config.modelAlias}`);
-          const modelId = resolveModelAlias(config.defaultProvider as ProviderName, config.modelAlias);
+        // Resolve model alias if provided
+        if (config.defaultModelAlias && !config.defaultModelId) {
+          logger.debug(`Resolving model alias: ${config.defaultModelAlias}`);
+          const modelId = resolveModelAlias(config.defaultProvider as ProviderName, config.defaultModelAlias);
           logger.debug(`Resolved model alias to: ${modelId}`);
-          configManager.updateConfig({ modelId: modelId });
+          configManager.updateConfig({ defaultModelId: modelId });
         }
 
+        // Set AWS environment variables if provided
         if (config.awsProfile) {
-          logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
+          logger.debug(`Setting AWS profile: ${config.awsProfile}`);
           process.env.AWS_PROFILE = config.awsProfile;
         }
-
         if (config.awsRegion) {
-          logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
+          logger.debug(`Setting AWS region: ${config.awsRegion}`);
           process.env.AWS_REGION = config.awsRegion;
         }
 
-        logger.setLogLevel(options.logLevel);
+        // Set log level
+        logger.setLogLevel(config.logLevel || 'info');
         logger.debug(`Configuration: ${JSON.stringify(configManager.getConfig())}`);
+
+        // Initialize provider
+        if (config.defaultProvider) {
+          await ProviderFactory.getProvider(config.defaultProvider as ProviderName);
+        }
       } catch (error) {
         ErrorManager.handleError('PreActionError', error instanceof Error ? error.message : String(error));
         process.exit(1);

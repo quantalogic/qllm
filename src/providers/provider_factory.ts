@@ -12,7 +12,7 @@ export class ProviderFactory {
 
   static async getProvider(providerName: ProviderName): Promise<LLMProvider> {
     const config = configManager.getConfig();
-    const modelId = config.modelId || getDefaultModel(providerName);
+    const modelId = config.defaultModelId || getDefaultModel(providerName);
     const options: LLMProviderOptions = {
       model: modelId,
       awsProfile: config.awsProfile,
