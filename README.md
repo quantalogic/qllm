@@ -525,8 +525,8 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 ## 📞 Contact
 
 - Project Maintainer: [@raphaelmansuy](https://github.com/raphaelmansuy)
-- Project Homepage: https://github.com/raphaelmansuy/qllm
-- Bug Reports: https://github.com/raphaelmansuy/qllm/issues
+- Project Homepage: https://github.com/quantalogic/qllm
+- Bug Reports: https://github.com/quantalogic/qllm/issues
 
 ---
 
