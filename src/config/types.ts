@@ -41,10 +41,8 @@ export interface AppConfig {
   modelAlias?: string;
   /** Specific model ID to use */
   modelId?: string;
-  /** Array of prompt directories */
-  promptDirectories: string[];
-  /** Active prompt set */
-  activePromptSet: string;
+  /** Prompt directory */
+  promptDirectory: string;
 }
 
 /**

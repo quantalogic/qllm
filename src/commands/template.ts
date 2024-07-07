@@ -28,8 +28,7 @@ export function createTemplateCommand(): Command {
     .addCommand(createDeleteCommand())
     .addCommand(createViewCommand())
     .addCommand(createEditCommand())
-    .addCommand(createVariablesCommand())
-    .addCommand(createSetPromptDirCommand())
+    .addCommand(createVariablesCommand());
 
   return templateCommand;
 }
@@ -164,7 +163,11 @@ function createViewCommand(): Command {
     .action(async (name: string) => {
       try {
         const template = await templateManager.getTemplate(name);
-        console.log(yaml.dump(template));
+        if (template) {
+          console.log(yaml.dump(template));
+        } else {
+          console.log(`Template '${name}' not found.`);
+        }
       } catch (error) {
         ErrorManager.handleError('ViewTemplateError', `Failed to view template: ${error}`);
       }
@@ -206,22 +209,6 @@ function createVariablesCommand(): Command {
       }
     });
 }
-
-function createSetPromptDirCommand(): Command {
-  return new Command('set-dir')
-    .description('Set prompt directory')
-    .argument('<directory>', 'Directory path')
-    .action(async (directory: string) => {
-      try {
-        await templateManager.setPromptDirectory(directory);
-        logger.info(`Prompt directory set to: ${directory}`);
-      } catch (error) {
-        ErrorManager.handleError('SetPromptDirError', `Failed to set prompt directory: ${error}`);
-      }
-    });
-}
-
-
 
 async function promptForTemplateDetails(existingTemplate?: TemplateDefinition): Promise<TemplateDefinition> {
   const questions: prompts.PromptObject[] = [

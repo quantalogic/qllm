@@ -4,7 +4,8 @@ import { Message } from './types';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { providerRegistry } from './provider_registry';
 
-export const DEFAULT_MAX_TOKENS = 1024;
+import { DEFAULT_MAX_TOKENS } from '../config/default';
+
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;

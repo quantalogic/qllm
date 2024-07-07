@@ -4,8 +4,8 @@ import { Message } from './types';
 import { getCredentials } from '../credentials';
 import { providerRegistry } from './provider_registry';
 import { logger } from '../utils/logger';
+import { DEFAULT_MAX_TOKENS } from '../config/default';
 
-export const DEFAULT_MAX_TOKENS = 1024;
 
 export class AnthropicProvider implements LLMProvider {
   private client: AnthropicBedrock | null = null;

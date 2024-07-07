@@ -2,6 +2,7 @@ name: improve_prompt
 version: '1.0'
 description: Improve a prompt
 author: Raphaël MANSUY
+max_tokens: 2048
 #provider: ollama
 #model: mistral
 input_variables:

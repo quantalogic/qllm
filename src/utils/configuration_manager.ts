@@ -14,8 +14,7 @@ const CONFIG_MAP: Record<string, keyof AppConfig> = {
   'DEFAULT_PROVIDER': 'defaultProvider',
   'MODEL_ALIAS': 'modelAlias',
   'MODEL_ID': 'modelId',
-  'PROMPT_DIRECTORIES': 'promptDirectories',
-  'ACTIVE_PROMPT_SET': 'activePromptSet',
+  'PROMPT_DIRECTORY': 'promptDirectory',
 };
 
 class ConfigurationManager extends EventEmitter {
@@ -30,8 +29,7 @@ class ConfigurationManager extends EventEmitter {
       awsProfile: 'default',
       awsRegion: 'us-east-1',
       defaultProvider: 'anthropic',
-      promptDirectories: [this.getDefaultPromptDirectory()],
-      activePromptSet: 'default',
+      promptDirectory: this.getDefaultPromptDirectory(),
     };
   }
 
@@ -74,8 +72,8 @@ class ConfigurationManager extends EventEmitter {
     const configUpdates: Partial<AppConfig> = {};
     for (const [envKey, configKey] of Object.entries(CONFIG_MAP)) {
       if (envValues[envKey] !== undefined) {
-        if (configKey === 'promptDirectories') {
-          configUpdates[configKey] = this.parsePromptDirectories(envValues[envKey]);
+        if (configKey === 'promptDirectory') {
+          configUpdates[configKey] = this.expandHomeDir(envValues[envKey]);
         } else if (configKey === 'defaultProvider') {
           configUpdates[configKey] = envValues[envKey] as ProviderName;
         } else {
@@ -90,8 +88,8 @@ class ConfigurationManager extends EventEmitter {
     const envUpdates: Partial<AppConfig> = {};
     for (const [envKey, configKey] of Object.entries(CONFIG_MAP)) {
       if (process.env[envKey] !== undefined) {
-        if (configKey === 'promptDirectories') {
-          envUpdates[configKey] = this.parsePromptDirectories(process.env[envKey]!);
+        if (configKey === 'promptDirectory') {
+          envUpdates[configKey] = this.expandHomeDir(process.env[envKey]!);
         } else if (configKey === 'defaultProvider') {
           envUpdates[configKey] = process.env[envKey] as ProviderName;
         } else {
@@ -111,9 +109,6 @@ class ConfigurationManager extends EventEmitter {
       .map(([envKey, configKey]) => {
         const value = this.config[configKey];
         if (value !== undefined) {
-          if (Array.isArray(value)) {
-            return `${envKey}=${value.join(',')}`;
-          }
           return `${envKey}=${value}`;
         }
         return null;
@@ -151,18 +146,8 @@ class ConfigurationManager extends EventEmitter {
     return path.join(homeDir, '.config', 'qllm', 'prompts');
   }
 
-  public setPromptDirectories(directories: string[]): void {
-    this.updateConfig({ promptDirectories: directories });
-  }
-
-  public setActivePromptSet(setName: string): void {
-    this.updateConfig({ activePromptSet: setName });
-  }
-
-  private parsePromptDirectories(value: string): string[] {
-    return value.split(',')
-      .map(dir => dir.trim())
-      .map(dir => this.expandHomeDir(dir));
+  public setPromptDirectory(directory: string): void {
+    this.updateConfig({ promptDirectory: this.expandHomeDir(directory) });
   }
 
   private expandHomeDir(dir: string): string {

@@ -42,6 +42,8 @@ async function main() {
         if (options.promptsDir) {
           await templateManager.setPromptDirectory(options.promptsDir);
         }
+        
+        logger.debug(`Using prompts directory: ${configManager.getConfig().promptDirectory}`)
 
         await templateManager.init();
 
@@ -63,13 +65,11 @@ async function main() {
         }
 
         if (config.awsProfile) {
-          // This is very important for the AWS SDK to work correctly
           logger.debug(`Setting Env AWS profile: ${config.awsProfile}`);
           process.env.AWS_PROFILE = config.awsProfile;
         }
 
         if (config.awsRegion) {
-          // This is very important for the AWS SDK to work correctly
           logger.debug(`Setting Env AWS region: ${config.awsRegion}`);
           process.env.AWS_REGION = config.awsRegion;
         }
