@@ -1,3 +1,5 @@
+// src/commands/stream.ts
+
 import { Command } from 'commander';
 import fs from 'fs/promises';
 import { ProviderFactory } from '../providers/provider_factory';
@@ -6,9 +8,9 @@ import { cliOptions } from '../options';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinnerAndOutput, createStreamOutputHandler } from '../helpers/stream_helper';
 import { displayOptions } from '../utils/option_display';
-import { mergeOptions } from '../utils/option_merging';
 import { configManager } from '../utils/configuration_manager';
 import { ErrorManager } from '../utils/error_manager';
+import { getModelProvider } from '../utils/get_model_provider';
 
 export function createStreamCommand(): Command {
   const streamCommand = new Command('stream')
@@ -22,10 +24,14 @@ export function createStreamCommand(): Command {
     .addOption(cliOptions.outputOption)
     .action(async (options, command) => {
       try {
-        const globalOptions = command.parent?.opts();
-        const config = configManager.getConfig();
-        const providerName = options.provider || globalOptions.provider || config.defaultProvider;
-        const model = options.modelId || globalOptions.modelId || config.modelId || "";
+
+        const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
+
+        const { providerName, modelId } = getModelProvider();
+
+        logger.debug(`providerName: ${providerName}`);
+        logger.debug(`modelId: ${modelId}`);
+        logger.debug(`maxTokens: ${maxTokens}`);
 
         const provider = await ProviderFactory.getProvider(providerName);
 
@@ -43,25 +49,15 @@ export function createStreamCommand(): Command {
 
         logger.debug(`providerName: ${providerName}`);
 
-        const defaultOptions: Partial<LLMProviderOptions> = {
-          maxTokens: 256,
-          temperature: 0.7,
-          topP: 1,
-          topK: 250,
-          model: model,
+        const llmOptions: LLMProviderOptions = {
+          maxTokens: maxTokens,
+          temperature: options.temperature,
+          topP: options.topP,
+          topK: options.topK,
+          model: modelId,
         };
 
-        const mergedOptions = mergeOptions(defaultOptions, options);
-        const providerOptions: LLMProviderOptions = {
-          maxTokens: mergedOptions.maxTokens,
-          temperature: mergedOptions.temperature,
-          topP: mergedOptions.topP,
-          topK: mergedOptions.topK,
-          system: mergedOptions.system,
-          model: model,
-        };
-
-        displayOptions(providerOptions, 'stream');
+        displayOptions(llmOptions, 'stream');
 
         const outputHandler = await createStreamOutputHandler(options.output);
 
@@ -69,9 +65,11 @@ export function createStreamCommand(): Command {
           const fullResponse = await handleStreamWithSpinnerAndOutput(
             provider,
             messages,
-            providerOptions,
+            llmOptions,
             outputHandler
           );
+
+          console.log(fullResponse);
 
           if (options.output) {
             logger.info(`Full response written to ${options.output}`);
@@ -88,3 +86,4 @@ export function createStreamCommand(): Command {
 
   return streamCommand;
 }
+

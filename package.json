@@ -1,6 +1,6 @@
 {
   "name": "qllm",
-  "version": "0.6.2",
+  "version": "1.0.0",
   "description": "QLLM Multi-Provider LLM Command CLI",
   "main": "dist/qllm.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "test": "jest",
     "dev": "ts-node src/qllm.ts",
     "start": "node dist/qllm.js",
-    "cli": "node dist/qllm.js"
+    "cli": "node dist/qllm.js",
+    "prune": "ts-prune prune"
   },
   "keywords": [
     "llm",
@@ -22,12 +23,15 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.10.1",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.14.8",
     "@types/prompts": "^2.4.9",
     "cli-spinner": "^0.2.10",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
+    "fast-xml-parser": "^4.4.0",
     "glob": "^10.4.2",
+    "js-yaml": "^4.1.0",
     "lru-cache": "^10.3.0",
     "ollama": "^0.5.2",
     "openai": "^4.52.2",
@@ -40,6 +44,7 @@
     "jest": "^29.7.0",
     "ts-jest": "^29.1.5",
     "ts-node": "^10.9.2",
+    "ts-prune": "^0.10.3",
     "typescript": "^5.5.2"
   },
   "jest": {

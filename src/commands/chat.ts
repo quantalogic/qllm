@@ -1,3 +1,5 @@
+// src/commands/chat.ts
+
 import { Command } from 'commander';
 import prompts from 'prompts';
 import { ProviderFactory } from '../providers/provider_factory';
@@ -6,8 +8,9 @@ import { cliOptions } from '../options';
 import { LLMProviderOptions, Message } from '../providers/types';
 import { handleStreamWithSpinner } from '../helpers/stream_helper';
 import { displayOptions } from '../utils/option_display';
-import { mergeOptions } from '../utils/option_merging';
 import { configManager } from '../utils/configuration_manager';
+import { ErrorManager } from '../utils/error_manager';
+import { getModelProvider } from '../utils/get_model_provider';
 
 export function createChatCommand(): Command {
   const chatCommand = new Command('chat')
@@ -19,40 +22,35 @@ export function createChatCommand(): Command {
     .addOption(cliOptions.systemOption)
     .action(async (options, command) => {
       try {
-        const globalOptions = command.parent?.opts();
-        const config = configManager.getConfig();
-        const providerName = options.provider || globalOptions.provider || config.defaultProvider;
-        const model = options.modelId || globalOptions.modelId || config.modelId || "";
 
+        const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
+
+        const { providerName, modelId } = getModelProvider();
 
         const provider = await ProviderFactory.getProvider(providerName);
 
+        logger.debug(`providerName: ${providerName}`);
+        logger.debug(`modelId: ${modelId}`);
+        logger.debug(`maxTokens: ${maxTokens}`);
+
         const messages: Message[] = [];
+
         logger.info('Starting chat session. Type "exit" to end the session.');
 
-        const defaultOptions: Partial<LLMProviderOptions> = {
-          maxTokens: 256,
-          temperature: 0.7,
-          topP: 1,
-          topK: 250,
-          model: model,
+        // Prepare default options
+        const llmOptions: LLMProviderOptions = {
+          maxTokens: maxTokens,
+          temperature: options.temperature,
+          topP: options.topP,
+          topK: options.topK,
+          model: modelId,
         };
 
-        const mergedOptions = mergeOptions(defaultOptions, options);
+        logger.debug(`providerName: ${providerName}`);
 
-        logger.debug(`providerName:  ${providerName}`);
+        displayOptions(llmOptions, 'chat');
 
-        const providerOptions: LLMProviderOptions = {
-          maxTokens: mergedOptions.maxTokens,
-          temperature: mergedOptions.temperature,
-          topP: mergedOptions.topP,
-          topK: mergedOptions.topK,
-          system: mergedOptions.system,
-          model: model,
-        };
-
-        displayOptions(providerOptions, 'chat');
-
+        // Main chat loop
         while (true) {
           const response = await prompts({
             type: 'text',
@@ -67,22 +65,19 @@ export function createChatCommand(): Command {
 
           messages.push({ role: 'user', content: response.input });
 
-          const fullResponse = await handleStreamWithSpinner(provider, messages, providerOptions);
+          const fullResponse = await handleStreamWithSpinner(provider, messages, llmOptions);
 
-          // display the response on the console
-          const formattedResponse = `🤖  : ${fullResponse}`
+          // Display the response on the console
+          const formattedResponse = `🤖 : ${fullResponse}`;
           console.log(formattedResponse);
 
           messages.push({ role: 'assistant', content: fullResponse });
         }
       } catch (error) {
-        if (error instanceof Error) {
-          logger.error(`An error occurred: ${error.message}`);
-        } else {
-          logger.error(`An error occurred: ${error}`);
-        }
+        ErrorManager.handleError('ChatCommandError', error instanceof Error ? error.message : String(error));
       }
     });
 
   return chatCommand;
 }
+
