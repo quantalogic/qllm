@@ -494,13 +494,16 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 3. **Q: Is my data secure when using QLLM?**
    A: QLLM does not store any of your prompts or responses. However, please review the privacy policies of the LLM providers you're using.
 
-4. **Q: How can I create complex workflows with templates?**
+4. **Q: How can I create complex workflows with templates?** [Not 
    A: You can create multiple templates and chain them together using shell scripts or by referencing the output of one template as input to another.
 
 ## 🗺 Roadmap
 
 - [ ] Add a command the list the available providers
-  [ ] Add a list that present the models available for a provider
+- [ ] Add a list that present the models available for a provider
+- [ ] Publish and search prompt on a prompts/template marketplace
+- [ ] Plugin for Raycast
+- [ ] Plugin for Chrome
 - [ ] Cost evaluation by providers
 - [ ] Add support for more LLM providers
 - [ ] Implement AI agent capabilities
@@ -515,7 +518,7 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 - [ ] Semantic Search and Knowledge Base
 - [ ] Plugin Ecosystem
 - [ ] AI-Assisted Prompt Engineering
-- [ ] Plug-In for project code assistance
+- [ ] Plug-In for project code assistance, with diff support
 
 ## Changelog
 
