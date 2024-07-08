@@ -532,6 +532,10 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 - Project Homepage: https://github.com/quantalogic/qllm
 - Bug Reports: https://github.com/quantalogic/qllm/issues
 
+
+## Project Growth
+[![Star History Chart](https://api.star-history.com/svg?repos=quantalogic/qllm&type=Date)](https://star-history.com/#quantalogic/qllm&Date)
+
 ---
 
 Made with ❤️ by the QLLM team. Happy prompting!
