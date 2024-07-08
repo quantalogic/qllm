@@ -1,6 +1,6 @@
 
-[![GitHub Stars](https://img.shields.io/github/stars/quantalogic/quantalogic.svg)](https://github.com/quantalogic/quantalogic/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/quantalogic/quantalogic.svg)](https://github.com/quantalogic/quantalogic/network/members)
+[![GitHub Stars](https://img.shields.io/github/stars/quantalogic/qllm.svg)](https://github.com/quantalogic/qllm/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/quantalogic/qllm.svg)](https://github.com/quantalogic/qllm/network/members)
 
 # QLLM: Multi-Provider LLM Command CLI
 
