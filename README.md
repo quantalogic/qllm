@@ -2,6 +2,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/quantalogic/qllm.svg)](https://github.com/quantalogic/qllm/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/quantalogic/qllm.svg)](https://github.com/quantalogic/qllm/network/members)
 [![npm version](https://img.shields.io/npm/v/qllm.svg)](https://www.npmjs.com/package/qllm)
+[![npm downloads](https://img.shields.io/npm/dm/qllm.svg)](https://www.npmjs.com/package/qllm)
 
 # QLLM: Multi-Provider LLM Command CLI
 
