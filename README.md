@@ -499,13 +499,13 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 
 ## 🗺 Roadmap
 
-- [ ] Add a command the list the available providers
-- [ ] Add a list that present the models available for a provider
+- [ ] Add a command to list all the available providers
+- [ ] Add a list command that present all the models available for a provider
 - [ ] Publish and search prompt on a prompts/template marketplace
 - [ ] Plugin for Raycast
 - [ ] Plugin for Chrome
 - [ ] Cost evaluation by providers
-- [ ] Add support for more LLM providers
+- [ ] Add support for more LLM providers (Perplexity, Groq, Mistral, etc ...)
 - [ ] Implement AI agent capabilities
 - [ ] Expand provider support to include more LLM services
 - [ ] Add safe code interpreter
@@ -523,6 +523,7 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 ## Changelog
 
 The changelog is available at [CHANGELOG](./CHANGELOG.md)
+
 ## 📄 License
 
 This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
