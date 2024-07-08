@@ -515,6 +515,8 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 - [ ] Semantic Search and Knowledge Base
 - [ ] Plugin Ecosystem
 - [ ] AI-Assisted Prompt Engineering
+- [ ] Plug-In for project code assistance
+
 ## Changelog
 
 The changelog is available at [CHANGELOG](./CHANGELOG.md)
