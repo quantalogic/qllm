@@ -1,20 +1,21 @@
 // src/templates/template_manager.ts
-
 import fs from 'fs/promises';
 import path from 'path';
 import yaml from 'js-yaml';
 import { TemplateDefinition, TemplateVariable } from './types';
 import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error_manager';
-import { configManager } from '../utils/configuration_manager';
-import { resolveConfigPath } from '../utils/path_resolver';
+
+export interface TemplateManagerConfig {
+  promptDirectory: string;
+}
 
 export class TemplateManager {
   private templateDir: string;
   private fileCache: Map<string, string> = new Map();
 
-  constructor() {
-    this.templateDir = '';
+  constructor(private config: TemplateManagerConfig) {
+    this.templateDir = config.promptDirectory;
   }
 
   /**
@@ -22,9 +23,6 @@ export class TemplateManager {
    */
   async init(): Promise<void> {
     try {
-      const config = configManager.getConfig();
-      const promptsDir = config.promptDirectory;
-      this.templateDir = await resolveConfigPath(promptsDir);
       await fs.mkdir(this.templateDir, { recursive: true });
       logger.debug(`Ensured template directory exists: ${this.templateDir}`);
     } catch (error) {
@@ -171,12 +169,11 @@ export class TemplateManager {
    */
   async setPromptDirectory(directory: string): Promise<void> {
     try {
-      const expandedDir = await resolveConfigPath(directory);
+      const expandedDir = path.resolve(directory);
       const stats = await fs.stat(expandedDir);
       if (!stats.isDirectory()) {
         ErrorManager.throwError('SetPromptDirError', 'Specified path is not a directory');
       }
-      await configManager.updateAndSaveConfig({ promptDirectory: expandedDir });
       this.templateDir = expandedDir;
       logger.info(`Prompt directory set to: ${expandedDir}`);
     } catch (error) {
@@ -197,9 +194,11 @@ export class TemplateManager {
     while ((match = fileInclusionRegex.exec(content)) !== null) {
       const [fullMatch, filePath] = match;
       const fullPath = path.resolve(this.templateDir, filePath.trim());
+
       if (visitedFiles.has(fullPath)) {
         ErrorManager.throwError('CircularDependencyError', `Circular file inclusion detected: ${filePath}`);
       }
+
       try {
         let fileContent: string;
         if (this.fileCache.has(fullPath)) {
@@ -208,6 +207,7 @@ export class TemplateManager {
           fileContent = await fs.readFile(fullPath, 'utf-8');
           this.fileCache.set(fullPath, fileContent);
         }
+
         visitedFiles.add(fullPath);
         await this.parseContentVariables(fileContent, variables, inputVariables, visitedFiles);
         visitedFiles.delete(fullPath);
@@ -293,5 +293,3 @@ export class TemplateManager {
     return resolvedContent;
   }
 }
-
-export const templateManager = new TemplateManager();

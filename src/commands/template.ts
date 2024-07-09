@@ -1,9 +1,8 @@
 // src/commands/template.ts
-
 import { Command, Option } from 'commander';
 import prompts from 'prompts';
 import yaml from 'js-yaml';
-import { templateManager } from '../templates/template_manager';
+import { TemplateManager, TemplateManagerConfig } from '../templates/template_manager';
 import { TemplateExecutor } from '../templates/template_executor';
 import { logger } from '../utils/logger';
 import { ExecutionContext, TemplateDefinition, TemplateVariable } from '../templates/types';
@@ -18,9 +17,23 @@ import { resolveModelAlias } from '../config/model_aliases';
 import { DEFAULT_APP_CONFIG } from '../config/default_config';
 import { ProviderName } from '../config/types';
 
+async function getTemplateManager(promptsDir?: string): Promise<TemplateManager> {
+
+  const templateManagerConfig: TemplateManagerConfig = {
+    promptDirectory: promptsDir || configManager.getConfig().promptDirectory,
+  };
+  const templateManer =  new TemplateManager(
+    templateManagerConfig,
+  );
+
+  await templateManer.init();
+  return templateManer;
+}
+
 export function createTemplateCommand(): Command {
   const templateCommand = new Command('template')
     .description('Manage and execute prompt templates')
+    .addOption(new Option('--prompts-dir <directory>', 'Set the directory for prompt templates'))
     .addCommand(createListCommand())
     .addCommand(createCreateCommand())
     .addCommand(createExecuteCommand())
@@ -38,6 +51,7 @@ function createListCommand(): Command {
     .action(async () => {
       try {
         logger.debug('Executing list command');
+        const templateManager = await getTemplateManager();
         const templates = await templateManager.listTemplates();
         logger.debug(`Found ${templates.length} templates`);
         console.log('Available templates:');
@@ -58,6 +72,7 @@ function createCreateCommand(): Command {
     .action(async () => {
       try {
         const template = await promptForTemplateDetails();
+        const templateManager = await getTemplateManager();
         await templateManager.saveTemplate(template);
         logger.info(`Template ${template.name} created successfully`);
       } catch (error) {
@@ -78,38 +93,35 @@ function createExecuteCommand(): Command {
     .addOption(cliOptions.streamOption)
     .addOption(new Option('--output [file]', 'Output file path'))
     .addOption(new Option('--format <format>', 'Output format').choices(['json', 'xml']).default('json'))
-    .option('-v, --variable <key>=<value>', 'Set variable values for the template', collectVariables, {})
-    .action(async (name,options,command) => {
+    .option('-v, --variable <key=value>', 'Set variable values for the template', collectVariables, {})
+    .action(async (name, options, command) => {
       try {
-
+        const config = configManager.getConfig();
         const parent = command.parent.opts();
-        const parentOptions = command.parent.opts();  
-
+        const parentOptions = command.parent.opts();
         logger.debug(`Attempting to execute template: ${name}`);
+        const templateManager = await getTemplateManager();
         const template = await templateManager.getTemplate(name);
         if (!template) {
           throw new Error(`Template '${name}' not found`);
         }
         logger.debug(`Template found: ${JSON.stringify(template)}`);
-
         const variables = await templateManager.parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
-        const config = configManager.getConfig();
         const modelAlias = parentOptions.model as string || config.defaultModelAlias;
         const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
+
         // Resolve model alias to model id
         logger.debug(`modelAlias: ${modelAlias}`);
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`defaultProviderName: ${config.defaultProvider}`);
         const modelId = parentOptions.modelId || modelAlias ? resolveModelAlias(providerName, modelAlias) : config.defaultModelId;
-
         if (!modelId) {
           ErrorManager.throwError('ModelError', `Model id ${modelId} not found`);
         }
 
         const maxTokens = options.maxTokens || config.defaultMaxTokens;
-
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`modelId: ${modelId}`);
         logger.debug(`maxTokens: ${maxTokens}`);
@@ -150,6 +162,7 @@ function createDeleteCommand(): Command {
     .argument('<name>', 'Name of the template to delete')
     .action(async (name: string) => {
       try {
+        const templateManager = await getTemplateManager();
         await templateManager.deleteTemplate(name);
         logger.info(`Template ${name} deleted successfully`);
       } catch (error) {
@@ -164,6 +177,7 @@ function createViewCommand(): Command {
     .argument('<name>', 'Name of the template to view')
     .action(async (name: string) => {
       try {
+        const templateManager = await getTemplateManager();
         const template = await templateManager.getTemplate(name);
         if (template) {
           console.log(yaml.dump(template));
@@ -180,14 +194,15 @@ function createEditCommand(): Command {
   return new Command('edit')
     .description('Edit an existing template')
     .argument('<name>', 'Name of the template to edit')
-    .action(async (name: string) => {
+    .action(async (name: string,options) => {
       try {
+        const templateManager = await getTemplateManager(options.promptsDir);
         const template = await templateManager.getTemplate(name);
         if (!template) {
           throw new Error(`Template '${name}' not found`);
         }
         const updatedTemplate = await promptForTemplateDetails(template);
-        await templateManager.saveTemplate(updatedTemplate);
+        await templateManager.updateTemplate(name, updatedTemplate);
         logger.info(`Template ${name} updated successfully`);
       } catch (error) {
         ErrorManager.handleError('EditTemplateError', `Failed to edit template: ${error}`);
@@ -199,8 +214,9 @@ function createVariablesCommand(): Command {
   return new Command('variables')
     .description('Display all variables in a template')
     .argument('<name>', 'Name of the template')
-    .action(async (name: string) => {
+    .action(async (name: string,options) => {
       try {
+        const templateManager = await getTemplateManager(options.promptsDir);
         const template = await templateManager.getTemplate(name);
         if (!template) {
           throw new Error(`Template '${name}' not found`);

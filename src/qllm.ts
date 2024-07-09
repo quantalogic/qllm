@@ -9,9 +9,6 @@ import { createTemplateCommand } from './commands/template';
 import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
 import { ErrorManager } from './utils/error_manager';
-import { ProviderFactory } from './providers/provider_factory';
-import { ProviderName } from './config/types';
-import { templateManager } from './templates/template_manager';
 import { resolveConfigPath } from './utils/path_resolver';
 import { ConfigurationFileLoader } from './utils/configuration_file_loader';
 
@@ -30,7 +27,6 @@ async function main() {
       .option('--modelid <modelid>', 'Specific model ID to use')
       .option('--model <model>', 'Model alias to use')
       .option('--log-level <level>', 'Set log level (error, warn, info, debug)')
-      .option('--prompts-dir <directory>', 'Set the directory for prompt templates')
       .option('--config <path>', 'Path to configuration file');
 
     program.hook('preAction', async (thisCommand) => {
@@ -65,8 +61,6 @@ async function main() {
         logger.debug(`Configuration: ${JSON.stringify(configManager.getConfig())}`);
 
 
-        // Initialize template manager
-        await templateManager.init();
       } catch (error) {
         ErrorManager.handleError('PreActionError', error instanceof Error ? error.message : String(error));
         process.exit(1);
