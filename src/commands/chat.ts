@@ -20,13 +20,10 @@ export function createChatCommand(): Command {
     .addOption(cliOptions.topPOption)
     .addOption(cliOptions.topKOption)
     .addOption(cliOptions.systemOption)
-    .action(async (options, command) => {
+    .action(async (options) => {
       try {
-
         const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
-
         const { providerName, modelId } = getModelProvider();
-
         const provider = await ProviderFactory.getProvider(providerName);
 
         logger.debug(`providerName: ${providerName}`);
@@ -47,7 +44,6 @@ export function createChatCommand(): Command {
         };
 
         logger.debug(`providerName: ${providerName}`);
-
         displayOptions(llmOptions, 'chat');
 
         // Main chat loop
@@ -65,7 +61,11 @@ export function createChatCommand(): Command {
 
           messages.push({ role: 'user', content: response.input });
 
-          const fullResponse = await handleStreamWithSpinner(provider, messages, llmOptions);
+          const fullResponse = await handleStreamWithSpinner(
+            provider,
+            messages,
+            llmOptions
+          );
 
           // Display the response on the console
           const formattedResponse = `🤖 : ${fullResponse}`;
@@ -81,3 +81,4 @@ export function createChatCommand(): Command {
   return chatCommand;
 }
 
+export default createChatCommand;

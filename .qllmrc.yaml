@@ -1,7 +1,7 @@
 awsProfile: bedrock
 awsRegion: us-east-1
 defaultProvider: ''
-defaultModel: sonnet35
+defaultModel: haiku
 logLevel: debug
 defaultMaxTokens: 2048
 promptDirectory: ./prompts

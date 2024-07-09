@@ -24,12 +24,10 @@ export function createAskCommand(): Command {
     .addOption(cliOptions.fileOption)
     .addOption(cliOptions.outputOption)
     .addOption(cliOptions.formatOption)
-
     .action(async (options, command) => {
       try {
-
-        const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
-
+        const commandOptions = configManager.getCommandOptions('ask');
+        const maxTokens = configManager.getOption('defaultMaxTokens', commandOptions.maxTokens);
         const { providerName, modelId } = getModelProvider();
 
         logger.debug(`providerName: ${providerName}`);
@@ -81,4 +79,4 @@ export function createAskCommand(): Command {
   return askCommand;
 }
 
-
+export default createAskCommand;

@@ -24,9 +24,7 @@ export function createStreamCommand(): Command {
     .addOption(cliOptions.outputOption)
     .action(async (options, command) => {
       try {
-
         const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
-
         const { providerName, modelId } = getModelProvider();
 
         logger.debug(`providerName: ${providerName}`);
@@ -35,6 +33,7 @@ export function createStreamCommand(): Command {
 
         const provider = await ProviderFactory.getProvider(providerName);
 
+        // Handle input from file or command line
         let input: string;
         if (options.file) {
           input = await fs.readFile(options.file, 'utf-8');
@@ -49,6 +48,7 @@ export function createStreamCommand(): Command {
 
         logger.debug(`providerName: ${providerName}`);
 
+        // Prepare provider options
         const llmOptions: LLMProviderOptions = {
           maxTokens: maxTokens,
           temperature: options.temperature,
@@ -87,3 +87,4 @@ export function createStreamCommand(): Command {
   return streamCommand;
 }
 
+export default createStreamCommand;

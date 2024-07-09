@@ -1,4 +1,5 @@
 // src/commands/template.ts
+
 import { Command, Option } from 'commander';
 import prompts from 'prompts';
 import yaml from 'js-yaml';
@@ -10,7 +11,6 @@ import { ErrorManager } from '../utils/error_manager';
 import { LLMProviderOptions } from '../providers/types';
 import { configManager } from '../utils/configuration_manager';
 import { cliOptions } from '../options';
-
 import { ProviderFactory } from '../providers/provider_factory';
 import { displayOptions } from '../utils/option_display';
 import { OutputHandler } from '../utils/output_handler';
@@ -89,9 +89,7 @@ function createExecuteCommand(): Command {
         const variables = await templateManager.parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
-
         const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
-
         const { providerName, modelId } = getModelProvider();
 
         logger.debug(`providerName: ${providerName}`);
@@ -301,4 +299,3 @@ function formatDefaultValue(variable: TemplateVariable): string {
 }
 
 export default createTemplateCommand;
-
