@@ -8,13 +8,11 @@ import { createConfigCommand } from './commands/config';
 import { createTemplateCommand } from './commands/template';
 import { configManager } from './utils/configuration_manager';
 import { logger } from './utils/logger';
-import { resolveModelAlias } from "./config/model_aliases";
 import { ErrorManager } from './utils/error_manager';
-import { ProviderFactory } from './providers/provider_factory';
-import { ProviderName } from './config/types';
-import { templateManager } from './templates/template_manager';
+import { resolveConfigPath } from './utils/path_resolver';
+import { ConfigurationFileLoader } from './utils/configuration_file_loader';
 
-const VERSION = '1.0.0'; 
+const VERSION = '1.0.0';
 
 async function main() {
   try {
@@ -29,54 +27,40 @@ async function main() {
       .option('--modelid <modelid>', 'Specific model ID to use')
       .option('--model <model>', 'Model alias to use')
       .option('--log-level <level>', 'Set log level (error, warn, info, debug)')
-      .option('--prompts-dir <dir>', 'Set the directory for prompt templates')
       .option('--config <path>', 'Path to configuration file');
 
     program.hook('preAction', async (thisCommand) => {
       try {
+
+
         const options = thisCommand.opts();
+        logger.setLogLevel(options.logLevel || 'info');
 
-        // Load configuration
-        await configManager.loadConfig(options);
-        const config = configManager.getConfig();
+        const configFile = options.config ? await resolveConfigPath(options.config) : await resolveConfigPath(undefined);
+        
+        const configLoader = new ConfigurationFileLoader(configFile);
+        const loadedConfig = await configLoader.loadConfig();
+        
+        await configManager.loadConfig({ ...options, ...loadedConfig });
+        const config = configManager.getConfig() ;
 
-        logger.setLogLevel(config.logLevel || 'info');
+        console.log('config', config, 'options', options);
 
-        // Initialize template manager
-        if (options.promptsDir) {
-          await templateManager.setPromptDirectory(options.promptsDir);
-        }
-        logger.debug(`Using prompts directory: ${config.promptDirectory}`);
-        await templateManager.init();
-
-        // Update configuration with CLI options
-        configManager.updateConfig({
-          awsProfile: options.profile,
-          awsRegion: options.region,
-          defaultProvider: options.provider as ProviderName,
-          defaultModelAlias: options.model,
-          defaultModelId: options.modelid,
-        });
-
-  
-        // Set AWS environment variables if provided
+        // SET AWS profile and region
+        // THIS CODE CANNOT BE DELETED 
         if (config.awsProfile) {
-          logger.debug(`Setting AWS profile: ${config.awsProfile}`);
           process.env.AWS_PROFILE = config.awsProfile;
         }
         if (config.awsRegion) {
-          logger.debug(`Setting AWS region: ${config.awsRegion}`);
           process.env.AWS_REGION = config.awsRegion;
         }
 
         // Set log level
         logger.setLogLevel(config.logLevel || 'info');
+
         logger.debug(`Configuration: ${JSON.stringify(configManager.getConfig())}`);
 
-        // Initialize provider
-        if (config.defaultProvider) {
-          await ProviderFactory.getProvider(config.defaultProvider as ProviderName);
-        }
+
       } catch (error) {
         ErrorManager.handleError('PreActionError', error instanceof Error ? error.message : String(error));
         process.exit(1);

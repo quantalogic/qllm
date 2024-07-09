@@ -1,9 +1,8 @@
 awsProfile: bedrock
 awsRegion: us-east-1
-defaultProvider: ''
-defaultModel: haiku
-logLevel: info
+defaultProvider: anthropic
+defaultModelAlias: haiku
+logLevel: debug
 defaultMaxTokens: 2048
 promptDirectory: ./prompts
-defaultModelAlias: haiku
-defaultModelId: anthropic.claude-3-haiku-20240307-v1:0
+defaultModelId: ''

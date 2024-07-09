@@ -1,13 +1,16 @@
 // src/commands/config.ts
+
 import { Command, Option } from 'commander';
 import prompts from 'prompts';
 import { configManager } from '../utils/configuration_manager';
+import { ConfigurationFileLoader } from '../utils/configuration_file_loader';
 import { logger } from '../utils/logger';
-import { AppConfig, ProviderName } from '../config/types';
 import { ErrorManager } from '../utils/error_manager';
+import { AppConfig, ProviderName } from '../config/types';
+import { resolveConfigPath } from '../utils/path_resolver';
 
 export function createConfigCommand(): Command {
-  const config_command = new Command('config')
+  const configCommand = new Command('config')
     .description('Configure the QLLM utility')
     .addOption(new Option('--show', 'Show current configuration'))
     .addOption(new Option('--set-profile <profile>', 'Set AWS profile'))
@@ -22,25 +25,48 @@ export function createConfigCommand(): Command {
     .addOption(new Option('--interactive', 'Enter interactive configuration mode'))
     .action(async (options) => {
       try {
-        await configManager.loadConfig();
-
+        const configFile = await resolveConfigPath(options.config);
+        const configLoader = new ConfigurationFileLoader(configFile);
+        
         if (options.show) {
-          showConfig();
+          showConfig(configManager.getConfig());
         } else if (options.interactive) {
-          await interactiveConfig();
+          await interactiveConfig(configLoader);
         } else {
-          await updateConfig(options);
+          await updateConfig(options, configLoader);
         }
       } catch (error) {
         ErrorManager.handleError('ConfigCommandError', `Configuration error: ${error}`);
       }
     });
 
-  return config_command;
+  return configCommand;
 }
 
-function showConfig(): void {
-  const config = configManager.getConfig();
+async function updateConfig(options: any, configLoader: ConfigurationFileLoader): Promise<void> {
+  const updates: Partial<AppConfig> = {};
+
+  if (options.setProfile) updates.awsProfile = options.setProfile;
+  if (options.setRegion) updates.awsRegion = options.setRegion;
+  if (options.setProvider) updates.defaultProvider = options.setProvider as ProviderName;
+  if (options.setLogLevel) updates.logLevel = options.setLogLevel;
+  if (options.setMaxTokens) updates.defaultMaxTokens = parseInt(options.setMaxTokens, 10);
+  if (options.setPromptsDir) updates.promptDirectory = options.setPromptsDir;
+  if (options.setModelAlias) updates.defaultModelAlias = options.setModelAlias;
+  if (options.setModelId) updates.defaultModelId = options.setModelId;
+
+  if (Object.keys(updates).length > 0) {
+    configManager.updateConfig(updates);
+    await configLoader.saveConfig(configManager.getConfig());
+    logger.info('Configuration updated successfully.');
+    showConfig(configManager.getConfig());
+  } else {
+    logger.info('No configuration changes made.');
+    showConfig(configManager.getConfig());
+  }
+}
+
+function showConfig(config: AppConfig): void {
   console.info('Current configuration:');
   Object.entries(config).forEach(([key, value]) => {
     if (key.toLowerCase().includes('secret')) {
@@ -51,34 +77,9 @@ function showConfig(): void {
   });
 }
 
-async function updateConfig(options: any): Promise<void> {
-  const updates: Partial<AppConfig> = {};
-
-  if (options.setProfile) updates.awsProfile = options.setProfile;
-  if (options.setRegion) updates.awsRegion = options.setRegion;
-  if (options.setProvider) updates.defaultProvider = options.setProvider as ProviderName;
-  if (options.setModel) updates.defaultModel = options.setModel;
-  if (options.setLogLevel) updates.logLevel = options.setLogLevel;
-  if (options.setMaxTokens) updates.defaultMaxTokens = parseInt(options.setMaxTokens, 10);
-  if (options.setPromptsDir) updates.promptDirectory = options.setPromptsDir;
-  if (options.setModelAlias) updates.defaultModelAlias = options.setModelAlias;
-  if (options.setModelId) updates.defaultModelId = options.setModelId;
-
-  if (Object.keys(updates).length > 0) {
-    await configManager.updateAndSaveConfig(updates);
-    logger.info('Configuration updated successfully.');
-    showConfig();
-  } else {
-    logger.info('No configuration changes made.');
-    showConfig();
-  }
-}
-
-import { PromptObject } from 'prompts';
-
-async function interactiveConfig(): Promise<void> {
+async function interactiveConfig(configLoader: ConfigurationFileLoader): Promise<void> {
   const currentConfig = configManager.getConfig();
-  const questions: PromptObject[] = [
+  const questions: prompts.PromptObject[] = [
     {
       type: 'text',
       name: 'awsProfile',
@@ -95,26 +96,20 @@ async function interactiveConfig(): Promise<void> {
       type: 'text',
       name: 'defaultProvider',
       message: 'Select default provider:',
+      initial: currentConfig.defaultProvider,
     },
     {
-      type: 'text',
-      name: 'defaultModel',
-      message: 'Enter default model:',
-      initial: currentConfig.defaultModel,
+      type: 'select',
+      name: 'logLevel',
+      message: 'Select log level:',
+      choices: [
+        { title: 'Info', value: 'info' },
+        { title: 'Warning', value: 'warning' },
+        { title: 'Error', value: 'error' },
+        { title: 'Debug', value: 'debug' },
+      ],
+      initial: ['info', 'warning', 'error', 'debug'].indexOf(currentConfig.logLevel) || 0,
     },
-    {
-        type: 'select',
-        name: 'logLevel',
-        message: 'Select log level:',
-        choices: [
-          { title: 'Info', value: 'info' },
-          { title: 'Warning', value: 'warning' },
-          { title: 'Error', value: 'error' },
-          { title: 'Debug', value: 'debug' },
-        ],
-        initial: ['info', 'warning', 'error', 'debug'].indexOf(currentConfig.logLevel) || 0,
- 
-      },
     {
       type: 'number',
       name: 'defaultMaxTokens',
@@ -143,6 +138,9 @@ async function interactiveConfig(): Promise<void> {
 
   const responses = await prompts(questions);
   await configManager.updateAndSaveConfig(responses);
+  await configLoader.saveConfig(configManager.getConfig());
   logger.info('Configuration updated successfully.');
-  showConfig();
+  showConfig(configManager.getConfig());
 }
+
+export default createConfigCommand;

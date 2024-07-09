@@ -1,7 +1,6 @@
 import { LLMProvider, LLMProviderOptions } from './llm_provider';
 import { ProviderName } from '../config/types';
 import { logger } from '../utils/logger';
-import { configManager } from '../utils/configuration_manager';
 import { getDefaultModel } from '../config/model_aliases';
 import { providerRegistry } from './provider_registry';
 import { PluginManager } from '../utils/plugin_manager';
@@ -12,17 +11,11 @@ export class ProviderFactory {
 
   static async getProvider(providerName: ProviderName): Promise<LLMProvider> {
 
-    const config = configManager.getConfig();
-    const modelId = config.defaultModelId || getDefaultModel(providerName);
-
-    if(!modelId) {
-      ErrorManager.throwError('ModelError', `No default model set for provider: ${providerName}`);
-    }
 
     const options: LLMProviderOptions = {
-      model: modelId,
-      awsProfile: config.awsProfile,
-      awsRegion: config.awsRegion,
+      model: '',
+      awsProfile: process.env.AWS_PROFILE,
+      awsRegion: process.env.AWS_REGION,
     };
 
     if (!providerRegistry.hasProvider(providerName)) {

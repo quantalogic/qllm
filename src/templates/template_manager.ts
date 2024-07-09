@@ -1,32 +1,33 @@
 // src/templates/template_manager.ts
 import fs from 'fs/promises';
 import path from 'path';
-import os from 'os';
 import yaml from 'js-yaml';
 import { TemplateDefinition, TemplateVariable } from './types';
 import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error_manager';
-import { configManager } from '../utils/configuration_manager';
+
+export interface TemplateManagerConfig {
+  promptDirectory: string;
+}
 
 export class TemplateManager {
   private templateDir: string;
   private fileCache: Map<string, string> = new Map();
 
-  constructor() {
-    this.templateDir = configManager.getConfig().promptDirectory;
-    logger.debug(`Template directory: ${this.templateDir}`);
+  constructor(private config: TemplateManagerConfig) {
+    this.templateDir = config.promptDirectory;
   }
 
   /**
-   * Initializes the templates directory.
+   * Initializes the template manager.
    */
   async init(): Promise<void> {
     try {
       await fs.mkdir(this.templateDir, { recursive: true });
       logger.debug(`Ensured template directory exists: ${this.templateDir}`);
     } catch (error) {
-      logger.error(`Failed to create templates directory ${this.templateDir}: ${error}`);
-      ErrorManager.throwError('TemplateManagerError', `Failed to create templates directory ${this.templateDir}: ${error}`);
+      logger.error(`Failed to initialize template directory: ${error}`);
+      ErrorManager.throwError('TemplateManagerError', `Failed to initialize template directory: ${error}`);
     }
   }
 
@@ -168,13 +169,11 @@ export class TemplateManager {
    */
   async setPromptDirectory(directory: string): Promise<void> {
     try {
-      const expandedDir = this.expandPath(directory);
+      const expandedDir = path.resolve(directory);
       const stats = await fs.stat(expandedDir);
       if (!stats.isDirectory()) {
         ErrorManager.throwError('SetPromptDirError', 'Specified path is not a directory');
       }
-      configManager.updateConfig({ promptDirectory: expandedDir });
-      await configManager.saveConfig();
       this.templateDir = expandedDir;
       logger.info(`Prompt directory set to: ${expandedDir}`);
     } catch (error) {
@@ -195,9 +194,11 @@ export class TemplateManager {
     while ((match = fileInclusionRegex.exec(content)) !== null) {
       const [fullMatch, filePath] = match;
       const fullPath = path.resolve(this.templateDir, filePath.trim());
+
       if (visitedFiles.has(fullPath)) {
         ErrorManager.throwError('CircularDependencyError', `Circular file inclusion detected: ${filePath}`);
       }
+
       try {
         let fileContent: string;
         if (this.fileCache.has(fullPath)) {
@@ -206,6 +207,7 @@ export class TemplateManager {
           fileContent = await fs.readFile(fullPath, 'utf-8');
           this.fileCache.set(fullPath, fileContent);
         }
+
         visitedFiles.add(fullPath);
         await this.parseContentVariables(fileContent, variables, inputVariables, visitedFiles);
         visitedFiles.delete(fullPath);
@@ -265,9 +267,11 @@ export class TemplateManager {
     while ((match = fileInclusionRegex.exec(content)) !== null) {
       const [fullMatch, filePath] = match;
       const fullPath = path.resolve(this.templateDir, filePath.trim());
+
       if (visitedFiles.has(fullPath)) {
-        ErrorManager.throwError('FileInclusionError', `Circular file inclusion detected: ${filePath}`);
+        ErrorManager.throwError('CircularDependencyError', `Circular file inclusion detected: ${filePath}`);
       }
+
       try {
         let fileContent: string;
         if (this.fileCache.has(fullPath)) {
@@ -276,6 +280,7 @@ export class TemplateManager {
           fileContent = await fs.readFile(fullPath, 'utf-8');
           this.fileCache.set(fullPath, fileContent);
         }
+
         visitedFiles.add(fullPath);
         const resolvedFileContent = await this.resolveFileInclusions(fileContent, visitedFiles);
         resolvedContent = resolvedContent.replace(fullMatch, resolvedFileContent);
@@ -284,18 +289,7 @@ export class TemplateManager {
         ErrorManager.throwError('FileInclusionError', `Failed to include file ${filePath}: ${error}`);
       }
     }
+
     return resolvedContent;
   }
-
-  private expandPath(dir: string): string {
-    if (dir.startsWith('~')) {
-      return path.join(os.homedir(), dir.slice(1));
-    }
-    if (path.isAbsolute(dir)) {
-      return dir;
-    }
-    return path.resolve(process.cwd(), dir);
-  }
 }
-
-export const templateManager = new TemplateManager();
