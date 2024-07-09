@@ -15,7 +15,7 @@ import { ProviderFactory } from '../providers/provider_factory';
 import { displayOptions } from '../utils/option_display';
 import { OutputHandler } from '../utils/output_handler';
 import { resolveModelAlias } from '../config/model_aliases';
-import { DEFAULT_CONFIG } from '../config/default_config';
+import { DEFAULT_APP_CONFIG } from '../config/default_config';
 import { ProviderName } from '../config/types';
 
 export function createTemplateCommand(): Command {
@@ -79,9 +79,12 @@ function createExecuteCommand(): Command {
     .addOption(new Option('--output [file]', 'Output file path'))
     .addOption(new Option('--format <format>', 'Output format').choices(['json', 'xml']).default('json'))
     .option('-v, --variable <key>=<value>', 'Set variable values for the template', collectVariables, {})
-    .action(async (name: string, options: any) => {
+    .action(async (name,options,command) => {
       try {
-        
+
+        const parent = command.parent.opts();
+        const parentOptions = command.parent.opts();  
+
         logger.debug(`Attempting to execute template: ${name}`);
         const template = await templateManager.getTemplate(name);
         if (!template) {
@@ -93,20 +96,19 @@ function createExecuteCommand(): Command {
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
         const config = configManager.getConfig();
-        const parentOptions = options.parent.opts();  
         const modelAlias = parentOptions.model as string || config.defaultModelAlias;
-        const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_CONFIG.defaultProvider) as ProviderName;
+        const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
         // Resolve model alias to model id
         logger.debug(`modelAlias: ${modelAlias}`);
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`defaultProviderName: ${config.defaultProvider}`);
-        const modelId = parentOptions.modelId || modelAlias ? resolveModelAlias(providerName,modelAlias) : config.defaultModelId;
+        const modelId = parentOptions.modelId || modelAlias ? resolveModelAlias(providerName, modelAlias) : config.defaultModelId;
 
-        if(!modelId){
+        if (!modelId) {
           ErrorManager.throwError('ModelError', `Model id ${modelId} not found`);
         }
-        
-        const maxTokens = options.maxTokens ||config.defaultMaxTokens;
+
+        const maxTokens = options.maxTokens || config.defaultMaxTokens;
 
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`modelId: ${modelId}`);

@@ -12,7 +12,7 @@ import { configManager } from '../utils/configuration_manager';
 import { withSpinner } from '../helpers/spinner_helper';
 import { ErrorManager } from '../utils/error_manager';
 import { resolveModelAlias } from '../config/model_aliases';
-import { DEFAULT_CONFIG } from '../config/default_config';
+import { DEFAULT_APP_CONFIG } from '../config/default_config';
 import { ProviderName } from '@/config/types';
 
 export function createAskCommand(): Command {
@@ -32,7 +32,7 @@ export function createAskCommand(): Command {
         const config = configManager.getConfig();
         const parentOptions = command.parent.opts();  
         const modelAlias = parentOptions.model as string || config.defaultModelAlias;
-        const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_CONFIG.defaultProvider) as ProviderName;
+        const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
         // Resolve model alias to model id
         logger.debug(`modelAlias: ${modelAlias}`);
         logger.debug(`providerName: ${providerName}`);

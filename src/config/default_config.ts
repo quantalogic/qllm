@@ -2,7 +2,7 @@ import path from "path";
 import os from "os"; // Add this line to import the 'os' module
 import { AppConfig } from "./types"
 
-export const DEFAULT_CONFIG: AppConfig = {
+export const DEFAULT_APP_CONFIG: AppConfig = {
     awsProfile: 'default',
     awsRegion: 'us-east-1',
     defaultProvider: 'anthropic',

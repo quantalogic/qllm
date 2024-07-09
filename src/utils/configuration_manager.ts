@@ -4,7 +4,7 @@ import { EventEmitter } from 'events';
 import { AppConfig } from '../config/types';
 import { logger } from './logger';
 import { ErrorManager } from './error_manager';
-import { DEFAULT_CONFIG } from '../config/default_config';
+import { DEFAULT_APP_CONFIG } from '../config/default_config';
 
 
 export class ConfigurationManager extends EventEmitter {
@@ -13,7 +13,7 @@ export class ConfigurationManager extends EventEmitter {
 
   private constructor() {
     super();
-    this.config = { ...DEFAULT_CONFIG };
+    this.config = { ...DEFAULT_APP_CONFIG };
   }
 
   public static getInstance(): ConfigurationManager {

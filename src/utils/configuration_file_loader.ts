@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import fs from 'fs/promises';
 import path from 'path';
 import { AppConfig } from '../config/types';
-import { DEFAULT_CONFIG } from '../config/default_config';
+import { DEFAULT_APP_CONFIG } from '../config/default_config';
 import { logger } from './logger';
 import { ErrorManager } from './error_manager';
 
@@ -19,11 +19,11 @@ export class ConfigurationFileLoader {
     try {
       const configContent = await fs.readFile(this.configFilePath, 'utf-8');
       const loadedConfig = yaml.load(configContent) as Partial<AppConfig>;
-      return { ...DEFAULT_CONFIG, ...loadedConfig };
+      return { ...DEFAULT_APP_CONFIG, ...loadedConfig };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         logger.warn(`Configuration file not found at ${this.configFilePath}. Using default configuration.`);
-        return DEFAULT_CONFIG;
+        return DEFAULT_APP_CONFIG;
       }
       ErrorManager.throwError('ConfigLoadError', `Failed to load configuration: ${error}`);
     }
