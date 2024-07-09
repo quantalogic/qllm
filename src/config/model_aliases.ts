@@ -1,6 +1,6 @@
 // src/config/model_aliases.ts
 
-import { ModelAlias, ProviderConfig, ProviderName } from './types';
+import { ProviderConfig, ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
 import openaiConfig from './providers/openai';
 import ollamaConfig from './providers/ollama';

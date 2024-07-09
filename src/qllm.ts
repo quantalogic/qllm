@@ -35,7 +35,11 @@ async function main() {
 
     program.hook('preAction', async (thisCommand) => {
       try {
+
+
         const options = thisCommand.opts();
+        logger.setLogLevel(options.logLevel || 'info');
+
         const configFile = options.config ? await resolveConfigPath(options.config) : await resolveConfigPath(undefined);
         
         const configLoader = new ConfigurationFileLoader(configFile);
@@ -60,10 +64,6 @@ async function main() {
 
         logger.debug(`Configuration: ${JSON.stringify(configManager.getConfig())}`);
 
-        // Initialize provider
-        if (config.defaultProvider) {
-          await ProviderFactory.getProvider(config.defaultProvider as ProviderName);
-        }
 
         // Initialize template manager
         await templateManager.init();

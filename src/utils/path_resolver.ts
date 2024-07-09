@@ -15,42 +15,50 @@ export async function resolveConfigPath(configPath?: string): Promise<string> {
     const defaultConfigName = '.qllmrc.yaml';
 
     try {
+        // If no config path is provided, use the default config name
         if (!configPath) {
-            // If no path provided, use default name in current working directory
             configPath = defaultConfigName;
         }
 
         let resolvedPath: string;
 
+        // Handle different types of paths
         if (configPath.startsWith('~/')) {
-            // Resolve path relative to home directory
+            // If path starts with '~/', it's relative to the user's home directory
+            // Remove the '~/' and join with the home directory path
             resolvedPath = path.join(os.homedir(), configPath.slice(2));
-        } else if (configPath.startsWith('./')) {
-            // Resolve path relative to current working directory
-            resolvedPath = path.resolve(process.cwd(), configPath.slice(2));
-        } else {
-            // Resolve path relative to current working directory
+        } else if (configPath.startsWith('./') || !path.isAbsolute(configPath)) {
+            // If path starts with './' or is not absolute, it's relative to the current working directory
+            // Resolve it against the current working directory
             resolvedPath = path.resolve(process.cwd(), configPath);
+        } else {
+            // If it's an absolute path, use it as is
+            resolvedPath = configPath;
         }
 
-        logger.debug(`Attempting to resolve config path: ${resolvedPath}`);
-
-        // Check if the file exists
-        await fs.access(resolvedPath);
-        logger.debug(`Config file found at: ${resolvedPath}`);
-        return resolvedPath;
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-            // If the file doesn't exist and it's the default config, return path in home directory
-            if (configPath === defaultConfigName) {
-                const homeConfigPath = path.join(os.homedir(), defaultConfigName);
-                logger.debug(`Default config not found, using home directory: ${homeConfigPath}`);
-                return homeConfigPath;
+        try {
+            // Check if the resolved file path exists and is accessible
+            await fs.access(resolvedPath);
+            logger.debug(`Config file found at: ${resolvedPath}`);
+            return resolvedPath;
+        } catch (accessError) {
+            // Handle file not found error
+            if ((accessError as NodeJS.ErrnoException).code === 'ENOENT') {
+                // If the file doesn't exist and we're looking for the default config,
+                // return the path in the user's home directory
+                if (configPath === defaultConfigName) {
+                    const homeConfigPath = path.join(os.homedir(), defaultConfigName);
+                    logger.debug(`Default config not found, using home directory: ${homeConfigPath}`);
+                    return homeConfigPath;
+                }
+                // If it's not the default config, throw a custom error
+                ErrorManager.throwError('ConfigNotFoundError', `Configuration file not found: ${configPath}`);
             }
-            // Otherwise, throw an error
-            ErrorManager.throwError('ConfigNotFoundError', `Configuration file not found: ${configPath}`);
+            // For any other file access error, re-throw it
+            throw accessError;
         }
-        // For any other error, re-throw
+    } catch (error) {
+        // Catch and re-throw any unexpected errors that weren't handled above
         throw error;
     }
 }
