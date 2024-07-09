@@ -14,7 +14,9 @@ import { cliOptions } from '../options';
 import { ProviderFactory } from '../providers/provider_factory';
 import { displayOptions } from '../utils/option_display';
 import { OutputHandler } from '../utils/output_handler';
-import { getModelProvider } from '../utils/get_model_provider';
+import { resolveModelAlias } from '../config/model_aliases';
+import { DEFAULT_CONFIG } from '../config/default_config';
+import { ProviderName } from '../config/types';
 
 export function createTemplateCommand(): Command {
   const templateCommand = new Command('template')
@@ -79,6 +81,7 @@ function createExecuteCommand(): Command {
     .option('-v, --variable <key>=<value>', 'Set variable values for the template', collectVariables, {})
     .action(async (name: string, options: any) => {
       try {
+        
         logger.debug(`Attempting to execute template: ${name}`);
         const template = await templateManager.getTemplate(name);
         if (!template) {
@@ -89,8 +92,21 @@ function createExecuteCommand(): Command {
         const variables = await templateManager.parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
-        const maxTokens = configManager.getOption('defaultMaxTokens', options.maxTokens);
-        const { providerName, modelId } = getModelProvider();
+        const config = configManager.getConfig();
+        const parentOptions = options.parent.opts();  
+        const modelAlias = parentOptions.model as string || config.defaultModelAlias;
+        const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_CONFIG.defaultProvider) as ProviderName;
+        // Resolve model alias to model id
+        logger.debug(`modelAlias: ${modelAlias}`);
+        logger.debug(`providerName: ${providerName}`);
+        logger.debug(`defaultProviderName: ${config.defaultProvider}`);
+        const modelId = parentOptions.modelId || modelAlias ? resolveModelAlias(providerName,modelAlias) : config.defaultModelId;
+
+        if(!modelId){
+          ErrorManager.throwError('ModelError', `Model id ${modelId} not found`);
+        }
+        
+        const maxTokens = options.maxTokens ||config.defaultMaxTokens;
 
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`modelId: ${modelId}`);

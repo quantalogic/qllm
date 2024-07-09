@@ -42,7 +42,9 @@ async function main() {
         const loadedConfig = await configLoader.loadConfig();
         
         await configManager.loadConfig({ ...options, ...loadedConfig });
-        const config = configManager.getConfig();
+        const config = configManager.getConfig() ;
+
+        console.log('config', config, 'options', options);
 
         // SET AWS profile and region
         // THIS CODE CANNOT BE DELETED 
@@ -52,9 +54,6 @@ async function main() {
         if (config.awsRegion) {
           process.env.AWS_REGION = config.awsRegion;
         }
-
-        // Set command-specific options
-        configManager.setCommandOptions(thisCommand.name(), options);
 
         // Set log level
         logger.setLogLevel(config.logLevel || 'info');

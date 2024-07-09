@@ -11,7 +11,9 @@ import { displayOptions } from '../utils/option_display';
 import { configManager } from '../utils/configuration_manager';
 import { withSpinner } from '../helpers/spinner_helper';
 import { ErrorManager } from '../utils/error_manager';
-import { getModelProvider } from '../utils/get_model_provider';
+import { resolveModelAlias } from '../config/model_aliases';
+import { DEFAULT_CONFIG } from '../config/default_config';
+import { ProviderName } from '@/config/types';
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
@@ -26,11 +28,23 @@ export function createAskCommand(): Command {
     .addOption(cliOptions.formatOption)
     .action(async (options, command) => {
       try {
-        const commandOptions = configManager.getCommandOptions('ask');
-        const maxTokens = configManager.getOption('defaultMaxTokens', commandOptions.maxTokens);
-        const { providerName, modelId } = getModelProvider();
 
+        const config = configManager.getConfig();
+        const parentOptions = command.parent.opts();  
+        const modelAlias = parentOptions.model as string || config.defaultModelAlias;
+        const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_CONFIG.defaultProvider) as ProviderName;
+        // Resolve model alias to model id
+        logger.debug(`modelAlias: ${modelAlias}`);
         logger.debug(`providerName: ${providerName}`);
+        logger.debug(`defaultProviderName: ${config.defaultProvider}`);
+        const modelId = parentOptions.modelId || modelAlias ? resolveModelAlias(providerName,modelAlias) : config.defaultModelId;
+
+        if(!modelId){
+          ErrorManager.throwError('ModelError', `Model id ${modelId} not found`);
+        }
+        
+        const maxTokens = options.maxTokens ||config.defaultMaxTokens;
+
         logger.debug(`modelId: ${modelId}`);
         logger.debug(`maxTokens: ${maxTokens}`);
 

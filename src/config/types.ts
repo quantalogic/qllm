@@ -31,27 +31,22 @@ export type ProviderName = 'anthropic' | 'openai' | 'ollama';
  * Application configuration interface.
  */
 export interface AppConfig {
-  [x: string]: any;
   /** AWS profile to use */
   awsProfile: string;
   /** AWS region to use */
   awsRegion: string;
   /** Default LLM provider */
   defaultProvider: ProviderName;
-  /** Model alias to use */
-  defaultModelAlias?: string;
   /** Specific model ID to use */
   defaultModelId?: string;
   /** Prompt directory */
   promptDirectory: string;
-  /** Configuration file path */
-  configFile?: string;
   /** Log level */
   logLevel: string;
   /** Default maximum tokens */
   defaultMaxTokens: number;
   /** Default model alias */
-  defaultModel: string;
+  defaultModelAlias: string;
 
 }
 

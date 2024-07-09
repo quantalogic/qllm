@@ -1,11 +1,8 @@
 awsProfile: bedrock
 awsRegion: us-east-1
-defaultProvider: ''
-defaultModel: haiku
+defaultProvider: anthropic
+defaultModelAlias: haiku
 logLevel: debug
 defaultMaxTokens: 2048
-promptDirectory: ./prompts
-defaultModelAlias: sonnet35
-defaultModelId: anthropic.claude-3-haiku-20240307-v1:0
-model: haiku
-configFile: /Users/raphaelmansuy/Github/03-working/qllm/.qllmrc.yaml
+promptDirectory: /Users/raphaelmansuy/.config/qllm/prompts
+defaultModelId: ''

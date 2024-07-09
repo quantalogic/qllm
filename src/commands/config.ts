@@ -49,7 +49,6 @@ async function updateConfig(options: any, configLoader: ConfigurationFileLoader)
   if (options.setProfile) updates.awsProfile = options.setProfile;
   if (options.setRegion) updates.awsRegion = options.setRegion;
   if (options.setProvider) updates.defaultProvider = options.setProvider as ProviderName;
-  if (options.setModel) updates.defaultModel = options.setModel;
   if (options.setLogLevel) updates.logLevel = options.setLogLevel;
   if (options.setMaxTokens) updates.defaultMaxTokens = parseInt(options.setMaxTokens, 10);
   if (options.setPromptsDir) updates.promptDirectory = options.setPromptsDir;
@@ -98,12 +97,6 @@ async function interactiveConfig(configLoader: ConfigurationFileLoader): Promise
       name: 'defaultProvider',
       message: 'Select default provider:',
       initial: currentConfig.defaultProvider,
-    },
-    {
-      type: 'text',
-      name: 'defaultModel',
-      message: 'Enter default model:',
-      initial: currentConfig.defaultModel,
     },
     {
       type: 'select',
