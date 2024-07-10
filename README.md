@@ -130,29 +130,6 @@ QLLM resolves configuration in the following order of precedence:
 
 This allows for flexible configuration management, from global defaults to template-specific overrides and per-command customization.
 
-### Environment Variables
-
-You can also use environment variables to set configuration options. The variable names should be prefixed with `QLLM_`. For example:
-
-```bash
-export QLLM_DEFAULT_PROVIDER=openai
-export QLLM_DEFAULT_MODEL=gpt-3.5-turbo
-```
-
-Mapping Env variable configuration.
-
-```plain
-  'QLLM_AWS_PROFILE': 'awsProfile',
-  'QLLM_AWS_REGION': 'awsRegion',
-  'QLLM_DEFAULT_PROVIDER': 'defaultProvider',
-  'QLLM_DEFAULT_MODEL': 'defaultModel',
-  'QLLM_DEFAULT_MAX_TOKENS': 'defaultMaxTokens',
-  'QLLM_PROMPT_DIRECTORY': 'promptDirectory',
-  'QLLM_CONFIG_FILE': 'configFile',
-  'QLLM_LOG_LEVEL': 'logLevel'
-```
-
-Environment variables take precedence over the configuration file but are overridden by command-line arguments.
 
 ## 📚 Detailed Documentation
 
