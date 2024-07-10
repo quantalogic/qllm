@@ -1,3 +1,9 @@
+
+[![GitHub Stars](https://img.shields.io/github/stars/quantalogic/qllm.svg)](https://github.com/quantalogic/qllm/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/quantalogic/qllm.svg)](https://github.com/quantalogic/qllm/network/members)
+[![npm version](https://img.shields.io/npm/v/qllm.svg)](https://www.npmjs.com/package/qllm)
+[![npm downloads](https://img.shields.io/npm/dm/qllm.svg)](https://www.npmjs.com/package/qllm)
+
 # QLLM: Multi-Provider LLM Command CLI
 
 QLLM (QuantaLogic LLM) is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with ❤️ by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
@@ -465,15 +471,18 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 3. **Q: Is my data secure when using QLLM?**
    A: QLLM does not store any of your prompts or responses. However, please review the privacy policies of the LLM providers you're using.
 
-4. **Q: How can I create complex workflows with templates?**
+4. **Q: How can I create complex workflows with templates?** [Not 
    A: You can create multiple templates and chain them together using shell scripts or by referencing the output of one template as input to another.
 
 ## 🗺 Roadmap
 
-- [ ] Add a command the list the available providers
-  [ ] Add a list that present the models available for a provider
+- [ ] Add a command to list all the available providers
+- [ ] Add a list command that present all the models available for a provider
+- [ ] Publish and search prompt on a prompts/template marketplace
+- [ ] Plugin for Raycast
+- [ ] Plugin for Chrome
 - [ ] Cost evaluation by providers
-- [ ] Add support for more LLM providers
+- [ ] Add support for more LLM providers (Perplexity, Groq, Mistral, etc ...)
 - [ ] Implement AI agent capabilities
 - [ ] Expand provider support to include more LLM services
 - [ ] Add safe code interpreter
@@ -486,9 +495,12 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 - [ ] Semantic Search and Knowledge Base
 - [ ] Plugin Ecosystem
 - [ ] AI-Assisted Prompt Engineering
+- [ ] Plug-In for project code assistance, with diff support
+
 ## Changelog
 
 The changelog is available at [CHANGELOG](./CHANGELOG.md)
+
 ## 📄 License
 
 This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
@@ -504,6 +516,10 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 - Project Maintainer: [@raphaelmansuy](https://github.com/raphaelmansuy)
 - Project Homepage: https://github.com/quantalogic/qllm
 - Bug Reports: https://github.com/quantalogic/qllm/issues
+
+
+## Project Growth
+[![Star History Chart](https://api.star-history.com/svg?repos=quantalogic/qllm&type=Date)](https://star-history.com/#quantalogic/qllm&Date)
 
 ---
 
