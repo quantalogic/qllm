@@ -27,6 +27,14 @@ export function createChatCommand(): Command {
  
         const config = configManager.getConfig();
         const parentOptions = command.parent.opts();  
+
+        if(parentOptions.profile) {
+          process.env.AWS_PROFILE = parentOptions.profile;
+        }
+        if(parentOptions.region) {
+          process.env.AWS_REGION = parentOptions.region;
+        }
+
         const modelAlias = parentOptions.model as string || config.defaultModelAlias;
         const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
         // Resolve model alias to model id

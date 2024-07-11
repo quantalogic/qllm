@@ -12,7 +12,7 @@ import { ErrorManager } from './utils/error_manager';
 import { resolveConfigPath } from './utils/path_resolver';
 import { ConfigurationFileLoader } from './utils/configuration_file_loader';
 
-const VERSION = '1.1.0';
+const VERSION = '1.1.1';
 
 async function main() {
   try {

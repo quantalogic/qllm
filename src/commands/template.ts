@@ -97,8 +97,17 @@ function createExecuteCommand(): Command {
     .action(async (name, options, command) => {
       try {
         const config = configManager.getConfig();
+        
         const parent = command.parent.opts();
         const parentOptions = command.parent.opts();
+
+        if(parentOptions.profile) {
+          process.env.AWS_PROFILE = parentOptions.profile;
+        }
+        if(parentOptions.region) {
+          process.env.AWS_REGION = parentOptions.region;
+        }
+
         logger.debug(`Attempting to execute template: ${name}`);
         const templateManager = await getTemplateManager();
         const template = await templateManager.getTemplate(name);
