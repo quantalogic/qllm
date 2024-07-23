@@ -490,7 +490,8 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 - [ ] Plugin for Raycast
 - [ ] Plugin for Chrome
 - [ ] Cost evaluation by providers
-- [ ] Add support for more LLM providers (Perplexity, Groq, Mistral, etc ...)
+- [OK] Add support for more LLM providers (Perplexity, Groq)
+- [ ] Add support for more LLM providers (Mistral, etc ...)
 - [ ] Implement AI agent capabilities
 - [ ] Expand provider support to include more LLM services
 - [ ] Add safe code interpreter

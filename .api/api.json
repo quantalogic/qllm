@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "pplx",
+      "source": "@pplx/v0#1df0qolw0ud5bb",
+      "integrity": "sha512-eS9kmHMCz3bN+a0HS6jDni2+3VmMNTy6edpVjlgG32gmop4gjphPxonP5ZZ1P+Zoe2veNiWYIKk3sfpYuUC8DQ==",
+      "installerVersion": "6.1.2"
+    }
+  ]
+}
