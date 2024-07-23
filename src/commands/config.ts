@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error_manager';
 import { AppConfig, ProviderName } from '../config/types';
 import { resolveConfigPath } from '../utils/path_resolver';
+import { getAllProviders, getModelsForProvider } from '../config/provider_config';
 
 export function createConfigCommand(): Command {
   const configCommand = new Command('config')
@@ -23,12 +24,18 @@ export function createConfigCommand(): Command {
     .addOption(new Option('--set-model-alias <alias>', 'Set default model alias'))
     .addOption(new Option('--set-model-id <id>', 'Set default model ID'))
     .addOption(new Option('--interactive', 'Enter interactive configuration mode'))
+    .addOption(new Option('--show-providers', 'Show available providers'))
+    .addOption(new Option('--show-models-provider <provider>', 'Show available models for a provider'))
     .action(async (options) => {
       try {
         const configFile = await resolveConfigPath(options.config);
         const configLoader = new ConfigurationFileLoader(configFile);
-        
-        if (options.show) {
+
+        if (options.showProvidersAvailable) {
+          showProviders();
+        }  else if (options.showModelsProvider) {
+          showModelsForProvider(options.showModelsProvider as ProviderName);
+        } else if (options.show) {
           showConfig(configManager.getConfig());
         } else if (options.interactive) {
           await interactiveConfig(configLoader);
@@ -65,6 +72,23 @@ async function updateConfig(options: any, configLoader: ConfigurationFileLoader)
     showConfig(configManager.getConfig());
   }
 }
+
+function showProviders(): ProviderName[] {
+  const availableProviders = getAllProviders()
+  console.log("My providers : ", availableProviders)
+  return availableProviders;
+}
+
+function showModelsForProvider(providerName: ProviderName): void {
+  try{
+    const availableProviders = getModelsForProvider(providerName)
+    console.log("My providers : ", availableProviders)
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 
 function showConfig(config: AppConfig): void {
   console.info('Current configuration:');

@@ -2,6 +2,7 @@
 
 import { ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
+import ollamaConfig from './providers/ollama';
 import { configManager  } from '../utils/configuration_manager';
 import openaiConfig from './providers/openai';
 
@@ -38,5 +39,20 @@ export function getProviderConfig(providerName: ProviderName): ProviderConfig {
   return { ...config };
 }
 
+// New function to get models for a provider
+export function getModelsForProvider(providerName: ProviderName): { alias: string; modelId: string }[] {
+  switch (providerName) {
+    case 'anthropic':
+      return anthropicConfig.models;
+    case 'openai':
+      return openaiConfig.models; // Assuming you have models for openaiConfig
+    case 'ollama':
+      return ollamaConfig.models; // Assuming you have models for ollamaConfig
+    default:
+      throw new Error(`Unknown provider: ${providerName}`);
+  }
+}
 
-
+export function getAllProviders(): ProviderName[] {
+  return Object.keys(PROVIDER_CONFIGS) as ProviderName[];
+}

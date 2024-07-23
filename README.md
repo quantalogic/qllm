@@ -66,6 +66,10 @@ This makes the `qllm` command available system-wide.
 
 ```bash
 qllm ask "Write a 100-word story about a time traveler" --max-tokens 150
+
+or : 
+
+npm run dev-cli  ask "Write a 100-word story about a time traveler" --max-tokens 150
 ```
 
 2. Start an interactive chat session:
@@ -84,6 +88,10 @@ qllm stream "Explain quantum computing" --max-tokens 200
 
 ```bash
 qllm config --show
+
+or : 
+
+npm run dev-cli -- config --option
 ```
 
 5. Create and use a template:
@@ -476,8 +484,8 @@ For more issues, please check our GitHub Issues page or submit a new issue.
 
 ## 🗺 Roadmap
 
-- [ ] Add a command to list all the available providers
-- [ ] Add a list command that present all the models available for a provider
+- [OK] Add a command to list all the available providers
+- [OK] Add a list command that present all the models available for a provider
 - [ ] Publish and search prompt on a prompts/template marketplace
 - [ ] Plugin for Raycast
 - [ ] Plugin for Chrome

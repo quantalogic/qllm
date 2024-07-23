@@ -13,9 +13,9 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*", "luncher/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "luncher/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }
