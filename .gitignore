@@ -6,3 +6,4 @@ dist/
 tasks/
 package-lock.json
 .qllmrc.yaml
+.qllmrc.yaml*
