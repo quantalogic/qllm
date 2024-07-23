@@ -1,3 +1,6 @@
+// a simple version of exprerss server using node call to qllm 
+// refactoring will be needed to optimize this part
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';

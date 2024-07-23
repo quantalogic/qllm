@@ -31,7 +31,7 @@ export function createConfigCommand(): Command {
         const configFile = await resolveConfigPath(options.config);
         const configLoader = new ConfigurationFileLoader(configFile);
 
-        if (options.showProvidersAvailable) {
+        if (options.showProviders) {
           showProviders();
         }  else if (options.showModelsProvider) {
           showModelsForProvider(options.showModelsProvider as ProviderName);

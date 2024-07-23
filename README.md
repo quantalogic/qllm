@@ -69,7 +69,7 @@ qllm ask "Write a 100-word story about a time traveler" --max-tokens 150
 
 or : 
 
-npm run dev-cli  ask "Write a 100-word story about a time traveler" --max-tokens 150
+npm run dev-cli ask "Write a 100-word story about a time traveler" --max-tokens 150
 ```
 
 2. Start an interactive chat session:
