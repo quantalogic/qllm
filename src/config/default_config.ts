@@ -4,7 +4,7 @@ import { AppConfig } from "./types"
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
     awsProfile: 'default',
-    awsRegion: 'us-east-1',
+    awsRegion: 'us-west-2',
     defaultProvider: 'anthropic',
     defaultModelAlias: 'haiku',
     logLevel: 'info',

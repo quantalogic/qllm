@@ -4,12 +4,18 @@ import { ProviderConfig, ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
 import openaiConfig from './providers/openai';
 import ollamaConfig from './providers/ollama';
+import groqConfig from './providers/groq';
+import perplexityConfig from './providers/perplexity';
+import mistralConfig from './providers/mistral';
 
 // Define a record of provider configurations
 const providerConfigs: Record<ProviderName, ProviderConfig> = {
   anthropic: anthropicConfig,
   openai: openaiConfig,
-  ollama: ollamaConfig
+  ollama: ollamaConfig,
+  groq: groqConfig,
+  perplexity: perplexityConfig,
+  mistral: mistralConfig
 };
 
 /**

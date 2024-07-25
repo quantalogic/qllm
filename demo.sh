@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set your AWS region
-AWS_REGION="us-east-1"
+AWS_REGION="us-east-2"
 
 # Set the model ID for Claude 3 Sonnet
 MODEL_ID="anthropic.claude-3-haiku-20240307-v1:0"

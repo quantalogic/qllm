@@ -2,8 +2,13 @@
 
 import { ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
+import ollamaConfig from './providers/ollama';
 import { configManager  } from '../utils/configuration_manager';
 import openaiConfig from './providers/openai';
+import groqConfig from './providers/groq';
+import perplexityConfig from './providers/perplexity';
+import mistralConfig from './providers/mistral';
+
 
 
 export interface ProviderConfig {
@@ -28,6 +33,21 @@ const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
     apiKey: '',
     model: 'mistral',
   },
+  groq: {
+    type: "groq",
+    apiKey: '',
+    model: configManager.getConfig().defaultModelAlias || groqConfig.defaultModel || '',
+  },
+  perplexity: {
+    type: "perplexity",
+    apiKey: '',
+    model: configManager.getConfig().defaultModelAlias || perplexityConfig.defaultModel || '',
+  },
+  mistral: {
+    type: "mistral",
+    apiKey: '',
+    model: configManager.getConfig().defaultModelAlias || mistralConfig.defaultModel || '',
+  }
 };
 
 export function getProviderConfig(providerName: ProviderName): ProviderConfig {
@@ -38,5 +58,24 @@ export function getProviderConfig(providerName: ProviderName): ProviderConfig {
   return { ...config };
 }
 
+// New function to get models for a provider
+export function getModelsForProvider(providerName: ProviderName): { alias: string; modelId: string }[] {
+  switch (providerName) {
+    case 'anthropic':
+      return anthropicConfig.models;
+    case 'openai':
+      return openaiConfig.models; // Assuming you have models for openaiConfig
+    case 'ollama':
+      return ollamaConfig.models; // Assuming you have models for ollamaConfig
+    case 'groq':
+      return groqConfig.models; // Assuming you have models for groqConfig
+    case 'perplexity':
+      return perplexityConfig.models; // Assuming you have models for groqConfig
+    default:
+      throw new Error(`Unknown provider: ${providerName}`);
+  }
+}
 
-
+export function getAllProviders(): ProviderName[] {
+  return Object.keys(PROVIDER_CONFIGS) as ProviderName[];
+}
