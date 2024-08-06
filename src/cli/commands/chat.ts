@@ -2,17 +2,17 @@
 
 import { Command } from 'commander';
 import prompts from 'prompts';
-import { ProviderFactory } from '../providers/provider_factory';
-import { logger } from '../utils/logger';
 import { cliOptions } from '../options';
-import { LLMProviderOptions, Message } from '../providers/types';
-import { handleStreamWithSpinner } from '../helpers/stream_helper';
-import { displayOptions } from '../utils/option_display';
-import { configManager } from '../utils/configuration_manager';
-import { ErrorManager } from '../utils/error_manager';
-import { resolveModelAlias } from '../config/model_aliases';
-import { DEFAULT_APP_CONFIG } from '../config/default_config';
-import { ProviderName } from '../config/types';
+import { configManager } from '@/common/utils/configuration_manager';
+import { logger } from '@/common/utils/logger';
+import { resolveModelAlias } from '@/core/config/model_aliases';
+import { ErrorManager } from '@/common/utils/error_manager';
+import { DEFAULT_APP_CONFIG } from '@/core/config/default_config';
+import { ProviderName } from '@/core/config/types';
+import { ProviderFactory } from '@/core/providers/provider_factory';
+import { LLMProviderOptions, Message } from '@/core/providers/types';
+import { displayOptions } from '@/common/utils/option_display';
+import { handleStreamWithSpinner } from '@/helpers/stream_helper';
 
 export function createChatCommand(): Command {
   const chatCommand = new Command('chat')

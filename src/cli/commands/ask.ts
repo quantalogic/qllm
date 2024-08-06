@@ -2,18 +2,18 @@
 
 import { Command } from 'commander';
 import fs from 'fs/promises';
-import { ProviderFactory } from '../providers/provider_factory';
-import { logger } from '../utils/logger';
 import { cliOptions } from '../options';
-import { formatOutput, writeOutput } from '../helpers/output_helper';
-import { LLMProviderOptions, Message } from '../providers/types';
-import { displayOptions } from '../utils/option_display';
-import { configManager } from '../utils/configuration_manager';
-import { withSpinner } from '../helpers/spinner_helper';
-import { ErrorManager } from '../utils/error_manager';
-import { resolveModelAlias } from '../config/model_aliases';
-import { DEFAULT_APP_CONFIG } from '../config/default_config';
-import { ProviderName } from '@/config/types';
+import { logger } from '@/common/utils/logger';
+import { ErrorManager } from '@/common/utils/error_manager';
+import { resolveModelAlias } from '@/core/config/model_aliases';
+import { ProviderFactory } from '@/core/providers/provider_factory';
+import { configManager } from '@/common/utils/configuration_manager';
+import { DEFAULT_APP_CONFIG } from '@/core/config/default_config';
+import { ProviderName } from '@/core/config/types';
+import { displayOptions } from '@/common/utils/option_display';
+import { withSpinner } from '@/helpers/spinner_helper';
+import { formatOutput, writeOutput } from '@/helpers/output_helper';
+import { LLMProviderOptions, Message } from '@/core/providers/types';
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')

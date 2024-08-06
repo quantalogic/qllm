@@ -5,7 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import main from '../src/qllm';
+import main from '@/cli/qllm';
 
 // Initialize express app
 const app = express();

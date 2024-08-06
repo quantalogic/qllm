@@ -6,11 +6,11 @@ import { createStreamCommand } from './commands/stream';
 import { createChatCommand } from './commands/chat';
 import { createConfigCommand } from './commands/config';
 import { createTemplateCommand } from './commands/template';
-import { configManager } from './utils/configuration_manager';
-import { logger } from './utils/logger';
-import { ErrorManager } from './utils/error_manager';
-import { resolveConfigPath } from './utils/path_resolver';
-import { ConfigurationFileLoader } from './utils/configuration_file_loader';
+import { resolveConfigPath } from '@/common/utils/path_resolver';
+import { ConfigurationFileLoader } from '@/common/utils/configuration_file_loader';
+import { logger } from '@/common/utils/logger';
+import { configManager } from '@/common/utils/configuration_manager';
+import { ErrorManager } from '@/common/utils/error_manager';
 
 const VERSION = '1.1.1';
 

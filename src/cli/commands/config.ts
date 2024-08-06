@@ -1,14 +1,15 @@
 // src/commands/config.ts
 
+import { ConfigurationFileLoader } from '@/common/utils/configuration_file_loader';
+import { configManager } from '@/common/utils/configuration_manager';
+import { ErrorManager } from '@/common/utils/error_manager';
+import { logger } from '@/common/utils/logger';
+import { resolveConfigPath } from '@/common/utils/path_resolver';
+import { getAllProviders, getModelsForProvider } from '@/core/config/provider_config';
+import { AppConfig, ProviderName } from '@/core/config/types';
 import { Command, Option } from 'commander';
 import prompts from 'prompts';
-import { configManager } from '../utils/configuration_manager';
-import { ConfigurationFileLoader } from '../utils/configuration_file_loader';
-import { logger } from '../utils/logger';
-import { ErrorManager } from '../utils/error_manager';
-import { AppConfig, ProviderName } from '../config/types';
-import { resolveConfigPath } from '../utils/path_resolver';
-import { getAllProviders, getModelsForProvider } from '../config/provider_config';
+
 
 export function createConfigCommand(): Command {
   const configCommand = new Command('config')

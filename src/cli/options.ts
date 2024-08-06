@@ -1,6 +1,6 @@
 // src/options.ts
+import { ErrorManager } from '@/common/utils/error_manager';
 import { Option } from 'commander';
-import { ErrorManager } from './utils/error_manager';
 
 /**
  * Parses a numeric value within a specified range.
