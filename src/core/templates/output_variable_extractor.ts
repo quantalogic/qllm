@@ -1,6 +1,5 @@
-import { TemplateDefinition, OutputVariable } from './types';
-import { ErrorManager } from '../utils/error_manager';
-import { logger } from '../utils/logger';
+import { ErrorManager } from "@/common/utils/error_manager";
+import { TemplateDefinition, OutputVariable } from "./types";
 
 export class OutputVariableExtractor {
   constructor(private template: TemplateDefinition) {}
@@ -19,42 +18,59 @@ export class OutputVariableExtractor {
     return result;
   }
 
-  private extractVariable(key: string, variable: OutputVariable, output: string): string | null {
-    const regex = new RegExp(`<${key}>(.+?)</${key}>`, 's');
+  private extractVariable(
+    key: string,
+    variable: OutputVariable,
+    output: string
+  ): string | null {
+    const regex = new RegExp(`<${key}>(.+?)</${key}>`, "s");
     const match = output.match(regex);
     return match ? match[1].trim() : null;
   }
 
-  private validateAndTransform(key: string, variable: OutputVariable, value: string | null): any {
+  private validateAndTransform(
+    key: string,
+    variable: OutputVariable,
+    value: string | null
+  ): any {
     if (value === null) {
-      if ('default' in variable) {
+      if ("default" in variable) {
         return variable.default;
       }
-      ErrorManager.throwError('OutputValidationError', `Missing required output variable: ${key}`);
+      ErrorManager.throwError(
+        "OutputValidationError",
+        `Missing required output variable: ${key}`
+      );
     }
 
     switch (variable.type) {
-      case 'string':
+      case "string":
         return value;
-      case 'integer':
+      case "integer":
         return this.parseInteger(key, value);
-      case 'float':
+      case "float":
         return this.parseFloat(key, value);
-      case 'boolean':
+      case "boolean":
         return this.parseBoolean(key, value);
-      case 'array':
+      case "array":
         return this.parseArray(key, value);
-      case 'object':
+      case "object":
         return this.parseObject(key, value);
       default:
-        ErrorManager.throwError('OutputValidationError', `Invalid type for output variable ${key}: ${variable.type}`);
+        ErrorManager.throwError(
+          "OutputValidationError",
+          `Invalid type for output variable ${key}: ${variable.type}`
+        );
     }
   }
 
   private parseInteger(key: string, value: string): number {
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) {
-      ErrorManager.throwError('OutputValidationError', `Invalid integer value for ${key}: ${value}`);
+      ErrorManager.throwError(
+        "OutputValidationError",
+        `Invalid integer value for ${key}: ${value}`
+      );
     }
     return parsed;
   }
@@ -62,23 +78,32 @@ export class OutputVariableExtractor {
   private parseFloat(key: string, value: string): number {
     const parsed = parseFloat(value);
     if (isNaN(parsed)) {
-      ErrorManager.throwError('OutputValidationError', `Invalid float value for ${key}: ${value}`);
+      ErrorManager.throwError(
+        "OutputValidationError",
+        `Invalid float value for ${key}: ${value}`
+      );
     }
     return parsed;
   }
 
   private parseBoolean(key: string, value: string): boolean {
     const lowercaseValue = value.toLowerCase();
-    if (lowercaseValue === 'true') return true;
-    if (lowercaseValue === 'false') return false;
-    ErrorManager.throwError('OutputValidationError', `Invalid boolean value for ${key}: ${value}`);
+    if (lowercaseValue === "true") return true;
+    if (lowercaseValue === "false") return false;
+    ErrorManager.throwError(
+      "OutputValidationError",
+      `Invalid boolean value for ${key}: ${value}`
+    );
   }
 
   private parseArray(key: string, value: string): any[] {
     try {
       return JSON.parse(value);
     } catch (error) {
-      ErrorManager.throwError('OutputValidationError', `Invalid array value for ${key}: ${value}`);
+      ErrorManager.throwError(
+        "OutputValidationError",
+        `Invalid array value for ${key}: ${value}`
+      );
     }
   }
 
@@ -86,7 +111,10 @@ export class OutputVariableExtractor {
     try {
       return JSON.parse(value);
     } catch (error) {
-      ErrorManager.throwError('OutputValidationError', `Invalid object value for ${key}: ${value}`);
+      ErrorManager.throwError(
+        "OutputValidationError",
+        `Invalid object value for ${key}: ${value}`
+      );
     }
   }
 }

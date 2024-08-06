@@ -1,12 +1,14 @@
 // src/templates/template_executor.ts
-import { ExecutionContext, TemplateDefinition } from './types';
-import { Message } from '../providers/types';
-import { logger } from '../utils/logger';
-import { ErrorManager } from '../utils/error_manager';
-import { promptForMissingVariables } from '../utils/variable_prompt';
-import { createStreamOutputHandler } from "../helpers/stream_helper";
-import { handleStreamWithSpinnerAndOutput } from "../helpers/stream_helper";
-import { OutputVariableExtractor } from './output_variable_extractor';
+import { ExecutionContext, TemplateDefinition } from "./types";
+import { Message } from "../providers/types";
+import { OutputVariableExtractor } from "./output_variable_extractor";
+import {
+  createStreamOutputHandler,
+  handleStreamWithSpinnerAndOutput,
+} from "@/helpers/stream_helper";
+import { logger } from "@/common/utils/logger";
+import { ErrorManager } from "@/common/utils/error_manager";
+import { promptForMissingVariables } from "@/common/utils/variable_prompt";
 
 export class TemplateExecutor {
   /**
@@ -14,22 +16,31 @@ export class TemplateExecutor {
    * @param context The execution context containing the template, variables, and provider options.
    * @returns A promise that resolves to the generated content and extracted output variables.
    */
-  static async execute(context: ExecutionContext): Promise<{ response: string, outputVariables: Record<string, any> }> {
+  static async execute(
+    context: ExecutionContext
+  ): Promise<{ response: string; outputVariables: Record<string, any> }> {
     const { template, variables, providerOptions, provider, stream } = context;
 
     try {
       logger.debug(`Executing template: ${JSON.stringify(template)}`);
       logger.debug(`Initial variables: ${JSON.stringify(variables)}`);
 
-      const resolvedVariables = await this.resolveVariables(template, variables);
+      const resolvedVariables = await this.resolveVariables(
+        template,
+        variables
+      );
       logger.debug(`Resolved variables: ${JSON.stringify(resolvedVariables)}`);
 
       this.validateInputVariables(template, resolvedVariables);
 
       const content = await this.prepareContent(template, resolvedVariables);
-      const messages: Message[] = [{ role: 'user', content }];
+      const messages: Message[] = [{ role: "user", content }];
 
-      logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
+      logger.debug(
+        `Sending request to provider with options: ${JSON.stringify(
+          providerOptions
+        )}`
+      );
 
       let response: string;
       if (stream) {
@@ -49,7 +60,10 @@ export class TemplateExecutor {
       return { response, outputVariables };
     } catch (error) {
       logger.error(`Failed to execute template: ${error}`);
-      ErrorManager.handleError('TemplateExecutionError', error instanceof Error ? error.message : String(error));
+      ErrorManager.handleError(
+        "TemplateExecutionError",
+        error instanceof Error ? error.message : String(error)
+      );
       throw error;
     }
   }
@@ -64,7 +78,10 @@ export class TemplateExecutor {
     template: TemplateDefinition,
     initialVariables: Record<string, any>
   ): Promise<Record<string, any>> {
-    return promptForMissingVariables(template.input_variables || {}, initialVariables);
+    return promptForMissingVariables(
+      template.input_variables || {},
+      initialVariables
+    );
   }
 
   /**
@@ -72,11 +89,17 @@ export class TemplateExecutor {
    * @param template The template definition.
    * @param variables The input variables.
    */
-  private static validateInputVariables(template: TemplateDefinition, variables: Record<string, any>): void {
+  private static validateInputVariables(
+    template: TemplateDefinition,
+    variables: Record<string, any>
+  ): void {
     const inputVariables = template.input_variables || {};
     for (const [key, variable] of Object.entries(inputVariables)) {
-      if (!(key in variables) && !('default' in variable)) {
-        ErrorManager.throwError('InputValidationError', `Missing required input variable: ${key}`);
+      if (!(key in variables) && !("default" in variable)) {
+        ErrorManager.throwError(
+          "InputValidationError",
+          `Missing required input variable: ${key}`
+        );
       }
       this.validateVariableType(key, variables[key], variable);
     }
@@ -88,34 +111,56 @@ export class TemplateExecutor {
    * @param value The variable value.
    * @param variable The variable definition from the template.
    */
-  private static validateVariableType(key: string, value: any, variable: any): void {
-    if (value === undefined && 'default' in variable) {
+  private static validateVariableType(
+    key: string,
+    value: any,
+    variable: any
+  ): void {
+    if (value === undefined && "default" in variable) {
       return; // Skip type checking for undefined values with defaults
     }
 
     switch (variable.type) {
-      case 'string':
-        if (typeof value !== 'string') {
-          ErrorManager.throwError('InputValidationError', `Invalid type for ${key}: expected string`);
+      case "string":
+        if (typeof value !== "string") {
+          ErrorManager.throwError(
+            "InputValidationError",
+            `Invalid type for ${key}: expected string`
+          );
         }
         break;
-      case 'number':
-        if (typeof value !== 'number' && !isNaN(Number(value))) {
-          ErrorManager.throwError('InputValidationError', `Invalid type for ${key}: expected number`);
+      case "number":
+        if (typeof value !== "number" && !isNaN(Number(value))) {
+          ErrorManager.throwError(
+            "InputValidationError",
+            `Invalid type for ${key}: expected number`
+          );
         }
         break;
-      case 'boolean':
-        if (typeof value !== 'boolean' && !['true', 'false'].includes(value.toLowerCase())) {
-          ErrorManager.throwError('InputValidationError', `Invalid type for ${key}: expected boolean`);
+      case "boolean":
+        if (
+          typeof value !== "boolean" &&
+          !["true", "false"].includes(value.toLowerCase())
+        ) {
+          ErrorManager.throwError(
+            "InputValidationError",
+            `Invalid type for ${key}: expected boolean`
+          );
         }
         break;
-      case 'array':
-        if (!Array.isArray(value) && typeof value !== 'string') {
-          ErrorManager.throwError('InputValidationError', `Invalid type for ${key}: expected array or comma-separated string`);
+      case "array":
+        if (!Array.isArray(value) && typeof value !== "string") {
+          ErrorManager.throwError(
+            "InputValidationError",
+            `Invalid type for ${key}: expected array or comma-separated string`
+          );
         }
         break;
       default:
-        ErrorManager.throwError('InputValidationError', `Unknown variable type for ${key}: ${variable.type}`);
+        ErrorManager.throwError(
+          "InputValidationError",
+          `Unknown variable type for ${key}: ${variable.type}`
+        );
     }
   }
 
@@ -125,11 +170,14 @@ export class TemplateExecutor {
    * @param variables The resolved variables.
    * @returns A promise that resolves to the prepared content.
    */
-  private static async prepareContent(template: TemplateDefinition, variables: Record<string, any>): Promise<string> {
+  private static async prepareContent(
+    template: TemplateDefinition,
+    variables: Record<string, any>
+  ): Promise<string> {
     let content = template.resolved_content || template.content;
 
     for (const [key, value] of Object.entries(variables)) {
-      const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
+      const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g");
       content = content.replace(regex, this.formatValue(value));
     }
 
@@ -143,7 +191,7 @@ export class TemplateExecutor {
    */
   private static formatValue(value: any): string {
     if (Array.isArray(value)) {
-      return value.join('\n');
+      return value.join("\n");
     }
     return String(value);
   }
@@ -154,7 +202,10 @@ export class TemplateExecutor {
    * @param response The response from the LLM provider.
    * @returns The extracted output variables.
    */
-  private static processOutputVariables(template: TemplateDefinition, response: string): Record<string, any> {
+  private static processOutputVariables(
+    template: TemplateDefinition,
+    response: string
+  ): Record<string, any> {
     if (!template.output_variables) {
       return { qqlm_response: response };
     }
@@ -162,7 +213,7 @@ export class TemplateExecutor {
     const extractor = new OutputVariableExtractor(template);
     return {
       qllm_response: response,
-      ...extractor.extractVariables(response)
+      ...extractor.extractVariables(response),
     };
   }
 }

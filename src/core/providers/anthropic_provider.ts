@@ -1,10 +1,11 @@
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
-import { getCredentials } from '../credentials';
-import { providerRegistry } from './provider_registry';
-import { logger } from '../utils/logger';
+import { getCredentials } from '@/credentials';
+import { logger } from '@/common/utils/logger';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
+import { providerRegistry } from './provider_registry';
+
 
 
 export class AnthropicProvider implements LLMProvider {

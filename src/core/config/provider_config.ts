@@ -3,11 +3,11 @@
 import { ProviderName } from './types';
 import anthropicConfig from './providers/anthropic';
 import ollamaConfig from './providers/ollama';
-import { configManager  } from '../utils/configuration_manager';
 import openaiConfig from './providers/openai';
 import groqConfig from './providers/groq';
 import perplexityConfig from './providers/perplexity';
 import mistralConfig from './providers/mistral';
+import { configManager } from '@/common/utils/configuration_manager';
 
 
 

@@ -1,10 +1,10 @@
 // src/templates/template_manager.ts
-import fs from 'fs/promises';
-import path from 'path';
-import yaml from 'js-yaml';
-import { TemplateDefinition, TemplateVariable } from './types';
-import { logger } from '../utils/logger';
-import { ErrorManager } from '../utils/error_manager';
+import fs from "fs/promises";
+import path from "path";
+import yaml from "js-yaml";
+import { TemplateDefinition, TemplateVariable } from "./types";
+import { logger } from "@/common/utils/logger";
+import { ErrorManager } from "@/common/utils/error_manager";
 
 export interface TemplateManagerConfig {
   promptDirectory: string;
@@ -27,7 +27,10 @@ export class TemplateManager {
       logger.debug(`Ensured template directory exists: ${this.templateDir}`);
     } catch (error) {
       logger.error(`Failed to initialize template directory: ${error}`);
-      ErrorManager.throwError('TemplateManagerError', `Failed to initialize template directory: ${error}`);
+      ErrorManager.throwError(
+        "TemplateManagerError",
+        `Failed to initialize template directory: ${error}`
+      );
     }
   }
 
@@ -39,9 +42,11 @@ export class TemplateManager {
     try {
       logger.debug(`Scanning directory: ${this.templateDir}`);
       const files = await fs.readdir(this.templateDir);
-      const yamlFiles = files.filter(file => file.endsWith('.yaml'));
-      logger.debug(`Found ${yamlFiles.length} YAML files in ${this.templateDir}`);
-      return yamlFiles.map(file => path.basename(file, '.yaml'));
+      const yamlFiles = files.filter((file) => file.endsWith(".yaml"));
+      logger.debug(
+        `Found ${yamlFiles.length} YAML files in ${this.templateDir}`
+      );
+      return yamlFiles.map((file) => path.basename(file, ".yaml"));
     } catch (error) {
       logger.error(`Failed to read directory ${this.templateDir}: ${error}`);
       return [];
@@ -56,15 +61,20 @@ export class TemplateManager {
   async getTemplate(name: string): Promise<TemplateDefinition | null> {
     const filePath = path.join(this.templateDir, `${name}.yaml`);
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(filePath, "utf-8");
       const template = yaml.load(content) as TemplateDefinition;
-      if (!template || typeof template !== 'object') {
-        ErrorManager.throwError('TemplateManagerError', `Invalid template structure for ${name}`);
+      if (!template || typeof template !== "object") {
+        ErrorManager.throwError(
+          "TemplateManagerError",
+          `Invalid template structure for ${name}`
+        );
       }
-      template.resolved_content = await this.resolveFileInclusions(template.content);
+      template.resolved_content = await this.resolveFileInclusions(
+        template.content
+      );
       return template;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
         logger.error(`Failed to read template ${name}: ${error}`);
       }
       return null;
@@ -79,10 +89,13 @@ export class TemplateManager {
     const filePath = path.join(this.templateDir, `${template.name}.yaml`);
     try {
       const content = yaml.dump(template);
-      await fs.writeFile(filePath, content, 'utf-8');
+      await fs.writeFile(filePath, content, "utf-8");
     } catch (error) {
       logger.error(`Failed to save template ${template.name}: ${error}`);
-      ErrorManager.throwError('TemplateManagerError', `Failed to save template ${template.name}: ${error}`);
+      ErrorManager.throwError(
+        "TemplateManagerError",
+        `Failed to save template ${template.name}: ${error}`
+      );
     }
   }
 
@@ -96,9 +109,12 @@ export class TemplateManager {
       await fs.unlink(filePath);
       logger.info(`Deleted template ${name} from ${this.templateDir}`);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
         logger.error(`Failed to delete template ${name}: ${error}`);
-        ErrorManager.throwError('TemplateManagerError', `Failed to delete template ${name}: ${error}`);
+        ErrorManager.throwError(
+          "TemplateManagerError",
+          `Failed to delete template ${name}: ${error}`
+        );
       }
     }
   }
@@ -108,10 +124,16 @@ export class TemplateManager {
    * @param name The name of the template to update.
    * @param updatedTemplate The updated template definition.
    */
-  async updateTemplate(name: string, updatedTemplate: TemplateDefinition): Promise<void> {
+  async updateTemplate(
+    name: string,
+    updatedTemplate: TemplateDefinition
+  ): Promise<void> {
     const existingTemplate = await this.getTemplate(name);
     if (!existingTemplate) {
-      ErrorManager.throwError('TemplateManagerError', `Template ${name} not found`);
+      ErrorManager.throwError(
+        "TemplateManagerError",
+        `Template ${name} not found`
+      );
     }
     const mergedTemplate = { ...existingTemplate, ...updatedTemplate };
     await this.saveTemplate(mergedTemplate);
@@ -138,7 +160,10 @@ export class TemplateManager {
    * @param template Template definition
    * @returns Parsed variables
    */
-  async parseVariables(args: string[], template: TemplateDefinition): Promise<Record<string, any>> {
+  async parseVariables(
+    args: string[],
+    template: TemplateDefinition
+  ): Promise<Record<string, any>> {
     const variables: Record<string, any> = {};
     const variablePattern = /^-v:(\w+)$/;
 
@@ -148,8 +173,12 @@ export class TemplateManager {
       if (match) {
         const variableName = match[1];
         const variableValue = args[i + 1];
-        if (variableValue && !variableValue.startsWith('-')) {
-          variables[variableName] = this.castVariable(variableName, variableValue, template.input_variables);
+        if (variableValue && !variableValue.startsWith("-")) {
+          variables[variableName] = this.castVariable(
+            variableName,
+            variableValue,
+            template.input_variables
+          );
           i++; // Skip the next argument as it's the value
         } else {
           logger.warn(`Missing value for variable: ${variableName}`);
@@ -158,7 +187,11 @@ export class TemplateManager {
     }
 
     // Parse variables from template content, including included files
-    await this.parseContentVariables(template.content, variables, template.input_variables);
+    await this.parseContentVariables(
+      template.content,
+      variables,
+      template.input_variables
+    );
 
     return variables;
   }
@@ -172,12 +205,18 @@ export class TemplateManager {
       const expandedDir = path.resolve(directory);
       const stats = await fs.stat(expandedDir);
       if (!stats.isDirectory()) {
-        ErrorManager.throwError('SetPromptDirError', 'Specified path is not a directory');
+        ErrorManager.throwError(
+          "SetPromptDirError",
+          "Specified path is not a directory"
+        );
       }
       this.templateDir = expandedDir;
       logger.info(`Prompt directory set to: ${expandedDir}`);
     } catch (error) {
-      ErrorManager.throwError('SetPromptDirError', `Failed to set prompt directory: ${error}`);
+      ErrorManager.throwError(
+        "SetPromptDirError",
+        `Failed to set prompt directory: ${error}`
+      );
     }
   }
 
@@ -196,7 +235,10 @@ export class TemplateManager {
       const fullPath = path.resolve(this.templateDir, filePath.trim());
 
       if (visitedFiles.has(fullPath)) {
-        ErrorManager.throwError('CircularDependencyError', `Circular file inclusion detected: ${filePath}`);
+        ErrorManager.throwError(
+          "CircularDependencyError",
+          `Circular file inclusion detected: ${filePath}`
+        );
       }
 
       try {
@@ -204,15 +246,23 @@ export class TemplateManager {
         if (this.fileCache.has(fullPath)) {
           fileContent = this.fileCache.get(fullPath)!;
         } else {
-          fileContent = await fs.readFile(fullPath, 'utf-8');
+          fileContent = await fs.readFile(fullPath, "utf-8");
           this.fileCache.set(fullPath, fileContent);
         }
 
         visitedFiles.add(fullPath);
-        await this.parseContentVariables(fileContent, variables, inputVariables, visitedFiles);
+        await this.parseContentVariables(
+          fileContent,
+          variables,
+          inputVariables,
+          visitedFiles
+        );
         visitedFiles.delete(fullPath);
       } catch (error) {
-        ErrorManager.throwError('FileInclusionError', `Failed to include file ${filePath}: ${error}`);
+        ErrorManager.throwError(
+          "FileInclusionError",
+          `Failed to include file ${filePath}: ${error}`
+        );
       }
     }
 
@@ -221,45 +271,65 @@ export class TemplateManager {
     while ((varMatch = variableRegex.exec(content)) !== null) {
       const [, variableName] = varMatch;
       if (!(variableName in variables)) {
-        variables[variableName] = this.castVariable(variableName, '', inputVariables);
+        variables[variableName] = this.castVariable(
+          variableName,
+          "",
+          inputVariables
+        );
       }
     }
   }
 
-  private castVariable(key: string, value: string, inputVariables: Record<string, TemplateVariable>): any {
+  private castVariable(
+    key: string,
+    value: string,
+    inputVariables: Record<string, TemplateVariable>
+  ): any {
     if (inputVariables && inputVariables[key]) {
       const variableType = inputVariables[key].type;
       switch (variableType) {
-        case 'number':
+        case "number":
           const numberValue = Number(value);
           if (isNaN(numberValue)) {
-            ErrorManager.throwError('InputValidationError', `Failed to cast '${value}' to number for variable '${key}'`);
+            ErrorManager.throwError(
+              "InputValidationError",
+              `Failed to cast '${value}' to number for variable '${key}'`
+            );
           }
           return numberValue;
-        case 'boolean':
+        case "boolean":
           const lowerValue = value.toLowerCase();
-          if (lowerValue !== 'true' && lowerValue !== 'false') {
-            ErrorManager.throwError('InputValidationError', `Failed to cast '${value}' to boolean for variable '${key}'. Use 'true' or 'false'`);
+          if (lowerValue !== "true" && lowerValue !== "false") {
+            ErrorManager.throwError(
+              "InputValidationError",
+              `Failed to cast '${value}' to boolean for variable '${key}'. Use 'true' or 'false'`
+            );
           }
-          return lowerValue === 'true';
-        case 'array':
+          return lowerValue === "true";
+        case "array":
           try {
             // First, attempt to parse as JSON
             return JSON.parse(value);
           } catch {
             // If JSON parsing fails, fall back to comma-separated string splitting
-            return value.split(',').map(item => item.trim());
+            return value.split(",").map((item) => item.trim());
           }
-        case 'string':
+        case "string":
           return value;
         default:
-          ErrorManager.throwError('InputValidationError', `Unknown variable type '${variableType}' for variable '${key}'`);
+          ErrorManager.throwError(
+            "InputValidationError",
+            `Unknown variable type '${variableType}' for variable '${key}'`
+          );
       }
     }
     return value; // If type is not defined, return as-is
   }
 
-  private async resolveFileInclusions(content: string, visitedFiles: Set<string> = new Set()): Promise<string> {
+  private async resolveFileInclusions(
+    content: string,
+    visitedFiles: Set<string> = new Set()
+  ): Promise<string> {
     const fileInclusionRegex = /{{file:\s*([^}]+)\s*}}/g;
     let resolvedContent = content;
     let match;
@@ -269,7 +339,10 @@ export class TemplateManager {
       const fullPath = path.resolve(this.templateDir, filePath.trim());
 
       if (visitedFiles.has(fullPath)) {
-        ErrorManager.throwError('CircularDependencyError', `Circular file inclusion detected: ${filePath}`);
+        ErrorManager.throwError(
+          "CircularDependencyError",
+          `Circular file inclusion detected: ${filePath}`
+        );
       }
 
       try {
@@ -277,16 +350,25 @@ export class TemplateManager {
         if (this.fileCache.has(fullPath)) {
           fileContent = this.fileCache.get(fullPath)!;
         } else {
-          fileContent = await fs.readFile(fullPath, 'utf-8');
+          fileContent = await fs.readFile(fullPath, "utf-8");
           this.fileCache.set(fullPath, fileContent);
         }
 
         visitedFiles.add(fullPath);
-        const resolvedFileContent = await this.resolveFileInclusions(fileContent, visitedFiles);
-        resolvedContent = resolvedContent.replace(fullMatch, resolvedFileContent);
+        const resolvedFileContent = await this.resolveFileInclusions(
+          fileContent,
+          visitedFiles
+        );
+        resolvedContent = resolvedContent.replace(
+          fullMatch,
+          resolvedFileContent
+        );
         visitedFiles.delete(fullPath);
       } catch (error) {
-        ErrorManager.throwError('FileInclusionError', `Failed to include file ${filePath}: ${error}`);
+        ErrorManager.throwError(
+          "FileInclusionError",
+          `Failed to include file ${filePath}: ${error}`
+        );
       }
     }
 

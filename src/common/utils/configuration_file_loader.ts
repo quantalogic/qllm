@@ -2,11 +2,10 @@
 
 import yaml from 'js-yaml';
 import fs from 'fs/promises';
-import path from 'path';
-import { AppConfig } from '../config/types';
-import { DEFAULT_APP_CONFIG } from '../config/default_config';
 import { logger } from './logger';
 import { ErrorManager } from './error_manager';
+import { AppConfig } from '@/core/config/types';
+import { DEFAULT_APP_CONFIG } from '@/core/config/default_config';
 
 export class ConfigurationFileLoader {
   constructor(private configFilePath: string) {}

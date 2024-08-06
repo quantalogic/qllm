@@ -1,8 +1,8 @@
-import { Spinner } from '../utils/spinner';
-import { LLMProviderOptions, Message } from '../providers/types';
-import { LLMProvider } from '../providers/llm_provider';
-import { logger } from '../utils/logger';
-import { ErrorManager } from '../utils/error_handler';
+import { LLMProvider } from '@/core/providers/llm_provider';
+import { Spinner } from '../common/utils/spinner';
+import { LLMProviderOptions, Message } from '@/core/providers/types';
+import { logger } from '@/common/utils/logger';
+import { ErrorManager } from '@/common/utils/error_manager';
 
 /**
  * Handles streaming of LLM responses with a spinner for user feedback.

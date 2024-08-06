@@ -1,10 +1,9 @@
 import { LLMProvider, LLMProviderOptions } from './llm_provider';
 import { ProviderName } from '../config/types';
-import { logger } from '../utils/logger';
-import { getDefaultModel } from '../config/model_aliases';
 import { providerRegistry } from './provider_registry';
-import { PluginManager } from '../utils/plugin_manager';
-import { ErrorManager } from '../utils/error_manager';
+import { logger } from '@/common/utils/logger';
+import { ErrorManager } from '@/common/utils/error_manager';
+import { PluginManager } from '@/common/utils/plugin_manager';
 
 export class ProviderFactory {
   private static pluginManager = new PluginManager();

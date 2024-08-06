@@ -1,6 +1,6 @@
-import { Spinner } from '../utils/spinner';
-import { logger } from '../utils/logger';
-import { LLMProviderError } from '../providers/llm_provider';
+import { logger } from "@/common/utils/logger";
+import { Spinner } from "@/common/utils/spinner";
+import { LLMProviderError } from "@/core/providers/llm_provider";
 
 export async function withSpinner<T>(
   action: () => Promise<T>,

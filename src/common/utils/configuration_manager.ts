@@ -1,10 +1,10 @@
 // src/utils/configuration_manager.ts
 
 import { EventEmitter } from 'events';
-import { AppConfig } from '../config/types';
 import { logger } from './logger';
 import { ErrorManager } from './error_manager';
-import { DEFAULT_APP_CONFIG } from '../config/default_config';
+import { DEFAULT_APP_CONFIG } from '@/core/config/default_config';
+import { AppConfig } from '@/core/config/types';
 
 
 export class ConfigurationManager extends EventEmitter {

@@ -1,6 +1,6 @@
+import { logger } from '@/common/utils/logger';
+import { LLMResponse, OutputFormat } from '@/core/providers/types';
 import fs from 'fs/promises';
-import { LLMResponse, OutputFormat } from '../providers/types';
-import { logger } from '../utils/logger';
 
 /**
  * Formats the LLM response based on the specified output format.

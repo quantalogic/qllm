@@ -2,7 +2,7 @@ import ollama from 'ollama';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
 import { providerRegistry } from './provider_registry';
-import { logger } from '../utils/logger';
+import { logger } from '@/common/utils/logger';
 
 export class OllamaProvider implements LLMProvider {
   constructor(private options: LLMProviderOptions) {}

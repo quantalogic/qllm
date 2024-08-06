@@ -1,5 +1,5 @@
+import { LLMProviderOptions } from '@/core/providers/types';
 import { logger } from './logger';
-import { LLMProviderOptions } from '../providers/types';
 
 type OptionValue = string | number | boolean | undefined;
 
