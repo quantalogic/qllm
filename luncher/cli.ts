@@ -2,7 +2,7 @@
 
 // import CLI command 
 
-import main from "@/cli/qllm";
+import main from "../src/cli/qllm";
 
 // qllm main function for CLI
 main()

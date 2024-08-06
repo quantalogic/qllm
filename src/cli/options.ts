@@ -1,5 +1,5 @@
 // src/options.ts
-import { ErrorManager } from '@/common/utils/error_manager';
+import { ErrorManager } from '../common/utils/error_manager';
 import { Option } from 'commander';
 
 /**
