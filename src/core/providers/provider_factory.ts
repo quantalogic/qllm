@@ -3,7 +3,7 @@ import { ProviderName } from '../config/types';
 import { providerRegistry } from './provider_registry';
 import { logger } from '@/common/utils/logger';
 import { ErrorManager } from '@/common/utils/error_manager';
-import { PluginManager } from '@/common/utils/plugin_manager';
+import { PluginManager } from '@/core/plugin_manager';
 
 export class ProviderFactory {
   private static pluginManager = new PluginManager();

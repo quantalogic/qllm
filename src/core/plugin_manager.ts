@@ -1,5 +1,5 @@
-import { logger } from './logger';
-import { ErrorManager } from './error_manager';
+import { logger } from '../common/utils/logger';
+import { ErrorManager } from '../common/utils/error_manager';
 
 type PluginInitFunction = () => void;
 
@@ -15,7 +15,7 @@ export class PluginManager {
     if (!initFunction) {
       try {
         // Attempt to dynamically import the plugin
-        const plugin = await import(`../providers/${name}_provider`);
+        const plugin = await import(`./providers/${name}_provider`);
         if (typeof plugin.register === 'function') {
           plugin.register();
         } else {
