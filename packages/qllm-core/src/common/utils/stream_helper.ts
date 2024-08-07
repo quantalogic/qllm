@@ -16,7 +16,7 @@ export async function handleStreamWithSpinner(
   provider: LLMProvider,
   messages: Message[],
   options: LLMProviderOptions,
-  spinner?: Spinner
+  spinner: Spinner
 ): Promise<string> {
   let fullResponse = '';
   let isFirstChunk = true;

@@ -13,6 +13,7 @@ import { ProviderName } from "@qllm-core/core/config/types";
 import { displayOptions } from "@qllm-core/common/utils/option_display";
 import { LLMProviderOptions, Message } from "@qllm-core/core/providers/types";
 import { handleStreamWithSpinner } from "@qllm-core/common/utils/stream_helper";
+import { Spinner } from "../../helpers/spinner";
 
 export function createChatCommand(): Command {
   const chatCommand = new Command("chat")
@@ -96,7 +97,8 @@ export function createChatCommand(): Command {
           const fullResponse = await handleStreamWithSpinner(
             provider,
             messages,
-            llmOptions
+            llmOptions, 
+            new Spinner("Generating response...")
           );
 
           // Display the response on the console
