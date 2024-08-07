@@ -13,7 +13,7 @@ export async function promptForMissingVariables(
     providedValues: Record<string, string>
 ): Promise<Record<string, string>> {
     const missingVariables = Object.entries(variables).filter(
-        ([key, variable]) => !(key in providedValues) || providedValues[key] === ''
+        ([key, _variable]) => !(key in providedValues) || providedValues[key] === ''
     );
 
     const results: Record<string, string> = { ...providedValues };

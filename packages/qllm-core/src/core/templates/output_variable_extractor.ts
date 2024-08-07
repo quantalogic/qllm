@@ -20,7 +20,7 @@ export class OutputVariableExtractor {
 
   private extractVariable(
     key: string,
-    variable: OutputVariable,
+    _variable: OutputVariable,
     output: string
   ): string | null {
     const regex = new RegExp(`<${key}>(.+?)</${key}>`, "s");

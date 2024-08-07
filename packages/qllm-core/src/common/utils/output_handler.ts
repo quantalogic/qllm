@@ -10,7 +10,6 @@ import prompts from 'prompts';
 export class OutputHandler {
   private outputPath: string | undefined;
   private format: 'json' | 'xml';
-  private buffer: string = '';
 
   constructor(outputPath: string | undefined, format: 'json' | 'xml') {
     this.outputPath = outputPath;

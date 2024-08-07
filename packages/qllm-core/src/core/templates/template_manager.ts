@@ -14,7 +14,7 @@ export class TemplateManager {
   private templateDir: string;
   private fileCache: Map<string, string> = new Map();
 
-  constructor(private config: TemplateManagerConfig) {
+  constructor(config: TemplateManagerConfig) {
     this.templateDir = config.promptDirectory;
   }
 
@@ -231,7 +231,7 @@ export class TemplateManager {
 
     let match;
     while ((match = fileInclusionRegex.exec(content)) !== null) {
-      const [fullMatch, filePath] = match;
+      const [_fullMatch, filePath] = match;
       const fullPath = path.resolve(this.templateDir, filePath.trim());
 
       if (visitedFiles.has(fullPath)) {
