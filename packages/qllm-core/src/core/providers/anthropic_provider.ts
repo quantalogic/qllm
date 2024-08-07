@@ -2,7 +2,7 @@ import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from './types';
 import { getCredentials } from './aws/credentials';
-import { logger } from '@/common/utils/logger';
+import { logger } from '../../common/utils/logger';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
 import { providerRegistry } from './provider_registry';
 

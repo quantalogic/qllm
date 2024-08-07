@@ -21,7 +21,7 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*", "luncher/*"]
+      "@/*": ["src/*"]
     }
   },
   "ts-node": {

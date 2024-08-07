@@ -4,11 +4,11 @@
   "description": "QLLM Multi-Provider LLM Command CLI",
   "main": "dist/src/cli.js",
   "scripts": {
-    "dev-cli": "ts-node src/cli.ts",
-    "dev-server": "ts-node src/server.ts",
+    "dev-cli": "ts-node -r tsconfig-paths/register src/cli.ts",
+    "dev-server": "ts-node -r tsconfig-paths/register src/server.ts",
     "build": "tsc",
     "test": "jest",
-    "dev": "ts-node src/index.ts",
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "start": "node dist/src/server.js",
     "cli": "node dist/src/cli.js",
     "prune": "ts-prune prune"
@@ -20,6 +20,10 @@
   ],
   "bin": {
     "qllm": "dist/qllm.js"
+  },
+  "baseUrl": ".",
+  "paths": {
+    "@/*": ["src/*"]
   },
   "author": "quantalogic",
   "license": "Apache-2.0",
@@ -81,6 +85,7 @@
   },
   "devDependencies": {
     "@types/cli-spinner": "^0.2.3",
-    "@types/express": "^4.17.21"
+    "@types/express": "^4.17.21",
+    "tsconfig-paths": "^4.2.0"
   }
 }
