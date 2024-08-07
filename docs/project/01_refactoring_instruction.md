@@ -2349,3 +2349,148 @@ qllm template execute code_review --variable language=python --variable code="$(
 ```
 
 This comprehensive documentation covers the main features and usage patterns of the QLLM CLI. Users can refer to this guide to understand how to effectively use the tool for various LLM interactions, configuration management, and template-based operations.
+
+Certainly! I'll provide an updated documentation and specification for executing templates by name or file path in the QLLM CLI.
+
+# QLLM CLI Documentation: Template Execution
+
+## Template Execute Command
+
+The `template execute` command allows you to run a template either by its name (stored in the default template directory) or by specifying a file path to a template file.
+
+### Syntax
+
+```
+qllm template execute <name-or-path> [options]
+```
+
+### Arguments
+
+- `<name-or-path>`: The name of the template or the file path to the template YAML file.
+
+### Options
+
+- `-v, --variable <key=value>`: Set variable values for the template (can be used multiple times)
+- `--output [file]`: Output file path
+- `--format <format>`: Output format (json, yaml)
+- `--max-tokens <number>`: Maximum number of tokens to generate
+- `--temperature <number>`: Temperature for response generation
+- `--top-p <number>`: Top P for response generation
+- `--top-k <number>`: Top K for response generation
+- `--system <message>`: System message to set context
+
+### Examples
+
+1. Execute a template by name:
+
+```bash
+qllm template execute my_template --variable key1=value1 --variable key2=value2
+```
+
+2. Execute a template from a file path:
+
+```bash
+qllm template execute /path/to/my_template.yaml --variable key1=value1 --variable key2=value2
+```
+
+3. Execute a template with output to a file:
+
+```bash
+qllm template execute my_template --output result.json --format json
+```
+
+4. Execute a template with custom LLM parameters:
+
+```bash
+qllm template execute my_template --max-tokens 500 --temperature 0.7
+```
+
+## Specification for Implementation
+
+To implement the ability to execute templates by name or file path, follow these specifications:
+
+1. Update the `createExecuteCommand` function in `packages/qllm-cli/src/cli/commands/template.ts`:
+
+```typescript
+function createExecuteCommand(): Command {
+  return new Command("execute")
+    .description("Execute a template by name or file path")
+    .argument("<name-or-path>", "Name of the template or path to the template file")
+    .addOption(new Option("-v, --variable <key=value>", "Set variable values for the template").argParser(collectVariables))
+    .addOption(new Option("--output [file]", "Output file path"))
+    .addOption(new Option("--format <format>", "Output format").choices(["json", "yaml"]).default("json"))
+    .addOption(cliOptions.maxTokensOption)
+    .addOption(cliOptions.temperatureOption)
+    .addOption(cliOptions.topPOption)
+    .addOption(cliOptions.topKOption)
+    .addOption(cliOptions.systemOption)
+    .action(async (nameOrPath, options) => {
+      try {
+        const templateManager = await getTemplateManager();
+        let template;
+
+        if (path.isAbsolute(nameOrPath) || nameOrPath.startsWith('./') || nameOrPath.startsWith('../')) {
+          // It's a file path
+          template = await templateManager.loadTemplateFromFile(nameOrPath);
+        } else {
+          // It's a template name
+          template = await templateManager.getTemplate(nameOrPath);
+        }
+
+        if (!template) {
+          throw new Error(`Template '${nameOrPath}' not found`);
+        }
+
+        // Rest of the execution logic...
+      } catch (error) {
+        ErrorManager.handleError("ExecuteTemplateError", `Failed to execute template: ${error}`);
+      }
+    });
+}
+```
+
+2. Add a new method `loadTemplateFromFile` to the `TemplateManager` class in `packages/qllm-core/src/core/templates/template_manager.ts`:
+
+```typescript
+async loadTemplateFromFile(filePath: string): Promise<TemplateDefinition | null> {
+  try {
+    const content = await fs.readFile(filePath, "utf-8");
+    const template = yaml.load(content) as TemplateDefinition;
+    if (!template || typeof template !== "object") {
+      ErrorManager.throwError("TemplateManagerError", `Invalid template structure in file: ${filePath}`);
+    }
+    template.resolved_content = await this.resolveFileInclusions(template.content);
+    return template;
+  } catch (error) {
+    logger.error(`Failed to read template file ${filePath}: ${error}`);
+    return null;
+  }
+}
+```
+
+3. Update the error handling to provide clear messages for both cases:
+
+```typescript
+if (!template) {
+  if (path.isAbsolute(nameOrPath) || nameOrPath.startsWith('./') || nameOrPath.startsWith('../')) {
+    throw new Error(`Failed to load template file: ${nameOrPath}`);
+  } else {
+    throw new Error(`Template '${nameOrPath}' not found in the template directory`);
+  }
+}
+```
+
+4. Ensure that the `resolveFileInclusions` method in `TemplateManager` can handle both relative and absolute paths:
+
+```typescript
+private async resolveFileInclusions(content: string, basePath: string = this.templateDir): Promise<string> {
+  // ... existing code ...
+
+  const fullPath = path.isAbsolute(filePath) ? filePath : path.resolve(basePath, filePath.trim());
+
+  // ... rest of the method ...
+}
+```
+
+By implementing these changes, the QLLM CLI will be able to distinguish between executing templates by name (stored in the default template directory) and by file path, providing a flexible way for users to run their templates.
+
