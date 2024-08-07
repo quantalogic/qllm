@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2018",
+    "module": "CommonJS",
+    "lib": [
+      "dom",
+      "ES2018",
+      "ES2019.Array",
+      "ES2020.Promise",
+      "ES2020.BigInt",
+      "ES2020.String"
+    ],
+    "declaration": true,
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*", "luncher/*"]
+    }
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
+  "include": ["src/**/*", "luncher/**/*", "../qllm-cli/src/helpers/spinner.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}

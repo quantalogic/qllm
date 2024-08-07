@@ -6,4 +6,5 @@ dist/
 tasks/
 package-lock.json
 .qllmrc.yaml
-.qllmrc.yaml*
+.qllmrc.yaml*node_modules
+dist

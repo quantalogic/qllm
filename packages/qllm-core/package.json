@@ -1,0 +1,26 @@
+{
+  "name": "@qllm/core",
+  "version": "1.0.0",
+  "description": "Core functionality for QLLM",
+  "types": "dist/src/index.d.ts",
+  "module": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "author": "quantalogic",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/quantalogic/qllm"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sts": "^3.624.0",
+    "@aws-sdk/credential-providers": "^3.624.0",
+    "@aws-sdk/types": "^3.609.0"
+  },
+  "peerDependencies": {
+    "typescript": "^4.0.0"
+  }
+}
