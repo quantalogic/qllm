@@ -15,7 +15,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@qllm-core/*": ["../qllm-core/src/*"]
+      "@qllm-lib/*": ["../qllm-lib/src/*"],
+      "@qllm-types/*": ["../qllm-types/src/*"]
     }
   },
     "ts-node": {

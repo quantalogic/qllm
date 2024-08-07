@@ -1,16 +1,18 @@
 // src/commands/config.ts
 
-import { logger } from '@qllm-core/common/utils/logger';
-import { ErrorManager } from '@qllm-core/common/utils/error_manager';
-import { configManager } from '@qllm-core/common/utils/configuration_manager';
-import { AppConfig, ProviderName } from '@qllm-core/core/config/types';
+import { logger } from '@qllm-lib/common/utils/logger';
+import { ErrorManager } from '@qllm-lib/common/utils/error_manager';
+import { configManager } from '@qllm-lib/config/configuration_manager';
+import { AppConfig, ProviderName } from '@qllm/types/src';
 
 import { Command, Option } from 'commander';
 import prompts from 'prompts';
-import { ConfigurationFileLoader } from '@qllm-core/common/utils/configuration_file_loader';
-import { resolveConfigPath } from '@qllm-core/common/utils/path_resolver';
-import { getAllProviders, getModelsForProvider } from '@qllm-core/core/config/provider_config';
+import { ConfigurationFileLoader } from '@qllm-lib/common/utils/configuration_file_loader';
+import { resolveConfigPath } from '@qllm-lib/common/utils/path_resolver';
+import { getAllProviders, getModelsForProvider } from '@qllm-lib/config/provider_config';
 
+import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
+import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
 export function createConfigCommand(): Command {
   const configCommand = new Command('config')
@@ -45,7 +47,13 @@ export function createConfigCommand(): Command {
           await updateConfig(options, configLoader);
         }
       } catch (error) {
-        ErrorManager.handleError('ConfigCommandError', `Configuration error: ${error}`);
+        //ErrorManager.handleError('ConfigCommandError', `Configuration error: ${error}`);
+        if (error instanceof QllmError) {
+          ErrorHandler.handle(error);
+        } else {
+          ErrorHandler.handle(new QllmError(`Unexpected error in config command: ${error}`));
+        }
+        process.exit(1);
       }
     });
 
@@ -65,8 +73,7 @@ async function updateConfig(options: any, configLoader: ConfigurationFileLoader)
   if (options.setModelId) updates.defaultModelId = options.setModelId;
 
   if (Object.keys(updates).length > 0) {
-    configManager.updateConfig(updates);
-    await configLoader.saveConfig(configManager.getConfig());
+    await configManager.updateAndSaveConfig(updates);
     logger.info('Configuration updated successfully.');
     showConfig(configManager.getConfig());
   } else {

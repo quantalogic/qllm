@@ -3,17 +3,20 @@
 import { Command } from "commander";
 import prompts from "prompts";
 import { cliOptions } from "../options";
-import { logger } from "@qllm-core/common/utils/logger";
-import { ErrorManager } from "@qllm-core/common/utils/error_manager";
-import { resolveModelAlias } from "@qllm-core/core/config/model_aliases";
-import { ProviderFactory } from "@qllm-core/core/providers/provider_factory";
-import { configManager } from "@qllm-core/common/utils/configuration_manager";
-import { DEFAULT_APP_CONFIG } from "@qllm-core/core/config/default_config";
-import { ProviderName } from "@qllm-core/core/config/types";
-import { displayOptions } from "@qllm-core/common/utils/option_display";
-import { LLMProviderOptions, Message } from "@qllm-core/core/providers/types";
-import { handleStreamWithSpinner } from "@qllm-core/common/utils/stream_helper";
+import { logger } from "@qllm-lib/common/utils/logger";
+import { ErrorManager } from "@qllm-lib/common/utils/error_manager";
+import { resolveModelAlias } from "@qllm-lib/config/model_aliases";
+import { ProviderFactory } from "@qllm-lib/core/providers/provider_factory";
+import { configManager } from "@qllm-lib/common/utils/configuration_manager";
+import { DEFAULT_APP_CONFIG } from "@qllm-lib/config/default_config";
+import { ProviderName } from "@qllm-lib/config/types";
+import { displayOptions } from "@qllm-lib/common/utils/option_display";
+import { LLMProviderOptions, Message } from '@qllm/types/src';
+import { handleStreamWithSpinner } from "@qllm-lib/common/utils/stream_helper";
 import { Spinner } from "../../helpers/spinner";
+
+import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
+import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
 export function createChatCommand(): Command {
   const chatCommand = new Command("chat")
@@ -108,10 +111,16 @@ export function createChatCommand(): Command {
           messages.push({ role: "assistant", content: fullResponse });
         }
       } catch (error) {
-        ErrorManager.handleError(
+        /* ErrorManager.handleError(
           "ChatCommandError",
           error instanceof Error ? error.message : String(error)
-        );
+        ); */
+        if (error instanceof QllmError) {
+          ErrorHandler.handle(error);
+        } else {
+          ErrorHandler.handle(new QllmError(`Unexpected error in chat command: ${error}`));
+        }
+        process.exit(1);
       }
     });
 

@@ -1,5 +1,5 @@
 import { Spinner as CLISpinner } from 'cli-spinner';
-import { logger } from '../../../qllm-core/src/common/utils/logger';
+import { logger } from '../../../qllm-lib/src/common/utils/logger';
 
 export class Spinner {
   private spinner: CLISpinner;
