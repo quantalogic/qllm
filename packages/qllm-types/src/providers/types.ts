@@ -1,5 +1,5 @@
 // Message roles
-export type MessageRole = 'user' | 'assistant' | 'system';
+type MessageRole = 'user' | 'assistant' | 'system';
 
 // Message structure
 export interface Message {
