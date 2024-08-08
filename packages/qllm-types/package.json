@@ -14,9 +14,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/quantalogic/qllm"
-  },
-  "dependencies": {},
-  "peerDependencies": {
-    "typescript": "^4.0.0"
   }
 }
