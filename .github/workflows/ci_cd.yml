@@ -23,6 +23,17 @@ jobs:
       - name: Check if release version
         id: check_version
         run: node scripts/check_version.js
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
 #      - name: Publish to npm
 #        if: steps.check_version.outputs.is_release == 'true'
 #        uses: actions/setup-node@v3

@@ -1,6 +1,6 @@
 // src/options.ts
 import { Option } from "commander";
-import { ErrorManager } from "@qllm-core/common/utils/error_manager";
+import { ErrorManager } from "@qllm-lib/common/utils/error_manager";
 
 /**
  * Parses a numeric value within a specified range.

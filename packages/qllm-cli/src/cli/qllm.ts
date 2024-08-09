@@ -6,11 +6,14 @@ import { createStreamCommand } from "./commands/stream";
 import { createChatCommand } from "./commands/chat";
 import { createConfigCommand } from "./commands/config";
 import { createTemplateCommand } from "./commands/template";
-import { ConfigurationFileLoader } from "@qllm-core/common/utils/configuration_file_loader";
-import { logger } from "@qllm-core/common/utils/logger";
-import { configManager } from "@qllm-core/common/utils/configuration_manager";
-import { ErrorManager } from "@qllm-core/common/utils/error_manager";
-import { resolveConfigPath } from "@qllm-core/common/utils/path_resolver";
+import { ConfigurationFileLoader } from "@qllm-lib/common/utils/configuration_file_loader";
+import { logger } from "@qllm-lib/common/utils/logger";
+import { configManager } from "@qllm-lib/config/configuration_manager";
+import { ErrorManager } from "@qllm-lib/common/utils/error_manager";
+import { resolveConfigPath } from "@qllm-lib/common/utils/path_resolver";
+
+import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
+import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
 const VERSION = "1.1.1";
 
@@ -43,7 +46,7 @@ export async function main() {
         const configLoader = new ConfigurationFileLoader(configFile);
         const loadedConfig = await configLoader.loadConfig();
 
-        await configManager.loadConfig({ ...options, ...loadedConfig });
+        await configManager.loadConfig(options.config); 
         const config = configManager.getConfig();
 
         console.log("config", config, "options", options);
@@ -64,11 +67,16 @@ export async function main() {
           `Configuration: ${JSON.stringify(configManager.getConfig())}`
         );
       } catch (error) {
-        ErrorManager.handleError(
+        if (error instanceof QllmError) {
+          ErrorHandler.handle(error);
+        } else {
+          ErrorHandler.handle(new QllmError(`Unexpected error in main: ${error}`));
+        }
+        process.exit(1);
+        /* ErrorManager.handleError(
           "PreActionError",
           error instanceof Error ? error.message : String(error)
-        );
-        process.exit(1);
+        );  */
       }
     });
 

@@ -15,12 +15,13 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@qllm-core/*": ["../qllm-core/src/*"]
+      "@qllm-lib/*": ["../qllm-lib/src/*"],
+      "@qllm-types/*": ["../qllm-types/src/*"]
     }
   },
     "ts-node": {
   "require": ["tsconfig-paths/register"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
 }

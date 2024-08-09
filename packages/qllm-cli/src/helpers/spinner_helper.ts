@@ -1,5 +1,5 @@
-import { logger } from "@qllm-core/common/utils/logger";
-import { LLMProviderError } from "@qllm-core/core/providers/llm_provider";
+import { logger } from "@qllm-lib/common/utils/logger";
+import { LLMProviderError } from "@qllm-lib/core/providers/llm_provider";
 import { Spinner } from "../helpers/spinner";
 
 export async function withSpinner<T>(
