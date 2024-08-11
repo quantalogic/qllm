@@ -5,6 +5,8 @@
     "packages/*"
   ],
   "scripts": {
+    "docs:generate": "typedoc",
+    "docs:serve": "npx http-server docs/api",
     "lint": "eslint 'packages/**/*.ts'",
     "lint:fix": "eslint 'packages/**/*.ts' --fix",
     "format": "prettier --write 'packages/**/*.ts'",

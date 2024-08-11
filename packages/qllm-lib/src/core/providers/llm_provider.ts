@@ -1,18 +1,45 @@
 import { Message } from './types';
 
+/**
+ * Represents the options for an LLM provider.
+ */
 export interface LLMProviderOptions {
+  /** Maximum number of tokens to generate */
   maxTokens?: number;
+  /** Temperature for response generation */
   temperature?: number;
+  /** Top P for response generation */
   topP?: number;
+  /** Top K for response generation */
   topK?: number;
+  /** System message to set context */
   system?: string;
+  /** Model to use for generation */
   model: string;
+  /** AWS REGION */
   awsRegion?: string;
+  /** AWS PROFIL */
   awsProfile?: string;
 }
 
+/**
+ * Represents an LLM provider.
+ */
 export interface LLMProvider {
+  /**
+   * Generates a message using the LLM.
+   * @param messages - The input messages.
+   * @param options - The provider options.
+   * @returns A promise that resolves to the generated message.
+   */
   generateMessage: (messages: Message[], options: LLMProviderOptions) => Promise<string>;
+
+  /**
+   * Streams a message from the LLM.
+   * @param messages - The input messages.
+   * @param options - The provider options.
+   * @returns An async iterable of message chunks.
+   */
   streamMessage: (messages: Message[], options: LLMProviderOptions) => AsyncIterableIterator<string>;
 }
 
