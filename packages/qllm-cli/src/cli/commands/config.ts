@@ -30,12 +30,22 @@ export function createConfigCommand(): Command {
     .addOption(new Option('--interactive', 'Enter interactive configuration mode'))
     .addOption(new Option('--show-providers', 'Show available providers'))
     .addOption(new Option('--show-models-provider <provider>', 'Show available models for a provider'))
+    .option('--show-parameters-model <provider> <model>', 'Show parameters for a specific model of a provider')
     .action(async (options) => {
       try {
         const configFile = await resolveConfigPath(options.config);
         const configLoader = new ConfigurationFileLoader(configFile);
 
-        if (options.showProviders) {
+        if (options.showParametersModel) {
+          const args = options.showParametersModel.split(' ');
+          if (args.length !== 2) {
+            throw new QllmError('Both provider and model must be specified for --show-parameters-model');
+          }
+          const [provider, model] = args;
+          console.log(`Provider: ${provider}`);
+          console.log(`Model: ${model}`);
+          showModelParameters(provider, model)
+        } else if (options.showProviders) {
           showProviders();
         }  else if (options.showModelsProvider) {
           showModelsForProvider(options.showModelsProvider as ProviderName);
@@ -89,15 +99,34 @@ function showProviders(): ProviderName[] {
 }
 
 function showModelsForProvider(providerName: ProviderName): void {
-  try{
-    const availableProviders = getModelsForProvider(providerName)
-    console.log("My providers : ", availableProviders)
-
+  try {
+    const availableProviders = getModelsForProvider(providerName);
+    console.log("My models:");
+    availableProviders.forEach((model, index) => {
+      console.log(`Model ${index + 1}, alias : ${model.alias}, id : ${model.modelId} `);
+      //console.log(JSON.stringify(model, null, 2));
+    });
   } catch (error) {
     console.error(error);
   }
 }
 
+function showModelParameters(providerName: ProviderName, modelAlias: string): void {
+  try {
+    const models = getModelsForProvider(providerName);
+    const model = models.find(m => m.alias === modelAlias);
+
+    if (!model) {
+      console.log(`Model '${modelAlias}' not found for provider '${providerName}'.`);
+      return;
+    }
+
+    console.log(`Parameters for ${providerName}/${modelAlias}:`);
+    console.log(JSON.stringify(model.parameters, null, 2));
+  } catch (error) {
+    console.error(`---- Error showing model parameters: ${error}`);
+  }
+}
 
 function showConfig(config: AppConfig): void {
   console.info('Current configuration:');
