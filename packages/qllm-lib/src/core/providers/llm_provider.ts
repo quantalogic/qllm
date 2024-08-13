@@ -1,4 +1,6 @@
 import { Message } from './types';
+import { z } from 'zod';
+import {ToolsArraySchema} from "@qllm/types/src" 
 
 /**
  * Represents the options for an LLM provider.
@@ -20,6 +22,8 @@ export interface LLMProviderOptions {
   awsRegion?: string;
   /** AWS PROFIL */
   awsProfile?: string;
+  /** Tools data */
+  tools?: z.infer<typeof ToolsArraySchema>;
 }
 
 /**
@@ -41,6 +45,14 @@ export interface LLMProvider {
    * @returns An async iterable of message chunks.
    */
   streamMessage: (messages: Message[], options: LLMProviderOptions) => AsyncIterableIterator<string>;
+
+  /**
+   * Streams a message from the LLM.
+   * @param messages - The input file.
+   * @param options - The provider options.
+   * @returns An async iterable of embedding files.
+   */
+  generateEmbedding?: (fileContent: Buffer, modelId: string) => Promise<number[]>;
 }
 
 export class LLMProviderError extends Error {

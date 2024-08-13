@@ -6,7 +6,9 @@ const openaiConfig: ProviderConfig = {
   models: [
     { alias: 'gpt3', modelId: 'gpt-3.5-turbo', parameters:{} },
     { alias: 'gpt4', modelId: 'gpt-4', parameters:{} },
-    { alias: 'gpt4-turbo', modelId: 'gpt-4-1106-preview', parameters:{} },
+    { alias: 'gpt4-v', modelId: 'gpt-4', parameters:{} },
+    { alias: 'gpt-4o-mini', modelId: 'gpt-4o-mini', parameters:{} },
+    { alias: 'text-embedding-3-small', modelId: 'text-embedding-3-small', parameters:{} },
   ],
   defaultModel: 'gpt3',
 };

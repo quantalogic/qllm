@@ -14,9 +14,10 @@ import { displayOptions } from '@qllm-lib/common/utils/option_display';
 import { withSpinner } from '@/helpers/spinner_helper';
 import { formatOutput, writeOutput } from '@/helpers/output_helper';
 import { LLMProviderOptions, Message } from '@qllm/types/src';
-
+import { z } from 'zod';
 import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
 import { QllmError } from '@qllm-lib/common/errors/custom_errors';
+import {ToolsArraySchema} from "@qllm/types/src"
 
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
@@ -29,6 +30,7 @@ export function createAskCommand(): Command {
     .addOption(cliOptions.fileOption)
     .addOption(cliOptions.outputOption)
     .addOption(cliOptions.formatOption)
+    .addOption(cliOptions.toolsOption)
     .action(async (options, command) => {
       try {
 
@@ -76,6 +78,14 @@ export function createAskCommand(): Command {
 
         logger.debug(`providerName: ${providerName}`);
 
+        let tools: z.infer<typeof ToolsArraySchema> | undefined;
+        if (options.tools) {
+          try {
+            tools = ToolsArraySchema.parse(JSON.parse(options.tools));
+          } catch (error) {
+            ErrorManager.throwError('ToolsError', 'Invalid tools format. Please provide a valid JSON array of tools.');
+          }
+        }
         // Prepare provider options
         const llmOptions: LLMProviderOptions = {
           maxTokens: maxTokens,
@@ -83,6 +93,7 @@ export function createAskCommand(): Command {
           topP: options.topP,
           topK: options.topK,
           model: modelId,
+          tools: tools
         };
 
         displayOptions(llmOptions, 'ask');

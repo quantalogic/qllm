@@ -62,7 +62,8 @@
     "openai": "^4.52.2",
     "perplexity-sdk": "^1.0.4",
     "prompts": "^2.4.2",
-    "winston": "^3.13.0"
+    "winston": "^3.13.0",
+    "zod": "^3.23.8"
   },
   "husky": {
     "hooks": {

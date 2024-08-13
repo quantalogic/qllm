@@ -1,3 +1,7 @@
+
+import {ToolsArraySchema} from "@qllm/types/src"
+import { z } from 'zod';
+
 // Message roles
 type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -15,6 +19,7 @@ export interface LLMProviderOptions {
   topK: number;
   system?: string;
   model: string;
+  tools?: z.infer<typeof ToolsArraySchema>;
 }
 // Output format options
 export type OutputFormat = 'json' | 'markdown' | 'text';

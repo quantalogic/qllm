@@ -3,7 +3,6 @@ import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, I
 import { Message } from './types';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { providerRegistry } from './provider_registry';
-
 import { DEFAULT_MAX_TOKENS } from '../config/default';
 
 
@@ -28,7 +27,15 @@ export class OpenAIProvider implements LLMProvider {
         temperature: options.temperature,
         top_p: options.topP,
         n: 1,
+        tools: options.tools, // Add tools here
       });
+
+      // Handle function calls if present
+      if (response.choices[0]?.message?.function_call) {
+        // Implement function calling logic here
+        // This might involve calling a separate function to handle the tool execution
+        // and then recursively calling generateMessage with the result
+      }
 
       return response.choices[0]?.message?.content || '';
     } catch (error) {
@@ -60,6 +67,24 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 
+  async generateEmbedding(fileContent: Buffer, modelId: string): Promise<number[]> {
+    try {
+      const base64Image = fileContent.toString('base64');
+      const response = await this.client.embeddings.create({
+        model: modelId,
+        input: [base64Image],
+      });
+
+      if (response.data && response.data.length > 0) {
+        return response.data[0].embedding;
+      } else {
+        throw new Error('No embedding generated');
+      }
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+  
   private withSystemMessage(options: LLMProviderOptions, messages: Message[]): Message[] {
     return options.system && options.system.length > 0
       ? [{ role: 'system', content: options.system }, ...messages]

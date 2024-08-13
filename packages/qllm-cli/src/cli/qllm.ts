@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import { createEmbedCommand } from "./commands/embed";
 import { createAskCommand } from "./commands/ask";
 import { createStreamCommand } from "./commands/stream";
 import { createChatCommand } from "./commands/chat";
@@ -86,6 +87,7 @@ export async function main() {
     program.addCommand(createChatCommand());
     program.addCommand(createConfigCommand());
     program.addCommand(createTemplateCommand());
+    program.addCommand(createEmbedCommand()); 
 
     // Error handling for unknown commands
     program.on("command:*", () => {

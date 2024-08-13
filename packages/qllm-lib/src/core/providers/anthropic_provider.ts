@@ -75,7 +75,7 @@ export class AnthropicProvider implements LLMProvider {
       this.handleError(error);
     }
   }
-
+   
   private handleError(error: any): never {
     if (error.status === 401) {
       throw new AuthenticationError('Authentication failed with Anthropic', 'Anthropic');

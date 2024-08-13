@@ -100,6 +100,8 @@ export const streamOption = new Option("--stream", "Stream the output").default(
   false
 );
 
+export const toolsOption = new Option('--tools <tools...>', 'Tools to use for the request')
+
 // Exporting all CLI options
 export const cliOptions = {
   maxTokensOption,
@@ -111,4 +113,5 @@ export const cliOptions = {
   outputOption,
   formatOption,
   streamOption,
+  toolsOption
 };
