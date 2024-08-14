@@ -5,24 +5,27 @@ import yaml from "js-yaml";
 import {
   TemplateManager,
   TemplateManagerConfig,
-} from "@qllm-core/core/templates/template_manager";
-import { configManager } from "@qllm-core/common/utils/configuration_manager";
-import { logger } from "@qllm-core/common/utils/logger";
-import { ErrorManager } from "@qllm-core/common/utils/error_manager";
+} from "@qllm-lib/core/templates/template_manager";
+import { configManager } from "@qllm-lib/config/configuration_manager";
+import { logger } from "@qllm-lib/common/utils/logger";
+import { ErrorManager } from "@qllm-lib/common/utils/error_manager";
 import { cliOptions } from "../options";
-import { resolveModelAlias } from "@qllm-core/core/config/model_aliases";
-import { displayOptions } from "@qllm-core/common/utils/option_display";
-import { LLMProviderOptions } from "@qllm-core/core/providers/types";
-import { ProviderFactory } from "@qllm-core/core/providers/provider_factory";
+import { resolveModelAlias } from "@qllm-lib/config/model_aliases";
+import { displayOptions } from "@qllm-lib/common/utils/option_display"; 
+import { LLMProviderOptions } from "@qllm/types/src";
+import { ProviderFactory } from "@qllm-lib/core/providers/provider_factory";
 import {
   ExecutionContext,
   TemplateDefinition,
   TemplateVariable,
-} from "@qllm-core/core/templates/types";
-import { TemplateExecutor } from "@qllm-core/core/templates/template_executor";
-import { OutputHandler } from "@qllm-core/common/utils/output_handler";
-import { DEFAULT_APP_CONFIG } from "@qllm-core/core/config/default_config";
-import { ProviderName } from "@qllm-core/core/config/types";
+} from "@qllm-lib/core/templates/types";
+import { TemplateExecutor } from "@qllm-lib/core/templates/template_executor";
+import { OutputHandler } from "@qllm-lib/common/utils/output_handler";
+import { DEFAULT_APP_CONFIG } from "@qllm-lib/config/default_config";
+import { ProviderName } from "@qllm/types/src";
+
+import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
+import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
 async function getTemplateManager(
   promptsDir?: string
@@ -72,10 +75,16 @@ function createListCommand(): Command {
           templates.forEach((template) => console.log(`- ${template}`));
         }
       } catch (error) {
-        ErrorManager.handleError(
+        /* ErrorManager.handleError(
           "ListTemplatesError",
           `Failed to list templates: ${error}`
-        );
+        ); */
+        if (error instanceof QllmError) {
+          ErrorHandler.handle(error);
+        } else {
+          ErrorHandler.handle(new QllmError(`Failed to list templates: ${error}`));
+        }
+        process.exit(1);
       }
     });
 }
@@ -90,10 +99,16 @@ function createCreateCommand(): Command {
         await templateManager.saveTemplate(template);
         logger.info(`Template ${template.name} created successfully`);
       } catch (error) {
-        ErrorManager.handleError(
+        /* ErrorManager.handleError(
           "CreateTemplateError",
           `Failed to create template: ${error}`
-        );
+        ); */
+        if (error instanceof QllmError) {
+          ErrorHandler.handle(error);
+        } else {
+          ErrorHandler.handle(new QllmError(`Failed to create template: ${error}`));
+        }
+        process.exit(1);
       }
     });
 }
@@ -198,10 +213,16 @@ function createExecuteCommand(): Command {
         const outputHandler = new OutputHandler(options.output, options.format);
         await outputHandler.handleOutput(result.outputVariables);
       } catch (error) {
-        ErrorManager.handleError(
+        /* ErrorManager.handleError(
           "ExecuteTemplateError",
           `Failed to execute template: ${error}`
-        );
+        ); */
+        if (error instanceof QllmError) {
+          ErrorHandler.handle(error);
+        } else {
+          ErrorHandler.handle(new QllmError(`Unexpected error in template create execute command: ${error}`));
+        }
+        process.exit(1);
       }
     });
 }
@@ -216,10 +237,16 @@ function createDeleteCommand(): Command {
         await templateManager.deleteTemplate(name);
         logger.info(`Template ${name} deleted successfully`);
       } catch (error) {
-        ErrorManager.handleError(
+        /* ErrorManager.handleError(
           "DeleteTemplateError",
           `Failed to delete template: ${error}`
-        );
+        ); */
+        if (error instanceof QllmError) {
+          ErrorHandler.handle(error);
+        } else {
+          ErrorHandler.handle(new QllmError(`Failed to delete template: ${error}`));
+        }
+        process.exit(1);
       }
     });
 }

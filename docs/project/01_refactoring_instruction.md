@@ -5,7 +5,7 @@
 ### Current Structure
 The project has been separated into two main packages:
 1. `qllm-cli`: Handles CLI commands and user interactions
-2. `qllm-core`: Contains core functionality and provider implementations
+2. `qllm-lib`: Contains core functionality and provider implementations
 
 ### Strengths
 - Clear separation of concerns between CLI and core functionality
@@ -14,7 +14,7 @@ The project has been separated into two main packages:
 
 ### Areas for Improvement
 1. **Dependency Management**: The CLI package directly references the core package using a file path, which may cause issues in different environments.
-2. **Package Naming**: The core package name `@qllm/core` might conflict with npm scoped packages.
+2. **Package Naming**: The core package name `@qllm/lib` might conflict with npm scoped packages.
 3. **File Naming Convention**: Inconsistent use of camelCase and kebab-case in file names.
 4. **Type Definitions**: Some type definitions are duplicated across packages.
 5. **Configuration Management**: Configuration handling is spread across multiple files and could be centralized.
@@ -84,7 +84,7 @@ Recommendation: Proceed with Approach 3 (Hybrid Approach) as it offers the best 
 ## 4. Detailed Implementation Plan
 
 1. Refactor Package Structure
-   - Rename `qllm-core` to `qllm-lib` to avoid npm scope conflicts
+   - Rename `qllm-lib` to `qllm-lib` to avoid npm scope conflicts
    - Update all import statements in `qllm-cli` to use the new package name
 
 2. Implement Yarn Workspaces
@@ -136,7 +136,7 @@ mkdir -p qllm-monorepo/packages/qllm-types
 mv packages/qllm-cli/* qllm-monorepo/packages/qllm-cli/
 
 # Move core library files
-mv packages/qllm-core/* qllm-monorepo/packages/qllm-lib/
+mv packages/qllm-lib/* qllm-monorepo/packages/qllm-lib/
 
 # Create qllm-types package
 echo '{
@@ -183,7 +183,7 @@ echo "Project structure has been updated. Please review the changes and adjust a
 ## 6. Detailed Explanation of Changes to Codebase
 
 1. Package Renaming and Structure:
-   - Rename `qllm-core` to `qllm-lib` in all files and import statements
+   - Rename `qllm-lib` to `qllm-lib` in all files and import statements
    - Update `package.json` files to reflect new package names and dependencies
 
 2. Type Definitions:
@@ -432,17 +432,17 @@ Certainly! I'll provide a detailed explanation of how to implement centralized c
 1. Create a new `config` directory in `qllm-lib`:
 
 ```bash
-mkdir -p packages/qllm-core/src/config
+mkdir -p packages/qllm-lib/src/config
 ```
 
 2. Move existing configuration files:
 
 Move the following files to the new `config` directory:
 
-- `packages/qllm-core/src/core/config/default_config.ts`
-- `packages/qllm-core/src/core/config/types.ts`
-- `packages/qllm-core/src/core/config/provider_config.ts`
-- `packages/qllm-core/src/core/config/model_aliases.ts`
+- `packages/qllm-lib/src/core/config/default_config.ts`
+- `packages/qllm-lib/src/core/config/types.ts`
+- `packages/qllm-lib/src/core/config/provider_config.ts`
+- `packages/qllm-lib/src/core/config/model_aliases.ts`
 
 3. Update import statements:
 
@@ -455,7 +455,7 @@ import { DEFAULT_APP_CONFIG } from '../../config/default_config';
 
 4. Implement a centralized configuration manager:
 
-Create a new file `packages/qllm-core/src/config/configuration_manager.ts`:
+Create a new file `packages/qllm-lib/src/config/configuration_manager.ts`:
 
 ```typescript
 import { EventEmitter } from 'events';
@@ -536,7 +536,7 @@ export const configManager = ConfigurationManager.getInstance();
 
 5. Update `configuration_file_loader.ts`:
 
-Update `packages/qllm-core/src/common/utils/configuration_file_loader.ts` to work with the new configuration structure:
+Update `packages/qllm-lib/src/common/utils/configuration_file_loader.ts` to work with the new configuration structure:
 
 ```typescript
 import yaml from 'js-yaml';
@@ -586,7 +586,7 @@ export class ConfigurationFileLoader {
 
 6. Update the main entry point:
 
-Update `packages/qllm-core/src/index.ts` to export the configuration manager:
+Update `packages/qllm-lib/src/index.ts` to export the configuration manager:
 
 ```typescript
 export * from './config/configuration_manager';
@@ -602,7 +602,7 @@ Update `packages/qllm-cli/src/cli/qllm.ts` to use the new configuration manager:
 
 ```typescript
 import { Command } from "commander";
-import { configManager } from "@qllm/core";
+import { configManager } from "@qllm/lib";
 // ... other imports
 
 export async function main() {
@@ -634,7 +634,7 @@ Update `packages/qllm-cli/src/cli/commands/config.ts` to use the new configurati
 
 ```typescript
 import { Command, Option } from 'commander';
-import { configManager, AppConfig } from '@qllm/core';
+import { configManager, AppConfig } from '@qllm/lib';
 // ... other imports
 
 export function createConfigCommand(): Command {
@@ -689,13 +689,13 @@ Certainly! I'll provide a detailed explanation of how to implement a centralized
 First, let's create a new directory for our custom error classes:
 
 ```bash
-mkdir -p packages/qllm-core/src/common/errors
+mkdir -p packages/qllm-lib/src/common/errors
 ```
 
 Now, let's create a file for our custom error classes:
 
 ```typescript
-// packages/qllm-core/src/common/errors/custom_errors.ts
+// packages/qllm-lib/src/common/errors/custom_errors.ts
 
 export class QllmError extends Error {
   constructor(message: string) {
@@ -745,7 +745,7 @@ export class OutputValidationError extends QllmError {
 Now, let's create a centralized error handler:
 
 ```typescript
-// packages/qllm-core/src/common/utils/error_handler.ts
+// packages/qllm-lib/src/common/utils/error_handler.ts
 
 import { logger } from './logger';
 import { QllmError } from '../errors/custom_errors';
@@ -777,7 +777,7 @@ Now, we need to update our existing code to use the new error system. Here are s
 a. Update the configuration manager:
 
 ```typescript
-// packages/qllm-core/src/common/utils/configuration_manager.ts
+// packages/qllm-lib/src/common/utils/configuration_manager.ts
 
 import { ErrorHandler } from './error_handler';
 import { ConfigurationError } from '../errors/custom_errors';
@@ -798,7 +798,7 @@ public async loadConfig(options?: Partial<AppConfig>): Promise<void> {
 b. Update the provider factory:
 
 ```typescript
-// packages/qllm-core/src/core/providers/provider_factory.ts
+// packages/qllm-lib/src/core/providers/provider_factory.ts
 
 import { ErrorHandler } from '../../common/utils/error_handler';
 import { ProviderError } from '../../common/errors/custom_errors';
@@ -823,7 +823,7 @@ static async getProvider(providerName: ProviderName): Promise<LLMProvider> {
 c. Update the template manager:
 
 ```typescript
-// packages/qllm-core/src/core/templates/template_manager.ts
+// packages/qllm-lib/src/core/templates/template_manager.ts
 
 import { ErrorHandler } from '../../common/utils/error_handler';
 import { TemplateError, InputValidationError } from '../../common/errors/custom_errors';
@@ -878,8 +878,8 @@ d. Update the CLI commands:
 ```typescript
 // packages/qllm-cli/src/cli/commands/ask.ts
 
-import { ErrorHandler } from '@qllm-core/common/utils/error_handler';
-import { QllmError } from '@qllm-core/common/errors/custom_errors';
+import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
+import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
 // ...
 
@@ -908,8 +908,8 @@ Finally, let's update the main entry point to use our new error handling system:
 ```typescript
 // packages/qllm-cli/src/cli.ts
 
-import { ErrorHandler } from '@qllm-core/common/utils/error_handler';
-import { QllmError } from '@qllm-core/common/errors/custom_errors';
+import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
+import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
 // ...
 
@@ -946,7 +946,7 @@ Certainly! I'll provide a detailed explanation of how to implement the File Nami
 
 ## 1. Detailed Analysis
 
-The current project structure uses a mix of camelCase and kebab-case for file naming. To improve consistency and adhere to the specified requirements, we'll rename all files to use snake_case. This change will affect both the `qllm-cli` and `qllm-core` packages.
+The current project structure uses a mix of camelCase and kebab-case for file naming. To improve consistency and adhere to the specified requirements, we'll rename all files to use snake_case. This change will affect both the `qllm-cli` and `qllm-lib` packages.
 
 ### Current Issues:
 - Inconsistent file naming conventions
@@ -994,7 +994,7 @@ function rename_to_snake_case() {
 cd packages/qllm-cli
 rename_to_snake_case
 
-cd ../qllm-core
+cd ../qllm-lib
 rename_to_snake_case
 ```
 
@@ -1028,7 +1028,7 @@ function update_imports() {
 cd packages/qllm-cli
 update_imports
 
-cd ../qllm-core
+cd ../qllm-lib
 update_imports
 ```
 
@@ -1054,7 +1054,7 @@ For `packages/qllm-cli/package.json`:
 }
 ```
 
-For `packages/qllm-core/package.json`:
+For `packages/qllm-lib/package.json`:
 
 ```json
 {
@@ -1063,7 +1063,7 @@ For `packages/qllm-core/package.json`:
 }
 ```
 
-For both `packages/qllm-cli/tsconfig.json` and `packages/qllm-core/tsconfig.json`:
+For both `packages/qllm-cli/tsconfig.json` and `packages/qllm-lib/tsconfig.json`:
 
 ```json
 {
@@ -1079,13 +1079,13 @@ After making these changes, it's crucial to verify that everything still works c
 1. Rebuild both packages:
    ```
    cd packages/qllm-cli && npm run build
-   cd ../qllm-core && npm run build
+   cd ../qllm-lib && npm run build
    ```
 
 2. Run the test suites:
    ```
    cd packages/qllm-cli && npm test
-   cd ../qllm-core && npm test
+   cd ../qllm-lib && npm test
    ```
 
 3. Manually test the CLI to ensure all commands still work as expected.
@@ -1408,7 +1408,7 @@ npm install --save-dev typedoc typedoc-plugin-markdown
 
 ```json
 {
-  "entryPoints": ["packages/qllm-core/src/index.ts", "packages/qllm-cli/src/index.ts"],
+  "entryPoints": ["packages/qllm-lib/src/index.ts", "packages/qllm-cli/src/index.ts"],
   "out": "docs/api",
   "name": "QLLM API Documentation",
   "theme": "default",
@@ -1435,7 +1435,7 @@ npm install --save-dev typedoc typedoc-plugin-markdown
 4. Update source files with JSDoc comments:
 
 ```typescript
-// packages/qllm-core/src/core/providers/llm_provider.ts
+// packages/qllm-lib/src/core/providers/llm_provider.ts
 
 /**
  * Represents the options for an LLM provider.
@@ -1511,7 +1511,7 @@ For more detailed usage instructions and examples, please refer to the [CLI Docu
 ## Packages
 
 - [qllm-cli](packages/qllm-cli/README.md): The CLI tool for QLLM
-- [qllm-core](packages/qllm-core/README.md): Core functionality and provider implementations
+- [qllm-lib](packages/qllm-lib/README.md): Core functionality and provider implementations
 
 ## Documentation
 
@@ -1584,7 +1584,7 @@ Contributions are welcome! Please see our [Contributing Guide](../../CONTRIBUTIN
 This project is licensed under the Apache-2.0 License - see the [LICENSE](../../LICENSE) file for details.
 ```
 
-3. Create `packages/qllm-core/README.md`:
+3. Create `packages/qllm-lib/README.md`:
 
 ```markdown
 # QLLM Core
@@ -1594,13 +1594,13 @@ Core functionality and provider implementations for QLLM.
 ## Installation
 
 ```bash
-npm install @qllm/core
+npm install @qllm/lib
 ```
 
 ## Usage
 
 ```typescript
-import { ProviderFactory, LLMProvider } from '@qllm/core';
+import { ProviderFactory, LLMProvider } from '@qllm/lib';
 
 async function main() {
   const provider: LLMProvider = await ProviderFactory.getProvider('openai');
@@ -2449,7 +2449,7 @@ function createExecuteCommand(): Command {
 }
 ```
 
-2. Add a new method `loadTemplateFromFile` to the `TemplateManager` class in `packages/qllm-core/src/core/templates/template_manager.ts`:
+2. Add a new method `loadTemplateFromFile` to the `TemplateManager` class in `packages/qllm-lib/src/core/templates/template_manager.ts`:
 
 ```typescript
 async loadTemplateFromFile(filePath: string): Promise<TemplateDefinition | null> {
