@@ -1,6 +1,6 @@
 // src/templates/template_executor.ts
 import { ExecutionContext, TemplateDefinition } from "./types";
-import { Message } from "../providers/types";
+import { Message } from "@qllm/types/src";
 import { OutputVariableExtractor } from "./output_variable_extractor";
 import {
   createStreamOutputHandler,

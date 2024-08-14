@@ -7,6 +7,7 @@ import ollamaConfig from '../core/config/providers/ollama';
 import groqConfig from '../core/config/providers/groq';
 import perplexityConfig from '../core/config/providers/perplexity';
 import mistralConfig from '../core/config/providers/mistral';
+import jinaConfig from '../core/config/providers/jina';
 import openrouterConfig from '../core/config/providers/openrouter';
 
 // Define a record of provider configurations
@@ -17,7 +18,8 @@ const providerConfigs: Record<ProviderName, ProviderConfig> = {
   groq: groqConfig,
   perplexity: perplexityConfig,
   mistral: mistralConfig,
-  openrouter: openrouterConfig
+  openrouter: openrouterConfig,
+  jina: jinaConfig
 };
 
 /**

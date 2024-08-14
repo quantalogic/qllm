@@ -87,7 +87,7 @@ export async function main() {
     program.addCommand(createChatCommand());
     program.addCommand(createConfigCommand());
     program.addCommand(createTemplateCommand());
-    program.addCommand(createEmbedCommand()); 
+    program.addCommand(createEmbedCommand());  
 
     // Error handling for unknown commands
     program.on("command:*", () => {

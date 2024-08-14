@@ -8,7 +8,7 @@ import {
   RateLimitError,
   InvalidRequestError,
 } from "./llm_provider";
-import { Message } from "./types";
+import { Message } from "@qllm/types/src";
 import { providerRegistry } from "./provider_registry";
 import { DEFAULT_MAX_TOKENS } from "../config/default";
 

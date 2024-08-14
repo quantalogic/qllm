@@ -101,6 +101,9 @@ export const streamOption = new Option("--stream", "Stream the output").default(
 );
 
 export const toolsOption = new Option('--tools <tools...>', 'Tools to use for the request')
+// Add these to your cliOptions object
+export const imageOption = new Option('--image <path>', 'Path to an image file');
+export const imageLinkOption = new Option('--image-link <url>', 'URL of an image');
 
 // Exporting all CLI options
 export const cliOptions = {
@@ -113,5 +116,7 @@ export const cliOptions = {
   outputOption,
   formatOption,
   streamOption,
-  toolsOption
+  toolsOption,
+  imageOption,
+  imageLinkOption
 };

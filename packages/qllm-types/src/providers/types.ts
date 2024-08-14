@@ -5,6 +5,10 @@ import { z } from 'zod';
 // Message roles
 type MessageRole = 'user' | 'assistant' | 'system';
 
+export type ContentItem = 
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
 // Message structure
 export interface Message {
   role: MessageRole;

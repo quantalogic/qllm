@@ -31,6 +31,8 @@ export function createAskCommand(): Command {
     .addOption(cliOptions.outputOption)
     .addOption(cliOptions.formatOption)
     .addOption(cliOptions.toolsOption)
+    .addOption(cliOptions.imageOption)
+    .addOption(cliOptions.imageLinkOption)
     .action(async (options, command) => {
       try {
 

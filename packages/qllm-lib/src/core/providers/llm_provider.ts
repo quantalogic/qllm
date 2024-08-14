@@ -1,4 +1,4 @@
-import { Message } from './types';
+import { Message } from "@qllm/types/src";
 import { z } from 'zod';
 import {ToolsArraySchema} from "@qllm/types/src" 
 
@@ -52,7 +52,7 @@ export interface LLMProvider {
    * @param options - The provider options.
    * @returns An async iterable of embedding files.
    */
-  generateEmbedding?: (fileContent: Buffer, modelId: string) => Promise<number[]>;
+  generateEmbedding?: (input: string | Buffer | URL, modelId: string, sImage: boolean) => Promise<number[]>;
 }
 
 export class LLMProviderError extends Error {

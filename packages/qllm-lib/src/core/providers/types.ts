@@ -1,11 +1,5 @@
-// Message roles
-export type MessageRole = 'user' | 'assistant' | 'system';
 
-// Message structure
-export interface Message {
-  role: MessageRole;
-  content: string;
-}
+
 
 // LLM Provider options
 export interface LLMProviderOptions {

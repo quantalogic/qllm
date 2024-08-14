@@ -27,7 +27,7 @@ export interface ProviderConfig {
 /** 
  * Supported LLM provider names.
  */
-export type ProviderName = 'anthropic' | 'openai' | 'ollama' | 'groq' | 'perplexity' | 'mistral' | 'openrouter';
+export type ProviderName = 'anthropic' | 'openai' | 'ollama' | 'groq' | 'perplexity' | 'mistral' | 'openrouter' | 'jina';
 
 /** 
  * Application configuration interface.

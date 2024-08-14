@@ -44,7 +44,7 @@
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.10.1",
     "@mistralai/mistralai": "^0.5.0",
-    "axios": "^1.7.2",
+    "axios": "^1.7.4",
     "body-parser": "^1.20.2",
     "cli-spinner": "^0.2.10",
     "commander": "^12.1.0",

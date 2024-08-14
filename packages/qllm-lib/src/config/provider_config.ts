@@ -8,6 +8,7 @@ import groqConfig from '../core/config/providers/groq';
 import perplexityConfig from '../core/config/providers/perplexity';
 import mistralConfig from '../core/config/providers/mistral';
 import openrouterConfig from '../core/config/providers/openrouter';
+import jinaConfig from '../core/config/providers/jina';
 import { configManager } from './configuration_manager';
 
 
@@ -53,7 +54,12 @@ const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
     type: "openrouter",
     apiKey: '',
     model: configManager.getConfig().defaultModelAlias || openrouterConfig.defaultModel || ''
-  }
+  },
+  jina: {
+    type: "jina",
+    apiKey: '',
+    model: configManager.getConfig().defaultModelAlias || jinaConfig.defaultModel || ''
+  }  
 };
 
 export function getProviderConfig(providerName: ProviderName): ProviderConfig {
@@ -76,9 +82,11 @@ export function getModelsForProvider(providerName: ProviderName): { alias: strin
     case 'groq':
       return groqConfig.models; // Assuming you have models for groqConfig
     case 'perplexity':
-      return perplexityConfig.models; // Assuming you have models for groqConfig
+      return perplexityConfig.models; // Assuming you have models for perplexityConfig
     case 'openrouter':
-      return openrouterConfig.models; // Assuming you have models for groqConfig
+      return openrouterConfig.models; // Assuming you have models for openrouterConfig
+    case 'jina':
+      return jinaConfig.models; // Assuming you have models for jinaConfig
     default:
       throw new Error(`Unknown provider: ${providerName}`);
   }
