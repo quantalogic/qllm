@@ -5,6 +5,8 @@
     "packages/*"
   ],
   "scripts": {
+    "docs:generate": "typedoc",
+    "docs:serve": "npx http-server docs/api",
     "lint": "eslint 'packages/**/*.ts'",
     "lint:fix": "eslint 'packages/**/*.ts' --fix",
     "format": "prettier --write 'packages/**/*.ts'",
@@ -42,7 +44,7 @@
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.10.1",
     "@mistralai/mistralai": "^0.5.0",
-    "axios": "^1.7.2",
+    "axios": "^1.7.4",
     "body-parser": "^1.20.2",
     "cli-spinner": "^0.2.10",
     "commander": "^12.1.0",
@@ -60,7 +62,8 @@
     "openai": "^4.52.2",
     "perplexity-sdk": "^1.0.4",
     "prompts": "^2.4.2",
-    "winston": "^3.13.0"
+    "winston": "^3.13.0",
+    "zod": "^3.23.8"
   },
   "husky": {
     "hooks": {

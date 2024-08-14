@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 
 import { logger } from "@qllm-lib/common/utils/logger";
-import { LLMResponse, OutputFormat } from "@qllm-lib/core/providers/types";
+import { OutputFormat, LLMResponse } from "@qllm/types/src";
 
 /**
  * Formats the LLM response based on the specified output format.
@@ -9,7 +9,7 @@ import { LLMResponse, OutputFormat } from "@qllm-lib/core/providers/types";
  * @param format The desired output format
  * @returns Formatted string representation of the response
  */
-export function formatOutput(
+/* export function formatOutput(
   response: LLMResponse,
   format: OutputFormat
 ): string {
@@ -21,6 +21,31 @@ export function formatOutput(
     case "text":
     default:
       return response.content[0].text;
+  }
+} */
+
+export function formatOutput(
+  response: LLMResponse | { content: Array<{ text?: string; embedding?: number[] }> },
+  format: OutputFormat
+): string {
+  switch (format.toLowerCase()) {
+    case "json":
+      return JSON.stringify(response, null, 2);
+    case "markdown":
+      if ('text' in response.content[0]) {
+        return `# LLM Response\n\n${response.content[0].text}`;
+      } else if ('embedding' in response.content[0]) {
+        return `# Embedding\n\n\`\`\`json\n${JSON.stringify(response.content[0].embedding)}\n\`\`\``;
+      }
+      return "# No content";
+    case "text":
+    default:
+      if ('text' in response.content[0]) {
+        return response.content[0].text || '';
+      } else if ('embedding' in response.content[0]) {
+        return JSON.stringify(response.content[0].embedding);
+      }
+      return "No content";
   }
 }
 

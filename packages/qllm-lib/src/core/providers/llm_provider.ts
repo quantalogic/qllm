@@ -1,19 +1,35 @@
-import { Message } from './types';
+import { Message } from "@qllm/types/src";
+import { LLMProviderOptions } from "@qllm/types/src";
 
-export interface LLMProviderOptions {
-  maxTokens?: number;
-  temperature?: number;
-  topP?: number;
-  topK?: number;
-  system?: string;
-  model: string;
-  awsRegion?: string;
-  awsProfile?: string;
-}
-
+/**
+ * Represents an LLM provider.
+ */
 export interface LLMProvider {
+  /**
+   * Generates a message using the LLM.
+   * @param messages - The input messages.
+   * @param options - The provider options.
+   * @returns A promise that resolves to the generated message.
+   */
   generateMessage: (messages: Message[], options: LLMProviderOptions) => Promise<string>;
+
+  /**
+   * Streams a message from the LLM.
+   * @param messages - The input messages.
+   * @param options - The provider options.
+   * @returns An async iterable of message chunks.
+   */
   streamMessage: (messages: Message[], options: LLMProviderOptions) => AsyncIterableIterator<string>;
+
+  /**
+   * Streams a message from the LLM.
+   * @param messages - The input file.
+   * @param options - The provider options.
+   * @returns An async iterable of embedding files.
+   */
+  generateEmbedding?: (input: string | Buffer | URL, modelId: string, sImage: boolean) => Promise<number[]>;
+
+  analyzeImage?: (input: string | Buffer | URL, modelId: string) => Promise<string>;
 }
 
 export class LLMProviderError extends Error {

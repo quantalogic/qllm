@@ -4,16 +4,20 @@ import { logger } from '@qllm-lib/common/utils/logger';
 import { ErrorManager } from '@qllm-lib/common/utils/error_manager';
 import { configManager } from '@qllm-lib/config/configuration_manager';
 import { AppConfig, ProviderName } from '@qllm/types/src';
-
 import { Command, Option } from 'commander';
 import prompts from 'prompts';
 import { ConfigurationFileLoader } from '@qllm-lib/common/utils/configuration_file_loader';
 import { resolveConfigPath } from '@qllm-lib/common/utils/path_resolver';
 import { getAllProviders, getModelsForProvider } from '@qllm-lib/config/provider_config';
-
 import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
 import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
+/**
+ * Creates and returns the 'config' command for the CLI application.
+ * This command allows users to configure the QLLM utility.
+ * 
+ * @returns {Command} The configured 'config' command
+ */
 export function createConfigCommand(): Command {
   const configCommand = new Command('config')
     .description('Configure the QLLM utility')
@@ -30,14 +34,26 @@ export function createConfigCommand(): Command {
     .addOption(new Option('--interactive', 'Enter interactive configuration mode'))
     .addOption(new Option('--show-providers', 'Show available providers'))
     .addOption(new Option('--show-models-provider <provider>', 'Show available models for a provider'))
+    .option('--show-parameters-model <provider> <model>', 'Show parameters for a specific model of a provider')
     .action(async (options) => {
       try {
+        // Resolve the configuration file path
         const configFile = await resolveConfigPath(options.config);
         const configLoader = new ConfigurationFileLoader(configFile);
 
-        if (options.showProviders) {
+        // Handle different command options
+        if (options.showParametersModel) {
+          const args = options.showParametersModel.split(' ');
+          if (args.length !== 2) {
+            throw new QllmError('Both provider and model must be specified for --show-parameters-model');
+          }
+          const [provider, model] = args;
+          console.log(`Provider: ${provider}`);
+          console.log(`Model: ${model}`);
+          showModelParameters(provider, model)
+        } else if (options.showProviders) {
           showProviders();
-        }  else if (options.showModelsProvider) {
+        } else if (options.showModelsProvider) {
           showModelsForProvider(options.showModelsProvider as ProviderName);
         } else if (options.show) {
           showConfig(configManager.getConfig());
@@ -47,7 +63,7 @@ export function createConfigCommand(): Command {
           await updateConfig(options, configLoader);
         }
       } catch (error) {
-        //ErrorManager.handleError('ConfigCommandError', `Configuration error: ${error}`);
+        // Handle errors
         if (error instanceof QllmError) {
           ErrorHandler.handle(error);
         } else {
@@ -60,9 +76,16 @@ export function createConfigCommand(): Command {
   return configCommand;
 }
 
+/**
+ * Updates the configuration based on the provided options.
+ * 
+ * @param {any} options - The options provided by the user
+ * @param {ConfigurationFileLoader} configLoader - The configuration file loader
+ */
 async function updateConfig(options: any, configLoader: ConfigurationFileLoader): Promise<void> {
   const updates: Partial<AppConfig> = {};
 
+  // Update configuration based on provided options
   if (options.setProfile) updates.awsProfile = options.setProfile;
   if (options.setRegion) updates.awsRegion = options.setRegion;
   if (options.setProvider) updates.defaultProvider = options.setProvider as ProviderName;
@@ -82,23 +105,62 @@ async function updateConfig(options: any, configLoader: ConfigurationFileLoader)
   }
 }
 
+/**
+ * Displays all available providers.
+ * 
+ * @returns {ProviderName[]} Array of available provider names
+ */
 function showProviders(): ProviderName[] {
   const availableProviders = getAllProviders()
   console.log("My providers : ", availableProviders)
   return availableProviders;
 }
 
+/**
+ * Displays all available models for a specific provider.
+ * 
+ * @param {ProviderName} providerName - The name of the provider
+ */
 function showModelsForProvider(providerName: ProviderName): void {
-  try{
-    const availableProviders = getModelsForProvider(providerName)
-    console.log("My providers : ", availableProviders)
-
+  try {
+    const availableProviders = getModelsForProvider(providerName);
+    console.log("My models:");
+    availableProviders.forEach((model, index) => {
+      console.log(`Model ${index + 1}, alias : ${model.alias}, id : ${model.modelId} `);
+    });
   } catch (error) {
     console.error(error);
   }
 }
 
+/**
+ * Displays parameters for a specific model of a provider.
+ * 
+ * @param {ProviderName} providerName - The name of the provider
+ * @param {string} modelAlias - The alias of the model
+ */
+function showModelParameters(providerName: ProviderName, modelAlias: string): void {
+  try {
+    const models = getModelsForProvider(providerName);
+    const model = models.find(m => m.alias === modelAlias);
 
+    if (!model) {
+      console.log(`Model '${modelAlias}' not found for provider '${providerName}'.`);
+      return;
+    }
+
+    console.log(`Parameters for ${providerName}/${modelAlias}:`);
+    console.log(JSON.stringify(model.parameters, null, 2));
+  } catch (error) {
+    console.error(`---- Error showing model parameters: ${error}`);
+  }
+}
+
+/**
+ * Displays the current configuration.
+ * 
+ * @param {AppConfig} config - The current configuration
+ */
 function showConfig(config: AppConfig): void {
   console.info('Current configuration:');
   Object.entries(config).forEach(([key, value]) => {
@@ -110,6 +172,11 @@ function showConfig(config: AppConfig): void {
   });
 }
 
+/**
+ * Initiates an interactive configuration session.
+ * 
+ * @param {ConfigurationFileLoader} configLoader - The configuration file loader
+ */
 async function interactiveConfig(configLoader: ConfigurationFileLoader): Promise<void> {
   const currentConfig = configManager.getConfig();
   const questions: prompts.PromptObject[] = [
@@ -176,4 +243,4 @@ async function interactiveConfig(configLoader: ConfigurationFileLoader): Promise
   showConfig(configManager.getConfig());
 }
 
-export default createConfigCommand;
+export default createConfigCommand

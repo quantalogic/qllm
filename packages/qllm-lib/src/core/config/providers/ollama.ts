@@ -4,8 +4,8 @@ import { ProviderConfig } from '@qllm/types/src';
 const ollamaConfig: ProviderConfig = {
   name: 'ollama',
   models: [
-    { alias: 'codellama', modelId: 'codellama' },
-    { alias: 'mistral', modelId: 'mistral' },
+    { alias: 'codellama', modelId: 'codellama', parameters:{} },
+    { alias: 'mistral', modelId: 'mistral', parameters:{} },
   ],
   defaultModel: 'mistral',
 };

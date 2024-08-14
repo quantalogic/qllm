@@ -1,4 +1,5 @@
-import { LLMProvider, LLMProviderOptions } from './llm_provider';  
+import { LLMProvider } from './llm_provider';  
+import { LLMProviderOptions } from "@qllm/types/src";
 import { ProviderName } from '@qllm/types/src';
 import { providerRegistry } from './provider_registry';
 import { logger } from '../../common/utils/logger';

@@ -1,6 +1,7 @@
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
-import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
-import { Message } from './types';
+import { LLMProvider, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
+import { Message } from "@qllm/types/src";
+import { LLMProviderOptions } from "@qllm/types/src";
 import { getCredentials } from './aws/credentials';
 import { logger } from '../../common/utils/logger';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
@@ -75,7 +76,7 @@ export class AnthropicProvider implements LLMProvider {
       this.handleError(error);
     }
   }
-
+   
   private handleError(error: any): never {
     if (error.status === 401) {
       throw new AuthenticationError('Authentication failed with Anthropic', 'Anthropic');
