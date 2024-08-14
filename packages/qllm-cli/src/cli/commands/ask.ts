@@ -20,6 +20,12 @@ import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
 import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 import {ToolsArraySchema} from "@qllm/types/src"
 
+/**
+ * Creates and returns the 'ask' command for the CLI application.
+ * This command allows users to ask questions to a Language Learning Model (LLM).
+ * 
+ * @returns {Command} The configured 'ask' command
+ */
 export function createAskCommand(): Command {
   const askCommand = new Command('ask')
     .description('Ask a question to the LLM')
@@ -36,10 +42,11 @@ export function createAskCommand(): Command {
     .addOption(cliOptions.imageLinkOption)
     .action(async (options, command) => {
       try {
-
+        // Retrieve configuration
         const config = configManager.getConfig();
         const parentOptions = command.parent.opts();  
         
+        // Set AWS profile and region if provided
         if(parentOptions.profile) {
           process.env.AWS_PROFILE = parentOptions.profile;
         }
@@ -47,12 +54,16 @@ export function createAskCommand(): Command {
           process.env.AWS_REGION = parentOptions.region;
         }
 
+        // Resolve model and provider
         const modelAlias = parentOptions.model as string || config.defaultModelAlias;
         const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
-        // Resolve model alias to model id
+        
+        // Log debug information
         logger.debug(`modelAlias: ${modelAlias}`);
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`defaultProviderName: ${config.defaultProvider}`);
+        
+        // Resolve model alias to model id
         const modelId = parentOptions.modelId || modelAlias ? resolveModelAlias(providerName,modelAlias) : config.defaultModelId;
 
         if(!modelId){
@@ -64,6 +75,7 @@ export function createAskCommand(): Command {
         logger.debug(`modelId: ${modelId}`);
         logger.debug(`maxTokens: ${maxTokens}`);
 
+        // Get the provider
         const provider = await ProviderFactory.getProvider(providerName);
 
         // Handle input from file or command line
@@ -77,10 +89,12 @@ export function createAskCommand(): Command {
           }
         }
 
+        // Prepare messages
         const messages: Message[] = [{ role: 'user', content: input }];
 
         logger.debug(`providerName: ${providerName}`);
 
+        // Parse tools if provided
         let tools: z.infer<typeof ToolsArraySchema> | undefined;
         if (options.tools) {
           try {
@@ -89,6 +103,7 @@ export function createAskCommand(): Command {
             ErrorManager.throwError('ToolsError', 'Invalid tools format. Please provide a valid JSON array of tools.');
           }
         }
+
         // Prepare provider options
         const llmOptions: LLMProviderOptions = {
           maxTokens: maxTokens,
@@ -101,6 +116,7 @@ export function createAskCommand(): Command {
 
         displayOptions(llmOptions, 'ask');
 
+        // Handle image option
         if (options.image) {
           const imagePath = path.resolve(options.image);
           llmOptions.imagePath = imagePath;
@@ -116,13 +132,13 @@ export function createAskCommand(): Command {
         const output = formatOutput({ content: [{ text: response }] }, options.format);
         await writeOutput(output, options.output);
       } catch (error) {
+        // Handle errors
         if (error instanceof QllmError) {
           ErrorHandler.handle(error);
         } else {
           ErrorHandler.handle(new QllmError(`Unexpected error in ask command: ${error}`));
         }
         process.exit(1);
-        //ErrorManager.handleError('AskCommandError', error instanceof Error ? error.message : String(error));
       }
     });
 

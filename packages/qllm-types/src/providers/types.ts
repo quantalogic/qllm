@@ -15,14 +15,27 @@ export interface Message {
   content: string;
 }
 
-// LLM Provider options
+/*
+ * Represents the options for an LLM provider.
+ */
 export interface LLMProviderOptions {
-  maxTokens: number;
-  temperature: number;
-  topP: number;
-  topK: number;
+  /** Maximum number of tokens to generate */
+  maxTokens?: number;
+  /** Temperature for response generation */
+  temperature?: number;
+  /** Top P for response generation */
+  topP?: number;
+  /** Top K for response generation */
+  topK?: number;
+  /** System message to set context */
   system?: string;
+  /** Model to use for generation */
   model: string;
+  /** AWS REGION */
+  awsRegion?: string;
+  /** AWS PROFIL */
+  awsProfile?: string;
+  /** Tools data */
   tools?: z.infer<typeof ToolsArraySchema>;
   /** Image path */
   imagePath?: string;

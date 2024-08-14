@@ -11,8 +11,8 @@ import { logger } from "@qllm-lib/common/utils/logger";
 import { ErrorManager } from "@qllm-lib/common/utils/error_manager";
 import { cliOptions } from "../options";
 import { resolveModelAlias } from "@qllm-lib/config/model_aliases";
-import { displayOptions } from "@qllm-lib/common/utils/option_display";
-import { LLMProviderOptions } from "@qllm-lib/core/providers/types";
+import { displayOptions } from "@qllm-lib/common/utils/option_display"; 
+import { LLMProviderOptions } from "@qllm/types/src";
 import { ProviderFactory } from "@qllm-lib/core/providers/provider_factory";
 import {
   ExecutionContext,

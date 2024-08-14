@@ -1,6 +1,7 @@
 import ollama from 'ollama';
-import { LLMProvider, LLMProviderOptions, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
+import { LLMProvider,  AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
 import { Message } from "@qllm/types/src";
+import { LLMProviderOptions } from "@qllm/types/src";
 import { providerRegistry } from './provider_registry';
 import { logger } from '../../common/utils/logger';
 
