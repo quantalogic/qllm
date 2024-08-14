@@ -4,7 +4,7 @@ import { Message } from "@qllm/types/src";
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { providerRegistry } from './provider_registry';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
-import axios from "axios"
+import fs from 'fs/promises';
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
@@ -17,12 +17,17 @@ export class OpenAIProvider implements LLMProvider {
     this.client = new OpenAI({ apiKey });
   }
 
+
+  
+
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
     try {
-      const messageWithSystem = this.withSystemMessage(options, messages) as ChatCompletionMessageParam[];
+      const messageWithSystem = this.withSystemMessage(options, messages);
+      const formattedMessages = await this.formatMessages(messageWithSystem, options);
+
       const response = await this.client.chat.completions.create({
-        model: options.model || this.options.model || 'gpt-4o-mini', // Use a vision-capable model
-        messages: messageWithSystem,
+        model: options.model || this.options.model || 'gpt-4-vision-preview',
+        messages: formattedMessages,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topP,
@@ -30,17 +35,41 @@ export class OpenAIProvider implements LLMProvider {
         tools: options.tools
       });
 
-      // Handle function calls if present
-      if (response.choices[0]?.message?.function_call) {
-        // Implement function calling logic here
-        // This might involve calling a separate function to handle the tool execution
-        // and then recursively calling generateMessage with the result
-      }
-
       return response.choices[0]?.message?.content || '';
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  private async formatMessages(messages: Message[], options: LLMProviderOptions): Promise<ChatCompletionMessageParam[]> {
+    const formattedMessages: ChatCompletionMessageParam[] = [];
+
+    for (const message of messages) {
+      if (message.role === 'user' && options.imagePath) {
+        const base64Image = await this.getBase64Image(options.imagePath);
+        formattedMessages.push({
+          role: message.role,
+          content: [
+            { type: "text", text: message.content },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+              },
+            },
+          ],
+        });
+      } else {
+        formattedMessages.push(message as ChatCompletionMessageParam);
+      }
+    }
+
+    return formattedMessages;
+  }
+
+  private async getBase64Image(imagePath: string): Promise<string> {
+    const imageBuffer = await fs.readFile(imagePath);
+    return imageBuffer.toString('base64');
   }
 
   async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {

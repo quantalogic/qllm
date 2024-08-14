@@ -24,6 +24,8 @@ export interface LLMProviderOptions {
   awsProfile?: string;
   /** Tools data */
   tools?: z.infer<typeof ToolsArraySchema>;
+  /** Image path */
+  imagePath?: string;
 }
 
 /**
@@ -53,6 +55,8 @@ export interface LLMProvider {
    * @returns An async iterable of embedding files.
    */
   generateEmbedding?: (input: string | Buffer | URL, modelId: string, sImage: boolean) => Promise<number[]>;
+
+  analyzeImage?: (input: string | Buffer | URL, modelId: string) => Promise<string>;
 }
 
 export class LLMProviderError extends Error {

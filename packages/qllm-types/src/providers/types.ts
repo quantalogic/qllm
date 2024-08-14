@@ -24,7 +24,10 @@ export interface LLMProviderOptions {
   system?: string;
   model: string;
   tools?: z.infer<typeof ToolsArraySchema>;
+  /** Image path */
+  imagePath?: string;
 }
+
 // Output format options
 export type OutputFormat = 'json' | 'markdown' | 'text';
 

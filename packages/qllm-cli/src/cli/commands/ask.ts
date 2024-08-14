@@ -1,6 +1,7 @@
 // src/commands/ask.ts
 
 import { Command } from 'commander';
+import path from 'path';
 import fs from 'fs/promises';
 import { cliOptions } from '../options';
 import { logger } from '@qllm-lib/common/utils/logger';
@@ -100,6 +101,11 @@ export function createAskCommand(): Command {
 
         displayOptions(llmOptions, 'ask');
 
+        if (options.image) {
+          const imagePath = path.resolve(options.image);
+          llmOptions.imagePath = imagePath;
+        }
+        
         // Generate response with spinner
         const response = await withSpinner(
           () => provider.generateMessage(messages, llmOptions),
