@@ -7,15 +7,20 @@ import { providerRegistry } from './provider_registry';
 export class JinaProvider implements LLMProvider {
   private apiKey: string;
 
-  constructor(private options: LLMProviderOptions) {
+  constructor(options: LLMProviderOptions) {
+    console.log("options : ", options)
     this.apiKey = process.env.JINA_API_KEY || "";
   }
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
+    console.log("options : ", options)
+    console.log("messages : ", messages)
     throw new Error('Text generation is not supported by Jina AI provider');
   }
 
   async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
+    console.log("options : ", options)
+    console.log("messages : ", messages)
     throw new Error('Streaming is not supported by Jina AI provider');
   }
 
