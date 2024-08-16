@@ -1,0 +1,18 @@
+{
+  "name": "@qllm/types",
+  "version": "1.0.0",
+  "description": "Lib functionality for QLLM",
+  "types": "dist/src/index.d.ts",
+  "module": "dist/src/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "author": "quantalogic",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/quantalogic/qllm"
+  }
+}

@@ -1,4 +1,6 @@
 node_modules/
+*/node_modules/
+*/*/node_modules/
 dist/
 .env
 *.log
@@ -7,3 +9,4 @@ tasks/
 package-lock.json
 .qllmrc.yaml
 .qllmrc.yaml*
+dist
