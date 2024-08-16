@@ -1,6 +1,6 @@
 // src/templates/types.ts
 
-import { LLMProviderOptions } from '../providers/types';  
+import { LLMProviderOptions } from '@qllm/types/src';  
 import { ProviderName } from '@qllm/types/src';
 import { LLMProvider } from '../providers/llm_provider';
 
