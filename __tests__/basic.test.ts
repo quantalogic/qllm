@@ -1,5 +1,5 @@
-import { ProviderFactory } from '../src/providers/provider_factory';
-import { configManager } from '../src/utils/configuration_manager';
+import { ProviderFactory } from '../src/core/providers/provider_factory';
+import { configManager } from '../src/common/utils/configuration_manager';
 
 describe('ProviderFactory', () => {
   it('should be defined', () => {
