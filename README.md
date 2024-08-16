@@ -66,8 +66,10 @@ This makes the `qllm` command available system-wide.
 
 ```bash
 qllm ask "Write a 100-word story about a time traveler" --max-tokens 150
-# Or when running from the project directory:
-npm run dev-ask "What is the capital of France?"
+
+or : 
+
+npm run dev-cli ask "Write a 100-word story about a time traveler" --max-tokens 150
 ```
 
 2. Start an interactive chat session:
@@ -98,56 +100,6 @@ npm run dev-cli -- config --option
 qllm template create
 qllm template execute my-template
 ```
-
-6. Generate embeddings for an image:
-
-```bash
-#qllm embed --link https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg --provider openai --model gpt-4-vision-preview
-
-# Or when running from the project directory:
-npm run dev-cli embed -- --link https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg --provider openai --model gpt-4-vision-preview
-
-```
-
-7. Generate embeddings for text:
-
-```bash
-qllm embed --text "Hello, world" --provider openai --model text-embedding-ada-002
-
-# Or when running from the project directory:
-npm run dev-cli embed -- --text "Hello, world" --provider openai --model text-embedding-ada-002
-```
-
-8. Use function calling with tools:
-
-```bash
-qllm ask "What's the weather like?" --tools '[{"type":"function","function":{"name":"get_weather","description":"Get the current weather","parameters":{"type":"object","properties":{"location":{"type":"string"}}}}}]' --provider openai --model gpt-4
-
-# Or when running from the project directory:
-npm run dev-ask "What's the weather like?" -- --tools '[{"type":"function","function":{"name":"get_weather","description":"Get the current weather","parameters":{"type":"object","properties":{"location":{"type":"string"}}}}}]' --provider openai --model gpt-4
-```
-
-9. Generate embeddings for text:
-
-```bash
-qllm embed --text "Hello, world" --provider openai --model text-embedding-ada-002
-
-# Or when running from the project directory:
-npm run dev-cli embed -- --text "Hello, world" --provider openai --model text-embedding-ada-002
-```
-
-10. multimodal chat (ask command ):
-
-```bash
-qllm ask "describe the following image" -- --image "/home/youcef/Bureau/f1.jpg" --provider openai --model gpt-4o-mini
-
-# Or when running from the project directory:
-npm run dev-ask "describe the following image" -- --image "/home/youcef/Bureau/f1.jpg" --provider openai --model gpt-4o-mini
-```
-
-
-
-
 ## Configuration
 
 QLLM uses a configuration file to manage various settings. The default configuration file is named `.qllmrc.yaml` and is located in the user's home directory.
@@ -384,29 +336,6 @@ Execute the template:
 ```bash
 qllm template execute product-description -v:product_name="Eco-friendly Water Bottle" -v:key_features="Insulated, BPA-free, 24oz capacity"
 ```
-
-### Env variables 
-  AWS_PROFILE=
-  AWS_REGION=us-east-2
-
-  #### Default LLM Provider
-  #### Options: anthropic, openai, ollama
-  DEFAULT_PROVIDER=
-  #### Model Configuration
-  #### Use either MODEL_ALIAS or MODEL_ID, not both
-  MODEL_ALIAS=
-  MODEL_ID=
-  #### OpenAI Configuration (required when using OpenAI provider)
-  OPENAI_API_KEY=sk-
-  GROQ_API_KEY=""
-  PERPLEXITY_API_KEY=""
-  MISTRAL_API_KEY=""
-  JINA_API_KEY=""
-  OPENROUTER_API_KEY=""
-  OPENROUTER_TITLE=""
-  PROMPT_DIRECTORY=
-  #### Logging
-  LOG_LEVEL=info
 
 ### Multi-step Analysis with Templates
 
