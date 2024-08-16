@@ -1,12 +1,14 @@
 // src/config/provider_config.ts
 
-import { ProviderName } from './types';
+import { ProviderName } from "@qllm/types/src";
 import anthropicConfig from '../core/config/providers/anthropic';
 import ollamaConfig from '../core/config/providers/ollama';
 import openaiConfig from '../core/config/providers/openai';
 import groqConfig from '../core/config/providers/groq';
 import perplexityConfig from '../core/config/providers/perplexity';
 import mistralConfig from '../core/config/providers/mistral';
+import openrouterConfig from '../core/config/providers/openrouter';
+import jinaConfig from '../core/config/providers/jina';
 import { configManager } from './configuration_manager';
 
 
@@ -47,7 +49,17 @@ const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
     type: "mistral",
     apiKey: '',
     model: configManager.getConfig().defaultModelAlias || mistralConfig.defaultModel || '',
-  }
+  },
+  openrouter: {
+    type: "openrouter",
+    apiKey: '',
+    model: configManager.getConfig().defaultModelAlias || openrouterConfig.defaultModel || ''
+  },
+  jina: {
+    type: "jina",
+    apiKey: '',
+    model: configManager.getConfig().defaultModelAlias || jinaConfig.defaultModel || ''
+  }  
 };
 
 export function getProviderConfig(providerName: ProviderName): ProviderConfig {
@@ -59,7 +71,7 @@ export function getProviderConfig(providerName: ProviderName): ProviderConfig {
 }
 
 // New function to get models for a provider
-export function getModelsForProvider(providerName: ProviderName): { alias: string; modelId: string }[] {
+export function getModelsForProvider(providerName: ProviderName): { alias: string; modelId: string, parameters: Object }[] {
   switch (providerName) {
     case 'anthropic':
       return anthropicConfig.models;
@@ -70,7 +82,11 @@ export function getModelsForProvider(providerName: ProviderName): { alias: strin
     case 'groq':
       return groqConfig.models; // Assuming you have models for groqConfig
     case 'perplexity':
-      return perplexityConfig.models; // Assuming you have models for groqConfig
+      return perplexityConfig.models; // Assuming you have models for perplexityConfig
+    case 'openrouter':
+      return openrouterConfig.models; // Assuming you have models for openrouterConfig
+    case 'jina':
+      return jinaConfig.models; // Assuming you have models for jinaConfig
     default:
       throw new Error(`Unknown provider: ${providerName}`);
   }

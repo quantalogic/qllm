@@ -6,13 +6,13 @@ import {
   TemplateManager,
   TemplateManagerConfig,
 } from "@qllm-lib/core/templates/template_manager";
-import { configManager } from "@qllm-lib/common/utils/configuration_manager";
+import { configManager } from "@qllm-lib/config/configuration_manager";
 import { logger } from "@qllm-lib/common/utils/logger";
 import { ErrorManager } from "@qllm-lib/common/utils/error_manager";
 import { cliOptions } from "../options";
 import { resolveModelAlias } from "@qllm-lib/config/model_aliases";
-import { displayOptions } from "@qllm-lib/common/utils/option_display";
-import { LLMProviderOptions } from "@qllm-lib/core/providers/types";
+import { displayOptions } from "@qllm-lib/common/utils/option_display"; 
+import { LLMProviderOptions } from "@qllm/types/src";
 import { ProviderFactory } from "@qllm-lib/core/providers/provider_factory";
 import {
   ExecutionContext,
@@ -22,7 +22,7 @@ import {
 import { TemplateExecutor } from "@qllm-lib/core/templates/template_executor";
 import { OutputHandler } from "@qllm-lib/common/utils/output_handler";
 import { DEFAULT_APP_CONFIG } from "@qllm-lib/config/default_config";
-import { ProviderName } from "@qllm-lib/config/types";
+import { ProviderName } from "@qllm/types/src";
 
 import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
 import { QllmError } from '@qllm-lib/common/errors/custom_errors';

@@ -3,12 +3,12 @@
 import MistralClient from "@mistralai/mistralai";
 import {
   LLMProvider,
-  LLMProviderOptions,
   AuthenticationError,
   RateLimitError,
   InvalidRequestError,
 } from "./llm_provider";
-import { Message } from "./types";
+import { LLMProviderOptions } from "@qllm/types/src";
+import { Message } from "@qllm/types/src";
 import { providerRegistry } from "./provider_registry";
 import { DEFAULT_MAX_TOKENS } from "../config/default";
 

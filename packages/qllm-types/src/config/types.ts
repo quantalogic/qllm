@@ -8,6 +8,8 @@ export interface ModelAlias {
   alias: string;
   /** The actual model ID */
   modelId: string;
+  /** parameters allowd */
+  parameters: Object
 }
 
 /** 
@@ -25,7 +27,7 @@ export interface ProviderConfig {
 /** 
  * Supported LLM provider names.
  */
-export type ProviderName = 'anthropic' | 'openai' | 'ollama' | 'groq' | 'perplexity' | 'mistral';
+export type ProviderName = 'anthropic' | 'openai' | 'ollama' | 'groq' | 'perplexity' | 'mistral' | 'openrouter' | 'jina';
 
 /** 
  * Application configuration interface.
