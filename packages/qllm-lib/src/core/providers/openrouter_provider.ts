@@ -1,7 +1,12 @@
-import { OpenAI } from "openai";
-import { LLMProvider, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
-import { Message } from "@qllm/types/src";
-import { LLMProviderOptions } from "@qllm/types/src";
+import { OpenAI } from 'openai';
+import {
+  LLMProvider,
+  AuthenticationError,
+  RateLimitError,
+  InvalidRequestError,
+} from './llm_provider';
+import { Message } from '@qllm/types/src';
+import { LLMProviderOptions } from '@qllm/types/src';
 import { providerRegistry } from './provider_registry';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
 
@@ -24,10 +29,10 @@ export class OpenRouterProvider implements LLMProvider {
     }
     this.client = new OpenAI({
       apiKey,
-      baseURL: "https://openrouter.ai/api/v1",
+      baseURL: 'https://openrouter.ai/api/v1',
       defaultHeaders: {
-        "HTTP-Referer": process.env.OPENROUTER_API_KEY || "", // Optional
-        "X-Title": process.env.OPENROUTER_TITLE || "", // Optional
+        'HTTP-Referer': process.env.OPENROUTER_API_KEY || '', // Optional
+        'X-Title': process.env.OPENROUTER_TITLE || '', // Optional
       },
     });
   }
@@ -63,7 +68,10 @@ export class OpenRouterProvider implements LLMProvider {
    * @yields Chunks of the generated message.
    * @throws Error if the API request fails.
    */
-  async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
+  async *streamMessage(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): AsyncIterableIterator<string> {
     try {
       const messageWithSystem = this.withSystemMessage(options, messages);
       const stream = await this.client.chat.completions.create({

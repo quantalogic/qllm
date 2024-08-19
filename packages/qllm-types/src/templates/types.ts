@@ -1,7 +1,6 @@
 //import { LLMProviderOptions } from '../providers/types';
 import { ProviderName } from '../config/types';
 
-
 /**
  * Represents the definition of a template.
  */
@@ -30,7 +29,6 @@ export interface TemplateDefinition {
   /** The output variables for the template. */
   output_variables?: Record<string, OutputVariable>;
 
-
   /** The content of the template. */
   content: string;
 
@@ -53,7 +51,6 @@ export interface TemplateDefinition {
   resolved_content?: string;
 }
 
-
 /**
  * Represents a variable in a template.
  */
@@ -67,7 +64,6 @@ export interface TemplateVariable {
   /** An optional default value for the variable. */
   default?: any;
 }
-
 
 export interface OutputVariable {
   type: 'string' | 'integer' | 'float' | 'boolean' | 'array' | 'object';

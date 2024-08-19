@@ -1,6 +1,11 @@
-import { LLMProvider,  AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
-import { Message } from "@qllm/types/src";
-import { LLMProviderOptions } from "@qllm/types/src";
+import {
+  LLMProvider,
+  AuthenticationError,
+  RateLimitError,
+  InvalidRequestError,
+} from './llm_provider';
+import { Message } from '@qllm/types/src';
+import { LLMProviderOptions } from '@qllm/types/src';
 import { providerRegistry } from './provider_registry';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
 import axios from 'axios'; // You'll need to install axios if not already installed
@@ -31,10 +36,10 @@ export class PerplexityProvider implements LLMProvider {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       return response.data.choices[0]?.message?.content || '';
@@ -44,7 +49,10 @@ export class PerplexityProvider implements LLMProvider {
   }
 
   // Implement the streamMessage method
-  async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
+  async *streamMessage(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): AsyncIterableIterator<string> {
     try {
       const messageWithSystem = this.withSystemMessage(options, messages);
       const response = await axios.post(
@@ -59,15 +67,18 @@ export class PerplexityProvider implements LLMProvider {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           responseType: 'stream',
-        }
+        },
       );
 
       for await (const chunk of response.data) {
-        const lines = chunk.toString().split('\n').filter((line:any) => line.trim() !== '');
+        const lines = chunk
+          .toString()
+          .split('\n')
+          .filter((line: any) => line.trim() !== '');
         for (const line of lines) {
           if (line.includes('[DONE]')) return;
           if (line.startsWith('data: ')) {

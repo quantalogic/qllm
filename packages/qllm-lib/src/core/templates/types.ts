@@ -1,6 +1,6 @@
 // src/templates/types.ts
 
-import { LLMProviderOptions } from '@qllm/types/src';  
+import { LLMProviderOptions } from '@qllm/types/src';
 import { ProviderName } from '@qllm/types/src';
 import { LLMProvider } from '../providers/llm_provider';
 
@@ -45,7 +45,6 @@ export interface TemplateDefinition {
 
   /** The output variables for the template. */
   output_variables?: Record<string, OutputVariable>;
-
 
   /** The content of the template. */
   content: string;

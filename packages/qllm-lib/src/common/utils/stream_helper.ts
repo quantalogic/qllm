@@ -1,10 +1,9 @@
 import { LLMProvider } from '../../core/providers/llm_provider';
 import { Spinner } from '../../common/types/spinner';
-import { LLMProviderOptions } from "@qllm/types/src";
+import { LLMProviderOptions } from '@qllm/types/src';
 import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error_manager';
-import { Message } from "@qllm/types/src";
-
+import { Message } from '@qllm/types/src';
 
 /**
  * Handles streaming of LLM responses with a spinner for user feedback.
@@ -17,7 +16,7 @@ export async function handleStreamWithSpinner(
   provider: LLMProvider,
   messages: Message[],
   options: LLMProviderOptions,
-  spinner: Spinner
+  spinner: Spinner,
 ): Promise<string> {
   let fullResponse = '';
   let isFirstChunk = true;
@@ -39,7 +38,10 @@ export async function handleStreamWithSpinner(
     return fullResponse;
   } catch (error) {
     spinner?.fail('Error during streaming');
-    ErrorManager.handleError('StreamingError', error instanceof Error ? error.message : String(error));
+    ErrorManager.handleError(
+      'StreamingError',
+      error instanceof Error ? error.message : String(error),
+    );
     throw error;
   } finally {
     if (spinner?.isActive()) {
@@ -91,7 +93,7 @@ export async function handleStreamWithSpinnerAndOutput(
   messages: Message[],
   options: LLMProviderOptions,
   outputHandler: ReturnType<typeof createStreamOutputHandler>,
-  spinner?: Spinner
+  spinner?: Spinner,
 ): Promise<string> {
   let isFirstChunk = true;
 
@@ -111,7 +113,10 @@ export async function handleStreamWithSpinnerAndOutput(
     return outputHandler.getFullResponse();
   } catch (error) {
     spinner?.fail('Error during streaming');
-    ErrorManager.handleError('StreamingError', error instanceof Error ? error.message : String(error));
+    ErrorManager.handleError(
+      'StreamingError',
+      error instanceof Error ? error.message : String(error),
+    );
     throw error;
   } finally {
     if (spinner?.isActive()) {

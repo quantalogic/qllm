@@ -1,13 +1,16 @@
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
-import { LLMProvider, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
-import { Message } from "@qllm/types/src";
-import { LLMProviderOptions } from "@qllm/types/src";
+import {
+  LLMProvider,
+  AuthenticationError,
+  RateLimitError,
+  InvalidRequestError,
+} from './llm_provider';
+import { Message } from '@qllm/types/src';
+import { LLMProviderOptions } from '@qllm/types/src';
 import { getCredentials } from './aws/credentials';
 import { logger } from '../../common/utils/logger';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
 import { providerRegistry } from './provider_registry';
-
-
 
 export class AnthropicProvider implements LLMProvider {
   private client: AnthropicBedrock | null = null;
@@ -42,7 +45,10 @@ export class AnthropicProvider implements LLMProvider {
         top_p: options.topP,
         top_k: options.topK,
         system: options.system,
-        messages: messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })),
+        messages: messages.map((msg) => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        })),
       });
 
       return response.content && response.content.length > 0 && response.content[0].type === 'text'
@@ -53,7 +59,10 @@ export class AnthropicProvider implements LLMProvider {
     }
   }
 
-  async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
+  async *streamMessage(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): AsyncIterableIterator<string> {
     try {
       const client = await this.getClient();
       const stream = client.messages.stream({
@@ -63,12 +72,18 @@ export class AnthropicProvider implements LLMProvider {
         top_p: options.topP,
         top_k: options.topK,
         system: options.system,
-        messages: messages.map(msg => ({ role: msg.role as "user" | "assistant", content: msg.content })),
+        messages: messages.map((msg) => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        })),
       });
 
       for await (const chunk of stream) {
         if (chunk.type === 'content_block_delta') {
-          const contentBlockDelta = chunk as { type: 'content_block_delta', delta: { text: string } };
+          const contentBlockDelta = chunk as {
+            type: 'content_block_delta';
+            delta: { text: string };
+          };
           yield contentBlockDelta.delta.text || '';
         }
       }
@@ -76,7 +91,7 @@ export class AnthropicProvider implements LLMProvider {
       this.handleError(error);
     }
   }
-   
+
   private handleError(error: any): never {
     if (error.status === 401) {
       throw new AuthenticationError('Authentication failed with Anthropic', 'Anthropic');

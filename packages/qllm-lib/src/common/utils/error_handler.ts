@@ -5,7 +5,10 @@ import { QllmError } from '../errors/custom_errors';
  * Custom error class for application-specific errors.
  */
 export class AppError extends Error {
-  constructor(public code: string, message: string) {
+  constructor(
+    public code: string,
+    message: string,
+  ) {
     super(message);
     this.name = 'AppError';
   }
@@ -54,7 +57,7 @@ export class ErrorManager {
    */
   static wrapWithErrorHandler<T extends (...args: any[]) => any>(
     fn: T,
-    errorType: string
+    errorType: string,
   ): (...args: Parameters<T>) => ReturnType<T> {
     return (...args: Parameters<T>): ReturnType<T> => {
       try {
@@ -81,7 +84,6 @@ export function handleError(error: unknown): void {
     logger.error(`An unknown error occurred: ${error}`);
   }
 }
-
 
 export class ErrorHandler {
   static handle(error: unknown): void {

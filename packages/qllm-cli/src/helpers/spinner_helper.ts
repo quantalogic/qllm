@@ -1,11 +1,8 @@
-import { logger } from "@qllm-lib/common/utils/logger";
-import { LLMProviderError } from "@qllm-lib/core/providers/llm_provider";
-import { Spinner } from "../helpers/spinner";
+import { logger } from '@qllm-lib/common/utils/logger';
+import { LLMProviderError } from '@qllm-lib/core/providers/llm_provider';
+import { Spinner } from '../helpers/spinner';
 
-export async function withSpinner<T>(
-  action: () => Promise<T>,
-  message: string
-): Promise<T> {
+export async function withSpinner<T>(action: () => Promise<T>, message: string): Promise<T> {
   const spinner = new Spinner(message);
   try {
     spinner.start();

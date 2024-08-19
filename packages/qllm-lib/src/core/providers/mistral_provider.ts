@@ -1,16 +1,16 @@
 // THIS Version is not wokring, still on developement !
 
-import MistralClient from "@mistralai/mistralai";
+import MistralClient from '@mistralai/mistralai';
 import {
   LLMProvider,
   AuthenticationError,
   RateLimitError,
   InvalidRequestError,
-} from "./llm_provider";
-import { LLMProviderOptions } from "@qllm/types/src";
-import { Message } from "@qllm/types/src";
-import { providerRegistry } from "./provider_registry";
-import { DEFAULT_MAX_TOKENS } from "../config/default";
+} from './llm_provider';
+import { LLMProviderOptions } from '@qllm/types/src';
+import { Message } from '@qllm/types/src';
+import { providerRegistry } from './provider_registry';
+import { DEFAULT_MAX_TOKENS } from '../config/default';
 
 export class MistralProvider implements LLMProvider {
   private client: MistralClient;
@@ -18,26 +18,23 @@ export class MistralProvider implements LLMProvider {
   constructor(private options: LLMProviderOptions) {
     const apiKey = process.env.MISTRAL_API_KEY;
     if (!apiKey) {
-      throw new Error("Mistral API key not found in environment variables");
+      throw new Error('Mistral API key not found in environment variables');
     }
     this.client = new MistralClient(apiKey);
   }
 
-  async generateMessage(
-    messages: Message[],
-    options: LLMProviderOptions
-  ): Promise<string> {
+  async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
     try {
       const messageWithSystem = this.withSystemMessage(options, messages);
       const completion = await this.client.chat({
-        model: options.model || this.options.model || "mistral-small-latest",
+        model: options.model || this.options.model || 'mistral-small-latest',
         messages: messageWithSystem,
         maxTokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         topP: options.topP,
       });
 
-      return completion.choices[0]?.message?.content || "";
+      return completion.choices[0]?.message?.content || '';
     } catch (error) {
       this.handleError(error);
     }
@@ -45,12 +42,12 @@ export class MistralProvider implements LLMProvider {
 
   async *streamMessage(
     messages: Message[],
-    options: LLMProviderOptions
+    options: LLMProviderOptions,
   ): AsyncIterableIterator<string> {
     try {
       const messageWithSystem = this.withSystemMessage(options, messages);
       const stream = await this.client.chatStream({
-        model: options.model || this.options.model || "mistral-small-latest",
+        model: options.model || this.options.model || 'mistral-small-latest',
         messages: messageWithSystem,
         maxTokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
@@ -68,39 +65,27 @@ export class MistralProvider implements LLMProvider {
     }
   }
 
-  private withSystemMessage(
-    options: LLMProviderOptions,
-    messages: Message[]
-  ): Message[] {
+  private withSystemMessage(options: LLMProviderOptions, messages: Message[]): Message[] {
     return options.system && options.system.length > 0
-      ? [{ role: "system", content: options.system }, ...messages]
+      ? [{ role: 'system', content: options.system }, ...messages]
       : messages;
   }
 
   private handleError(error: any): never {
     if (error instanceof Error) {
-      if (error.message.includes("401")) {
-        throw new AuthenticationError(
-          "Authentication failed with Mistral",
-          "Mistral"
-        );
-      } else if (error.message.includes("429")) {
-        throw new RateLimitError("Rate limit exceeded for Mistral", "Mistral");
+      if (error.message.includes('401')) {
+        throw new AuthenticationError('Authentication failed with Mistral', 'Mistral');
+      } else if (error.message.includes('429')) {
+        throw new RateLimitError('Rate limit exceeded for Mistral', 'Mistral');
       } else {
-        throw new InvalidRequestError(
-          `Mistral request failed: ${error.message}`,
-          "Mistral"
-        );
+        throw new InvalidRequestError(`Mistral request failed: ${error.message}`, 'Mistral');
       }
     }
-    throw new InvalidRequestError(`Unexpected error: ${error.message}`, "Mistral");
+    throw new InvalidRequestError(`Unexpected error: ${error.message}`, 'Mistral');
   }
 }
 
 export function register() {
   // Register the Mistral provider
-  providerRegistry.registerProvider(
-    "mistral",
-    (options) => new MistralProvider(options)
-  );
+  providerRegistry.registerProvider('mistral', (options) => new MistralProvider(options));
 }

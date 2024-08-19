@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'; 
+import { EventEmitter } from 'events';
 import { AppConfig } from '@qllm/types/src';
 import { DEFAULT_APP_CONFIG } from './default_config';
 import { logger } from '../common/utils/logger';
@@ -51,11 +51,11 @@ export class ConfigurationManager extends EventEmitter {
     const oldConfig = { ...this.config };
     this.config = {
       ...this.config,
-      ...Object.fromEntries(
-        Object.entries(updates).filter(([_, value]) => value !== undefined)
-      ),
+      ...Object.fromEntries(Object.entries(updates).filter(([_, value]) => value !== undefined)),
     };
-    logger.debug(`Configuration updated. Old: ${JSON.stringify(oldConfig)}, New: ${JSON.stringify(this.config)}`);
+    logger.debug(
+      `Configuration updated. Old: ${JSON.stringify(oldConfig)}, New: ${JSON.stringify(this.config)}`,
+    );
     this.emit('configUpdated', this.config);
   }
 
@@ -72,8 +72,6 @@ export class ConfigurationManager extends EventEmitter {
     // Add validation logic here if needed
     return true;
   }
-
-  
 }
 
 export const configManager = ConfigurationManager.getInstance();

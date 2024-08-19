@@ -1,5 +1,5 @@
-import { Message } from "@qllm/types/src";
-import { LLMProviderOptions } from "@qllm/types/src";
+import { Message } from '@qllm/types/src';
+import { LLMProviderOptions } from '@qllm/types/src';
 
 /**
  * Represents an LLM provider.
@@ -19,7 +19,10 @@ export interface LLMProvider {
    * @param options - The provider options.
    * @returns An async iterable of message chunks.
    */
-  streamMessage: (messages: Message[], options: LLMProviderOptions) => AsyncIterableIterator<string>;
+  streamMessage: (
+    messages: Message[],
+    options: LLMProviderOptions,
+  ) => AsyncIterableIterator<string>;
 
   /**
    * Streams a message from the LLM.
@@ -27,13 +30,20 @@ export interface LLMProvider {
    * @param options - The provider options.
    * @returns An async iterable of embedding files.
    */
-  generateEmbedding?: (input: string | Buffer | URL, modelId: string, sImage: boolean) => Promise<number[]>;
+  generateEmbedding?: (
+    input: string | Buffer | URL,
+    modelId: string,
+    sImage: boolean,
+  ) => Promise<number[]>;
 
   analyzeImage?: (input: string | Buffer | URL, modelId: string) => Promise<string>;
 }
 
 export class LLMProviderError extends Error {
-  constructor(message: string, public providerName: string) {
+  constructor(
+    message: string,
+    public providerName: string,
+  ) {
     super(message);
     this.name = 'LLMProviderError';
   }
@@ -47,7 +57,10 @@ export abstract class BaseLLMProvider implements LLMProvider {
   constructor(protected options: LLMProviderOptions) {}
 
   abstract generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string>;
-  abstract streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string>;
+  abstract streamMessage(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): AsyncIterableIterator<string>;
 
   protected handleError(error: any): never {
     if (error instanceof LLMProviderError) {

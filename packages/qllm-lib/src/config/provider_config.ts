@@ -1,6 +1,6 @@
 // src/config/provider_config.ts
 
-import { ProviderName } from "@qllm/types/src";
+import { ProviderName } from '@qllm/types/src';
 import anthropicConfig from '../core/config/providers/anthropic';
 import ollamaConfig from '../core/config/providers/ollama';
 import openaiConfig from '../core/config/providers/openai';
@@ -10,8 +10,6 @@ import mistralConfig from '../core/config/providers/mistral';
 import openrouterConfig from '../core/config/providers/openrouter';
 import jinaConfig from '../core/config/providers/jina';
 import { configManager } from './configuration_manager';
-
-
 
 export interface ProviderConfig {
   type: ProviderName;
@@ -36,30 +34,30 @@ const PROVIDER_CONFIGS: Record<ProviderName, ProviderConfig> = {
     model: 'mistral',
   },
   groq: {
-    type: "groq",
+    type: 'groq',
     apiKey: '',
     model: configManager.getConfig().defaultModelAlias || groqConfig.defaultModel || '',
   },
   perplexity: {
-    type: "perplexity",
+    type: 'perplexity',
     apiKey: '',
     model: configManager.getConfig().defaultModelAlias || perplexityConfig.defaultModel || '',
   },
   mistral: {
-    type: "mistral",
+    type: 'mistral',
     apiKey: '',
     model: configManager.getConfig().defaultModelAlias || mistralConfig.defaultModel || '',
   },
   openrouter: {
-    type: "openrouter",
+    type: 'openrouter',
     apiKey: '',
-    model: configManager.getConfig().defaultModelAlias || openrouterConfig.defaultModel || ''
+    model: configManager.getConfig().defaultModelAlias || openrouterConfig.defaultModel || '',
   },
   jina: {
-    type: "jina",
+    type: 'jina',
     apiKey: '',
-    model: configManager.getConfig().defaultModelAlias || jinaConfig.defaultModel || ''
-  }  
+    model: configManager.getConfig().defaultModelAlias || jinaConfig.defaultModel || '',
+  },
 };
 
 export function getProviderConfig(providerName: ProviderName): ProviderConfig {
@@ -71,7 +69,9 @@ export function getProviderConfig(providerName: ProviderName): ProviderConfig {
 }
 
 // New function to get models for a provider
-export function getModelsForProvider(providerName: ProviderName): { alias: string; modelId: string, parameters: Object }[] {
+export function getModelsForProvider(
+  providerName: ProviderName,
+): { alias: string; modelId: string; parameters: Object }[] {
   switch (providerName) {
     case 'anthropic':
       return anthropicConfig.models;

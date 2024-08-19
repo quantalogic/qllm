@@ -1,7 +1,12 @@
-import Groq from "groq-sdk";
-import { LLMProvider, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
-import { LLMProviderOptions } from "@qllm/types/src";
-import { Message } from "@qllm/types/src";
+import Groq from 'groq-sdk';
+import {
+  LLMProvider,
+  AuthenticationError,
+  RateLimitError,
+  InvalidRequestError,
+} from './llm_provider';
+import { LLMProviderOptions } from '@qllm/types/src';
+import { Message } from '@qllm/types/src';
 import { providerRegistry } from './provider_registry';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
 
@@ -33,7 +38,10 @@ export class GROQProvider implements LLMProvider {
     }
   }
 
-  async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
+  async *streamMessage(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): AsyncIterableIterator<string> {
     try {
       const messageWithSystem = this.withSystemMessage(options, messages);
       const stream = await this.client.chat.completions.create({

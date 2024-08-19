@@ -1,7 +1,12 @@
 import OpenAI from 'openai';
-import { LLMProvider, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
-import { Message } from "@qllm/types/src";
-import { LLMProviderOptions } from "@qllm/types/src";
+import {
+  LLMProvider,
+  AuthenticationError,
+  RateLimitError,
+  InvalidRequestError,
+} from './llm_provider';
+import { Message } from '@qllm/types/src';
+import { LLMProviderOptions } from '@qllm/types/src';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { providerRegistry } from './provider_registry';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
@@ -46,7 +51,7 @@ export class OpenAIProvider implements LLMProvider {
         temperature: options.temperature,
         top_p: options.topP,
         n: 1,
-        tools: options.tools
+        tools: options.tools,
       });
 
       return response.choices[0]?.message?.content || '';
@@ -61,7 +66,10 @@ export class OpenAIProvider implements LLMProvider {
    * @param options - Options containing potential image path.
    * @returns Promise resolving to an array of formatted messages.
    */
-  private async formatMessages(messages: Message[], options: LLMProviderOptions): Promise<ChatCompletionMessageParam[]> {
+  private async formatMessages(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): Promise<ChatCompletionMessageParam[]> {
     const formattedMessages: ChatCompletionMessageParam[] = [];
 
     for (const message of messages) {
@@ -70,9 +78,9 @@ export class OpenAIProvider implements LLMProvider {
         formattedMessages.push({
           role: message.role,
           content: [
-            { type: "text", text: message.content },
+            { type: 'text', text: message.content },
             {
-              type: "image_url",
+              type: 'image_url',
               image_url: {
                 url: `data:image/jpeg;base64,${base64Image}`,
               },
@@ -104,9 +112,15 @@ export class OpenAIProvider implements LLMProvider {
    * @yields Chunks of the generated message.
    * @throws Error if the API request fails.
    */
-  async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
+  async *streamMessage(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): AsyncIterableIterator<string> {
     try {
-      const messageWithSystem = this.withSystemMessage(options, messages) as ChatCompletionMessageParam[];
+      const messageWithSystem = this.withSystemMessage(
+        options,
+        messages,
+      ) as ChatCompletionMessageParam[];
       const stream = await this.client.chat.completions.create({
         model: options.model || this.options.model,
         messages: messageWithSystem,
@@ -126,7 +140,7 @@ export class OpenAIProvider implements LLMProvider {
     } catch (error) {
       this.handleError(error);
     }
-  } 
+  }
 
   /**
    * Generates an embedding for the given input.
@@ -136,7 +150,11 @@ export class OpenAIProvider implements LLMProvider {
    * @returns Promise resolving to an array of numbers representing the embedding.
    * @throws Error if the input type is invalid or if the API request fails.
    */
-  async generateEmbedding(input: string | Buffer | URL, modelId: string, isImage: boolean): Promise<number[]> {
+  async generateEmbedding(
+    input: string | Buffer | URL,
+    modelId: string,
+    isImage: boolean,
+  ): Promise<number[]> {
     try {
       if (isImage) {
         let imageUrl: string;
@@ -148,17 +166,17 @@ export class OpenAIProvider implements LLMProvider {
         } else {
           throw new Error('Invalid input type for image embedding');
         }
-  
+
         const description = await this.getImageDescription(imageUrl, modelId);
         return this.generateTextEmbedding(description, modelId); // model for embedding ?
       } else {
-        return this.generateTextEmbedding(input as string, modelId);  // model for embedding ?
+        return this.generateTextEmbedding(input as string, modelId); // model for embedding ?
       }
     } catch (error) {
       this.handleError(error);
     }
   }
-  
+
   /**
    * Gets a description of an image using OpenAI's vision model.
    * @param imageUrl - URL or data URI of the image.
@@ -170,16 +188,16 @@ export class OpenAIProvider implements LLMProvider {
       model: modelId,
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: [
-            { type: "text", text: "Describe this image in detail." }, // option ?
-            { type: "image_url", image_url: { url: imageUrl } }
+            { type: 'text', text: 'Describe this image in detail.' }, // option ?
+            { type: 'image_url', image_url: { url: imageUrl } },
           ],
         },
       ],
-     // max_tokens: 300, option
+      // max_tokens: 300, option
     });
-  
+
     return response.choices[0]?.message?.content || '';
   }
 

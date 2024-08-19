@@ -1,6 +1,6 @@
 // src/config/types.ts
 
-/** 
+/**
  * Represents a model alias and its corresponding model ID.
  */
 export interface ModelAlias {
@@ -9,10 +9,10 @@ export interface ModelAlias {
   /** The actual model ID */
   modelId: string;
   /** parameters allowd */
-  parameters: Object
+  parameters: Object;
 }
 
-/** 
+/**
  * Configuration for a specific LLM provider.
  */
 export interface ProviderConfig {
@@ -24,12 +24,20 @@ export interface ProviderConfig {
   defaultModel: string;
 }
 
-/** 
+/**
  * Supported LLM provider names.
  */
-export type ProviderName = 'anthropic' | 'openai' | 'ollama' | 'groq' | 'perplexity' | 'mistral' | 'openrouter' | 'jina';
+export type ProviderName =
+  | 'anthropic'
+  | 'openai'
+  | 'ollama'
+  | 'groq'
+  | 'perplexity'
+  | 'mistral'
+  | 'openrouter'
+  | 'jina';
 
-/** 
+/**
  * Application configuration interface.
  */
 export interface AppConfig {
@@ -49,13 +57,9 @@ export interface AppConfig {
   defaultMaxTokens: number;
   /** Default model alias */
   defaultModelAlias: string;
-
 }
 
-
-
-/** 
+/**
  * Message roles in conversations.
  */
 export type MessageRole = 'user' | 'assistant' | 'system';
-

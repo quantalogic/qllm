@@ -44,7 +44,7 @@ export class ErrorManager {
    */
   static wrapWithErrorHandler<T extends (...args: any[]) => any>(
     fn: T,
-    errorType: string
+    errorType: string,
   ): (...args: Parameters<T>) => ReturnType<T> {
     return (...args: Parameters<T>): ReturnType<T> => {
       try {

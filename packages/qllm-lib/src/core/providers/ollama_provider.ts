@@ -1,7 +1,12 @@
 import ollama from 'ollama';
-import { LLMProvider,  AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
-import { Message } from "@qllm/types/src";
-import { LLMProviderOptions } from "@qllm/types/src";
+import {
+  LLMProvider,
+  AuthenticationError,
+  RateLimitError,
+  InvalidRequestError,
+} from './llm_provider';
+import { Message } from '@qllm/types/src';
+import { LLMProviderOptions } from '@qllm/types/src';
 import { providerRegistry } from './provider_registry';
 import { logger } from '../../common/utils/logger';
 
@@ -28,7 +33,10 @@ export class OllamaProvider implements LLMProvider {
     }
   }
 
-  async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
+  async *streamMessage(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): AsyncIterableIterator<string> {
     try {
       const ollamaMessages = this.prepareMessages(messages, options);
       const stream = await ollama.chat({

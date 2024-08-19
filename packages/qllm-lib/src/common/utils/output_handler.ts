@@ -22,7 +22,10 @@ export class OutputHandler {
    * @param specifiedFormat The format specified by the user
    * @returns The determined format
    */
-  private determineFormat(outputPath: string | undefined, specifiedFormat: 'json' | 'xml'): 'json' | 'xml' {
+  private determineFormat(
+    outputPath: string | undefined,
+    specifiedFormat: 'json' | 'xml',
+  ): 'json' | 'xml' {
     if (outputPath) {
       const ext = path.extname(outputPath).toLowerCase();
       if (ext === '.xml') {
@@ -40,7 +43,7 @@ export class OutputHandler {
    */
   async handleOutput(outputVariables: Record<string, any>): Promise<void> {
     const formattedOutput = this.formatOutput(outputVariables);
-    
+
     if (this.outputPath && this.outputPath.trim() !== '') {
       await this.writeToFile(formattedOutput);
     } else {
@@ -71,7 +74,7 @@ export class OutputHandler {
     try {
       const fullPath = this.getFullPath();
       await this.ensureDirectoryExists(path.dirname(fullPath));
-      
+
       if (await this.fileExists(fullPath)) {
         const overwrite = await this.promptOverwrite(fullPath);
         if (!overwrite) {
@@ -79,7 +82,7 @@ export class OutputHandler {
           return;
         }
       }
-      
+
       await fs.writeFile(fullPath, content, 'utf-8');
       logger.info(`Output written to ${fullPath}`);
     } catch (error) {
@@ -139,7 +142,7 @@ export class OutputHandler {
       type: 'confirm',
       name: 'overwrite',
       message: `File ${filePath} already exists. Overwrite?`,
-      initial: false
+      initial: false,
     });
     return response.overwrite;
   }

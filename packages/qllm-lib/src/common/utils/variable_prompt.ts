@@ -9,28 +9,28 @@ import prompts from 'prompts';
  * @returns A promise that resolves to a record of all variable values.
  */
 export async function promptForMissingVariables(
-    variables: Record<string, TemplateVariable>,
-    providedValues: Record<string, string>
+  variables: Record<string, TemplateVariable>,
+  providedValues: Record<string, string>,
 ): Promise<Record<string, string>> {
-    const missingVariables = Object.entries(variables).filter(
-        ([key, _variable]) => !(key in providedValues) || providedValues[key] === ''
-    );
+  const missingVariables = Object.entries(variables).filter(
+    ([key, _variable]) => !(key in providedValues) || providedValues[key] === '',
+  );
 
-    const results: Record<string, string> = { ...providedValues };
+  const results: Record<string, string> = { ...providedValues };
 
-    for (const [key, variable] of missingVariables) {
-        const result = await prompts({
-            type: getPromptType(variable.type),
-            name: key,
-            message: getPromptMessage(key, variable),
-            initial: variable.default,
-            validate: (value) => validateInput(value, variable)
-        });
+  for (const [key, variable] of missingVariables) {
+    const result = await prompts({
+      type: getPromptType(variable.type),
+      name: key,
+      message: getPromptMessage(key, variable),
+      initial: variable.default,
+      validate: (value) => validateInput(value, variable),
+    });
 
-        results[key] = result[key];
-    }
+    results[key] = result[key];
+  }
 
-    return results;
+  return results;
 }
 
 /**
@@ -39,16 +39,16 @@ export async function promptForMissingVariables(
  * @returns The corresponding prompts type.
  */
 function getPromptType(variableType: string): prompts.PromptType {
-    switch (variableType) {
-        case 'number':
-            return 'number';
-        case 'boolean':
-            return 'confirm';
-        case 'array':
-            return 'list';
-        default:
-            return 'text';
-    }
+  switch (variableType) {
+    case 'number':
+      return 'number';
+    case 'boolean':
+      return 'confirm';
+    case 'array':
+      return 'list';
+    default:
+      return 'text';
+  }
 }
 
 /**
@@ -58,11 +58,11 @@ function getPromptType(variableType: string): prompts.PromptType {
  * @returns The formatted prompt message.
  */
 function getPromptMessage(key: string, variable: TemplateVariable): string {
-    let message = `Enter value for ${key} (${variable.description})`;
-    if ('default' in variable) {
-        message += ` [default: ${formatDefaultValue(variable)}]`;
-    }
-    return message + ':';
+  let message = `Enter value for ${key} (${variable.description})`;
+  if ('default' in variable) {
+    message += ` [default: ${formatDefaultValue(variable)}]`;
+  }
+  return message + ':';
 }
 
 /**
@@ -71,13 +71,13 @@ function getPromptMessage(key: string, variable: TemplateVariable): string {
  * @returns The formatted default value as a string.
  */
 function formatDefaultValue(variable: TemplateVariable): string {
-    if (variable.type === 'string') {
-        return `"${variable.default}"`;
-    } else if (variable.type === 'array') {
-        return JSON.stringify(variable.default);
-    } else {
-        return String(variable.default);
-    }
+  if (variable.type === 'string') {
+    return `"${variable.default}"`;
+  } else if (variable.type === 'array') {
+    return JSON.stringify(variable.default);
+  } else {
+    return String(variable.default);
+  }
 }
 
 /**
@@ -87,21 +87,27 @@ function formatDefaultValue(variable: TemplateVariable): string {
  * @returns True if valid, or an error message string if invalid.
  */
 function validateInput(value: any, variable: TemplateVariable): boolean | string {
-    if (value === undefined || value === '') {
-        if ('default' in variable) {
-            return true; // Allow empty input if there's a default value
-        }
-        return 'This field is required';
+  if (value === undefined || value === '') {
+    if ('default' in variable) {
+      return true; // Allow empty input if there's a default value
     }
+    return 'This field is required';
+  }
 
-    switch (variable.type) {
-        case 'number':
-            return !isNaN(Number(value)) || 'Please enter a valid number';
-        case 'boolean':
-            return typeof value === 'boolean' || ['true', 'false'].includes(value.toLowerCase()) || 'Please enter true or false';
-        case 'array':
-            return Array.isArray(value) || typeof value === 'string' || 'Please enter a comma-separated list';
-        default:
-            return true;
-    }
+  switch (variable.type) {
+    case 'number':
+      return !isNaN(Number(value)) || 'Please enter a valid number';
+    case 'boolean':
+      return (
+        typeof value === 'boolean' ||
+        ['true', 'false'].includes(value.toLowerCase()) ||
+        'Please enter true or false'
+      );
+    case 'array':
+      return (
+        Array.isArray(value) || typeof value === 'string' || 'Please enter a comma-separated list'
+      );
+    default:
+      return true;
+  }
 }

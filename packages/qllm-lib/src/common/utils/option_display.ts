@@ -1,4 +1,4 @@
-import { LLMProviderOptions } from "@qllm/types/src";
+import { LLMProviderOptions } from '@qllm/types/src';
 import { logger } from './logger';
 
 type OptionValue = string | number | boolean | undefined;
@@ -9,7 +9,6 @@ function formatValue(value: OptionValue): string {
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   return 'undefined';
 }
-
 
 export function displayOptions(options: LLMProviderOptions, commandName: string): void {
   logger.debug(`Options for ${commandName} command:`);

@@ -1,5 +1,5 @@
-import { LLMProvider } from './llm_provider';  
-import { LLMProviderOptions } from "@qllm/types/src";
+import { LLMProvider } from './llm_provider';
+import { LLMProviderOptions } from '@qllm/types/src';
 import { ProviderName } from '@qllm/types/src';
 import { providerRegistry } from './provider_registry';
 import { logger } from '../../common/utils/logger';
@@ -13,8 +13,6 @@ export class ProviderFactory {
   private static pluginManager = new PluginManager();
 
   static async getProvider(providerName: ProviderName): Promise<LLMProvider> {
-
-
     const options: LLMProviderOptions = {
       model: '',
       awsProfile: process.env.AWS_PROFILE,
@@ -39,5 +37,4 @@ export class ProviderFactory {
   static registerProviderPlugin(name: string, initFunction: () => void): void {
     this.pluginManager.registerPlugin(name, initFunction);
   }
-  
 }

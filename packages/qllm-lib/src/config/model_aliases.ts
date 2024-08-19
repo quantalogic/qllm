@@ -1,7 +1,7 @@
 // src/config/model_aliases.ts
 
-import { ProviderConfig, ProviderName } from "@qllm/types/src"; 
-import anthropicConfig from '../core/config/providers/anthropic'; 
+import { ProviderConfig, ProviderName } from '@qllm/types/src';
+import anthropicConfig from '../core/config/providers/anthropic';
 import openaiConfig from '../core/config/providers/openai';
 import ollamaConfig from '../core/config/providers/ollama';
 import groqConfig from '../core/config/providers/groq';
@@ -19,7 +19,7 @@ const providerConfigs: Record<ProviderName, ProviderConfig> = {
   perplexity: perplexityConfig,
   mistral: mistralConfig,
   openrouter: openrouterConfig,
-  jina: jinaConfig
+  jina: jinaConfig,
 };
 
 /**
@@ -44,7 +44,7 @@ export function getProviderConfig(provider: ProviderName): ProviderConfig {
  */
 export function resolveModelAlias(provider: ProviderName, modelAlias: string): string | undefined {
   const config = getProviderConfig(provider);
-  const model = config.models.find(m => m.alias === modelAlias);
+  const model = config.models.find((m) => m.alias === modelAlias);
   return model?.modelId;
 }
 

@@ -1,35 +1,47 @@
 import fetch from 'node-fetch';
-import { LLMProvider, AuthenticationError, RateLimitError, InvalidRequestError } from './llm_provider';
-import { Message } from "@qllm/types/src";
-import { LLMProviderOptions } from "@qllm/types/src";
+import {
+  LLMProvider,
+  AuthenticationError,
+  RateLimitError,
+  InvalidRequestError,
+} from './llm_provider';
+import { Message } from '@qllm/types/src';
+import { LLMProviderOptions } from '@qllm/types/src';
 import { providerRegistry } from './provider_registry';
 
 export class JinaProvider implements LLMProvider {
   private apiKey: string;
 
   constructor(options: LLMProviderOptions) {
-    console.log("options : ", options)
-    this.apiKey = process.env.JINA_API_KEY || "";
+    console.log('options : ', options);
+    this.apiKey = process.env.JINA_API_KEY || '';
   }
 
   async generateMessage(messages: Message[], options: LLMProviderOptions): Promise<string> {
-    console.log("options : ", options)
-    console.log("messages : ", messages)
+    console.log('options : ', options);
+    console.log('messages : ', messages);
     throw new Error('Text generation is not supported by Jina AI provider');
   }
 
-  async *streamMessage(messages: Message[], options: LLMProviderOptions): AsyncIterableIterator<string> {
-    console.log("options : ", options)
-    console.log("messages : ", messages)
+  async *streamMessage(
+    messages: Message[],
+    options: LLMProviderOptions,
+  ): AsyncIterableIterator<string> {
+    console.log('options : ', options);
+    console.log('messages : ', messages);
     throw new Error('Streaming is not supported by Jina AI provider');
   }
 
-  async generateEmbedding(input: string | Buffer | URL, modelId: string, isImage: boolean): Promise<number[]> {
+  async generateEmbedding(
+    input: string | Buffer | URL,
+    modelId: string,
+    isImage: boolean,
+  ): Promise<number[]> {
     try {
       const url = 'https://api.jina.ai/v1/embeddings';
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
+        Authorization: `Bearer ${this.apiKey}`,
       };
 
       let jinaInput;
@@ -44,16 +56,16 @@ export class JinaProvider implements LLMProvider {
       }
 
       const data = {
-        model: modelId || "jina-clip-v1",
+        model: modelId || 'jina-clip-v1',
         normalized: true,
-        embedding_type: "float",
-        input: [jinaInput]
+        embedding_type: 'float',
+        input: [jinaInput],
       };
 
       const response = await fetch(url, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {

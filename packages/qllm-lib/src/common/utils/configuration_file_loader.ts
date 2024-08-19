@@ -25,7 +25,9 @@ export class ConfigurationFileLoader {
       return { ...DEFAULT_APP_CONFIG, ...loadedConfig };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        logger.warn(`Configuration file not found at ${this.configFilePath}. Using default configuration.`);
+        logger.warn(
+          `Configuration file not found at ${this.configFilePath}. Using default configuration.`,
+        );
         return DEFAULT_APP_CONFIG;
       }
       ErrorManager.throwError('ConfigLoadError', `Failed to load configuration: ${error}`);
