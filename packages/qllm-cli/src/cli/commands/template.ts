@@ -1,35 +1,30 @@
 // src/commands/template.ts
-import { Command, Option } from "commander";
-import prompts from "prompts";
-import yaml from "js-yaml";
-import {
-  TemplateManager,
-  TemplateManagerConfig,
-} from "@qllm-lib/core/templates/template_manager";
-import { configManager } from "@qllm-lib/config/configuration_manager";
-import { logger } from "@qllm-lib/common/utils/logger";
-import { ErrorManager } from "@qllm-lib/common/utils/error_manager";
-import { cliOptions } from "../options";
-import { resolveModelAlias } from "@qllm-lib/config/model_aliases";
-import { displayOptions } from "@qllm-lib/common/utils/option_display"; 
-import { LLMProviderOptions } from "@qllm/types/src";
-import { ProviderFactory } from "@qllm-lib/core/providers/provider_factory";
+import { Command, Option } from 'commander';
+import prompts from 'prompts';
+import yaml from 'js-yaml';
+import { TemplateManager, TemplateManagerConfig } from '@qllm-lib/core/templates/template_manager';
+import { configManager } from '@qllm-lib/config/configuration_manager';
+import { logger } from '@qllm-lib/common/utils/logger';
+import { ErrorManager } from '@qllm-lib/common/utils/error_manager';
+import { cliOptions } from '../options';
+import { resolveModelAlias } from '@qllm-lib/config/model_aliases';
+import { displayOptions } from '@qllm-lib/common/utils/option_display';
+import { LLMProviderOptions } from '@qllm/types/src';
+import { ProviderFactory } from '@qllm-lib/core/providers/provider_factory';
 import {
   ExecutionContext,
   TemplateDefinition,
   TemplateVariable,
-} from "@qllm-lib/core/templates/types";
-import { TemplateExecutor } from "@qllm-lib/core/templates/template_executor";
-import { OutputHandler } from "@qllm-lib/common/utils/output_handler";
-import { DEFAULT_APP_CONFIG } from "@qllm-lib/config/default_config";
-import { ProviderName } from "@qllm/types/src";
+} from '@qllm-lib/core/templates/types';
+import { TemplateExecutor } from '@qllm-lib/core/templates/template_executor';
+import { OutputHandler } from '@qllm-lib/common/utils/output_handler';
+import { DEFAULT_APP_CONFIG } from '@qllm-lib/config/default_config';
+import { ProviderName } from '@qllm/types/src';
 
 import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
 import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
-async function getTemplateManager(
-  promptsDir?: string
-): Promise<TemplateManager> {
+async function getTemplateManager(promptsDir?: string): Promise<TemplateManager> {
   const templateManagerConfig: TemplateManagerConfig = {
     promptDirectory: promptsDir || configManager.getConfig().promptDirectory,
   };
@@ -40,14 +35,9 @@ async function getTemplateManager(
 }
 
 export function createTemplateCommand(): Command {
-  const templateCommand = new Command("template")
-    .description("Manage and execute prompt templates")
-    .addOption(
-      new Option(
-        "--prompts-dir <directory>",
-        "Set the directory for prompt templates"
-      )
-    )
+  const templateCommand = new Command('template')
+    .description('Manage and execute prompt templates')
+    .addOption(new Option('--prompts-dir <directory>', 'Set the directory for prompt templates'))
     .addCommand(createListCommand())
     .addCommand(createCreateCommand())
     .addCommand(createExecuteCommand())
@@ -60,80 +50,74 @@ export function createTemplateCommand(): Command {
 }
 
 function createListCommand(): Command {
-  return new Command("list")
-    .description("List all available templates")
-    .action(async () => {
-      try {
-        logger.debug("Executing list command");
-        const templateManager = await getTemplateManager();
-        const templates = await templateManager.listTemplates();
-        logger.debug(`Found ${templates.length} templates`);
-        console.log("Available templates:");
-        if (templates.length === 0) {
-          console.log("No templates found.");
-        } else {
-          templates.forEach((template) => console.log(`- ${template}`));
-        }
-      } catch (error) {
-        /* ErrorManager.handleError(
+  return new Command('list').description('List all available templates').action(async () => {
+    try {
+      logger.debug('Executing list command');
+      const templateManager = await getTemplateManager();
+      const templates = await templateManager.listTemplates();
+      logger.debug(`Found ${templates.length} templates`);
+      console.log('Available templates:');
+      if (templates.length === 0) {
+        console.log('No templates found.');
+      } else {
+        templates.forEach((template) => console.log(`- ${template}`));
+      }
+    } catch (error) {
+      /* ErrorManager.handleError(
           "ListTemplatesError",
           `Failed to list templates: ${error}`
         ); */
-        if (error instanceof QllmError) {
-          ErrorHandler.handle(error);
-        } else {
-          ErrorHandler.handle(new QllmError(`Failed to list templates: ${error}`));
-        }
-        process.exit(1);
+      if (error instanceof QllmError) {
+        ErrorHandler.handle(error);
+      } else {
+        ErrorHandler.handle(new QllmError(`Failed to list templates: ${error}`));
       }
-    });
+      process.exit(1);
+    }
+  });
 }
 
 function createCreateCommand(): Command {
-  return new Command("create")
-    .description("Create a new template")
-    .action(async () => {
-      try {
-        const template = await promptForTemplateDetails();
-        const templateManager = await getTemplateManager();
-        await templateManager.saveTemplate(template);
-        logger.info(`Template ${template.name} created successfully`);
-      } catch (error) {
-        /* ErrorManager.handleError(
+  return new Command('create').description('Create a new template').action(async () => {
+    try {
+      const template = await promptForTemplateDetails();
+      const templateManager = await getTemplateManager();
+      await templateManager.saveTemplate(template);
+      logger.info(`Template ${template.name} created successfully`);
+    } catch (error) {
+      /* ErrorManager.handleError(
           "CreateTemplateError",
           `Failed to create template: ${error}`
         ); */
-        if (error instanceof QllmError) {
-          ErrorHandler.handle(error);
-        } else {
-          ErrorHandler.handle(new QllmError(`Failed to create template: ${error}`));
-        }
-        process.exit(1);
+      if (error instanceof QllmError) {
+        ErrorHandler.handle(error);
+      } else {
+        ErrorHandler.handle(new QllmError(`Failed to create template: ${error}`));
       }
-    });
+      process.exit(1);
+    }
+  });
 }
 
 function createExecuteCommand(): Command {
-  return new Command("execute")
-    .description("Execute a template")
-    .argument("<name>", "Name of the template to execute")
+  return new Command('execute')
+    .description('Execute a template')
+    .argument('<name>', 'Name of the template to execute')
     .addOption(cliOptions.maxTokensOption)
     .addOption(cliOptions.temperatureOption)
     .addOption(cliOptions.topPOption)
     .addOption(cliOptions.topKOption)
     .addOption(cliOptions.systemOption)
     .addOption(cliOptions.streamOption)
-    .addOption(new Option("--output [file]", "Output file path"))
+    .addOption(new Option('--output [file]', 'Output file path'))
     .addOption(
-      new Option("--format <format>", "Output format")
-        .choices(["json", "xml"])
-        .default("json")
+      new Option('--format <format>', 'Output format').choices(['json', 'xml']).default('json'),
     )
     .option(
-      "-v, --variable <key=value>",
-      "Set variable values for the template",
+      '-v, --variable <key=value>',
+      'Set variable values for the template',
       collectVariables,
-      {}
+      {},
     )
     .action(async (name, options, command) => {
       try {
@@ -156,14 +140,10 @@ function createExecuteCommand(): Command {
           throw new Error(`Template '${name}' not found`);
         }
         logger.debug(`Template found: ${JSON.stringify(template)}`);
-        const variables = await templateManager.parseVariables(
-          process.argv,
-          template
-        );
+        const variables = await templateManager.parseVariables(process.argv, template);
         logger.debug(`Parsed variables: ${JSON.stringify(variables)}`);
 
-        const modelAlias =
-          (parentOptions.model as string) || config.defaultModelAlias;
+        const modelAlias = (parentOptions.model as string) || config.defaultModelAlias;
         const providerName = ((parentOptions.provider as string) ||
           config.defaultProvider ||
           DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
@@ -177,10 +157,7 @@ function createExecuteCommand(): Command {
             ? resolveModelAlias(providerName, modelAlias)
             : config.defaultModelId;
         if (!modelId) {
-          ErrorManager.throwError(
-            "ModelError",
-            `Model id ${modelId} not found`
-          );
+          ErrorManager.throwError('ModelError', `Model id ${modelId} not found`);
         }
 
         const maxTokens = options.maxTokens || config.defaultMaxTokens;
@@ -198,7 +175,7 @@ function createExecuteCommand(): Command {
           model: modelId,
         };
 
-        displayOptions(llmOptions, "execute");
+        displayOptions(llmOptions, 'execute');
 
         const executionContext: ExecutionContext = {
           template,
@@ -220,7 +197,9 @@ function createExecuteCommand(): Command {
         if (error instanceof QllmError) {
           ErrorHandler.handle(error);
         } else {
-          ErrorHandler.handle(new QllmError(`Unexpected error in template create execute command: ${error}`));
+          ErrorHandler.handle(
+            new QllmError(`Unexpected error in template create execute command: ${error}`),
+          );
         }
         process.exit(1);
       }
@@ -228,9 +207,9 @@ function createExecuteCommand(): Command {
 }
 
 function createDeleteCommand(): Command {
-  return new Command("delete")
-    .description("Delete a template")
-    .argument("<name>", "Name of the template to delete")
+  return new Command('delete')
+    .description('Delete a template')
+    .argument('<name>', 'Name of the template to delete')
     .action(async (name: string) => {
       try {
         const templateManager = await getTemplateManager();
@@ -252,9 +231,9 @@ function createDeleteCommand(): Command {
 }
 
 function createViewCommand(): Command {
-  return new Command("view")
-    .description("View the contents of a template")
-    .argument("<name>", "Name of the template to view")
+  return new Command('view')
+    .description('View the contents of a template')
+    .argument('<name>', 'Name of the template to view')
     .action(async (name: string) => {
       try {
         const templateManager = await getTemplateManager();
@@ -265,18 +244,15 @@ function createViewCommand(): Command {
           console.log(`Template '${name}' not found.`);
         }
       } catch (error) {
-        ErrorManager.handleError(
-          "ViewTemplateError",
-          `Failed to view template: ${error}`
-        );
+        ErrorManager.handleError('ViewTemplateError', `Failed to view template: ${error}`);
       }
     });
 }
 
 function createEditCommand(): Command {
-  return new Command("edit")
-    .description("Edit an existing template")
-    .argument("<name>", "Name of the template to edit")
+  return new Command('edit')
+    .description('Edit an existing template')
+    .argument('<name>', 'Name of the template to edit')
     .action(async (name: string, options) => {
       try {
         const templateManager = await getTemplateManager(options.promptsDir);
@@ -288,18 +264,15 @@ function createEditCommand(): Command {
         await templateManager.updateTemplate(name, updatedTemplate);
         logger.info(`Template ${name} updated successfully`);
       } catch (error) {
-        ErrorManager.handleError(
-          "EditTemplateError",
-          `Failed to edit template: ${error}`
-        );
+        ErrorManager.handleError('EditTemplateError', `Failed to edit template: ${error}`);
       }
     });
 }
 
 function createVariablesCommand(): Command {
-  return new Command("variables")
-    .description("Display all variables in a template")
-    .argument("<name>", "Name of the template")
+  return new Command('variables')
+    .description('Display all variables in a template')
+    .argument('<name>', 'Name of the template')
     .action(async (name: string, options) => {
       try {
         const templateManager = await getTemplateManager(options.promptsDir);
@@ -310,57 +283,57 @@ function createVariablesCommand(): Command {
         displayTemplateVariables(template);
       } catch (error) {
         ErrorManager.handleError(
-          "TemplateVariablesError",
-          `Failed to display template variables: ${error}`
+          'TemplateVariablesError',
+          `Failed to display template variables: ${error}`,
         );
       }
     });
 }
 
 async function promptForTemplateDetails(
-  existingTemplate?: TemplateDefinition
+  existingTemplate?: TemplateDefinition,
 ): Promise<TemplateDefinition> {
   const questions: prompts.PromptObject[] = [
     {
-      type: "text" as const,
-      name: "name",
-      message: "Template name:",
+      type: 'text' as const,
+      name: 'name',
+      message: 'Template name:',
       initial: existingTemplate?.name,
     },
     {
-      type: "text" as const,
-      name: "version",
-      message: "Version:",
-      initial: existingTemplate?.version || "1.0.0",
+      type: 'text' as const,
+      name: 'version',
+      message: 'Version:',
+      initial: existingTemplate?.version || '1.0.0',
     },
     {
-      type: "text" as const,
-      name: "description",
-      message: "Description:",
+      type: 'text' as const,
+      name: 'description',
+      message: 'Description:',
       initial: existingTemplate?.description,
     },
     {
-      type: "text" as const,
-      name: "author",
-      message: "Author:",
+      type: 'text' as const,
+      name: 'author',
+      message: 'Author:',
       initial: existingTemplate?.author,
     },
     {
-      type: "text" as const,
-      name: "provider",
-      message: "Provider:",
+      type: 'text' as const,
+      name: 'provider',
+      message: 'Provider:',
       initial: existingTemplate?.provider,
     },
     {
-      type: "text" as const,
-      name: "model",
-      message: "Model:",
+      type: 'text' as const,
+      name: 'model',
+      message: 'Model:',
       initial: existingTemplate?.model,
     },
     {
-      type: "text" as const,
-      name: "content",
-      message: "Template content:",
+      type: 'text' as const,
+      name: 'content',
+      message: 'Template content:',
       initial: existingTemplate?.content,
     },
   ];
@@ -369,11 +342,8 @@ async function promptForTemplateDetails(
   return responses as TemplateDefinition;
 }
 
-function collectVariables(
-  value: string,
-  previous: Record<string, string>
-): Record<string, string> {
-  const [key, val] = value.split("=");
+function collectVariables(value: string, previous: Record<string, string>): Record<string, string> {
+  const [key, val] = value.split('=');
   return { ...previous, [key]: val };
 }
 
@@ -382,11 +352,8 @@ function displayTemplateVariables(template: TemplateDefinition): void {
   const definedVariables = template.input_variables || {};
   const contentVariables = extractContentVariables(template.content);
 
-  if (
-    Object.keys(definedVariables).length === 0 &&
-    contentVariables.length === 0
-  ) {
-    console.log("No variables defined in this template.");
+  if (Object.keys(definedVariables).length === 0 && contentVariables.length === 0) {
+    console.log('No variables defined in this template.');
     return;
   }
 
@@ -395,10 +362,10 @@ function displayTemplateVariables(template: TemplateDefinition): void {
     console.log(`- ${key}:`);
     console.log(`  Type: ${variable.type}`);
     console.log(`  Description: ${variable.description}`);
-    if ("default" in variable) {
+    if ('default' in variable) {
       console.log(`  Default: ${formatDefaultValue(variable)}`);
     }
-    console.log("");
+    console.log('');
   }
 
   // Display content variables not defined in input_variables
@@ -407,7 +374,7 @@ function displayTemplateVariables(template: TemplateDefinition): void {
       console.log(`- ${key}:`);
       console.log(`  Type: undefined`);
       console.log(`  Description: Undefined variable found in content`);
-      console.log("");
+      console.log('');
     }
   }
 }
@@ -420,9 +387,9 @@ function extractContentVariables(content: string): string[] {
 }
 
 function formatDefaultValue(variable: TemplateVariable): string {
-  if (variable.type === "string") {
+  if (variable.type === 'string') {
     return `"${variable.default}"`;
-  } else if (variable.type === "array") {
+  } else if (variable.type === 'array') {
     return JSON.stringify(variable.default);
   } else {
     return String(variable.default);

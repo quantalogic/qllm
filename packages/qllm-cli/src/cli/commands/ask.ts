@@ -10,7 +10,7 @@ import { resolveModelAlias } from '@qllm-lib/config/model_aliases';
 import { ProviderFactory } from '@qllm-lib/core/providers/provider_factory';
 import { configManager } from '@qllm-lib/config/configuration_manager';
 import { DEFAULT_APP_CONFIG } from '@qllm-lib/config/default_config';
-import { ProviderName } from "@qllm/types/src";
+import { ProviderName } from '@qllm/types/src';
 import { displayOptions } from '@qllm-lib/common/utils/option_display';
 import { withSpinner } from '@/helpers/spinner_helper';
 import { formatOutput, writeOutput } from '@/helpers/output_helper';
@@ -18,12 +18,12 @@ import { LLMProviderOptions, Message } from '@qllm/types/src';
 import { z } from 'zod';
 import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
 import { QllmError } from '@qllm-lib/common/errors/custom_errors';
-import {ToolsArraySchema} from "@qllm/types/src"
+import { ToolsArraySchema } from '@qllm/types/src';
 
 /**
  * Creates and returns the 'ask' command for the CLI application.
  * This command allows users to ask questions to a Language Learning Model (LLM).
- * 
+ *
  * @returns {Command} The configured 'ask' command
  */
 export function createAskCommand(): Command {
@@ -44,33 +44,38 @@ export function createAskCommand(): Command {
       try {
         // Retrieve configuration
         const config = configManager.getConfig();
-        const parentOptions = command.parent.opts();  
-        
+        const parentOptions = command.parent.opts();
+
         // Set AWS profile and region if provided
-        if(parentOptions.profile) {
+        if (parentOptions.profile) {
           process.env.AWS_PROFILE = parentOptions.profile;
         }
-        if(parentOptions.region) {
+        if (parentOptions.region) {
           process.env.AWS_REGION = parentOptions.region;
         }
 
         // Resolve model and provider
-        const modelAlias = parentOptions.model as string || config.defaultModelAlias;
-        const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
-        
+        const modelAlias = (parentOptions.model as string) || config.defaultModelAlias;
+        const providerName = ((parentOptions.provider as string) ||
+          config.defaultProvider ||
+          DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
+
         // Log debug information
         logger.debug(`modelAlias: ${modelAlias}`);
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`defaultProviderName: ${config.defaultProvider}`);
-        
-        // Resolve model alias to model id
-        const modelId = parentOptions.modelId || modelAlias ? resolveModelAlias(providerName,modelAlias) : config.defaultModelId;
 
-        if(!modelId){
+        // Resolve model alias to model id
+        const modelId =
+          parentOptions.modelId || modelAlias
+            ? resolveModelAlias(providerName, modelAlias)
+            : config.defaultModelId;
+
+        if (!modelId) {
           ErrorManager.throwError('ModelError', `Model id ${modelId} not found`);
         }
-        
-        const maxTokens = options.maxTokens ||config.defaultMaxTokens;
+
+        const maxTokens = options.maxTokens || config.defaultMaxTokens;
 
         logger.debug(`modelId: ${modelId}`);
         logger.debug(`maxTokens: ${maxTokens}`);
@@ -85,7 +90,10 @@ export function createAskCommand(): Command {
         } else {
           input = command.args.join(' ');
           if (!input) {
-            ErrorManager.throwError('InputError', 'No question provided. Please provide a question or use the --file option.');
+            ErrorManager.throwError(
+              'InputError',
+              'No question provided. Please provide a question or use the --file option.',
+            );
           }
         }
 
@@ -100,7 +108,10 @@ export function createAskCommand(): Command {
           try {
             tools = ToolsArraySchema.parse(JSON.parse(options.tools));
           } catch (error) {
-            ErrorManager.throwError('ToolsError', 'Invalid tools format. Please provide a valid JSON array of tools.');
+            ErrorManager.throwError(
+              'ToolsError',
+              'Invalid tools format. Please provide a valid JSON array of tools.',
+            );
           }
         }
 
@@ -111,7 +122,7 @@ export function createAskCommand(): Command {
           topP: options.topP,
           topK: options.topK,
           model: modelId,
-          tools: tools
+          tools: tools,
         };
 
         displayOptions(llmOptions, 'ask');
@@ -121,11 +132,11 @@ export function createAskCommand(): Command {
           const imagePath = path.resolve(options.image);
           llmOptions.imagePath = imagePath;
         }
-        
+
         // Generate response with spinner
         const response = await withSpinner(
           () => provider.generateMessage(messages, llmOptions),
-          'Generating response'
+          'Generating response',
         );
 
         // Format and write output

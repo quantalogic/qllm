@@ -9,9 +9,12 @@ import { resolveModelAlias } from '@qllm-lib/config/model_aliases';
 import { ProviderFactory } from '@qllm-lib/core/providers/provider_factory';
 import { configManager } from '@qllm-lib/config/configuration_manager';
 import { DEFAULT_APP_CONFIG } from '@qllm-lib/config/default_config';
-import { displayOptions } from '@qllm-lib/common/utils/option_display'; 
+import { displayOptions } from '@qllm-lib/common/utils/option_display';
 import { LLMProviderOptions, Message, ProviderName } from '@qllm/types/src';
-import { createStreamOutputHandler, handleStreamWithSpinnerAndOutput } from '@qllm-lib/common/utils/stream_helper';
+import {
+  createStreamOutputHandler,
+  handleStreamWithSpinnerAndOutput,
+} from '@qllm-lib/common/utils/stream_helper';
 
 import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
 import { QllmError } from '@qllm-lib/common/errors/custom_errors';
@@ -29,28 +32,33 @@ export function createStreamCommand(): Command {
     .action(async (options, command) => {
       try {
         const config = configManager.getConfig();
-        const parentOptions = command.parent.opts();  
+        const parentOptions = command.parent.opts();
 
-        if(parentOptions.profile) {
+        if (parentOptions.profile) {
           process.env.AWS_PROFILE = parentOptions.profile;
         }
-        if(parentOptions.region) {
+        if (parentOptions.region) {
           process.env.AWS_REGION = parentOptions.region;
         }
 
-        const modelAlias = parentOptions.model as string || config.defaultModelAlias;
-        const providerName = (parentOptions.provider as string || config.defaultProvider || DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
+        const modelAlias = (parentOptions.model as string) || config.defaultModelAlias;
+        const providerName = ((parentOptions.provider as string) ||
+          config.defaultProvider ||
+          DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
         // Resolve model alias to model id
         logger.debug(`modelAlias: ${modelAlias}`);
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`defaultProviderName: ${config.defaultProvider}`);
-        const modelId = parentOptions.modelId || modelAlias ? resolveModelAlias(providerName,modelAlias) : config.defaultModelId;
+        const modelId =
+          parentOptions.modelId || modelAlias
+            ? resolveModelAlias(providerName, modelAlias)
+            : config.defaultModelId;
 
-        if(!modelId){
+        if (!modelId) {
           ErrorManager.throwError('ModelError', `Model id ${modelId} not found`);
         }
-        
-        const maxTokens = options.maxTokens ||config.defaultMaxTokens;
+
+        const maxTokens = options.maxTokens || config.defaultMaxTokens;
 
         logger.debug(`modelId: ${modelId}`);
         logger.debug(`maxTokens: ${maxTokens}`);
@@ -64,7 +72,10 @@ export function createStreamCommand(): Command {
         } else {
           input = command.args.join(' ');
           if (!input) {
-            ErrorManager.throwError('InputError', 'No input provided. Please provide input or use the --file option.');
+            ErrorManager.throwError(
+              'InputError',
+              'No input provided. Please provide input or use the --file option.',
+            );
           }
         }
 
@@ -90,7 +101,7 @@ export function createStreamCommand(): Command {
             provider,
             messages,
             llmOptions,
-            outputHandler
+            outputHandler,
           );
 
           console.log(fullResponse);
@@ -99,7 +110,10 @@ export function createStreamCommand(): Command {
             logger.info(`Full response written to ${options.output}`);
           }
         } catch (error) {
-          ErrorManager.handleError('StreamingError', error instanceof Error ? error.message : String(error));
+          ErrorManager.handleError(
+            'StreamingError',
+            error instanceof Error ? error.message : String(error),
+          );
         } finally {
           await outputHandler.finalize();
         }

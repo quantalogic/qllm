@@ -15,7 +15,7 @@ import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 /**
  * Creates and returns the 'config' command for the CLI application.
  * This command allows users to configure the QLLM utility.
- * 
+ *
  * @returns {Command} The configured 'config' command
  */
 export function createConfigCommand(): Command {
@@ -33,8 +33,13 @@ export function createConfigCommand(): Command {
     .addOption(new Option('--set-model-id <id>', 'Set default model ID'))
     .addOption(new Option('--interactive', 'Enter interactive configuration mode'))
     .addOption(new Option('--show-providers', 'Show available providers'))
-    .addOption(new Option('--show-models-provider <provider>', 'Show available models for a provider'))
-    .option('--show-parameters-model <provider> <model>', 'Show parameters for a specific model of a provider')
+    .addOption(
+      new Option('--show-models-provider <provider>', 'Show available models for a provider'),
+    )
+    .option(
+      '--show-parameters-model <provider> <model>',
+      'Show parameters for a specific model of a provider',
+    )
     .action(async (options) => {
       try {
         // Resolve the configuration file path
@@ -45,12 +50,14 @@ export function createConfigCommand(): Command {
         if (options.showParametersModel) {
           const args = options.showParametersModel.split(' ');
           if (args.length !== 2) {
-            throw new QllmError('Both provider and model must be specified for --show-parameters-model');
+            throw new QllmError(
+              'Both provider and model must be specified for --show-parameters-model',
+            );
           }
           const [provider, model] = args;
           console.log(`Provider: ${provider}`);
           console.log(`Model: ${model}`);
-          showModelParameters(provider, model)
+          showModelParameters(provider, model);
         } else if (options.showProviders) {
           showProviders();
         } else if (options.showModelsProvider) {
@@ -78,7 +85,7 @@ export function createConfigCommand(): Command {
 
 /**
  * Updates the configuration based on the provided options.
- * 
+ *
  * @param {any} options - The options provided by the user
  * @param {ConfigurationFileLoader} configLoader - The configuration file loader
  */
@@ -107,24 +114,24 @@ async function updateConfig(options: any, configLoader: ConfigurationFileLoader)
 
 /**
  * Displays all available providers.
- * 
+ *
  * @returns {ProviderName[]} Array of available provider names
  */
 function showProviders(): ProviderName[] {
-  const availableProviders = getAllProviders()
-  console.log("My providers : ", availableProviders)
+  const availableProviders = getAllProviders();
+  console.log('My providers : ', availableProviders);
   return availableProviders;
 }
 
 /**
  * Displays all available models for a specific provider.
- * 
+ *
  * @param {ProviderName} providerName - The name of the provider
  */
 function showModelsForProvider(providerName: ProviderName): void {
   try {
     const availableProviders = getModelsForProvider(providerName);
-    console.log("My models:");
+    console.log('My models:');
     availableProviders.forEach((model, index) => {
       console.log(`Model ${index + 1}, alias : ${model.alias}, id : ${model.modelId} `);
     });
@@ -135,14 +142,14 @@ function showModelsForProvider(providerName: ProviderName): void {
 
 /**
  * Displays parameters for a specific model of a provider.
- * 
+ *
  * @param {ProviderName} providerName - The name of the provider
  * @param {string} modelAlias - The alias of the model
  */
 function showModelParameters(providerName: ProviderName, modelAlias: string): void {
   try {
     const models = getModelsForProvider(providerName);
-    const model = models.find(m => m.alias === modelAlias);
+    const model = models.find((m) => m.alias === modelAlias);
 
     if (!model) {
       console.log(`Model '${modelAlias}' not found for provider '${providerName}'.`);
@@ -158,7 +165,7 @@ function showModelParameters(providerName: ProviderName, modelAlias: string): vo
 
 /**
  * Displays the current configuration.
- * 
+ *
  * @param {AppConfig} config - The current configuration
  */
 function showConfig(config: AppConfig): void {
@@ -174,7 +181,7 @@ function showConfig(config: AppConfig): void {
 
 /**
  * Initiates an interactive configuration session.
- * 
+ *
  * @param {ConfigurationFileLoader} configLoader - The configuration file loader
  */
 async function interactiveConfig(configLoader: ConfigurationFileLoader): Promise<void> {
@@ -243,4 +250,4 @@ async function interactiveConfig(configLoader: ConfigurationFileLoader): Promise
   showConfig(configManager.getConfig());
 }
 
-export default createConfigCommand
+export default createConfigCommand;

@@ -1,31 +1,31 @@
 // src/commands/chat.ts
 
-import { Command } from "commander";
-import prompts from "prompts";
-import { cliOptions } from "../options";
-import { logger } from "@qllm-lib/common/utils/logger";
-import { ErrorManager } from "@qllm-lib/common/utils/error_manager";
-import { resolveModelAlias } from "@qllm-lib/config/model_aliases";
-import { ProviderFactory } from "@qllm-lib/core/providers/provider_factory";
-import { configManager } from "@qllm-lib/config/configuration_manager";
-import { DEFAULT_APP_CONFIG } from "@qllm-lib/config/default_config";
-import { ProviderName } from "@qllm/types/src";
-import { displayOptions } from "@qllm-lib/common/utils/option_display";
+import { Command } from 'commander';
+import prompts from 'prompts';
+import { cliOptions } from '../options';
+import { logger } from '@qllm-lib/common/utils/logger';
+import { ErrorManager } from '@qllm-lib/common/utils/error_manager';
+import { resolveModelAlias } from '@qllm-lib/config/model_aliases';
+import { ProviderFactory } from '@qllm-lib/core/providers/provider_factory';
+import { configManager } from '@qllm-lib/config/configuration_manager';
+import { DEFAULT_APP_CONFIG } from '@qllm-lib/config/default_config';
+import { ProviderName } from '@qllm/types/src';
+import { displayOptions } from '@qllm-lib/common/utils/option_display';
 import { LLMProviderOptions, Message } from '@qllm/types/src';
-import { handleStreamWithSpinner } from "@qllm-lib/common/utils/stream_helper";
-import { Spinner } from "../../helpers/spinner";
+import { handleStreamWithSpinner } from '@qllm-lib/common/utils/stream_helper';
+import { Spinner } from '../../helpers/spinner';
 import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
 import { QllmError } from '@qllm-lib/common/errors/custom_errors';
 
 /**
  * Creates and returns the 'chat' command for the CLI application.
  * This command initiates an interactive chat session with a Language Learning Model (LLM).
- * 
+ *
  * @returns {Command} The configured 'chat' command
  */
 export function createChatCommand(): Command {
-  const chatCommand = new Command("chat")
-    .description("Start an interactive chat session with the LLM")
+  const chatCommand = new Command('chat')
+    .description('Start an interactive chat session with the LLM')
     .addOption(cliOptions.maxTokensOption)
     .addOption(cliOptions.temperatureOption)
     .addOption(cliOptions.topPOption)
@@ -50,19 +50,20 @@ export function createChatCommand(): Command {
         const providerName = ((parentOptions.provider as string) ||
           config.defaultProvider ||
           DEFAULT_APP_CONFIG.defaultProvider) as ProviderName;
-        
+
         // Log debug information
         logger.debug(`modelAlias: ${modelAlias}`);
         logger.debug(`providerName: ${providerName}`);
         logger.debug(`defaultProviderName: ${config.defaultProvider}`);
-        
+
         // Resolve model alias to model id
-        const modelId = parentOptions.modelId || modelAlias
-          ? resolveModelAlias(providerName, modelAlias)
-          : config.defaultModelId;
+        const modelId =
+          parentOptions.modelId || modelAlias
+            ? resolveModelAlias(providerName, modelAlias)
+            : config.defaultModelId;
 
         if (!modelId) {
-          ErrorManager.throwError("ModelError", `Model id ${modelId} not found`);
+          ErrorManager.throwError('ModelError', `Model id ${modelId} not found`);
         }
 
         const maxTokens = options.maxTokens || config.defaultMaxTokens;
@@ -88,32 +89,32 @@ export function createChatCommand(): Command {
         };
 
         logger.debug(`providerName: ${providerName}`);
-        displayOptions(llmOptions, "chat");
+        displayOptions(llmOptions, 'chat');
 
         // Main chat loop
         while (true) {
           // Prompt user for input
           const response = await prompts({
-            type: "text",
-            name: "input",
-            message: "You:",
+            type: 'text',
+            name: 'input',
+            message: 'You:',
           });
 
           // Check if user wants to exit
-          if (response.input.toLowerCase() === "exit") {
-            logger.info("Chat session ended.");
+          if (response.input.toLowerCase() === 'exit') {
+            logger.info('Chat session ended.');
             break;
           }
 
           // Add user message to the conversation
-          messages.push({ role: "user", content: response.input });
+          messages.push({ role: 'user', content: response.input });
 
           // Generate and display AI response
           const fullResponse = await handleStreamWithSpinner(
             provider,
             messages,
-            llmOptions, 
-            new Spinner("Generating response...")
+            llmOptions,
+            new Spinner('Generating response...'),
           );
 
           // Display the response on the console
@@ -121,7 +122,7 @@ export function createChatCommand(): Command {
           console.log(formattedResponse);
 
           // Add AI response to the conversation
-          messages.push({ role: "assistant", content: fullResponse });
+          messages.push({ role: 'assistant', content: fullResponse });
         }
       } catch (error) {
         // Handle errors
