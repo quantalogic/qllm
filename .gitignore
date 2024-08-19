@@ -12,3 +12,5 @@ package-lock.json
 dist
 tsconfig.tsbuildinfo
 packages/qllm-cli/tsconfig.tsbuildinfo
+packages/qllm-lib/tsconfig.tsbuildinfo
+packages/qllm-types/tsconfig.tsbuildinfo
