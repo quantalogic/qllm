@@ -1,16 +1,16 @@
 // src/commands/config.ts
 
-import { logger } from '@qllm-lib/common/utils/logger';
-import { ErrorManager } from '@qllm-lib/common/utils/error_manager';
-import { configManager } from '@qllm-lib/config/configuration_manager';
+import { logger } from '@qllm/lib/common/utils/logger';
+import { ErrorManager } from '@qllm/lib/common/utils/error_manager';
+import { configManager } from '@qllm/lib/config/configuration_manager';
 import { AppConfig, ProviderName } from '@qllm/types/src';
 import { Command, Option } from 'commander';
 import prompts from 'prompts';
-import { ConfigurationFileLoader } from '@qllm-lib/common/utils/configuration_file_loader';
-import { resolveConfigPath } from '@qllm-lib/common/utils/path_resolver';
-import { getAllProviders, getModelsForProvider } from '@qllm-lib/config/provider_config';
-import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
-import { QllmError } from '@qllm-lib/common/errors/custom_errors';
+import { ConfigurationFileLoader } from '@qllm/lib/common/utils/configuration_file_loader';
+import { resolveConfigPath } from '@qllm/lib/common/utils/path_resolver';
+import { getAllProviders, getModelsForProvider } from '@qllm/lib/config/provider_config';
+import { ErrorHandler } from '@qllm/lib/common/utils/error_handler';
+import { QllmError } from '@qllm/lib/common/errors/custom_errors';
 
 /**
  * Creates and returns the 'config' command for the CLI application.

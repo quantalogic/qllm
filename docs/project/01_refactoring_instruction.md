@@ -878,8 +878,8 @@ d. Update the CLI commands:
 ```typescript
 // packages/qllm-cli/src/cli/commands/ask.ts
 
-import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
-import { QllmError } from '@qllm-lib/common/errors/custom_errors';
+import { ErrorHandler } from '@qllm/lib/common/utils/error_handler';
+import { QllmError } from '@qllm/lib/common/errors/custom_errors';
 
 // ...
 
@@ -908,8 +908,8 @@ Finally, let's update the main entry point to use our new error handling system:
 ```typescript
 // packages/qllm-cli/src/cli.ts
 
-import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
-import { QllmError } from '@qllm-lib/common/errors/custom_errors';
+import { ErrorHandler } from '@qllm/lib/common/utils/error_handler';
+import { QllmError } from '@qllm/lib/common/errors/custom_errors';
 
 // ...
 

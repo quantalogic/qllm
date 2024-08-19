@@ -29,7 +29,11 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
-    "composite": true
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@qllm/types": ["src"]
+    }
   },
   "include": [
     "src/**/*.ts"

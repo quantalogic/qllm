@@ -4,15 +4,15 @@ import { Command } from 'commander';
 import fs from 'fs/promises';
 import axios from 'axios';
 import { cliOptions } from '../options';
-import { logger } from '@qllm-lib/common/utils/logger';
-import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
-import { QllmError } from '@qllm-lib/common/errors/custom_errors';
-import { ProviderFactory } from '@qllm-lib/core/providers/provider_factory';
-import { configManager } from '@qllm-lib/config/configuration_manager';
+import { logger } from '@qllm/lib/common/utils/logger';
+import { ErrorHandler } from '@qllm/lib/common/utils/error_handler';
+import { QllmError } from '@qllm/lib/common/errors/custom_errors';
+import { ProviderFactory } from '@qllm/lib/core/providers/provider_factory';
+import { configManager } from '@qllm/lib/config/configuration_manager';
 import { ProviderName } from '@qllm/types/src';
 import { withSpinner } from '@/helpers/spinner_helper';
 import { formatOutput, writeOutput } from '@/helpers/output_helper';
-import { resolveModelAlias } from '@qllm-lib/config/model_aliases';
+import { resolveModelAlias } from '@qllm/lib/config/model_aliases';
 
 /**
  * Creates and returns the 'embed' command for the CLI application.

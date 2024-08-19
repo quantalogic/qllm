@@ -1,6 +1,6 @@
 {
   "name": "@qllm/types",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Lib functionality for QLLM",
   "types": "dist/src/index.d.ts",
   "module": "dist/src/index.js",

@@ -1,8 +1,8 @@
 {
   "files": [],
   "references": [
+    { "path": "./packages/qllm-types" },
     { "path": "./packages/qllm-lib" },
     { "path": "./packages/qllm-cli" },
-    { "path": "./packages/qllm-types" }
   ]
 }

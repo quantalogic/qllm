@@ -17,6 +17,11 @@
     "prune": "ts-prune prune",
     "lint": "eslint 'src/**/*.ts'"
   },
+  "dependencies": {
+    "@qllm/lib": "^1.2.0",
+    "commander": "^9.2.0",
+     "inquirer": "^8.1.0"
+  },
   "keywords": [
     "llm",
     "cli",

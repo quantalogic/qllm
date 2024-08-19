@@ -3,21 +3,21 @@
 import { Command } from 'commander';
 import fs from 'fs/promises';
 import { cliOptions } from '../options';
-import { logger } from '@qllm-lib/common/utils/logger';
-import { ErrorManager } from '@qllm-lib/common/utils/error_manager';
-import { resolveModelAlias } from '@qllm-lib/config/model_aliases';
-import { ProviderFactory } from '@qllm-lib/core/providers/provider_factory';
-import { configManager } from '@qllm-lib/config/configuration_manager';
-import { DEFAULT_APP_CONFIG } from '@qllm-lib/config/default_config';
-import { displayOptions } from '@qllm-lib/common/utils/option_display';
+import { logger } from '@qllm/lib/common/utils/logger';
+import { ErrorManager } from '@qllm/lib/common/utils/error_manager';
+import { resolveModelAlias } from '@qllm/lib/config/model_aliases';
+import { ProviderFactory } from '@qllm/lib/core/providers/provider_factory';
+import { configManager } from '@qllm/lib/config/configuration_manager';
+import { DEFAULT_APP_CONFIG } from '@qllm/lib/config/default_config';
+import { displayOptions } from '@qllm/lib/common/utils/option_display';
 import { LLMProviderOptions, Message, ProviderName } from '@qllm/types/src';
 import {
   createStreamOutputHandler,
   handleStreamWithSpinnerAndOutput,
-} from '@qllm-lib/common/utils/stream_helper';
+} from '@qllm/lib/common/utils/stream_helper';
 
-import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
-import { QllmError } from '@qllm-lib/common/errors/custom_errors';
+import { ErrorHandler } from '@qllm/lib/common/utils/error_handler';
+import { QllmError } from '@qllm/lib/common/errors/custom_errors';
 
 export function createStreamCommand(): Command {
   const streamCommand = new Command('stream')
