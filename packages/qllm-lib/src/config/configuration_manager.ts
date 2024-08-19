@@ -51,7 +51,7 @@ export class ConfigurationManager extends EventEmitter {
     const oldConfig = { ...this.config };
     this.config = {
       ...this.config,
-      ...Object.fromEntries(Object.entries(updates).filter(([_, value]) => value !== undefined)),
+      ...Object.fromEntries(Object.entries(updates).filter(([_key, value]) => value !== undefined)),
     };
     logger.debug(
       `Configuration updated. Old: ${JSON.stringify(oldConfig)}, New: ${JSON.stringify(this.config)}`,

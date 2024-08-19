@@ -9,7 +9,7 @@ export interface ModelAlias {
   /** The actual model ID */
   modelId: string;
   /** parameters allowd */
-  parameters: Object;
+  parameters: object;
 }
 
 /**

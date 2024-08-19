@@ -14,7 +14,8 @@
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "start": "node dist/src/server.js",
     "cli": "node dist/src/cli.js",
-    "prune": "ts-prune prune"
+    "prune": "ts-prune prune",
+    "lint": "eslint 'src/**/*.ts'"
   },
   "keywords": [
     "llm",

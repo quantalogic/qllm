@@ -71,7 +71,7 @@ export function getProviderConfig(providerName: ProviderName): ProviderConfig {
 // New function to get models for a provider
 export function getModelsForProvider(
   providerName: ProviderName,
-): { alias: string; modelId: string; parameters: Object }[] {
+): { alias: string; modelId: string; parameters: object }[] {
   switch (providerName) {
     case 'anthropic':
       return anthropicConfig.models;

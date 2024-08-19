@@ -14,5 +14,10 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/quantalogic/qllm"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.1.0",
+    "@typescript-eslint/parser": "^8.1.0",
+    "eslint": "^9.9.0"
   }
 }
