@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "CommonJS",
     "lib": ["ES2020", "DOM"],
     "moduleResolution": "node",
     "rootDir": "./src",
@@ -32,8 +32,8 @@
     "composite": true,
     "baseUrl": ".",
     "paths": {
-      "@qllm/lib/*": ["src/*"],
-      "@qllm/types": ["../qllm-types/src"]
+      "qllm-lib/*": ["src/*"],
+      "qllm-types": ["../qllm-types/src"]
     }
   },
   "include": ["src/**/*.ts"],

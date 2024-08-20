@@ -14,8 +14,8 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@qllm/lib/*": ["../qllm-lib/src/*"],
-      "@qllm/types/*": ["../qllm-types/src/*"]
+      "qllm-lib/*": ["../qllm-lib/src/*"],
+      "qllm-types/*": ["../qllm-types/src/*"]
     }
   },
     "ts-node": {

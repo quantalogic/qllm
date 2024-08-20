@@ -1,14 +1,17 @@
 {
   "name": "qllm",
-  "version": "1.3.0",
-  "description": "QLLM Multi-Provider LLM Command CLI",
+  "version": "1.4.0",
+  "private": false,
+  "description": "A versatile command line interface (CLI) for QLLM, enabling seamless interaction with multiple providers of Large Language Models (LLMs). Simplify your AI workflows with powerful commands and integrations.",
   "main": "dist/qllm-cli/src/cli.js",
   "type": "module",
   "types": "dist/qllm-cli/src/cli.d.ts",
   "bin": {
     "qllm": "dist/qllm-cli/src/cli.js"
   },
-  "outDir": "./dist",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev-cli": "ts-node -r tsconfig-paths/register src/cli.ts",
     "dev-server": "ts-node -r tsconfig-paths/register src/server.ts",
@@ -23,13 +26,26 @@
   "dependencies": {
     "@qllm/lib": "^1.3.0",
     "commander": "^9.2.0",
-     "inquirer": "^8.1.0"
+    "inquirer": "^8.1.0"
   },
   "keywords": [
     "llm",
     "cli",
-    "ai"
+    "ai",
+    "command-line",
+    "multi-provider"
   ],
-  "author": "QuantaLogic",
-  "license": "Apache-2.0"
+  "author": {
+    "name": "QuantaLogic",
+    "url": "https://quantalogic.com"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/quantalogic/qllm"
+  },
+  "bugs": {
+    "url": "https://github.com/quantalogic/qllm/issues"
+  },
+  "homepage": "https://github.com/quantalogic/qllm#readme"
 }
