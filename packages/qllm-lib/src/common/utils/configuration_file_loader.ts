@@ -4,7 +4,7 @@ import path from 'path';
 import { logger } from './logger';
 import { ErrorManager } from './error_manager';
 //import { AppConfig } from '../../config/types';
-import { AppConfig } from '@qllm/types/src';
+import { AppConfig } from 'qllm-types';
 import { DEFAULT_APP_CONFIG } from '../../config/default_config';
 
 export class ConfigurationFileLoader {

@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 
-import { logger } from '@qllm/lib/common/utils/logger';
-import { OutputFormat, LLMResponse } from '@qllm/types/src';
+import { logger } from 'qllm-lib/common/utils/logger';
+import { OutputFormat, LLMResponse } from 'qllm-types';
 
 /**
  * Formats the LLM response based on the specified output format.

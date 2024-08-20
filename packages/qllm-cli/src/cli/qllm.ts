@@ -7,14 +7,14 @@ import { createStreamCommand } from './commands/stream';
 import { createChatCommand } from './commands/chat';
 import { createConfigCommand } from './commands/config';
 import { createTemplateCommand } from './commands/template';
-import { ConfigurationFileLoader } from '@qllm/lib/common/utils/configuration_file_loader';
-import { logger } from '@qllm/lib/common/utils/logger';
-import { configManager } from '@qllm/lib/config/configuration_manager';
-import { resolveConfigPath } from '@qllm/lib/common/utils/path_resolver';
+import { ConfigurationFileLoader } from 'qllm-lib/common/utils/configuration_file_loader';
+import { logger } from 'qllm-lib/common/utils/logger';
+import { configManager } from 'qllm-lib/config/configuration_manager';
+import { resolveConfigPath } from 'qllm-lib/common/utils/path_resolver';
 
-import { ErrorHandler } from '@qllm/lib/common/utils/error_handler';
-import { QllmError } from '@qllm/lib/common/errors/custom_errors';
-import { ErrorManager } from '@qllm/lib/common/utils/error_manager';
+import { ErrorHandler } from 'qllm-lib/common/utils/error_handler';
+import { QllmError } from 'qllm-lib/common/errors/custom_errors';
+import { ErrorManager } from 'qllm-lib/common/utils/error_manager';
 
 const VERSION = '1.3.0';
 

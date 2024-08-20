@@ -1,4 +1,4 @@
-import { LLMProviderOptions } from '@qllm/types/src';
+import { LLMProviderOptions } from 'qllm-types';
 import { logger } from './logger';
 
 type OptionValue = string | number | boolean | undefined;

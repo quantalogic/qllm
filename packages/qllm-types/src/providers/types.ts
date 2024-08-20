@@ -1,4 +1,4 @@
-import { ToolsArraySchema } from '@qllm/types/src';
+import { ToolsArraySchema } from 'config/tools_config';
 import { z } from 'zod';
 
 // Message roles

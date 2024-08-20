@@ -1,6 +1,6 @@
 // src/config/providers/anthropic.ts
 
-import { ProviderConfig } from '@qllm/types/src';
+import { ProviderConfig } from 'qllm-types';
 
 const anthropicConfig: ProviderConfig = {
   name: 'anthropic',

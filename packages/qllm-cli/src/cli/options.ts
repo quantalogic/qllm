@@ -1,5 +1,5 @@
 // src/options.ts
-import { ErrorManager } from '@qllm/lib/common/utils/error_manager';
+import { ErrorManager } from 'qllm-lib/common/utils/error_manager';
 import { Option } from 'commander';
 
 /**

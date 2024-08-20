@@ -1,6 +1,6 @@
 import { LLMProvider } from './llm_provider';
-import { LLMProviderOptions } from '@qllm/types/src';
-import { ProviderName } from '@qllm/types/src';
+import { LLMProviderOptions } from 'qllm-types';
+import { ProviderName } from 'qllm-types';
 
 type ProviderFactory = (options: LLMProviderOptions) => LLMProvider;
 

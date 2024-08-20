@@ -1,4 +1,4 @@
-import { ProviderConfig } from '@qllm/types/src';
+import { ProviderConfig } from 'qllm-types';
 
 const ollamaConfig: ProviderConfig = {
   name: 'ollama',

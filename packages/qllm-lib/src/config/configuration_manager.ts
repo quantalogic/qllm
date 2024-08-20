@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { AppConfig } from '@qllm/types/src';
+import { AppConfig } from 'qllm-types';
 import { DEFAULT_APP_CONFIG } from './default_config';
 import { logger } from '../common/utils/logger';
 import { ErrorManager } from '../common/utils/error_manager';

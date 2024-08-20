@@ -1,4 +1,4 @@
-import { ProviderConfig } from '@qllm/types/src';
+import { ProviderConfig } from 'qllm-types';
 
 const perplexityConfig: ProviderConfig = {
   name: 'groq',

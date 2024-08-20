@@ -4,8 +4,8 @@ import {
   RateLimitError,
   InvalidRequestError,
 } from './llm_provider';
-import { Message } from '@qllm/types/src';
-import { LLMProviderOptions } from '@qllm/types/src';
+import { Message } from 'qllm-types';
+import { LLMProviderOptions } from 'qllm-types';
 import { providerRegistry } from './provider_registry';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
 import axios from 'axios'; // You'll need to install axios if not already installed

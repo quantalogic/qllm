@@ -1,6 +1,6 @@
 // src/config/model_aliases.ts
 
-import { ProviderConfig, ProviderName } from '@qllm/types/src';
+import { ProviderConfig, ProviderName } from 'qllm-types';
 import anthropicConfig from '../core/config/providers/anthropic';
 import openaiConfig from '../core/config/providers/openai';
 import ollamaConfig from '../core/config/providers/ollama';

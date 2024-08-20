@@ -24,9 +24,10 @@
     "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
-    "@qllm/lib": "^1.3.0",
     "commander": "^9.2.0",
-    "inquirer": "^8.1.0"
+    "inquirer": "^8.1.0",
+    "qllm-lib": "^1.4.0",
+    "qllm-types": "^1.4.0"
   },
   "keywords": [
     "llm",

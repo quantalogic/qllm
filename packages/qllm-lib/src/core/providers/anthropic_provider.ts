@@ -5,8 +5,8 @@ import {
   RateLimitError,
   InvalidRequestError,
 } from './llm_provider';
-import { Message } from '@qllm/types/src';
-import { LLMProviderOptions } from '@qllm/types/src';
+import { Message } from 'qllm-types';
+import { LLMProviderOptions } from 'qllm-types';
 import { getCredentials } from './aws/credentials';
 import { logger } from '../../common/utils/logger';
 import { DEFAULT_MAX_TOKENS } from '../config/default';
