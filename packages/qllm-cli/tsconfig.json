@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "CommonJS",
+    "module": "ESNext",
     "lib": ["ES2018", "ES2019.Array", "ES2020.Promise", "ES2020.BigInt", "ES2020.String"],
     "declaration": true,
     "outDir": "./dist",

@@ -3,6 +3,7 @@
   "version": "1.3.0",
   "description": "QLLM Multi-Provider LLM Command CLI",
   "main": "dist/qllm-cli/src/cli.js",
+  "type": "module",
   "types": "dist/qllm-cli/src/cli.d.ts",
   "bin": {
     "qllm": "dist/qllm-cli/src/cli.js"

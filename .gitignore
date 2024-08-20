@@ -10,7 +10,3 @@ package-lock.json
 .qllmrc.yaml
 .qllmrc.yaml*
 dist
-packages/qllm-cli/tsconfig.tsbuildinfo
-packages/qllm-lib/tsconfig.tsbuildinfo
-packages/qllm-types/tsconfig.tsbuildinfo
-**/*/*.tsbuildinfo
