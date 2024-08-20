@@ -21,7 +21,9 @@
     "dev-ask": "npm run dev-cli -w qllm -- ask",
     "dev-stream": "npm run dev-cli -w qllm -- stream",
     "start": "npm run start --workspaces --if-present",
-    "clean": "npm run clean --workspaces --if-present"
+    "clean": "npm run clean --workspaces --if-present",
+    "lerna:build": "lerna run build --stream",
+    "lerna:clean": "lerna clean && lerna exec -- rm -rf dist"
   },
   "devDependencies": {
     "@types/cli-spinner": "^0.2.3",

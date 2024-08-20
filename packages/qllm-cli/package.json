@@ -1,11 +1,13 @@
 {
   "name": "qllm",
-  "version": "1.1.1",
+  "version": "1.3.0",
   "description": "QLLM Multi-Provider LLM Command CLI",
-  "main": "dist/src/cli.js",
+  "main": "dist/qllm-cli/src/cli.js",
+  "types": "dist/qllm-cli/src/cli.d.ts",
   "bin": {
-    "qllm": "dist/cli.js"
+    "qllm": "dist/qllm-cli/src/cli.js"
   },
+  "outDir": "./dist",
   "scripts": {
     "dev-cli": "ts-node -r tsconfig-paths/register src/cli.ts",
     "dev-server": "ts-node -r tsconfig-paths/register src/server.ts",
@@ -18,7 +20,7 @@
     "lint": "eslint 'src/**/*.ts'"
   },
   "dependencies": {
-    "@qllm/lib": "^1.2.0",
+    "@qllm/lib": "^1.3.0",
     "commander": "^9.2.0",
      "inquirer": "^8.1.0"
   },
@@ -27,6 +29,6 @@
     "cli",
     "ai"
   ],
-  "author": "quantalogic",
+  "author": "QuantaLogic",
   "license": "Apache-2.0"
 }

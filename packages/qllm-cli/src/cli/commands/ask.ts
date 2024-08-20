@@ -12,13 +12,13 @@ import { configManager } from '@qllm/lib/config/configuration_manager';
 import { DEFAULT_APP_CONFIG } from '@qllm/lib/config/default_config';
 import { ProviderName } from '@qllm/types/src';
 import { displayOptions } from '@qllm/lib/common/utils/option_display';
-import { withSpinner } from '@/helpers/spinner_helper';
-import { formatOutput, writeOutput } from '@/helpers/output_helper';
+import { formatOutput, writeOutput } from '../../helpers/output_helper';
 import { LLMProviderOptions, Message } from '@qllm/types/src';
 import { z } from 'zod';
 import { ErrorHandler } from '@qllm/lib/common/utils/error_handler';
 import { QllmError } from '@qllm/lib/common/errors/custom_errors';
 import { ToolsArraySchema } from '@qllm/types/src';
+import { withSpinner } from '../../helpers/spinner_helper';
 
 /**
  * Creates and returns the 'ask' command for the CLI application.

@@ -1,7 +1,6 @@
 // src/commands/config.ts
 
 import { logger } from '@qllm/lib/common/utils/logger';
-import { ErrorManager } from '@qllm/lib/common/utils/error_manager';
 import { configManager } from '@qllm/lib/config/configuration_manager';
 import { AppConfig, ProviderName } from '@qllm/types/src';
 import { Command, Option } from 'commander';
