@@ -10,3 +10,4 @@ package-lock.json
 .qllmrc.yaml
 .qllmrc.yaml*
 dist
+*.tsbuildinfo
