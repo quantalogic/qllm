@@ -30,12 +30,12 @@
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
     "composite": true,
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {
-      "qllm-lib/*": ["src/*"],
-      "qllm-types": ["../qllm-types/src"]
+      "qllm-types": ["../qllm-types/dist"]
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"],
+  "references": [{ "path": "../qllm-types" }]
 }
