@@ -1,17 +1,26 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
-    "lib": ["es2016"],
-    "outDir": "dist",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "declaration": true,
-    "sourceMap": true,
-    "resolveJsonModule": true
+    "target": "es2016", // Target ECMAScript version
+    "module": "ESNext", // Use ESNext for module resolution
+    "lib": ["es2016", "DOM"], // Include necessary libraries
+    "outDir": "dist", // Output directory for compiled files
+    "rootDir": "src", // Specify the root directory of input files
+    "strict": true, // Enable all strict type-checking options
+    "esModuleInterop": true, // Enables emit interoperability between CommonJS and ES Modules
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "forceConsistentCasingInFileNames": true, // Ensure consistent casing in imports
+    "declaration": true, // Generate declaration files
+    "sourceMap": true, // Generate source maps for debugging
+    "resolveJsonModule": true, // Allow importing JSON files
+    "moduleResolution": "node", // Use Node.js module resolution strategy
+    "baseUrl": "./", // Base directory to resolve non-relative module names
+    "paths": {
+      "qllm-lib/*": ["dist/*"], // Allow importing from the dist directory
+      "qllm-lib/types/*": ["dist/types/*"], // Allow wildcard imports for types
+      "qllm-lib/config/*": ["dist/config/*"], // Allow wildcard imports for config
+      "qllm-lib/core/*": ["dist/core/*"] // Allow wildcard imports for core
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
+  "include": ["src/**/*"], // Include all TypeScript files in the src directory
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"] // Exclude unnecessary files
 }

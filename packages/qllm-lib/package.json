@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "1.4.10",
+  "version": "1.4.12",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -73,10 +73,34 @@
     "ts-jest": "^29.0.5",
     "typescript": "^5.5.4"
   },
-  "exports": {
+"exports": {
     ".": {
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
+    },
+    "./types": {
+      "import": "./dist/esm/types/index.js",
+      "require": "./dist/cjs/types/index.js"
+    },
+    "./types/*": {
+      "import": "./dist/esm/types/*.js",
+      "require": "./dist/cjs/types/*.js"
+    },
+    "./config": {
+      "import": "./dist/esm/config/index.js",
+      "require": "./dist/cjs/config/index.js"
+    },
+    "./config/*": {
+      "import": "./dist/esm/config/*.js",
+      "require": "./dist/cjs/config/*.js"
+    },
+    "./core": {
+      "import": "./dist/esm/core/index.js",
+      "require": "./dist/cjs/core/index.js"
+    },
+    "./core/*": {
+      "import": "./dist/esm/core/*.js",
+      "require": "./dist/cjs/core/*.js"
     }
   }
 }
