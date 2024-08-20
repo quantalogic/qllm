@@ -1,4 +1,4 @@
-import { ProviderConfig } from "../../../types/config";
+import { ProviderConfig } from '../../../types/config';
 
 const ollamaConfig: ProviderConfig = {
   name: 'ollama',

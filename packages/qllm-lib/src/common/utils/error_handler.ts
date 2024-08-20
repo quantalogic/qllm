@@ -5,10 +5,7 @@ import { QllmError } from '../../types/errors';
  * Custom error class for application-specific errors.
  */
 export class AppError extends Error {
-  constructor(
-    public code: string,
-    message: string,
-  ) {
+  constructor(public code: string, message: string) {
     super(message);
     this.name = 'AppError';
   }

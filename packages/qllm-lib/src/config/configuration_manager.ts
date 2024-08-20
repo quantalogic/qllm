@@ -54,7 +54,9 @@ export class ConfigurationManager extends EventEmitter {
       ...Object.fromEntries(Object.entries(updates).filter(([_key, value]) => value !== undefined)),
     };
     logger.debug(
-      `Configuration updated. Old: ${JSON.stringify(oldConfig)}, New: ${JSON.stringify(this.config)}`,
+      `Configuration updated. Old: ${JSON.stringify(oldConfig)}, New: ${JSON.stringify(
+        this.config,
+      )}`,
     );
     this.emit('configUpdated', this.config);
   }

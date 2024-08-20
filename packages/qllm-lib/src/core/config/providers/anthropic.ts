@@ -1,8 +1,6 @@
 // src/config/providers/anthropic.ts
 
-import { ProviderConfig } from "../../../types/config";
-
-
+import { ProviderConfig } from '../../../types/config';
 
 const anthropicConfig: ProviderConfig = {
   name: 'anthropic',

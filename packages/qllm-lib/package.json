@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "1.4.12",
+  "version": "1.4.13",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -14,6 +14,7 @@
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/cjs/index.d.ts",
+  "typings": "dist/cjs/index.d.ts",
   "files": [
     "dist"
   ],
@@ -73,34 +74,45 @@
     "ts-jest": "^29.0.5",
     "typescript": "^5.5.4"
   },
-"exports": {
+  "exports": {
     ".": {
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
     "./types": {
       "import": "./dist/esm/types/index.js",
-      "require": "./dist/cjs/types/index.js"
+      "require": "./dist/cjs/types/index.js",
+      "types": "./dist/cjs/types/index.d.ts",
+      "default": "./dist/cjs/types/index.js"
     },
     "./types/*": {
       "import": "./dist/esm/types/*.js",
-      "require": "./dist/cjs/types/*.js"
+      "require": "./dist/cjs/types/*.js",
+      "types": "./dist/cjs/types/*.d.ts",
+      "default": "./dist/cjs/types/*.js"
     },
     "./config": {
       "import": "./dist/esm/config/index.js",
-      "require": "./dist/cjs/config/index.js"
+      "require": "./dist/cjs/config/index.js",
+      "default": "./dist/cjs/config/index.js",
+      "types": "./dist/cjs/config/index.d.ts"
     },
     "./config/*": {
       "import": "./dist/esm/config/*.js",
-      "require": "./dist/cjs/config/*.js"
+      "require": "./dist/cjs/config/*.js",
+      "default": "./dist/cjs/config/*.js"
     },
     "./core": {
       "import": "./dist/esm/core/index.js",
-      "require": "./dist/cjs/core/index.js"
+      "require": "./dist/cjs/core/index.js",
+      "default": "./dist/cjs/core/index.js",
+      "types": "./dist/cjs/core/index.d.ts"
     },
     "./core/*": {
       "import": "./dist/esm/core/*.js",
-      "require": "./dist/cjs/core/*.js"
+      "require": "./dist/cjs/core/*.js",
+      "default": "./dist/cjs/core/*.js",
+      "types": "./dist/cjs/core/*.d.ts"
     }
   }
 }

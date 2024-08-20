@@ -15,10 +15,7 @@ export class ConfigurationError extends QllmError {
 }
 
 export class ProviderError extends QllmError {
-  constructor(
-    message: string,
-    public providerName: string,
-  ) {
+  constructor(message: string, public providerName: string) {
     super(message);
     this.name = 'ProviderError';
   }

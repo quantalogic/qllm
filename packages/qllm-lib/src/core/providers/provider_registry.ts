@@ -2,7 +2,6 @@ import { ProviderName } from '../../types/config';
 import { LLMProviderOptions } from '../../types/providers';
 import { LLMProvider } from './llm_provider';
 
-
 type ProviderFactory = (options: LLMProviderOptions) => LLMProvider;
 
 class ProviderRegistry {

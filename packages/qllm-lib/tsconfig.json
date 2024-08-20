@@ -21,6 +21,14 @@
       "qllm-lib/core/*": ["dist/core/*"] // Allow wildcard imports for core
     }
   },
-  "include": ["src/**/*","package.json","README.md"], // Include necessary files
+  "include": [
+    "src/**/*",
+    "package.json",
+    "package-lock.json",
+    "README.md",
+    "tsconfig.json",
+    "tsconfig.cjs.json",
+    "tsconfig.esm.json"
+  ], // Include necessary files
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"] // Exclude unnecessary files
 }

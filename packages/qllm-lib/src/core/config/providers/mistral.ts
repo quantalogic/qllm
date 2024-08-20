@@ -1,5 +1,4 @@
-
-import { ProviderConfig } from "../../../types/config";
+import { ProviderConfig } from '../../../types/config';
 
 const mistralConfig: ProviderConfig = {
   name: 'openai',

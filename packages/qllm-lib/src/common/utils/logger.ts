@@ -19,19 +19,18 @@ class Logger {
       ),
       transports: [
         new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-          ),
+          format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
         }),
       ],
     });
 
     // If in a browser environment, log to console directly
     if (isBrowser) {
-      this.logger.add(new winston.transports.Console({
-        format: winston.format.simple(),
-      }));
+      this.logger.add(
+        new winston.transports.Console({
+          format: winston.format.simple(),
+        }),
+      );
     }
   }
 

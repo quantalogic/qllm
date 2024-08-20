@@ -39,10 +39,7 @@ export interface LLMProvider {
 }
 
 export class LLMProviderError extends Error {
-  constructor(
-    message: string,
-    public providerName: string,
-  ) {
+  constructor(message: string, public providerName: string) {
     super(message);
     this.name = 'LLMProviderError';
   }

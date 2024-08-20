@@ -13,5 +13,5 @@
     "sourceMap": true, // Generate source maps for easier debugging
     "resolveJsonModule": true, // Allow importing JSON files
     "allowSyntheticDefaultImports": true // Allow default imports from modules without default exports
-  },
+  }
 }
