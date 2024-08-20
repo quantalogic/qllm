@@ -6,7 +6,7 @@ import { TemplateDefinition, TemplateVariable } from './types';
 import { logger } from '../../common/utils/logger';
 import { ErrorManager } from '../../common/utils/error_manager';
 import { ErrorHandler } from '../../common/utils/error_handler';
-import { TemplateError, InputValidationError } from '../../common/errors/custom_errors';
+import { TemplateError, InputValidationError } from '../../types/errors';
 
 export interface TemplateManagerConfig {
   promptDirectory: string;

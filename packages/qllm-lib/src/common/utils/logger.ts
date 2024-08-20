@@ -7,6 +7,8 @@ class Logger {
   private logger: winston.Logger;
 
   private constructor() {
+    const isBrowser = typeof window !== 'undefined';
+
     this.logger = winston.createLogger({
       level: process.env.LOG_LEVEL || 'info',
       format: winston.format.combine(
@@ -16,12 +18,21 @@ class Logger {
         }),
       ),
       transports: [
-        new winston.transports.Stream({
-          stream: process.stderr,
-          format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.simple()
+          ),
         }),
       ],
     });
+
+    // If in a browser environment, log to console directly
+    if (isBrowser) {
+      this.logger.add(new winston.transports.Console({
+        format: winston.format.simple(),
+      }));
+    }
   }
 
   public static getInstance(): Logger {

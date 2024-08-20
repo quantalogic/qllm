@@ -1,4 +1,4 @@
-import { ProviderConfig } from 'qllm-types';
+import { ProviderConfig } from "../../../types/config";
 
 const jinaConfig: ProviderConfig = {
   name: 'openai',

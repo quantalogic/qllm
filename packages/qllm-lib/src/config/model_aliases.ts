@@ -1,6 +1,5 @@
 // src/config/model_aliases.ts
 
-import { ProviderConfig, ProviderName } from 'qllm-types';
 import anthropicConfig from '../core/config/providers/anthropic';
 import openaiConfig from '../core/config/providers/openai';
 import ollamaConfig from '../core/config/providers/ollama';
@@ -9,6 +8,7 @@ import perplexityConfig from '../core/config/providers/perplexity';
 import mistralConfig from '../core/config/providers/mistral';
 import jinaConfig from '../core/config/providers/jina';
 import openrouterConfig from '../core/config/providers/openrouter';
+import { ProviderConfig, ProviderName } from '../types/config';
 
 // Define a record of provider configurations
 const providerConfigs: Record<ProviderName, ProviderConfig> = {

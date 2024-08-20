@@ -1,5 +1,5 @@
-import { ToolsArraySchema } from 'config/tools_config';
 import { z } from 'zod';
+import { ToolsArraySchema } from '../tools';
 
 // Message roles
 type MessageRole = 'user' | 'assistant' | 'system';

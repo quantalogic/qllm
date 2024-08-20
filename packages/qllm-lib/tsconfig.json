@@ -3,7 +3,6 @@
     "target": "ES2020",
     "module": "CommonJS",
     "lib": ["ES2020", "DOM"],
-    "moduleResolution": "node",
     "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
@@ -29,13 +28,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
-    "composite": true,
-    "baseUrl": "./src",
-    "paths": {
-      "qllm-types": ["../qllm-types/dist"]
-    }
+    "composite": false
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"],
-  "references": [{ "path": "../qllm-types" }]
 }

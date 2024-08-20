@@ -1,6 +1,5 @@
 // src/templates/template_executor.ts
 import { ExecutionContext, TemplateDefinition } from './types';
-import { Message } from 'qllm-types';
 import { OutputVariableExtractor } from './output_variable_extractor';
 import {
   createStreamOutputHandler,
@@ -9,6 +8,7 @@ import {
 import { logger } from '../../common/utils/logger';
 import { ErrorManager } from '../../common/utils/error_manager';
 import { promptForMissingVariables } from '../../common/utils/variable_prompt';
+import { Message } from '../../types/providers';
 
 export class TemplateExecutor {
   /**

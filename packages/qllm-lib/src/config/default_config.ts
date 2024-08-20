@@ -1,6 +1,6 @@
 import path from 'path';
 import os from 'os'; // Add this line to import the 'os' module
-import { AppConfig } from 'qllm-types';
+import { AppConfig } from '../types/config';
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   awsProfile: '381491861296_bedrockfullaccess',

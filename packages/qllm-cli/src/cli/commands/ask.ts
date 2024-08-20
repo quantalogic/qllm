@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import path from 'path';
 import fs from 'fs/promises';
 import { cliOptions } from '../options';
-import { logger } from 'qllm-lib/common/utils/logger';
+import { logger } from 'qllm-lib/common/utils/logger'
 import { ErrorManager } from 'qllm-lib/common/utils/error_manager';
 import { resolveModelAlias } from 'qllm-lib/config/model_aliases';
 import { ProviderFactory } from 'qllm-lib/core/providers/provider_factory';

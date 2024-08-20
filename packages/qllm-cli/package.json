@@ -3,11 +3,11 @@
   "version": "1.4.0",
   "private": false,
   "description": "A versatile command line interface (CLI) for QLLM, enabling seamless interaction with multiple providers of Large Language Models (LLMs). Simplify your AI workflows with powerful commands and integrations.",
-  "main": "dist/qllm-cli/src/cli.js",
+  "main": "dist/cli.js",
   "type": "module",
-  "types": "dist/qllm-cli/src/cli.d.ts",
+  "types": "dist/cli.d.ts",
   "bin": {
-    "qllm": "dist/qllm-cli/src/cli.js"
+    "qllm": "dist/cli.js"
   },
   "files": [
     "dist"
@@ -21,13 +21,13 @@
     "start": "node dist/src/server.js",
     "cli": "node dist/src/cli.js",
     "prune": "ts-prune prune",
-    "lint": "eslint 'src/**/*.ts'"
+    "lint": "eslint 'src/**/*.ts'",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "commander": "^9.2.0",
     "inquirer": "^8.1.0",
-    "qllm-lib": "^1.4.0",
-    "qllm-types": "^1.4.0"
+    "qllm-lib": "^1.4.0"
   },
   "keywords": [
     "llm",

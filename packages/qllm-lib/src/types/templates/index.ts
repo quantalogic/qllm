@@ -1,5 +1,5 @@
 //import { LLMProviderOptions } from '../providers/types';
-import { ProviderName } from '../config/types';
+import { ProviderName } from '../config';
 
 /**
  * Represents the definition of a template.

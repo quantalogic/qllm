@@ -5,8 +5,7 @@ import {
   RateLimitError,
   InvalidRequestError,
 } from './llm_provider';
-import { Message } from 'qllm-types';
-import { LLMProviderOptions } from 'qllm-types';
+import { LLMProviderOptions, Message } from '../../types/providers';
 import { providerRegistry } from './provider_registry';
 
 export class JinaProvider implements LLMProvider {

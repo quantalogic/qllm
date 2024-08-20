@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events';
-import { AppConfig } from 'qllm-types';
+import { AppConfig } from '../types/config';
 import { DEFAULT_APP_CONFIG } from './default_config';
 import { logger } from '../common/utils/logger';
 import { ErrorManager } from '../common/utils/error_manager';
 import { ConfigurationFileLoader } from '../common/utils/configuration_file_loader';
-import { ConfigurationError } from '../common/errors/custom_errors';
+import { ConfigurationError } from '../types/errors';
 import { ErrorHandler } from '../common/utils/error_handler';
 
 export class ConfigurationManager extends EventEmitter {

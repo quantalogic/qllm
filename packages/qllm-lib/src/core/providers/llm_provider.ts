@@ -1,5 +1,4 @@
-import { Message } from 'qllm-types';
-import { LLMProviderOptions } from 'qllm-types';
+import { LLMProviderOptions, Message } from '../../types/providers';
 
 /**
  * Represents an LLM provider.

@@ -1,10 +1,10 @@
 import { LLMProvider } from './llm_provider';
-import { LLMProviderOptions } from 'qllm-types';
-import { ProviderName } from 'qllm-types';
+import { LLMProviderOptions } from '../../types/providers';
 import { providerRegistry } from './provider_registry';
 import { logger } from '../../common/utils/logger';
 import { ErrorManager } from '../../common/utils/error_manager';
 import { PluginManager } from '../../core/plugin_manager';
+import { ProviderName } from '../../types/config';
 
 export class ProviderFactory {
   private static pluginManager = new PluginManager();

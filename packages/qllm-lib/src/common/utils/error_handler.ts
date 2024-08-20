@@ -1,5 +1,5 @@
 import { logger } from './logger';
-import { QllmError } from '../errors/custom_errors';
+import { QllmError } from '../../types/errors';
 
 /**
  * Custom error class for application-specific errors.

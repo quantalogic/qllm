@@ -1,8 +1,9 @@
 // src/templates/types.ts
 
-import { LLMProviderOptions } from 'qllm-types';
-import { ProviderName } from 'qllm-types';
-import { LLMProvider } from '../providers/llm_provider';
+import { ProviderName } from "../../types/config";
+import { LLMProviderOptions } from "../../types/providers";
+import { LLMProvider } from "../providers/llm_provider";
+
 
 /**
  * Represents a variable in a template.

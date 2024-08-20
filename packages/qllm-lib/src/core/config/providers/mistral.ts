@@ -1,4 +1,5 @@
-import { ProviderConfig } from 'qllm-types';
+
+import { ProviderConfig } from "../../../types/config";
 
 const mistralConfig: ProviderConfig = {
   name: 'openai',

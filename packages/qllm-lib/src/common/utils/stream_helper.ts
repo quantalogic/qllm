@@ -1,9 +1,8 @@
 import { LLMProvider } from '../../core/providers/llm_provider';
-import { Spinner } from '../../common/types/spinner';
-import { LLMProviderOptions } from 'qllm-types';
+import { Spinner } from '../../types/spinner';
 import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error_manager';
-import { Message } from 'qllm-types';
+import { LLMProviderOptions, Message } from '../../types/providers';
 
 /**
  * Handles streaming of LLM responses with a spinner for user feedback.

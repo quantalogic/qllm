@@ -1,6 +1,5 @@
 // src/config/provider_config.ts
 
-import { ProviderName } from 'qllm-types';
 import anthropicConfig from '../core/config/providers/anthropic';
 import ollamaConfig from '../core/config/providers/ollama';
 import openaiConfig from '../core/config/providers/openai';
@@ -10,6 +9,7 @@ import mistralConfig from '../core/config/providers/mistral';
 import openrouterConfig from '../core/config/providers/openrouter';
 import jinaConfig from '../core/config/providers/jina';
 import { configManager } from './configuration_manager';
+import { ProviderName } from '../types/config';
 
 export interface ProviderConfig {
   type: ProviderName;
