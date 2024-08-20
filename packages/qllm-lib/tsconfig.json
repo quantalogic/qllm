@@ -30,5 +30,10 @@
     "tsconfig.cjs.json",
     "tsconfig.esm.json"
   ], // Include necessary files
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"] // Exclude unnecessary files
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ] // Exclude unnecessary files
 }
