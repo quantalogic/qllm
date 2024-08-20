@@ -14,6 +14,4 @@
     "resolveJsonModule": true, // Allow importing JSON files
     "allowSyntheticDefaultImports": true // Allow default imports from modules without default exports
   },
-  "include": ["src/**/*.ts"], // Include all TypeScript files in the src directory
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"] // Exclude unnecessary directories and test files
 }

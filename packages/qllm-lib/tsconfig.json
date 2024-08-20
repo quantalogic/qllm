@@ -21,6 +21,6 @@
       "qllm-lib/core/*": ["dist/core/*"] // Allow wildcard imports for core
     }
   },
-  "include": ["src/**/*"], // Include all TypeScript files in the src directory
+  "include": ["src/**/*","package.json","README.md"], // Include necessary files
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"] // Exclude unnecessary files
 }

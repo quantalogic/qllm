@@ -27,7 +27,7 @@
   "dependencies": {
     "commander": "^9.2.0",
     "inquirer": "^8.1.0",
-    "qllm-lib": "^1.4.0"
+    "qllm-lib": "^1.4.12"
   },
   "keywords": [
     "llm",
