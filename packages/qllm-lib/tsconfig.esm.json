@@ -1,10 +1,19 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-      "module": "ESNext",
-      "outDir": "./dist/esm",
-      "moduleResolution": "node",
-      "declaration": true
-    },
-    "include": ["src/**/*.ts"]
-  }
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020", // Set the target to a more recent version for modern features
+    "module": "ESNext", // Use ESNext for module resolution
+    "lib": ["ES2020"], // Include necessary library declarations
+    "outDir": "./dist/esm", // Output directory for ESM build
+    "moduleResolution": "node", // Use Node.js module resolution
+    "esModuleInterop": true, // Enable interoperability between CommonJS and ES modules
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "forceConsistentCasingInFileNames": true, // Enforce consistent casing in imports
+    "declaration": true, // Generate declaration files
+    "sourceMap": true, // Generate source maps for easier debugging
+    "resolveJsonModule": true, // Allow importing JSON files
+    "allowSyntheticDefaultImports": true // Allow default imports from modules without default exports
+  },
+  "include": ["src/**/*.ts"], // Include all TypeScript files in the src directory
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"] // Exclude unnecessary directories and test files
+}

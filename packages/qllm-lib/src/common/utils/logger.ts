@@ -7,7 +7,7 @@ class Logger {
   private logger: winston.Logger;
 
   private constructor() {
-    const isBrowser = typeof window !== 'undefined';
+    const isBrowser = true;
 
     this.logger = winston.createLogger({
       level: process.env.LOG_LEVEL || 'info',
