@@ -13,25 +13,25 @@ export type ChatMessageContent = {
     text?: string;
     imageUrl?: { url: string };
   };
-}
+};
 
 // Chat message structure
-export type ChatMessage =  {
+export type ChatMessage = {
   role: ChatMessageRole;
   content: ChatMessageContent;
-}
+};
 
 export type Usage = {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
-}
+};
 
 export type ChatCompletionResponse = {
   text: string | null;
   finishReason?: string;
   usage?: Usage;
-}
+};
 
 // Generation options
 export interface GenerationOptions {
