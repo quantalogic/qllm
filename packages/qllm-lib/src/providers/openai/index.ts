@@ -12,12 +12,13 @@ import {
   EmbeddingProvider,
   EmbeddingRequestParams,
   ChatStreamCompletionResponse,
+  EmbeddingResponse,
 } from '../../types';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
 const DEFAULT_MODEL = 'gpt-4o-mini';
-const DEFAULT_EMBEDDING_MODEL = 'text-embedding-v1';
+const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
 
 /**
  * OpenAIProvider class implements the LLMProvider interface for OpenAI's language models.
@@ -94,7 +95,6 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       });
 
       for await (const chunk of stream) {
-        console.log(chunk);
         const content = chunk.choices[0]?.delta?.content;
         const usage = chunk.usage;
         const finishReason = chunk.choices[0]?.finish_reason;
@@ -110,7 +110,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
-  async generateEmbedding(input: EmbeddingRequestParams): Promise<number[]> {
+  async generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse> {
     try {
       const { content, model } = input;
 
@@ -124,7 +124,13 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       if (!response.data || response.data.length === 0) {
         throw new Error('No embedding generated');
       }
-      return response.data[0].embedding;
+
+      const embeddingResult: EmbeddingResponse = {
+        embedding: response.data[0]?.embedding || [],
+        embeddings: response.data.map((item) => item.embedding),
+      };
+
+      return embeddingResult;
     } catch (error) {
       this.handleError(error);
     }

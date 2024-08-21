@@ -1,25 +1,17 @@
-import { ChatCompletionResponse, ChatMessage,  ChatStreamCompletionResponse,  LLMOptions } from './llm-types';
-
-// Unified Input Type
-export type EmbeddingRequestParams = {
-  model: string;
-  content: string;
-};
-
-export type Model = {
-  id: string;
-  description?: string;
-  created?: Date;
-};
-
-export type ChatCompletionParams = {
-  messages: ChatMessage[];
-  options: LLMOptions;
-};
+import {
+  ChatCompletionParams,
+  ChatCompletionResponse,
+  ChatStreamCompletionResponse,
+  ChatMessage,
+  EmbeddingRequestParams,
+  EmbeddingResponse,
+  LLMOptions,
+  Model,
+} from './llm-types';
 
 export interface EmbeddingProvider {
   version: string;
-  generateEmbedding(input: EmbeddingRequestParams): Promise<number[]>;
+  generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse>;
   listModels(): Promise<Model[]>;
 }
 
@@ -30,7 +22,9 @@ export interface LLMProvider {
   defaultOptions: LLMOptions; // Default options for the provider
   listModels(): Promise<Model[]>; // Optional method to list available models
   generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
-  streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<ChatStreamCompletionResponse>;
+  streamChatCompletion(
+    params: ChatCompletionParams,
+  ): AsyncIterableIterator<ChatStreamCompletionResponse>;
 }
 
 // Error Handling Classes
@@ -57,8 +51,9 @@ export abstract class BaseLLMProvider implements LLMProvider {
   abstract defaultOptions: LLMOptions;
 
   abstract generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
-  abstract streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<ChatStreamCompletionResponse>;
-
+  abstract streamChatCompletion(
+    params: ChatCompletionParams,
+  ): AsyncIterableIterator<ChatStreamCompletionResponse>;
 
   protected handleError(error: unknown): never {
     if (error instanceof LLMProviderError) {
@@ -87,7 +82,7 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
   public version = '1.0.0'; // Default version
   public abstract name: string;
 
-  abstract generateEmbedding(input: EmbeddingRequestParams): Promise<number[]>;
+  abstract generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse>;
   abstract listModels(): Promise<Model[]>;
 
   protected handleError(error: unknown): never {
@@ -100,4 +95,3 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
     }
   }
 }
-

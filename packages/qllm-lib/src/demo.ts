@@ -1,10 +1,11 @@
-import { getProvider, LLMProvider } from './providers';
+import { EmbeddingProvider, getLLMProvider, LLMProvider,getEmbeddingProvider } from './providers';
 
 const demo = async () => {
   console.log('Test demo');
 
   console.log('Creating OpenAIProvider instance');
-  const provider = getProvider('openai');
+  const provider = getLLMProvider('openai');
+  const embedddingProvider = getEmbeddingProvider('openai');
   console.log('Provider created');
 
   const models = await provider.listModels();
@@ -13,6 +14,8 @@ const demo = async () => {
   await completion(provider);
 
   await stream(provider);
+
+  await embedding(embedddingProvider);  
 };
 
 demo()
@@ -65,6 +68,13 @@ async function stream(provider: LLMProvider) {
   });
 
   for await (const message of result) {
-    process.stdout.write(JSON.stringify(message));
+    process.stdout.write(message.text || '');
   }
+}
+
+async function embedding(provider: EmbeddingProvider) {
+  const content = 'Hello, world!';
+  const model = 'text-embedding-3-small';
+  const result = await provider.generateEmbedding({ model, content });
+  console.log(result);
 }

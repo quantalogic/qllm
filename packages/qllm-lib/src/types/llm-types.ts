@@ -40,6 +40,20 @@ export type ChatStreamCompletionResponse = {
   finishReason: string | null;
 };
 
+export type EmbeddingRequestParams = {
+  model: string;
+  content: string | Array<string> | Array<number> | Array<Array<number>>;
+  dimensions?: number;
+};
+
+
+export type Embedding = number[];
+
+export type EmbeddingResponse = {
+  embedding: Embedding;
+  embeddings: Embedding[];
+};
+
 // Generation options
 export interface GenerationOptions {
   /** Maximum number of tokens to generate */
@@ -103,3 +117,13 @@ export interface ErrorResponse {
   message: string;
   details?: string;
 }
+export type Model = {
+  id: string;
+  description?: string;
+  created?: Date;
+};
+
+export type ChatCompletionParams = {
+  messages: ChatMessage[];
+  options: LLMOptions;
+};
