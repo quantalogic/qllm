@@ -6,14 +6,18 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system';
 // Chat message content types
 export type ChatMessageContentType = 'text' | 'image_url';
 
+export type MessageContent =
+  | {
+      type: 'text';
+      text: string;
+    }
+  | {
+      type: 'image_url';
+      imageUrl: string;
+    };
+
 // Chat message content
-export type ChatMessageContent = {
-  type: ChatMessageContentType;
-  data: {
-    text?: string;
-    imageUrl?: { url: string };
-  };
-};
+export type ChatMessageContent = MessageContent | MessageContent[];
 
 // Chat message structure
 export type ChatMessage = {
@@ -45,7 +49,6 @@ export type EmbeddingRequestParams = {
   content: string | Array<string> | Array<number> | Array<Array<number>>;
   dimensions?: number;
 };
-
 
 export type Embedding = number[];
 

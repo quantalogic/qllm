@@ -1,4 +1,4 @@
-import { EmbeddingProvider, getLLMProvider, LLMProvider,getEmbeddingProvider } from './providers';
+import { EmbeddingProvider, getLLMProvider, LLMProvider, getEmbeddingProvider } from './providers';
 
 const demo = async () => {
   console.log('Test demo');
@@ -15,7 +15,7 @@ const demo = async () => {
 
   await stream(provider);
 
-  await embedding(embedddingProvider);  
+  await embedding(embedddingProvider);
 };
 
 demo()
@@ -33,9 +33,7 @@ async function completion(provider: LLMProvider) {
         role: 'user',
         content: {
           type: 'text',
-          data: {
-            text: 'What is the capital of France?',
-          },
+          text: 'What is the capital of France?',
         },
       },
     ],
@@ -55,9 +53,7 @@ async function stream(provider: LLMProvider) {
         role: 'user',
         content: {
           type: 'text',
-          data: {
-            text: 'Write a small story about Paris',
-          },
+          text: 'Write a small story about Paris',
         },
       },
     ],

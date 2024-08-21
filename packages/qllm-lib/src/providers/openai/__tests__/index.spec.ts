@@ -33,9 +33,7 @@ describe('getProvider', () => {
       role: 'user',
       content: {
         type: 'text',
-        data: {
-          text: 'What is the capital of France?',
-        },
+        text: 'What is the capital of France?',
       },
     };
     const messages: ChatMessage[] = [userMessage];

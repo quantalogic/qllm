@@ -70,7 +70,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
       ? [
           {
             role: 'system',
-            content: { type: 'text', data: { text: options.systemMessage } },
+            content: { type: 'text', text: options.systemMessage },
           },
           ...messages,
         ]

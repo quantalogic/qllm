@@ -150,13 +150,6 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
-  private async formatMessages(messages: ChatMessage[]): Promise<ChatCompletionMessageParam[]> {
-    return messages.map((message) => ({
-      role: message.role,
-      content: message.content.data.text || '',
-    }));
-  }
-
   private withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessage[] {
     return options.systemMessage && options.systemMessage.length > 0
       ? [this.createSystemMessage(options.systemMessage), ...messages]
@@ -168,13 +161,52 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       role: 'system',
       content: {
         type: 'text',
-        data: {
-          text: systemMessageText,
-        },
+        text: systemMessageText,
       },
     };
   }
 
+  private async formatMessages(messages: ChatMessage[]): Promise<ChatCompletionMessageParam[]> {
+    const formattedMessages: ChatCompletionMessageParam[] = [];
+
+    for (const message of messages) {
+      const formattedMessage: ChatCompletionMessageParam = {
+        role: message.role,
+        content: '', // Initialize with an empty string
+      };
+
+      if (Array.isArray(message.content)) {
+        const contentParts: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [];
+        for (const content of message.content) {
+          if (content.type === 'text') {
+            contentParts.push({ type: 'text', text: content.text });
+          } else if (content.type === 'image_url') {
+            contentParts.push({
+              type: 'image_url',
+              image_url: { url: content.imageUrl },
+            });
+          }
+        }
+        formattedMessage.content = contentParts;
+      } else {
+        if (message.content.type === 'text') {
+          formattedMessage.content = message.content.text;
+        } else if (message.content.type === 'image_url') {
+          formattedMessage.content = [
+            {
+              type: 'image_url',
+              image_url: { url: message.content.imageUrl },
+            },
+          ];
+        }
+      }
+
+      formattedMessages.push(formattedMessage);
+    }
+
+    return formattedMessages;
+  }
+  
   private handleError(error: unknown): never {
     if (error instanceof OpenAI.APIError) {
       if (error.status === 401) {
