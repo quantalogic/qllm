@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "1.4.15",
+  "version": "1.4.28",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -10,19 +10,19 @@
     "typescript",
     "aws-sdk"
   ],
-  "type": "module", 
+  "source": "src/index.ts",
   "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js", 
-  "types": "dist/cjs/index.d.ts", 
+  "module": "dist/esm/index.js",
+  "types": "dist/cjs/index.d.ts",
   "files": [
-    "dist" 
+    "dist"
   ],
   "scripts": {
-    "build": "npm run clean && tsc --project tsconfig.esm.json && tsc --project tsconfig.cjs.json", 
-    "clean": "rm -rf dist && rm -rf tsconfig.tsbuildinfo", 
-    "lint": "eslint . --ext .ts", 
-    "format": "prettier --write .", 
-    "test": "jest" 
+    "build": "tsc && tsc -p tsconfig.esm.json",
+    "clean": "rm -rf dist && rm -rf tsconfig.tsbuildinfo",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write .",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -38,29 +38,6 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@aws-sdk/client-sts": "^3.624.0",
-    "@aws-sdk/credential-providers": "^3.624.0",
-    "@aws-sdk/types": "^3.609.0",
-    "@anthropic-ai/bedrock-sdk": "^0.10.1",
-    "@mistralai/mistralai": "^0.5.0",
-    "axios": "^1.7.4",
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "esm": "^3.2.25",
-    "express": "^4.19.2",
-    "fast-xml-parser": "^4.4.0",
-    "glob": "^10.4.2",
-    "groq-sdk": "^0.5.0",
-    "helmet": "^7.1.0",
-    "js-yaml": "^4.1.0",
-    "morgan": "^1.10.0",
-    "ollama": "^0.5.2",
-    "openai": "^4.52.2",
-    "perplexity-sdk": "^1.0.4",
-    "prompts": "^2.4.2",
-    "winston": "^3.13.0",
-    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
@@ -72,41 +49,5 @@
     "prettier": "^2.8.8",
     "ts-jest": "^29.0.5",
     "typescript": "^5.5.4"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    },
-    "./types": {
-      "import": "./dist/esm/types/index.js",
-      "require": "./dist/cjs/types/index.js",
-      "types": "./dist/cjs/types/index.d.ts"
-    },
-    "./types/*": {
-      "import": "./dist/esm/types/*.js",
-      "require": "./dist/cjs/types/*.js",
-      "types": "./dist/cjs/types/*.d.ts"
-    },
-    "./config": {
-      "import": "./dist/esm/config/index.js",
-      "require": "./dist/cjs/config/index.js",
-      "types": "./dist/cjs/config/index.d.ts"
-    },
-    "./config/*": {
-      "import": "./dist/esm/config/*.js",
-      "require": "./dist/cjs/config/*.js",
-      "types": "./dist/cjs/config/*.d.ts"
-    },
-    "./core": {
-      "import": "./dist/esm/core/index.js",
-      "require": "./dist/cjs/core/index.js",
-      "types": "./dist/cjs/core/index.d.ts"
-    },
-    "./core/*": {
-      "import": "./dist/esm/core/*.js",
-      "require": "./dist/cjs/core/*.js",
-      "types": "./dist/cjs/core/*.d.ts"
-    }
   }
 }

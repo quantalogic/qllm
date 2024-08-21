@@ -1,8 +1,0 @@
-awsProfile: 381491861296_bedrockfullaccess
-awsRegion: us-west-2
-defaultProvider: anthropic
-defaultModelAlias: haiku
-logLevel: debug
-defaultMaxTokens: 5012
-promptDirectory: ./prompts
-defaultModelId: 'anthropic.claude-3-haiku-20240307-v1:0'
