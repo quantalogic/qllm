@@ -10,3 +10,5 @@ export function getProvider(providerName: string): LLMProvider {
       throw new Error(`Provider "${providerName}" not found.`);
   }
 }
+
+export { LLMProvider };
