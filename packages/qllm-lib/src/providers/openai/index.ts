@@ -14,7 +14,10 @@ import {
   ChatStreamCompletionResponse,
   EmbeddingResponse,
 } from '../../types';
-import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import {
+  ChatCompletionMessageParam,
+  ChatCompletionContentPart,
+} from 'openai/resources/chat/completions';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -176,28 +179,21 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       };
 
       if (Array.isArray(message.content)) {
-        const contentParts: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [];
+        const contentParts: ChatCompletionContentPart[] = [];
         for (const content of message.content) {
           if (content.type === 'text') {
             contentParts.push({ type: 'text', text: content.text });
           } else if (content.type === 'image_url') {
             contentParts.push({
               type: 'image_url',
-              image_url: { url: content.imageUrl },
-            });
+              image_url: { url: content.imageUrl.url },
+            } as ChatCompletionContentPart); // Type assertion
           }
         }
         formattedMessage.content = contentParts;
       } else {
         if (message.content.type === 'text') {
           formattedMessage.content = message.content.text;
-        } else if (message.content.type === 'image_url') {
-          formattedMessage.content = [
-            {
-              type: 'image_url',
-              image_url: { url: message.content.imageUrl },
-            },
-          ];
         }
       }
 
@@ -206,7 +202,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
 
     return formattedMessages;
   }
-  
+
   private handleError(error: unknown): never {
     if (error instanceof OpenAI.APIError) {
       if (error.status === 401) {

@@ -1,4 +1,5 @@
-import { EmbeddingProvider, getLLMProvider, LLMProvider, getEmbeddingProvider } from './providers';
+import { getEmbeddingProvider, getLLMProvider } from "./providers";
+import { EmbeddingProvider, LLMProvider } from "./types";
 
 const demo = async () => {
   console.log('Test demo');

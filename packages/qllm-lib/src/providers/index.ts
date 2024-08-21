@@ -20,4 +20,3 @@ export function getEmbeddingProvider(provider: string) : EmbeddingProvider {
   }
 }
 
-export { LLMProvider, EmbeddingProvider };

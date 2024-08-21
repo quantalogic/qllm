@@ -6,15 +6,19 @@ export type ChatMessageRole = 'user' | 'assistant' | 'system';
 // Chat message content types
 export type ChatMessageContentType = 'text' | 'image_url';
 
-export type MessageContent =
-  | {
-      type: 'text';
-      text: string;
-    }
-  | {
-      type: 'image_url';
-      imageUrl: string;
-    };
+export type TextContent = {
+  type: 'text';
+  text: string;
+};
+
+export type ImageUrlContent = {
+  type: 'image_url';
+  imageUrl: {
+    url: string;
+  };
+};
+
+export type MessageContent = TextContent | ImageUrlContent;
 
 // Chat message content
 export type ChatMessageContent = MessageContent | MessageContent[];
