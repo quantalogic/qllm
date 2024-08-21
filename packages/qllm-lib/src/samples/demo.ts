@@ -1,5 +1,6 @@
-import { getEmbeddingProvider, getLLMProvider } from './providers';
-import { EmbeddingProvider, LLMProvider } from './types';
+import { getEmbeddingProvider, getLLMProvider } from '../providers';
+import { EmbeddingProvider, LLMProvider } from '../types';
+import { createImageContent } from '../utils';
 
 const demo = async () => {
   console.log('Test demo');
@@ -11,6 +12,8 @@ const demo = async () => {
 
   const models = await provider.listModels();
   console.log(models);
+
+  await completionLocalImage(provider);
 
   await completion(provider);
 
@@ -87,6 +90,34 @@ async function completionImage(provider: LLMProvider) {
               url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Caucasus%2C_Ingushetia%2C_%D0%98%D0%BD%D0%B3%D1%83%D1%88%D1%81%D0%BA%D0%B8%D0%B5_%D0%B1%D0%BE%D0%B5%D0%B2%D1%8B%D0%B5_%D0%B8_%D1%81%D0%BC%D0%BE%D1%82%D1%80%D0%BE%D0%B2%D1%8B%D0%B5_%D0%B1%D0%B0%D1%88%D0%BD%D0%B8%2C_%D0%B3%D0%BE%D1%80%D1%8B_%D0%9A%D0%B0%D0%B2%D0%BA%D0%B0%D0%B7%D0%B0.jpg/2560px-Caucasus%2C_Ingushetia%2C_%D0%98%D0%BD%D0%B3%D1%83%D1%88%D1%81%D0%BA%D0%B8%D0%B5_%D0%B1%D0%BE%D0%B5%D0%B2%D1%8B%D0%B5_%D0%B8_%D1%81%D0%BC%D0%BE%D1%82%D1%80%D0%BE%D0%B2%D1%8B%D0%B5_%D0%B1%D0%B0%D1%88%D0%BD%D0%B8%2C_%D0%B3%D0%BE%D1%80%D1%8B_%D0%9A%D0%B0%D0%B2%D0%BA%D0%B0%D0%B7%D0%B0.jpg',
             },
           },
+        ],
+      },
+    ],
+    options: {
+      model: 'gpt-4o-mini',
+      maxTokens: 1024,
+    },
+  });
+
+  console.log('result:', result);
+}
+
+async function completionLocalImage(provider: LLMProvider) {
+
+  const filePath = "/Users/raphaelmansuy/Github/03-working/qllm/packages/qllm-lib/resources/image1.jpeg";
+  
+  const contentImage = await createImageContent(filePath);
+
+  const result = await provider.generateChatCompletion({
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'Can you describe this image?',
+          },
+          contentImage,
         ],
       },
     ],

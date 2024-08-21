@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-
 import {
   ChatCompletionParams,
   ChatCompletionResponse,
@@ -9,9 +7,7 @@ import {
   EmbeddingResponse,
   LLMOptions,
   Model,
-  ChatMessageContent,
 } from './llm-types';
-import axios from 'axios';
 
 export interface EmbeddingProvider {
   version: string;
@@ -97,68 +93,5 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
     } else {
       throw new InvalidRequestError(`Unknown error: ${error}`, this.constructor.name);
     }
-  }
-}
-
-export const createTextMessageContent = (content: string | string[]): ChatMessageContent => {
-  if (Array.isArray(content)) {
-    return content.map((text) => ({ type: 'text', text }));
-  } else {
-    return { type: 'text', text: content };
-  }
-};
-export const createImageMessageContent = async (source: string): Promise<ChatMessageContent> => {
-  try {
-    let content: string;
-    let mimeType: string;
-
-    if (isUrl(source)) {
-      // Handle URL
-      const response = await axios.get(source, { responseType: 'arraybuffer' });
-      content = Buffer.from(response.data, 'binary').toString('base64');
-      mimeType = response.headers['content-type'];
-    } else {
-      // Handle local file path
-      content = await fs.readFile(source, { encoding: 'base64' });
-      mimeType = getMimeType(source);
-    }
-
-    const imageUrl = `data:${mimeType};base64,${content}`;
-
-    return {
-      type: 'image_url',
-      imageUrl: {
-        url: imageUrl,
-      },
-    };
-  } catch (error) {
-    console.error(`Error processing image from: ${source}`, error);
-    throw error;
-  }
-};
-
-// Helper function to determine if the source is a URL
-function isUrl(source: string): boolean {
-  try {
-    new URL(source);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// Helper function to determine MIME type based on file extension
-function getMimeType(filePath: string): string {
-  const extension = filePath.split('.').pop()?.toLowerCase();
-  switch (extension) {
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'gif':
-      return 'image/gif';
-    default:
-      return 'application/octet-stream';
   }
 }
