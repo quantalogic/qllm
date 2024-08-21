@@ -1,10 +1,9 @@
-import { ChatCompletionResponse, ChatMessage, ChatMessageRole, LLMOptions } from './llm-types';
+import { ChatCompletionResponse, ChatMessage,  LLMOptions } from './llm-types';
 
 // Unified Input Type
-export type InputType = {
-  content: string | Buffer | URL; // The content to be processed
-  type: 'text' | 'image'; // Type of content
-  model?: string; // Model to use for processing
+export type EmbeddingRequestParams = {
+  model: string;
+  content: string;
 };
 
 export type Model = {
@@ -18,12 +17,17 @@ export type ChatCompletionParams = {
   options: LLMOptions;
 };
 
+export interface EmbeddingProvider {
+  version: string;
+  generateEmbedding(input: EmbeddingRequestParams): Promise<number[]>;
+  listModels(): Promise<Model[]>;
+}
+
 // LLM Provider Interface
 export interface LLMProvider {
   version: string; // Version of the provider
   name: string; // Name of the provider
   defaultOptions: LLMOptions; // Default options for the provider
-  generateEmbedding?(input: InputType): Promise<number[]>; // Optional embedding method
   listModels(): Promise<Model[]>; // Optional method to list available models
   generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
   streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string>;
@@ -55,10 +59,6 @@ export abstract class BaseLLMProvider implements LLMProvider {
   abstract generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
   abstract streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string>;
 
-  // Default implementation for generateEmbedding
-  async generateEmbedding(_input: InputType): Promise<number[]> {
-    throw new Error('Embedding not supported by this provider.');
-  }
 
   protected handleError(error: unknown): never {
     if (error instanceof LLMProviderError) {
@@ -82,3 +82,22 @@ export abstract class BaseLLMProvider implements LLMProvider {
       : messages;
   }
 }
+
+export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
+  public version = '1.0.0'; // Default version
+  public abstract name: string;
+
+  abstract generateEmbedding(input: EmbeddingRequestParams): Promise<number[]>;
+  abstract listModels(): Promise<Model[]>;
+
+  protected handleError(error: unknown): never {
+    if (error instanceof LLMProviderError) {
+      throw error;
+    } else if (error instanceof Error) {
+      throw new InvalidRequestError(error.message, this.constructor.name);
+    } else {
+      throw new InvalidRequestError(`Unknown error: ${error}`, this.constructor.name);
+    }
+  }
+}
+

@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "1.4.28",
+  "version": "1.5.1",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -11,7 +11,6 @@
     "aws-sdk"
   ],
   "type": "commonjs",
-  "source": "src/index.ts",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,7 +22,8 @@
     "clean": "rm -rf dist && rm -rf tsconfig.tsbuildinfo",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
-    "test": "jest"
+    "test": "jest",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",

@@ -6,25 +6,25 @@ import {
   InvalidRequestError,
   ChatMessage,
   LLMOptions,
-  InputType,
   Model,
   ChatCompletionResponse,
   ChatCompletionParams,
+  EmbeddingProvider,
+  EmbeddingRequestParams,
 } from '../../types';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import fs from 'fs/promises';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
 const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_EMBEDDING_MODEL = 'text-embedding-v1';
 
 /**
  * OpenAIProvider class implements the LLMProvider interface for OpenAI's language models.
  * It provides methods for generating messages, streaming messages, and generating embeddings.
  */
-export class OpenAIProvider implements LLMProvider {
+export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
   private client: OpenAI;
-  public supportsEmbedding = true;
-  public supportsImageAnalysis = true;
   public version = '1.0.0';
   public name = 'OpenAI';
 
@@ -97,21 +97,15 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 
-  async generateEmbedding(input: InputType): Promise<number[]> {
+  async generateEmbedding(input: EmbeddingRequestParams): Promise<number[]> {
     try {
-      const modelId = input.model || 'text-embedding-3-small';
-      let textInput: string;
+      const { content, model } = input;
 
-      if (input.type === 'image') {
-        const base64Image = await this.getBase64Image(input.content as string);
-        textInput = `data:image/png;base64,${base64Image}`;
-      } else {
-        textInput = input.content as string;
-      }
+      const modelId = model || DEFAULT_EMBEDDING_MODEL;
 
       const response = await this.client.embeddings.create({
         model: modelId,
-        input: textInput,
+        input: content,
       });
 
       if (!response.data || response.data.length === 0) {
