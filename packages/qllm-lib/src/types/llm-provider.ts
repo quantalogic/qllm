@@ -4,6 +4,7 @@ import { ChatMessage, ChatMessageRole, LLMOptions } from './llm-types';
 export type InputType = {
   content: string | Buffer | URL; // The content to be processed
   type: 'text' | 'image'; // Type of content
+  model?: string; // Model to use for processing
 };
 
 export type Model = {
@@ -17,6 +18,7 @@ export interface LLMProvider {
   supportsImageAnalysis: boolean; // Indicates if the provider supports image analysis
   version: string; // Version of the provider
   name: string; // Name of the provider
+  defaultOptions: LLMOptions; // Default options for the provider
   generateEmbedding?(input: InputType): Promise<number[]>; // Optional embedding method
   listModels(): Promise<Model[]>; // Optional method to list available models
   generateChatCompletion(messages: ChatMessage[], options: LLMOptions): Promise<string>;
@@ -43,6 +45,8 @@ export abstract class BaseLLMProvider implements LLMProvider {
   public abstract name: string;
 
   abstract listModels(): Promise<Model[]>;
+
+  abstract defaultOptions: LLMOptions;
 
   abstract generateChatCompletion(messages: ChatMessage[], options: LLMOptions): Promise<string>;
   abstract streamChatCompletion(

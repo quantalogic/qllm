@@ -11,3 +11,4 @@ package-lock.json
 .qllmrc.yaml*
 dist
 *.tsbuildinfo
+coverage
