@@ -1,153 +1,168 @@
-# QLLM Library by QuantaLogic
 
-## Overview
+# qllm-lib
 
-The **QLLM Library** is a versatile and user-friendly library designed to facilitate interaction with various language model providers such as OpenAI, Anthropic, Perplexity, and more. It abstracts the complexities of different APIs, allowing developers to focus on building applications that leverage powerful language models.
+## Table of Contents
+- [Introduction](#introduction)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Initializing a Provider](#initializing-a-provider)
+  - [Listing Models](#listing-models)
+  - [Generating Chat Completions](#generating-chat-completions)
+  - [Streaming Chat Completions](#streaming-chat-completions)
+  - [Generating Embeddings](#generating-embeddings)
+- [API Reference](#api-reference)
+- [Error Handling](#error-handling)
+- [Contributing](#contributing)
+- [License](#license)
 
-### Key Features
+## Introduction
 
-- **Provider Agnostic**: Seamlessly switch between different LLM providers with minimal changes to your code.
-- **Dynamic Configuration**: Load and manage provider configurations easily.
-- **Robust Error Handling**: Built-in mechanisms to handle API errors gracefully.
-- **Streaming Support**: Stream responses for real-time applications.
+qllm-lib is a TypeScript library that provides a unified interface for interacting with various Large Language Model (LLM) providers.
 
 ## Installation
 
-To install the library, use npm or yarn:
+To install qllm-lib, use npm:
 
 ```bash
 npm install qllm-lib
 ```
 
-or
+## Usage
 
-```bash
-yarn add qllm-lib
-```
+### Initializing a Provider
 
-## Getting Started
-
-### Basic Setup
-
-To begin using the library, import the necessary modules and configure your desired provider.
+To start using the API, first import the necessary functions and initialize a provider:
 
 ```typescript
-import { ProviderFactory } from 'qllm-lib';
-import { LLMProviderOptions } from 'qllm-types';
+import { getProvider, LLMProvider } from 'qllm-lib';
 
-async function main() {
-  const providerName = 'openai'; // Specify your desired provider
-  const options: LLMProviderOptions = {
-    model: 'gpt-4o-mini',
-    maxTokens: 2048,
-    temperature: 0.7,
-  };
+const provider: LLMProvider = getProvider('openai');
+```
 
-  const provider = await ProviderFactory.getProvider(providerName);
+Make sure to set the `OPENAI_API_KEY` environment variable before initializing the OpenAI provider.
 
-  // Generate a message using the provider
-  const response = await provider.generateMessage(
-    [{ role: 'user', content: 'Hello, how are you?' }],
-    options,
-  );
-  console.log(response);
+### Listing Models
+
+To get a list of available models:
+
+```typescript
+const models = await provider.listModels();
+console.log(models);
+```
+
+### Generating Chat Completions
+
+To generate a chat completion:
+
+```typescript
+const result = await provider.generateChatCompletion({
+  messages: [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        data: { text: 'What is the capital of France?' },
+      },
+    },
+  ],
+  options: {
+    model: 'gpt-4',
+    maxTokens: 1024,
+  },
+});
+
+console.log(result.text);
+```
+
+### Streaming Chat Completions
+
+To stream a chat completion:
+
+```typescript
+const stream = await provider.streamChatCompletion({
+  messages: [
+    {
+      role: 'user',
+      content: {
+        type: 'text',
+        data: { text: 'Write a short story about Paris.' },
+      },
+    },
+  ],
+  options: {
+    model: 'gpt-4',
+    maxTokens: 1024,
+  },
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk);
 }
-
-main().catch(console.error);
 ```
 
-### Example Usage of Different Providers
+### Generating Embeddings
 
-You can easily switch between providers by changing the `providerName` variable.
-
-#### OpenAI Example
+To generate embeddings for text or images:
 
 ```typescript
-const providerName = 'openai'; // Using OpenAI provider
+const embedding = await provider.generateEmbedding({
+  content: 'Hello, world!',
+  type: 'text',
+  model: 'text-embedding-3-small',
+});
+
+console.log(embedding);
 ```
 
-#### Anthropic Example
+For images:
 
 ```typescript
-const providerName = 'anthropic'; // Using Anthropic provider
+const imageEmbedding = await provider.generateEmbedding({
+  content: '/path/to/image.jpg',
+  type: 'image',
+});
+
+console.log(imageEmbedding);
 ```
 
-#### Perplexity Example
+## API Reference
 
-```typescript
-const providerName = 'perplexity'; // Using Perplexity provider
-```
+### LLMProvider Interface
 
-### Streaming Responses with Token Processing
+- `version`: string
+- `name`: string
+- `defaultOptions`: LLMOptions
+- `generateEmbedding(input: InputType): Promise<number[]>`
+- `listModels(): Promise<Model[]>`
+- `generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>`
+- `streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string>`
 
-For applications requiring real-time feedback, you can stream messages from the provider and process each token as it is generated:
+### Types
 
-```typescript
-async function streamMessages() {
-  const providerName = 'openai';
-  const options: LLMProviderOptions = {
-    model: 'gpt-4o-mini',
-    maxTokens: 2048,
-    temperature: 0.7,
-  };
-
-  const provider = await ProviderFactory.getProvider(providerName);
-  const messages = [{ role: 'user', content: 'Tell me a story.' }];
-
-  try {
-    let fullResponse = '';
-
-    for await (const token of provider.streamMessage(messages, options)) {
-      process.stdout.write(token); // Output each token as it arrives
-      fullResponse += token; // Accumulate the full response
-    }
-
-    spinner.succeed('Response generated');
-    console.log('\nFull Response:', fullResponse);
-  } catch (error) {
-    console.error('Streaming error:', error);
-  }
-}
-
-streamMessages().catch(console.error);
-```
-
-## Configuration
-
-You can customize provider configurations by modifying the `provider_config.ts` file or loading configurations from a YAML file.
-
-### Example Configuration
-
-```yaml
-# .qllmrc.yaml
-defaultProvider: openai
-providers:
-  openai:
-    apiKey: YOUR_OPENAI_API_KEY
-    model: gpt-4o-mini
-  anthropic:
-    apiKey: YOUR_ANTHROPIC_API_KEY
-    model: claude-3
-```
+- `ChatMessage`: Represents a chat message with role and content.
+- `LLMOptions`: Options for LLM generation, including model, max tokens, temperature, etc.
+- `InputType`: Input for embedding generation, supporting text and images.
+- `Model`: Represents an LLM model with id, description, and creation date.
+- `ChatCompletionParams`: Parameters for chat completion, including messages and options.
+- `ChatCompletionResponse`: Response from chat completion, including generated text and usage statistics.
 
 ## Error Handling
 
-The library provides robust error handling. You can handle specific errors as follows:
+The API uses custom error classes for different types of errors:
 
-```typescript
-try {
-  const response = await provider.generateMessage(messages, options);
-} catch (error) {
-  if (error instanceof AuthenticationError) {
-    console.error('Authentication failed:', error.message);
-  } else {
-    console.error('An error occurred:', error.message);
-  }
-}
-```
+- `LLMProviderError`: Base class for all provider errors.
+- `AuthenticationError`: Thrown when authentication fails.
+- `RateLimitError`: Thrown when rate limits are exceeded.
+- `InvalidRequestError`: Thrown for invalid requests or unexpected errors.
 
-## Conclusion
+## Contributing
 
-The LLM Provider Library is designed to simplify the integration and interaction with various language model APIs. With its flexible architecture and comprehensive error handling, developers can focus on building innovative applications without worrying about the underlying complexities.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-For more information, refer to the documentation or explore the source code. Happy coding!
+## License
+
+This project is licensed under the Apache License, Version 2.0. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
