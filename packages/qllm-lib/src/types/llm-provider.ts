@@ -30,7 +30,7 @@ export interface LLMProvider {
   defaultOptions: LLMOptions; // Default options for the provider
   listModels(): Promise<Model[]>; // Optional method to list available models
   generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
-  streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string>;
+  streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<ChatCompletionResponse>;
 }
 
 // Error Handling Classes
@@ -57,7 +57,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
   abstract defaultOptions: LLMOptions;
 
   abstract generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
-  abstract streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string>;
+  abstract streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<ChatCompletionResponse>;
 
 
   protected handleError(error: unknown): never {

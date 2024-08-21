@@ -29,7 +29,7 @@ export type Usage = {
 
 export type ChatCompletionResponse = {
   text: string | null;
-  finishReason?: string;
+  finishReason: string | null;
   usage?: Usage;
 };
 

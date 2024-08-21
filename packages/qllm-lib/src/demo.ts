@@ -65,6 +65,6 @@ async function stream(provider: LLMProvider) {
   });
 
   for await (const message of result) {
-    process.stdout.write(message);
+    process.stdout.write(message.text || '');
   }
 }

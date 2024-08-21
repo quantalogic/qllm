@@ -1,10 +1,10 @@
 // packages/qllm-lib/src/providers/__tests__/index.spec.ts
 
-import { ChatMessage } from '../../types';
-import { getProvider } from '../index';
-import { OpenAIProvider } from '../openai';
+import { ChatMessage } from '../../../types';
+import { getProvider } from '../../index';
+import { OpenAIProvider } from '..';
 
-jest.mock('../openai');
+jest.mock('..');
 
 describe('getProvider', () => {
   beforeEach(() => {

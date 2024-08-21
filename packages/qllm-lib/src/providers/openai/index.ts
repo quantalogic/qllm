@@ -71,7 +71,9 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
-  async *streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string> {
+  async *streamChatCompletion(
+    params: ChatCompletionParams,
+  ): AsyncIterableIterator<ChatCompletionResponse> {
     try {
       const { messages, options } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
@@ -88,9 +90,18 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content;
-        if (content) {
-          yield content;
-        }
+        const usage = chunk.usage;
+        const finishReason = chunk.choices[0]?.finish_reason;
+        const result: ChatCompletionResponse = {
+          text: content || null,
+          finishReason: finishReason,
+          usage: {
+            promptTokens: usage?.prompt_tokens || 0,
+            completionTokens: usage?.completion_tokens || 0,
+            totalTokens: usage?.total_tokens || 0,
+          },
+        };
+        yield result;
       }
     } catch (error) {
       this.handleError(error);
