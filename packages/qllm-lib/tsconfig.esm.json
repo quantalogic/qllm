@@ -1,7 +1,0 @@
-{
-  "extends": "./tsconfig.json", // Extend the base configuration
-  "compilerOptions": {
-      "module": "ESNext", // Specify module code generation for ES modules
-      "outDir": "./dist/esm" // Redirect output structure to the dist folder for ESM
-  }
-}

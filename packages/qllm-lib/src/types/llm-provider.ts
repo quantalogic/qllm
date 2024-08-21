@@ -1,4 +1,4 @@
-import { ChatMessage, ChatMessageRole, LLMOptions } from './llm-types';
+import { ChatCompletionResponse, ChatMessage, ChatMessageRole, LLMOptions } from './llm-types';
 
 // Unified Input Type
 export type InputType = {
@@ -10,19 +10,23 @@ export type InputType = {
 export type Model = {
   id: string;
   description?: string;
+  created?: Date;
+};
+
+export type ChatCompletionParams = {
+  messages: ChatMessage[];
+  options: LLMOptions;
 };
 
 // LLM Provider Interface
 export interface LLMProvider {
-  supportsEmbedding: boolean; // Indicates if the provider supports embeddings
-  supportsImageAnalysis: boolean; // Indicates if the provider supports image analysis
   version: string; // Version of the provider
   name: string; // Name of the provider
   defaultOptions: LLMOptions; // Default options for the provider
   generateEmbedding?(input: InputType): Promise<number[]>; // Optional embedding method
   listModels(): Promise<Model[]>; // Optional method to list available models
-  generateChatCompletion(messages: ChatMessage[], options: LLMOptions): Promise<string>;
-  streamChatCompletion(messages: ChatMessage[], options: LLMOptions): AsyncIterableIterator<string>;
+  generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
+  streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string>;
 }
 
 // Error Handling Classes
@@ -48,11 +52,8 @@ export abstract class BaseLLMProvider implements LLMProvider {
 
   abstract defaultOptions: LLMOptions;
 
-  abstract generateChatCompletion(messages: ChatMessage[], options: LLMOptions): Promise<string>;
-  abstract streamChatCompletion(
-    messages: ChatMessage[],
-    options: LLMOptions,
-  ): AsyncIterableIterator<string>;
+  abstract generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
+  abstract streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string>;
 
   // Default implementation for generateEmbedding
   async generateEmbedding(_input: InputType): Promise<number[]> {
@@ -73,7 +74,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
     return options.systemMessage && options.systemMessage.length > 0
       ? [
           {
-            role: ChatMessageRole.SYSTEM,
+            role: 'system',
             content: { type: 'text', data: { text: options.systemMessage } },
           },
           ...messages,

@@ -7,7 +7,9 @@ import {
   ChatMessage,
   LLMOptions,
   InputType,
-  ChatMessageRole,
+  Model,
+  ChatCompletionResponse,
+  ChatCompletionParams,
 } from '../../types';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import fs from 'fs/promises';
@@ -21,10 +23,10 @@ const DEFAULT_MODEL = 'gpt-4o-mini';
  */
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
-  public supportsEmbedding = true; // Indicates if the provider supports embeddings
-  public supportsImageAnalysis = true; // Indicates if the provider supports image analysis
-  public version = '1.0.0'; // Version of the provider
-  public name = 'OpenAI'; // Name of the provider
+  public supportsEmbedding = true;
+  public supportsImageAnalysis = true;
+  public version = '1.0.0';
+  public name = 'OpenAI';
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -39,8 +41,9 @@ export class OpenAIProvider implements LLMProvider {
     maxTokens: DEFAULT_MAX_TOKENS,
   };
 
-  async generateChatCompletion(messages: ChatMessage[], options: LLMOptions): Promise<string> {
+  async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
+      const { messages, options } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await this.formatMessages(messageWithSystem);
 
@@ -52,17 +55,25 @@ export class OpenAIProvider implements LLMProvider {
         top_p: options.topProbability,
       });
 
-      return response.choices[0]?.message?.content || '';
+      const firstResponse = response.choices[0];
+      const usage = response.usage;
+      return {
+        text: firstResponse?.message?.content || '',
+        finishReason: firstResponse?.finish_reason,
+        usage: {
+          promptTokens: usage?.prompt_tokens || 0,
+          completionTokens: usage?.completion_tokens || 0,
+          totalTokens: usage?.total_tokens || 0,
+        },
+      };
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  async *streamChatCompletion(
-    messages: ChatMessage[],
-    options: LLMOptions,
-  ): AsyncIterableIterator<string> {
+  async *streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<string> {
     try {
+      const { messages, options } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await this.formatMessages(messageWithSystem);
 
@@ -88,7 +99,7 @@ export class OpenAIProvider implements LLMProvider {
 
   async generateEmbedding(input: InputType): Promise<number[]> {
     try {
-      const modelId = input.model || 'text-embedding-v1';
+      const modelId = input.model || 'text-embedding-3-small';
       let textInput: string;
 
       if (input.type === 'image') {
@@ -103,21 +114,23 @@ export class OpenAIProvider implements LLMProvider {
         input: textInput,
       });
 
-      if (response.data && response.data.length > 0) {
-        return response.data[0].embedding;
-      } else {
+      if (!response.data || response.data.length === 0) {
         throw new Error('No embedding generated');
       }
+      return response.data[0].embedding;
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  async listModels(): Promise<{ id: string; description?: string }[]> {
+  async listModels(): Promise<Model[]> {
     try {
-      const models = await this.client.models.list();
-      return models.data.map((model) => ({
-        id: model.id,
+      const { data } = await this.client.models.list();
+      return data.map(({ id, created, owned_by }) => ({
+        id,
+        name: id,
+        created: new Date(created * 1000),
+        description: `${id} - ${owned_by} - created at ${new Date(created * 1000)}`,
       }));
     } catch (error) {
       this.handleError(error);
@@ -125,19 +138,22 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   private async formatMessages(messages: ChatMessage[]): Promise<ChatCompletionMessageParam[]> {
-    const formattedMessages: ChatCompletionMessageParam[] = [];
-    for (const message of messages) {
-      formattedMessages.push({
-        role: message.role,
-        content: message.content.data.text || '',
-      });
-    }
-    return formattedMessages;
+    return messages.map((message) => ({
+      role: message.role,
+      content: message.content.data.text || '',
+    }));
   }
 
   private async getBase64Image(imagePath: string): Promise<string> {
-    const imageBuffer = await fs.readFile(imagePath);
-    return imageBuffer.toString('base64');
+    try {
+      const imageBuffer = await fs.readFile(imagePath);
+      return imageBuffer.toString('base64');
+    } catch (error) {
+      throw new InvalidRequestError(
+        `Error reading image file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'OpenAI',
+      );
+    }
   }
 
   private withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessage[] {
@@ -148,7 +164,7 @@ export class OpenAIProvider implements LLMProvider {
 
   private createSystemMessage(systemMessageText: string): ChatMessage {
     return {
-      role: ChatMessageRole.SYSTEM, // Ensure this is correctly imported or defined
+      role: 'system',
       content: {
         type: 'text',
         data: {
@@ -167,8 +183,10 @@ export class OpenAIProvider implements LLMProvider {
       } else {
         throw new InvalidRequestError(`OpenAI request failed: ${error.message}`, 'OpenAI');
       }
+    } else if (error instanceof Error) {
+      throw new InvalidRequestError(`Unexpected error: ${error.message}`, 'OpenAI');
     } else {
-      throw new InvalidRequestError(`Unexpected error: ${error}`, 'OpenAI');
+      throw new InvalidRequestError(`Unknown error occurred: ${error}`, 'OpenAI');
     }
   }
 }

@@ -1,17 +1,13 @@
 import { z } from 'zod';
 
 // Chat message roles
-export enum ChatMessageRole {
-  USER = 'user',
-  ASSISTANT = 'assistant',
-  SYSTEM = 'system',
-}
+export type ChatMessageRole = 'user' | 'assistant' | 'system';
 
 // Chat message content types
 export type ChatMessageContentType = 'text' | 'image_url';
 
 // Chat message content
-export interface ChatMessageContent {
+export type ChatMessageContent = {
   type: ChatMessageContentType;
   data: {
     text?: string;
@@ -20,9 +16,21 @@ export interface ChatMessageContent {
 }
 
 // Chat message structure
-export interface ChatMessage {
+export type ChatMessage =  {
   role: ChatMessageRole;
   content: ChatMessageContent;
+}
+
+export type Usage = {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+export type ChatCompletionResponse = {
+  text: string | null;
+  finishReason?: string;
+  usage?: Usage;
 }
 
 // Generation options

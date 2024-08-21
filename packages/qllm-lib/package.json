@@ -10,15 +10,16 @@
     "typescript",
     "aws-sdk"
   ],
+  "type": "commonjs",
   "source": "src/index.ts",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/cjs/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.esm.json",
+    "build": "tsc",
     "clean": "rm -rf dist && rm -rf tsconfig.tsbuildinfo",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
