@@ -11,9 +11,9 @@ import {
   ChatCompletionParams,
   EmbeddingProvider,
   EmbeddingRequestParams,
+  ChatStreamCompletionResponse,
 } from '../../types';
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-import fs from 'fs/promises';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -47,8 +47,10 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await this.formatMessages(messageWithSystem);
 
+      const model = options.model || DEFAULT_MODEL;
+
       const response = await this.client.chat.completions.create({
-        model: options.model || DEFAULT_MODEL,
+        model: model,
         messages: formattedMessages,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
@@ -58,6 +60,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       const firstResponse = response.choices[0];
       const usage = response.usage;
       return {
+        model: model,
         text: firstResponse?.message?.content || '',
         finishReason: firstResponse?.finish_reason,
         usage: {
@@ -73,14 +76,16 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
 
   async *streamChatCompletion(
     params: ChatCompletionParams,
-  ): AsyncIterableIterator<ChatCompletionResponse> {
+  ): AsyncIterableIterator<ChatStreamCompletionResponse> {
     try {
       const { messages, options } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await this.formatMessages(messageWithSystem);
 
+      const model = options.model || DEFAULT_MODEL;
+
       const stream = await this.client.chat.completions.create({
-        model: options.model || DEFAULT_MODEL,
+        model: model,
         messages: formattedMessages,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
@@ -89,17 +94,14 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       });
 
       for await (const chunk of stream) {
+        console.log(chunk);
         const content = chunk.choices[0]?.delta?.content;
         const usage = chunk.usage;
         const finishReason = chunk.choices[0]?.finish_reason;
-        const result: ChatCompletionResponse = {
+        const result: ChatStreamCompletionResponse = {
           text: content || null,
           finishReason: finishReason,
-          usage: {
-            promptTokens: usage?.prompt_tokens || 0,
-            completionTokens: usage?.completion_tokens || 0,
-            totalTokens: usage?.total_tokens || 0,
-          },
+          model: model,
         };
         yield result;
       }
@@ -147,18 +149,6 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       role: message.role,
       content: message.content.data.text || '',
     }));
-  }
-
-  private async getBase64Image(imagePath: string): Promise<string> {
-    try {
-      const imageBuffer = await fs.readFile(imagePath);
-      return imageBuffer.toString('base64');
-    } catch (error) {
-      throw new InvalidRequestError(
-        `Error reading image file: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        'OpenAI',
-      );
-    }
   }
 
   private withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessage[] {

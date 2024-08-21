@@ -28,9 +28,16 @@ export type Usage = {
 };
 
 export type ChatCompletionResponse = {
+  model: string;
   text: string | null;
   finishReason: string | null;
   usage?: Usage;
+};
+
+export type ChatStreamCompletionResponse = {
+  model: string;
+  text: string | null;
+  finishReason: string | null;
 };
 
 // Generation options

@@ -1,4 +1,4 @@
-import { ChatCompletionResponse, ChatMessage,  LLMOptions } from './llm-types';
+import { ChatCompletionResponse, ChatMessage,  ChatStreamCompletionResponse,  LLMOptions } from './llm-types';
 
 // Unified Input Type
 export type EmbeddingRequestParams = {
@@ -30,7 +30,7 @@ export interface LLMProvider {
   defaultOptions: LLMOptions; // Default options for the provider
   listModels(): Promise<Model[]>; // Optional method to list available models
   generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
-  streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<ChatCompletionResponse>;
+  streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<ChatStreamCompletionResponse>;
 }
 
 // Error Handling Classes
@@ -57,7 +57,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
   abstract defaultOptions: LLMOptions;
 
   abstract generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
-  abstract streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<ChatCompletionResponse>;
+  abstract streamChatCompletion(params: ChatCompletionParams): AsyncIterableIterator<ChatStreamCompletionResponse>;
 
 
   protected handleError(error: unknown): never {
