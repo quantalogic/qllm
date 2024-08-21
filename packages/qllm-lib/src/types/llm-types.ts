@@ -88,32 +88,39 @@ export interface EnvironmentOptions {
 }
 
 // Function metadata
-export interface FunctionMetadata {
+export type FunctionMetadata = {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
 }
 
-// Functions options
-const FunctionSchema = z.object({
-  type: z.literal('function'),
-  metadata: z.object({
-    name: z.string(),
-    description: z.string(),
-    parameters: z.record(z.unknown()),
-  }),
-});
 
-export const FunctionsOptions = z.array(FunctionSchema);
+
+
+export type Tool = FunctionTool;
+type FunctionTool = {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: "object";
+      properties: {
+        [key: string]: {
+          type: string;
+          description: string;
+        };
+      };
+      required: string[];
+    };
+  };
+};
+
 
 // LLM options
 export interface LLMOptions extends GenerationOptions, ModelOptions, EnvironmentOptions {
   /** System message to set context */
   systemMessage?: string;
-  /** Functions data */
-  functions?: z.infer<typeof FunctionsOptions>;
-  /** Image path */
-  imagePath?: string;
 }
 
 // Response formats
@@ -129,6 +136,7 @@ export type Model = {
   description?: string;
   created?: Date;
 };
+
 
 export type ChatCompletionParams = {
   messages: ChatMessage[];
