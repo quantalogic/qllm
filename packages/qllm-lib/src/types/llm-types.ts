@@ -26,6 +26,16 @@ export type ChatMessage = {
   content: ChatMessageContent;
 };
 
+// Type guard functions for type checking
+export function isTextContent(content: MessageContent): content is TextContent {
+  return content.type === 'text';
+}
+
+export function isImageUrlContent(content: MessageContent): content is ImageUrlContent {
+  return content.type === 'image_url';
+}
+
+
 // -------------------- Usage and Response Types --------------------
 
 export type Usage = {
@@ -101,7 +111,6 @@ export interface EnvironmentOptions {
 }
 
 export interface LLMOptions extends GenerationOptions, ModelOptions, EnvironmentOptions {
-
   systemMessage?: string;
 }
 
