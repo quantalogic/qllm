@@ -21,7 +21,12 @@ import {
   EmbeddingRequestParams,
   EmbeddingResponse,
 } from '../../types';
-import ollama, { ChatRequest, Tool as OllamaTool, ToolCall as OllamaToolCall } from 'ollama';
+import ollama, {
+  ChatRequest,
+  Tool as OllamaTool,
+  ToolCall as OllamaToolCall,
+  Options as OllamaOptions,
+} from 'ollama';
 import { createTextMessageContent } from '../../utils/images';
 import { listModels } from './list-models';
 
@@ -82,6 +87,7 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
         messages: formattedMessages,
         stream: false,
         tools: formattedTools,
+        options: formatOptions(options),
       };
 
       const response = await ollama.chat(chatRequest);
@@ -114,6 +120,7 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
         messages: formattedMessages,
         tools: formattedTools,
         stream: true,
+        options: formatOptions(options),
       };
 
       const stream = await ollama.chat(chatRequest);
@@ -249,4 +256,17 @@ function mapOllamaToolCallToToolCall(
         },
       } as ToolCall),
   );
+}
+
+function formatOptions(options: LLMOptions): Partial<OllamaOptions> {
+  const formattedOptions: Partial<OllamaOptions> = {
+    temperature: options.temperature,
+    top_p: options.topProbability,
+    seed: options.seed,
+    top_k: options.topKTokens,
+    stop: Array.isArray(options.stop) ? options.stop : ([options.stop] as string[]),
+    presence_penalty: options.presencePenalty || undefined,
+    frequency_penalty: options.frequencyPenalty || undefined,
+  };
+  return formattedOptions;
 }
