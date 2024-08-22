@@ -70,7 +70,7 @@ export type Embedding = number[];
 
 export type EmbeddingResponse = {
   embedding: Embedding;
-  embeddings: Embedding[];
+  embeddings?: Embedding[];
 };
 
 // -------------------- Option Types --------------------

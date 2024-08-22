@@ -8,8 +8,18 @@ import { createImageContent, createFunctionToolFromZod } from '../utils';
 const runLLMTests = async () => {
   console.log('🚀 Starting LLM Tests');
 
+
+  await testListModels('groq');
   await testListModels('ollama');
   await testListModels('openai');
+
+
+  const groqModels = {
+    embeddingModelName: 'nomic-embed-text',
+    visionModelName: 'llama-3.1-70b-versatile',
+    toolModelName: 'llama3-groq-70b-8192-tool-use-preview',
+    textModelName: 'llama-3.1-70b-versatile',
+  };
 
   const ollamaModels = {
     embeddingModelName: 'nomic-embed-text:latest',
@@ -25,6 +35,7 @@ const runLLMTests = async () => {
     textModelName: 'gpt-4o-mini',
   };
 
+  await testLLMModel('groq', { maxTokens: 1024 }, groqModels);
   await testLLMModel('ollama', { maxTokens: 1024 }, ollamaModels);
   await testLLMModel('openai', { maxTokens: 1024 }, openaiModels);
 
@@ -174,9 +185,18 @@ const runEmbeddingTests = async () => {
     embeddingModelName: 'text-embedding-3-small',
   };
 
-  console.log('📊 Configured Models:');
-  console.log('   Ollama:', ollamaModels.embeddingModelName);
-  console.log('   OpenAI:', openaiModels.embeddingModelName);
+  const groqModels = {
+    embeddingModelName: 'nomic-embed-text',
+  };
+
+
+  console.log('\n🔍 Testing Groq Embedding Model');
+  console.time('Groq Test Duration');
+  await testEmbeddingModel('groq', {
+    maxTokens: 1024,
+    modelName: groqModels.embeddingModelName,
+  });
+  console.timeEnd('Groq Test Duration');
 
   console.log('\n🔍 Testing Ollama Embedding Model');
   console.time('Ollama Test Duration');
