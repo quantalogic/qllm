@@ -1,80 +1,71 @@
 import { z } from 'zod';
 import { FunctionTool } from '../../types';
 
-
-
-// Helper type to extract parameter info from Zod schema
-type ZodToJsonSchema<T extends z.ZodType<any, any, any>> = {
-  type: string;
-  description?: string;
-} & (T extends z.ZodObject<any>
-  ? { properties: { [K in keyof T['shape']]: ZodToJsonSchema<T['shape'][K]> } }
-  : T extends z.ZodArray<infer ItemType>
-  ? { items: ZodToJsonSchema<ItemType> }
-  : T extends z.ZodEnum<any>
-  ? { enum: T['options'] }
-  : {});
-
-// Utility function to convert Zod schema to JSON schema
-function zodToJsonSchema<T extends z.ZodType<any, any, any>>(schema: T): ZodToJsonSchema<T> {
+function zodToJsonSchema(schema: z.ZodType<any, any, any>): any {
   if (schema instanceof z.ZodObject) {
-    const properties: Record<string, ZodToJsonSchema<any>> = {};
-    for (const [key, value] of Object.entries(schema.shape)) {
+    const properties: Record<string, any> = {};
+    const required: string[] = [];
+
+    Object.entries(schema.shape).forEach(([key, value]) => {
       properties[key] = zodToJsonSchema(value as z.ZodType<any, any, any>);
-    }
+      if (!(value instanceof z.ZodOptional)) {
+        required.push(key);
+      }
+    });
+
     return {
       type: 'object',
       properties,
-    } as unknown as ZodToJsonSchema<T>;
-  } else if (schema instanceof z.ZodArray) {
+      ...(required.length > 0 ? { required } : {}),
+    };
+  }
+
+  if (schema instanceof z.ZodString) return { type: 'string' };
+  if (schema instanceof z.ZodNumber) return { type: 'number' };
+  if (schema instanceof z.ZodBoolean) return { type: 'boolean' };
+
+  if (schema instanceof z.ZodArray) {
     return {
       type: 'array',
       items: zodToJsonSchema(schema.element),
-    } as unknown as ZodToJsonSchema<T>;
-  } else if (schema instanceof z.ZodEnum) {
+    };
+  }
+
+  if (schema instanceof z.ZodEnum) {
     return {
       type: 'string',
-      enum: schema.options,
-    } as unknown as ZodToJsonSchema<T>;
-  } else {
-    const jsonSchema: ZodToJsonSchema<T> = {
-      type:
-        schema instanceof z.ZodString
-          ? 'string'
-          : schema instanceof z.ZodNumber
-          ? 'number'
-          : schema instanceof z.ZodBoolean
-          ? 'boolean'
-          : 'unknown',
-    } as unknown as ZodToJsonSchema<T>;
-    if ('description' in schema._def) {
-      jsonSchema.description = schema._def.description;
-    }
-    return jsonSchema;
+      enum: schema._def.values,
+    };
   }
+
+  if (schema instanceof z.ZodUnion) {
+    return {
+      anyOf: schema._def.options.map(zodToJsonSchema),
+    };
+  }
+
+  if (schema.description) {
+    return {
+      ...zodToJsonSchema(schema._def.innerType),
+      description: schema.description,
+    };
+  }
+
+  return {}; // fallback for unsupported types
 }
 
-// Utility function to create a function tool from a Zod schema
-export function createFunctionToolFromZod<T extends z.ZodObject<any>>(
+export function createFunctionToolFromZod(
   name: string,
   description: string,
-  schema: T,
+  schema: z.ZodObject<any>,
 ): FunctionTool {
   const jsonSchema = zodToJsonSchema(schema);
-  const required = Object.entries(schema.shape)
-    .filter(([_, value]) => !(value instanceof z.ZodOptional))
-    .map(([key, _]) => key);
-
   return {
     type: 'function',
     function: {
       name,
       description,
-      parameters: {
-        type: 'object',
-        properties: jsonSchema.properties as Record<string, unknown>,
-        required,
-      },
+      parameters: jsonSchema,
     },
   };
 }

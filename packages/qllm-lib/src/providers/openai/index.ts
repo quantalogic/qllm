@@ -32,11 +32,11 @@ const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
  */
 export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
   private client: OpenAI;
-  public version = '1.0.0';
-  public name = 'OpenAI';
+  public readonly version = '1.0.0';
+  public readonly name = 'OpenAI';
 
-  constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
+  constructor(key?: string) {
+    const apiKey = key ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error('OpenAI API key not found in environment variables');
     }

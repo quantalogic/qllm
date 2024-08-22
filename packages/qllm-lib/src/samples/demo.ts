@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { getEmbeddingProvider, getLLMProvider } from '../providers';
 import { EmbeddingProvider, LLMProvider } from '../types';
 import { createImageContent, createFunctionToolFromZod } from '../utils';
+import { exit } from 'process';
 
 const demo = async () => {
   console.log('Test demo');
@@ -142,17 +143,19 @@ async function embedding(provider: EmbeddingProvider) {
 
 async function completionWithTool(provider: LLMProvider) {
   // Define the weather parameters schema
-  const weatherParams = z.object({
-    city: z.string().describe('The city for which to get the weather'),
+  const weatherToolParameters = z.object({
+    location: z.string().describe('The city and state, e.g. San Francisco, CA'),
+    unit: z.enum(['celsius', 'fahrenheit']).describe('The unit of temperature to use'),
   });
+
 
   const weatherTool = createFunctionToolFromZod(
     'weather',
     'Get the weather for a city',
-    weatherParams,
+    weatherToolParameters,
   );
 
-/*  const weatherTool: Tool =  {
+  /*  const weatherTool: Tool =  {
     type: 'function',
     function: {
       name: 'get_current_weather',
@@ -175,6 +178,9 @@ async function completionWithTool(provider: LLMProvider) {
     },
   };*/
 
+  console.log("🔥 weatherTool:");
+  console.dir(weatherTool, { depth: null });
+
   const result = await provider.generateChatCompletion({
     messages: [
       {
@@ -195,5 +201,6 @@ async function completionWithTool(provider: LLMProvider) {
     },
   });
 
-  console.log('result:', result);
+  console.log('result:');
+  console.dir(result, { depth: null });
 }
