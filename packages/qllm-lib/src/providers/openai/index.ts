@@ -76,6 +76,9 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         top_logprobs: options.topLogprobs,
       });
 
+//      console.log("🍵 Result OpenAIProvider.generateChatCompletion:");
+//      console.dir(response, { depth: null });
+
       const firstResponse = response.choices[0];
       const usage = response.usage;
       return {

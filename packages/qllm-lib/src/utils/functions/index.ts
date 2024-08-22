@@ -1,64 +1,94 @@
 import { z } from 'zod';
 import { FunctionTool } from '../../types';
 
-function zodToJsonSchema(schema: z.ZodType<any, any, any>): any {
+type JsonSchemaType = {
+  type?: string;
+  description?: string;
+  properties?: Record<string, JsonSchemaType>;
+  required?: string[];
+  items?: JsonSchemaType;
+  enum?: string[];
+  anyOf?: JsonSchemaType[];
+};
+
+function zodToJsonSchema(schema: z.ZodTypeAny): JsonSchemaType {
   if (schema instanceof z.ZodObject) {
-    const properties: Record<string, any> = {};
+    const properties: Record<string, JsonSchemaType> = {};
     const required: string[] = [];
 
     Object.entries(schema.shape).forEach(([key, value]) => {
-      properties[key] = zodToJsonSchema(value as z.ZodType<any, any, any>);
+      properties[key] = zodToJsonSchema(value as z.ZodTypeAny);
       if (!(value instanceof z.ZodOptional)) {
         required.push(key);
       }
     });
 
-    return {
+    const result: JsonSchemaType = {
       type: 'object',
       properties,
-      ...(required.length > 0 ? { required } : {}),
     };
+
+    if (schema.description) result.description = schema.description;
+    if (required.length > 0) result.required = required;
+
+    return result;
   }
 
-  if (schema instanceof z.ZodString) return { type: 'string' };
-  if (schema instanceof z.ZodNumber) return { type: 'number' };
-  if (schema instanceof z.ZodBoolean) return { type: 'boolean' };
+  if (schema instanceof z.ZodString) {
+    const result: JsonSchemaType = { type: 'string' };
+    if (schema.description) result.description = schema.description;
+    return result;
+  }
+
+  if (schema instanceof z.ZodNumber) {
+    const result: JsonSchemaType = { type: 'number' };
+    if (schema.description) result.description = schema.description;
+    return result;
+  }
+
+  if (schema instanceof z.ZodBoolean) {
+    const result: JsonSchemaType = { type: 'boolean' };
+    if (schema.description) result.description = schema.description;
+    return result;
+  }
 
   if (schema instanceof z.ZodArray) {
-    return {
+    const result: JsonSchemaType = {
       type: 'array',
       items: zodToJsonSchema(schema.element),
     };
+    if (schema.description) result.description = schema.description;
+    return result;
   }
 
   if (schema instanceof z.ZodEnum) {
-    return {
+    const result: JsonSchemaType = {
       type: 'string',
-      enum: schema._def.values,
+      enum: schema.options as string[],
     };
+    if (schema.description) result.description = schema.description;
+    return result;
   }
 
   if (schema instanceof z.ZodUnion) {
     return {
-      anyOf: schema._def.options.map(zodToJsonSchema),
+      anyOf: schema.options.map(zodToJsonSchema),
     };
   }
 
-  if (schema.description) {
-    return {
-      ...zodToJsonSchema(schema._def.innerType),
-      description: schema.description,
-    };
+  if (schema instanceof z.ZodOptional) {
+    const innerSchema = zodToJsonSchema(schema.unwrap());
+    if (schema.description) innerSchema.description = schema.description;
+    return innerSchema;
   }
 
   return {}; // fallback for unsupported types
 }
 
-
 export type FunctionToolConfig = {
   name: string;
   description: string;
-  schema: z.ZodObject<any>;
+  schema: z.ZodObject<z.ZodRawShape>;
   strict?: boolean;
 }
 

@@ -10,7 +10,7 @@ const runLLMTests = async () => {
   await testListModels("ollama");
 
   await testLLMModel('ollama', {
-    model: 'llava-phi3:latest', // Ollama specific model
+    model: 'mistral', // Ollama specific model
     maxTokens: 1024,      // Ollama specific max tokens
   });
   
@@ -95,7 +95,7 @@ async function stream(provider: LLMProvider, options: { model: string; maxTokens
         role: 'user',
         content: {
           type: 'text',
-          text: 'Write a small story about Paris',
+          text: 'Write a small story about Paris. Less than 30 words.',
         },
       },
     ],

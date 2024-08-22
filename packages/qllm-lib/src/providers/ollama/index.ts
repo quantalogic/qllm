@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import path from 'path';
+import path, { format } from 'path';
 import axios from 'axios';
 import {
   BaseLLMProvider,
@@ -9,13 +9,15 @@ import {
   LLMOptions,
   LLMProviderError,
   Model,
+  Tool,
   ChatMessage,
   isTextContent,
   isImageUrlContent,
   MessageContent,
   ImageUrlContent,
+  ToolCall,
 } from '../../types';
-import ollama, { ChatRequest } from 'ollama';
+import ollama, { ChatRequest, Tool as OllamaTool, ToolCall as OllamaToolCall } from 'ollama';
 import { createTextMessageContent } from '../../utils/images';
 import { listModels } from './list-models';
 
@@ -50,22 +52,27 @@ export class OllamaProvider extends BaseLLMProvider {
 
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
-      const { messages, options } = params;
+      const { messages, options, tools } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await this.formatMessages(messageWithSystem);
+      const formattedTools = formatTools(tools);
 
       const chatRequest: ChatRequest & { stream: false } = {
         model: options.model || DEFAULT_MODEL,
         messages: formattedMessages,
         stream: false,
+        tools: formattedTools,
       };
 
       const response = await ollama.chat(chatRequest);
+
+     // console.dir(response, { depth: null });
 
       return {
         model: options.model || DEFAULT_MODEL,
         text: response.message.content,
         refusal: null,
+        toolCalls: mapOllamaToolCallToToolCall(response.message.tool_calls),
         finishReason: response.done ? 'stop' : null,
       };
     } catch (error) {
@@ -77,13 +84,15 @@ export class OllamaProvider extends BaseLLMProvider {
     params: ChatCompletionParams,
   ): AsyncIterableIterator<ChatStreamCompletionResponse> {
     try {
-      const { messages, options } = params;
+      const { messages, options, tools } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await this.formatMessages(messageWithSystem);
+      const formattedTools = formatTools(tools);
 
       const chatRequest: ChatRequest & { stream: true } = {
         model: options.model || DEFAULT_MODEL,
         messages: formattedMessages,
+        tools: formattedTools,
         stream: true,
       };
 
@@ -123,6 +132,7 @@ export class OllamaProvider extends BaseLLMProvider {
             images.push(imageContent.imageUrl.url);
           } catch (error) {
             console.error('Error processing image:', error);
+            throw error;
           }
         }
       }
@@ -183,3 +193,40 @@ export const createOllamaImageContent = async (source: string): Promise<ImageUrl
     throw error;
   }
 };
+function formatTools(tools: Tool[] | undefined): OllamaTool[] | undefined {
+  if (!tools) {
+    return undefined;
+  }
+  const ollamaTools: OllamaTool[] = [];
+  for (const tool of tools) {
+    const ollamaTool: OllamaTool = {
+      type: 'function',
+      function: {
+        name: tool.function.name,
+        description: tool.function.description,
+        parameters: tool.function.parameters,
+      },
+    };
+    ollamaTools.push(ollamaTool);
+  }
+  return ollamaTools;
+}
+
+function mapOllamaToolCallToToolCall(
+  toolCalls: OllamaToolCall[] | undefined,
+): ToolCall[] | undefined {
+  if (!toolCalls) {
+    return undefined;
+  }
+  return toolCalls.map(
+    (toolCall) =>
+      ({
+        type: 'function',
+        id: crypto.randomUUID(), // Generate a unique ID
+        function: {
+          name: toolCall.function.name,
+          arguments: JSON.stringify(toolCall.function.arguments),
+        },
+      } as ToolCall),
+  );
+}
