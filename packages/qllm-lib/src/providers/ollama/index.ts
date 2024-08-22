@@ -1,3 +1,6 @@
+import fs from 'fs/promises';
+import path from 'path';
+import axios from "axios";
 import {
   BaseLLMProvider,
   ChatCompletionParams,
@@ -10,9 +13,11 @@ import {
   isTextContent,
   isImageUrlContent,
   MessageContent,
+  ImageUrlContent,
 } from '../../types';
 import ollama, { ModelResponse, ChatRequest, ChatResponse } from 'ollama';
-import { createImageContent, createTextMessageContent } from '../../utils/images';
+import {  createTextMessageContent } from '../../utils/images';
+
 
 const DEFAULT_MODEL = 'llama3.1';
 
@@ -109,24 +114,36 @@ export class OllamaProvider extends BaseLLMProvider {
     messages: ChatMessage[],
   ): Promise<{ role: string; content: string; images?: string[] }[]> {
     const formattedMessages: { role: string; content: string; images?: string[] }[] = [];
-
+  
     for (const message of messages) {
       const messageContentArray: MessageContent[] = Array.isArray(message.content)
         ? message.content
         : [message.content];
+      
+      let content = '';
+      const images: string[] = [];
+  
       for (const messageContent of messageContentArray) {
-        {
-          if (isTextContent(messageContent)) {
-            formattedMessages.push({ role: message.role, content: messageContent.text });
-          } else if (isImageUrlContent(messageContent)) {
-            formattedMessages.push({ role: message.role, content: messageContent.imageUrl.url });
+        if (isTextContent(messageContent)) {
+          content += messageContent.text + '\n';
+        } else if (isImageUrlContent(messageContent)) {
+          try {
+            const imageContent = await createOllamaImageContent(messageContent.imageUrl.url);
+            images.push(imageContent.imageUrl.url);
+          } catch (error) {
+            console.error('Error processing image:', error);
           }
         }
       }
+  
+      formattedMessages.push({ 
+        role: message.role, 
+        content: content.trim(),
+        ...(images.length > 0 && { images })
+      });
     }
     return formattedMessages;
   }
-
   protected handleError(error: unknown): never {
     if (error instanceof LLMProviderError) {
       throw error;
@@ -148,3 +165,30 @@ export class OllamaProvider extends BaseLLMProvider {
     return messages;
   }
 }
+
+export const createOllamaImageContent = async (source: string): Promise<ImageUrlContent> => {
+    try {
+      let content: string;
+  
+      if (source.startsWith('http://') || source.startsWith('https://')) {
+        // Handle URL
+        const response = await axios.get(source, { responseType: 'arraybuffer' });
+        content = Buffer.from(response.data).toString('base64');
+      } else {
+        // Handle local file path
+        const absolutePath = path.resolve(source);
+        content = await fs.readFile(absolutePath, { encoding: 'base64' });
+      }
+  
+      // Return the raw base64 string without the data URL prefix
+      return {
+        type: 'image_url',
+        imageUrl: {
+          url: content,
+        },
+      };
+    } catch (error) {
+      console.error(`Error processing image from: ${source}`, error);
+      throw error;
+    }
+  };
