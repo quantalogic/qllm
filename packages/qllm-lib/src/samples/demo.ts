@@ -6,6 +6,9 @@ import { createImageContent, createFunctionToolFromZod } from '../utils';
 // LLM Tests
 
 const runLLMTests = async () => {
+
+  await testListModels("ollama");
+
   await testLLMModel('ollama', {
     model: 'llava-phi3:latest', // Ollama specific model
     maxTokens: 1024,      // Ollama specific max tokens
@@ -16,6 +19,13 @@ const runLLMTests = async () => {
     maxTokens: 1024,     // OpenAI specific max tokens
   });
 };
+
+const testListModels = async (providerName: string) => {
+  const provider = getLLMProvider(providerName);
+  const models = await provider.listModels();
+  console.log('Available models:');
+  console.dir(models, { depth: null });
+}
 
 const testLLMModel = async (providerName: string, options: { model: string; maxTokens: number }) => {
   console.log(`Test LLM model with provider: ${providerName}`);

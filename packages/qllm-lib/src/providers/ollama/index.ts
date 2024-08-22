@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import axios from "axios";
+import axios from 'axios';
 import {
   BaseLLMProvider,
   ChatCompletionParams,
@@ -15,45 +15,36 @@ import {
   MessageContent,
   ImageUrlContent,
 } from '../../types';
-import ollama, { ModelResponse, ChatRequest, ChatResponse } from 'ollama';
-import {  createTextMessageContent } from '../../utils/images';
-
+import ollama, { ChatRequest } from 'ollama';
+import { createTextMessageContent } from '../../utils/images';
+import { listModels } from './list-models';
 
 const DEFAULT_MODEL = 'llama3.1';
+const BASE_URL = 'http://localhost:11434';
 
 export class OllamaProvider extends BaseLLMProvider {
+  constructor(private baseUrl: string = BASE_URL) {
+    super();
+  }
+
   public readonly name = 'Ollama';
 
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
   };
 
-  private formatModelDescription(model: ModelResponse): string {
-    const { details, size, size_vram } = model;
-    const families = details.families.join(', ');
-    const sizeGB = (size / (1024 * 1024 * 1024)).toFixed(2);
-    const sizeVramGB = (size_vram / (1024 * 1024 * 1024)).toFixed(2);
-
-    return [
-      `Family: ${details.family}`,
-      `Related families: ${families}`,
-      `Quantization level: ${details.quantization_level}`,
-      `Size: ${sizeGB} GB`,
-      `VRAM size: ${sizeVramGB} GB`,
-    ].join(' | ');
-  }
-
   async listModels(): Promise<Model[]> {
     try {
-      const { models } = await ollama.list();
+      const models = await listModels(this.baseUrl);
 
-      return models.map((model: ModelResponse) => ({
-        id: model.name,
-        createdAt: model.modified_at,
-        description: this.formatModelDescription(model),
+      return models.map((model) => ({
+        id: model.id,
+        createdAt: model.createdAt,
+        description: model.description,
       }));
     } catch (error) {
       this.handleError(error);
+      return []; // Return an empty array in case of error
     }
   }
 
@@ -114,15 +105,15 @@ export class OllamaProvider extends BaseLLMProvider {
     messages: ChatMessage[],
   ): Promise<{ role: string; content: string; images?: string[] }[]> {
     const formattedMessages: { role: string; content: string; images?: string[] }[] = [];
-  
+
     for (const message of messages) {
       const messageContentArray: MessageContent[] = Array.isArray(message.content)
         ? message.content
         : [message.content];
-      
+
       let content = '';
       const images: string[] = [];
-  
+
       for (const messageContent of messageContentArray) {
         if (isTextContent(messageContent)) {
           content += messageContent.text + '\n';
@@ -135,11 +126,11 @@ export class OllamaProvider extends BaseLLMProvider {
           }
         }
       }
-  
-      formattedMessages.push({ 
-        role: message.role, 
+
+      formattedMessages.push({
+        role: message.role,
         content: content.trim(),
-        ...(images.length > 0 && { images })
+        ...(images.length > 0 && { images }),
       });
     }
     return formattedMessages;
@@ -167,28 +158,28 @@ export class OllamaProvider extends BaseLLMProvider {
 }
 
 export const createOllamaImageContent = async (source: string): Promise<ImageUrlContent> => {
-    try {
-      let content: string;
-  
-      if (source.startsWith('http://') || source.startsWith('https://')) {
-        // Handle URL
-        const response = await axios.get(source, { responseType: 'arraybuffer' });
-        content = Buffer.from(response.data).toString('base64');
-      } else {
-        // Handle local file path
-        const absolutePath = path.resolve(source);
-        content = await fs.readFile(absolutePath, { encoding: 'base64' });
-      }
-  
-      // Return the raw base64 string without the data URL prefix
-      return {
-        type: 'image_url',
-        imageUrl: {
-          url: content,
-        },
-      };
-    } catch (error) {
-      console.error(`Error processing image from: ${source}`, error);
-      throw error;
+  try {
+    let content: string;
+
+    if (source.startsWith('http://') || source.startsWith('https://')) {
+      // Handle URL
+      const response = await axios.get(source, { responseType: 'arraybuffer' });
+      content = Buffer.from(response.data).toString('base64');
+    } else {
+      // Handle local file path
+      const absolutePath = path.resolve(source);
+      content = await fs.readFile(absolutePath, { encoding: 'base64' });
     }
-  };
+
+    // Return the raw base64 string without the data URL prefix
+    return {
+      type: 'image_url',
+      imageUrl: {
+        url: content,
+      },
+    };
+  } catch (error) {
+    console.error(`Error processing image from: ${source}`, error);
+    throw error;
+  }
+};
