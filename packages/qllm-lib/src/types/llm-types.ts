@@ -35,7 +35,6 @@ export function isImageUrlContent(content: MessageContent): content is ImageUrlC
   return content.type === 'image_url';
 }
 
-
 // -------------------- Usage and Response Types --------------------
 
 export type Usage = {

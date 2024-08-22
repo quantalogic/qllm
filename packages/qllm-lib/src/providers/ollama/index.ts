@@ -16,6 +16,10 @@ import {
   MessageContent,
   ImageUrlContent,
   ToolCall,
+  LLMProvider,
+  EmbeddingProvider,
+  EmbeddingRequestParams,
+  EmbeddingResponse,
 } from '../../types';
 import ollama, { ChatRequest, Tool as OllamaTool, ToolCall as OllamaToolCall } from 'ollama';
 import { createTextMessageContent } from '../../utils/images';
@@ -24,12 +28,28 @@ import { listModels } from './list-models';
 const DEFAULT_MODEL = 'llama3.1';
 const BASE_URL = 'http://localhost:11434';
 
-export class OllamaProvider extends BaseLLMProvider {
-  constructor(private baseUrl: string = BASE_URL) {
-    super();
-  }
+export class OllamaProvider implements LLMProvider, EmbeddingProvider {
+  constructor(private baseUrl: string = BASE_URL) {}
 
+  public readonly version: string = '1.0.0';
   public readonly name = 'Ollama';
+
+  async generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse> {
+    if (Array.isArray(input.content)) {
+      throw new Error('Ollama embeddings does not support multiple text inputs');
+    }
+    const result = await ollama.embeddings({
+      model: input.model,
+      prompt: input.content,
+    });
+
+    const embeddingResponse: EmbeddingResponse = {
+      embedding: result.embedding,
+      embeddings: [result.embedding],
+    };
+
+    return embeddingResponse;
+  }
 
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
@@ -66,7 +86,7 @@ export class OllamaProvider extends BaseLLMProvider {
 
       const response = await ollama.chat(chatRequest);
 
-     // console.dir(response, { depth: null });
+      // console.dir(response, { depth: null });
 
       return {
         model: options.model || DEFAULT_MODEL,

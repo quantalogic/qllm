@@ -19,7 +19,7 @@ export function getEmbeddingProvider(provider: string) : EmbeddingProvider {
     case 'openai':
       return new OpenAIProvider();
     default:
-      return new OpenAIProvider();
+      return new OllamaProvider();
   }
 }
 

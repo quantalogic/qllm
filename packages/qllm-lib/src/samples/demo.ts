@@ -8,21 +8,21 @@ import { createImageContent, createFunctionToolFromZod } from '../utils';
 const runLLMTests = async () => {
   console.log('🚀 Starting LLM Tests');
 
-  await testListModels("ollama");
-  await testListModels("openai");
+  await testListModels('ollama');
+  await testListModels('openai');
 
   const ollamaModels = {
     embeddingModelName: 'nomic-embed-text:latest',
     visionModelName: 'llava-phi3:latest',
     toolModelName: 'mistral:latest',
-    textModelName: 'gemma2:2b'
+    textModelName: 'gemma2:2b',
   };
 
   const openaiModels = {
     embeddingModelName: 'text-embedding-3-small',
     visionModelName: 'gpt-4o-mini',
     toolModelName: 'gpt-4o-mini',
-    textModelName: 'gpt-4o-mini'
+    textModelName: 'gpt-4o-mini',
   };
 
   await testLLMModel('ollama', { maxTokens: 1024 }, ollamaModels);
@@ -38,17 +38,17 @@ const testListModels = async (providerName: string) => {
   console.log('📊 Available models:');
   console.dir(models, { depth: null });
   console.log('✅ Model listing completed');
-}
+};
 
 const testLLMModel = async (
-  providerName: string, 
+  providerName: string,
   options: { maxTokens: number },
   models: {
-    embeddingModelName: string,
-    visionModelName: string,
-    toolModelName: string,
-    textModelName: string
-  }
+    embeddingModelName: string;
+    visionModelName: string;
+    toolModelName: string;
+    textModelName: string;
+  },
 ) => {
   console.log(`🧪 Testing LLM model with provider: ${providerName}`);
 
@@ -57,18 +57,25 @@ const testLLMModel = async (
 
   await testCompletion(provider, { model: models.textModelName, maxTokens: options.maxTokens });
   await testStream(provider, { model: models.textModelName, maxTokens: options.maxTokens });
-  await testCompletionImage(provider, { model: models.visionModelName, maxTokens: options.maxTokens });
-  await testCompletionWithTool(provider, { model: models.toolModelName, maxTokens: options.maxTokens });
+  await testCompletionImage(provider, {
+    model: models.visionModelName,
+    maxTokens: options.maxTokens,
+  });
+  await testCompletionWithTool(provider, {
+    model: models.toolModelName,
+    maxTokens: options.maxTokens,
+  });
 
   console.log(`✅ LLM model test completed for ${providerName}`);
 };
 
-async function testCompletion(provider: LLMProvider, options: { model: string; maxTokens: number }) {
+async function testCompletion(
+  provider: LLMProvider,
+  options: { model: string; maxTokens: number },
+) {
   console.log('🔤 Starting text completion test');
   const result = await provider.generateChatCompletion({
-    messages: [
-      { role: 'user', content: { type: 'text', text: 'What is the capital of France?' } },
-    ],
+    messages: [{ role: 'user', content: { type: 'text', text: 'What is the capital of France?' } }],
     options: { model: options.model, maxTokens: options.maxTokens },
   });
 
@@ -80,7 +87,10 @@ async function testStream(provider: LLMProvider, options: { model: string; maxTo
   console.log('🌊 Starting streaming completion test');
   const result = await provider.streamChatCompletion({
     messages: [
-      { role: 'user', content: { type: 'text', text: 'Write a small story about Paris. Less than 30 words.' } },
+      {
+        role: 'user',
+        content: { type: 'text', text: 'Write a small story about Paris. Less than 30 words.' },
+      },
     ],
     options: { model: options.model, maxTokens: options.maxTokens },
   });
@@ -92,10 +102,14 @@ async function testStream(provider: LLMProvider, options: { model: string; maxTo
   console.log('\n✅ Streaming completion test completed');
 }
 
-async function testCompletionImage(provider: LLMProvider, options: { model: string; maxTokens: number }) {
+async function testCompletionImage(
+  provider: LLMProvider,
+  options: { model: string; maxTokens: number },
+) {
   console.log('🖼️ Starting image completion test');
 
-  const urlDemo = "https://images.unsplash.com/photo-1613048981304-12e96c2d3ec4?q=80&w=2874&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  const urlDemo =
+    'https://images.unsplash.com/photo-1613048981304-12e96c2d3ec4?q=80&w=2874&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
   const result = await provider.generateChatCompletion({
     messages: [
@@ -114,7 +128,10 @@ async function testCompletionImage(provider: LLMProvider, options: { model: stri
   console.log('✅ Image completion test completed');
 }
 
-async function testCompletionWithTool(provider: LLMProvider, options: { model: string; maxTokens: number }) {
+async function testCompletionWithTool(
+  provider: LLMProvider,
+  options: { model: string; maxTokens: number },
+) {
   console.log('🛠️ Starting completion with tool test');
 
   const weatherToolParameters = z.object({
@@ -132,9 +149,7 @@ async function testCompletionWithTool(provider: LLMProvider, options: { model: s
   console.log('🌡️ Weather Tool created');
 
   const result = await provider.generateChatCompletion({
-    messages: [
-      { role: 'user', content: { type: 'text', text: 'What is the Weather in Paris?' } },
-    ],
+    messages: [{ role: 'user', content: { type: 'text', text: 'What is the Weather in Paris?' } }],
     parallelToolCalls: true,
     toolChoice: 'required',
     tools: [weatherTool],
@@ -147,39 +162,60 @@ async function testCompletionWithTool(provider: LLMProvider, options: { model: s
 }
 
 // Embedding Tests
-
-const runEmbeddingTest = async () => {
+const runEmbeddingTests = async () => {
   console.log('🚀 Starting Embedding Tests');
+  console.time('Total Embedding Tests Duration');
 
-  const openaiModels = {
-    embeddingModelName: 'text-embedding-ada-002',
-    visionModelName: 'gpt-4-vision-preview',
-    toolModelName: 'gpt-4-0613',
-    textModelName: 'gpt-4-turbo-preview'
+  const ollamaModels = {
+    embeddingModelName: 'nomic-embed-text:latest',
   };
 
-  await testEmbeddingModel('openai', { maxTokens: 1024 }, openaiModels);
+  const openaiModels = {
+    embeddingModelName: 'text-embedding-3-small',
+  };
+
+  console.log('📊 Configured Models:');
+  console.log('   Ollama:', ollamaModels.embeddingModelName);
+  console.log('   OpenAI:', openaiModels.embeddingModelName);
+
+  console.log('\n🔍 Testing Ollama Embedding Model');
+  console.time('Ollama Test Duration');
+  await testEmbeddingModel('ollama', {
+    maxTokens: 1024,
+    modelName: ollamaModels.embeddingModelName,
+  });
+  console.timeEnd('Ollama Test Duration');
+
+  console.log('\n🔍 Testing OpenAI Embedding Model');
+  console.time('OpenAI Test Duration');
+  await testEmbeddingModel('openai', {
+    maxTokens: 1024,
+    modelName: openaiModels.embeddingModelName,
+  });
+  console.timeEnd('OpenAI Test Duration');
+
+  console.timeEnd('Total Embedding Tests Duration');
   console.log('✅ Embedding Tests completed');
 };
 
 const testEmbeddingModel = async (
-  providerName: string, 
-  options: { maxTokens: number },
-  models: {
-    embeddingModelName: string,
-    visionModelName: string,
-    toolModelName: string,
-    textModelName: string
-  }
+  providerName: string,
+  options: { maxTokens: number; modelName: string },
 ) => {
   console.log(`🧪 Testing Embedding model with provider: ${providerName}`);
   const embeddingProvider = getEmbeddingProvider(providerName);
   console.log(`🔧 ${providerName}Provider instance created for embedding`);
-  await testEmbedding(embeddingProvider, { model: models.embeddingModelName, maxTokens: options.maxTokens });
+  await testEmbedding(embeddingProvider, {
+    model: options.modelName,
+    maxTokens: options.maxTokens,
+  });
   console.log(`✅ Embedding model test completed for ${providerName}`);
 };
 
-async function testEmbedding(provider: EmbeddingProvider, options: { model: string; maxTokens: number }) {
+async function testEmbedding(
+  provider: EmbeddingProvider,
+  options: { model: string; maxTokens: number },
+) {
   console.log('🧬 Starting embedding generation');
   const content = 'Hello, world!';
   const model = options.model;
@@ -191,12 +227,10 @@ async function testEmbedding(provider: EmbeddingProvider, options: { model: stri
 // Execute the LLM Tests
 runLLMTests()
   .then(() => console.log('🎉 All LLM Tests executed successfully'))
-  .catch((error) => console.error('❌ Error during LLM tests execution:', error));
-
-// Execute the Embedding Tests
-// Uncomment the following lines to run embedding tests
-/*
-runEmbeddingTest()
-  .then(() => console.log('🎉 All Embedding Tests executed successfully'))
-  .catch((error) => console.error('❌ Error during Embedding Tests execution:', error));
-*/
+  .catch((error) => console.error('❌ Error during LLM tests execution:', error))
+  .then(() => {
+    // Execute the Embedding Tests
+    runEmbeddingTests()
+      .then(() => console.log('🎉 All Embedding Tests executed successfully'))
+      .catch((error) => console.error('❌ Error during Embedding Tests execution:', error));
+  });

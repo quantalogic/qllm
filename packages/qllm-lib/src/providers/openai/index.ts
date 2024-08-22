@@ -19,7 +19,6 @@ import {
   ChatCompletionMessageParam,
   ChatCompletionContentPart,
   ChatCompletionTool,
-  ChatCompletionToolChoiceOption,
 } from 'openai/resources/chat/completions';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;

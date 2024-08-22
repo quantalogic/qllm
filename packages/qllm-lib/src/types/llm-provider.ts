@@ -9,18 +9,20 @@ import {
   Model,
 } from './llm-types';
 
-export interface EmbeddingProvider {
-  version: string;
+export interface AIProvider {
+  readonly name: string;
+  readonly version: string;
+  listModels(): Promise<Model[]>;
+}
+
+export interface EmbeddingProvider extends AIProvider {
   generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse>;
   listModels(): Promise<Model[]>;
 }
 
 // LLM Provider Interface
-export interface LLMProvider {
-  version: string; // Version of the provider
-  name: string; // Name of the provider
+export interface LLMProvider extends AIProvider {
   defaultOptions: LLMOptions; // Default options for the provider
-  listModels(): Promise<Model[]>; // Optional method to list available models
   generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse>;
   streamChatCompletion(
     params: ChatCompletionParams,
