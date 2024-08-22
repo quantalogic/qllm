@@ -67,6 +67,13 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topProbability,
+        seed: options.seed,
+        frequency_penalty: options.frequencyPenalty,
+        presence_penalty: options.presencePenalty,
+        stop: options.stop,
+        logprobs: options.logprobs,
+        logit_bias: options.logitBias,
+        top_logprobs: options.topLogprobs,
       });
 
       const firstResponse = response.choices[0];
@@ -109,6 +116,14 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topProbability,
+        seed: options.seed,
+        frequency_penalty: options.frequencyPenalty,
+        presence_penalty: options.presencePenalty,
+        stop: options.stop,
+        logprobs: options.logprobs,
+        logit_bias: options.logitBias,
+        top_logprobs: options.topLogprobs,
+        n: 1,
         stream_options: {
           include_usage: true,
         },

@@ -59,10 +59,11 @@ export type FunctionToolConfig = {
   name: string;
   description: string;
   schema: z.ZodObject<any>;
+  strict?: boolean;
 }
 
 export function createFunctionToolFromZod(config: FunctionToolConfig): FunctionTool {
-  const { name, description, schema } = config;
+  const { name, description, schema, strict } = config;
   const jsonSchema = zodToJsonSchema(schema);
   return {
     type: 'function',
@@ -71,5 +72,6 @@ export function createFunctionToolFromZod(config: FunctionToolConfig): FunctionT
       description,
       parameters: jsonSchema,
     },
+    strict
   };
 }

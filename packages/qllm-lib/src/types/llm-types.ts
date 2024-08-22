@@ -1,3 +1,4 @@
+import { strict } from 'assert';
 import { z } from 'zod';
 
 // -------------------- Chat Message Types --------------------
@@ -66,11 +67,28 @@ export type EmbeddingResponse = {
 // -------------------- Option Types --------------------
 
 export interface GenerationOptions {
+  // Seed for deterministic generation. Same seed should produce same output.
   seed?: number;
+  // Maximum number of tokens to generate
   maxTokens?: number;
+  // Controls randomness: 0 = deterministic, 1 = very random
   temperature?: number;
+  // Nucleus sampling: only consider tokens with top_p cumulative probability
   topProbability?: number;
+  // Only sample from top K tokens
   topKTokens?: number;
+  // Number of most likely tokens to return with their log probabilities
+  topLogprobs?: number | null;
+  // Adjust likelihood of specific tokens appearing in the output
+  logitBias?: Record<string, number> | null;
+  // Whether to return log probabilities of the output tokens
+  logprobs?: boolean | null;
+  // Sequences where the API will stop generating further tokens
+  stop?: string | string[] | null;
+  // Penalize new tokens based on their existing frequency in the text so far
+  presencePenalty?: number | null;
+  // Penalize new tokens based on their existing frequency in the text so far
+  frequencyPenalty?: number | null;
 }
 
 export interface ModelOptions {
@@ -83,6 +101,7 @@ export interface EnvironmentOptions {
 }
 
 export interface LLMOptions extends GenerationOptions, ModelOptions, EnvironmentOptions {
+
   systemMessage?: string;
 }
 
@@ -160,6 +179,7 @@ const FunctionToolSchema = z.object({
     description: z.string(),
     parameters: JSONSchemaType,
   }),
+  strict: z.boolean().optional(),
 });
 
 const ToolSchema = FunctionToolSchema;

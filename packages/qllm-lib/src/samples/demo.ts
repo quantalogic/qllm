@@ -152,6 +152,7 @@ async function completionWithTool(provider: LLMProvider) {
     name: 'get_current_weather',
     description: 'Get the current weather in a given location',
     schema: weatherToolParameters,
+    strict: true,
   });
 
   /*  const weatherTool: Tool =  {
