@@ -259,12 +259,19 @@ function mapOllamaToolCallToToolCall(
 }
 
 function formatOptions(options: LLMOptions): Partial<OllamaOptions> {
+  const stops: string[] = [];
+  if (Array.isArray(options.stop)) {
+    stops.push(...options.stop);
+  } else if (options.stop) {
+    stops.push(options.stop);
+  }
+
   const formattedOptions: Partial<OllamaOptions> = {
     temperature: options.temperature,
     top_p: options.topProbability,
     seed: options.seed,
     top_k: options.topKTokens,
-    stop: Array.isArray(options.stop) ? options.stop : ([options.stop] as string[]),
+    stop: stops,
     presence_penalty: options.presencePenalty || undefined,
     frequency_penalty: options.frequencyPenalty || undefined,
   };

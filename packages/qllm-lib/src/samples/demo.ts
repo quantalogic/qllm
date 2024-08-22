@@ -13,7 +13,7 @@ const runLLMTests = async () => {
 
   const ollamaModels = {
     embeddingModelName: 'nomic-embed-text:latest',
-    visionModelName: 'llava-phi3:latest',
+    visionModelName: 'llava:latest',
     toolModelName: 'mistral:latest',
     textModelName: 'gemma2:2b',
   };
