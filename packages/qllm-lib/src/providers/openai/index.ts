@@ -75,6 +75,8 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         model: model,
         text: firstResponse?.message?.content || '',
         finishReason: firstResponse?.finish_reason,
+        toolCalls: firstResponse?.message?.tool_calls,
+        refusal: firstResponse?.message?.refusal,
         usage: {
           promptTokens: usage?.prompt_tokens || 0,
           completionTokens: usage?.completion_tokens || 0,
@@ -107,6 +109,9 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topProbability,
+        stream_options: {
+          include_usage: true,
+        },
         stream: true,
       });
 
@@ -219,12 +224,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
   private formatTools(tools?: Tool[]): ChatCompletionTool[] | undefined {
     if (!tools) return undefined;
     return tools.map((tool) => ({
-      type: 'function',
-      function: {
-        name: tool.function.name,
-        description: tool.function.description,
-        parameters: tool.function.parameters,
-      },
+      ...tool,
     }));
   }
 

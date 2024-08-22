@@ -2,19 +2,14 @@ import { z } from 'zod';
 
 // -------------------- Chat Message Types --------------------
 
-// Chat message roles
 export type ChatMessageRole = 'user' | 'assistant' | 'system';
-
-// Chat message content types
 export type ChatMessageContentType = 'text' | 'image_url';
 
-// Text content
 export type TextContent = {
   type: 'text';
   text: string;
 };
 
-// Image URL content
 export type ImageUrlContent = {
   type: 'image_url';
   imageUrl: {
@@ -22,13 +17,9 @@ export type ImageUrlContent = {
   };
 };
 
-// Message content (union type)
 export type MessageContent = TextContent | ImageUrlContent;
-
-// Chat message content (single or array)
 export type ChatMessageContent = MessageContent | MessageContent[];
 
-// Chat message structure
 export type ChatMessage = {
   role: ChatMessageRole;
   content: ChatMessageContent;
@@ -36,22 +27,21 @@ export type ChatMessage = {
 
 // -------------------- Usage and Response Types --------------------
 
-// Usage statistics
 export type Usage = {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
 };
 
-// Chat completion response
 export type ChatCompletionResponse = {
   model: string;
   text: string | null;
+  refusal: string | null;
+  toolCalls?: ToolCall[];
   finishReason: string | null;
   usage?: Usage;
 };
 
-// Chat stream completion response
 export type ChatStreamCompletionResponse = {
   model: string;
   text: string | null;
@@ -60,17 +50,14 @@ export type ChatStreamCompletionResponse = {
 
 // -------------------- Embedding Types --------------------
 
-// Embedding request parameters
 export type EmbeddingRequestParams = {
   model: string;
   content: string | string[] | number[] | number[][];
   dimensions?: number;
 };
 
-// Single embedding
 export type Embedding = number[];
 
-// Embedding response
 export type EmbeddingResponse = {
   embedding: Embedding;
   embeddings: Embedding[];
@@ -78,35 +65,31 @@ export type EmbeddingResponse = {
 
 // -------------------- Option Types --------------------
 
-// Generation options
 export interface GenerationOptions {
+  seed?: number;
   maxTokens?: number;
   temperature?: number;
   topProbability?: number;
   topKTokens?: number;
 }
 
-// Model options
 export interface ModelOptions {
   model: string;
 }
 
-// Environment options
 export interface EnvironmentOptions {
   awsRegion?: string;
   awsProfile?: string;
 }
 
-// LLM options (combined)
 export interface LLMOptions extends GenerationOptions, ModelOptions, EnvironmentOptions {
   systemMessage?: string;
 }
 
 // -------------------- Function and Tool Types --------------------
-// JSON Schema primitive types
+
 const JSONSchemaPrimitiveType = z.enum(['string', 'number', 'integer', 'boolean', 'null']);
 
-// JSON Schema type definition
 const JSONSchemaType: z.ZodType<any> = z.lazy(() =>
   z
     .object({
@@ -170,7 +153,6 @@ const JSONSchemaType: z.ZodType<any> = z.lazy(() =>
     .passthrough(),
 );
 
-// Function tool (aligned with OpenAI's format)
 const FunctionToolSchema = z.object({
   type: z.literal('function'),
   function: z.object({
@@ -182,13 +164,23 @@ const FunctionToolSchema = z.object({
 
 const ToolSchema = FunctionToolSchema;
 
-// Infer types from schemas
 export type FunctionTool = z.infer<typeof FunctionToolSchema>;
 export type Tool = z.infer<typeof ToolSchema>;
 
 export type ToolChoiceFunction = {
   type: 'function';
   name: string;
+};
+
+export type ToolCallFunction = {
+  name: string;
+  arguments: string; // JSON string of arguments
+};
+
+export type ToolCall = {
+  id: string;
+  type: 'function';
+  function: ToolCallFunction;
 };
 
 // -------------------- Miscellaneous Types --------------------
@@ -211,17 +203,17 @@ export type ResponseFormatJSONSchema = {
   };
 };
 
-// Response formats
-export type ResponseFormat = ResponseFormatText | ResponseFormatJSONObject | ResponseFormatJSONSchema;
+export type ResponseFormat =
+  | ResponseFormatText
+  | ResponseFormatJSONObject
+  | ResponseFormatJSONSchema;
 
-// Error response
 export interface ErrorResponse {
   code: string;
   message: string;
   details?: string;
 }
 
-// Model
 export type Model = {
   id: string;
   description?: string;
@@ -230,13 +222,10 @@ export type Model = {
 
 // -------------------- Chat Completion Types --------------------
 
-
-
-// Chat completion parameters
 export type ChatCompletionParams = {
   messages: ChatMessage[];
   tools?: Tool[];
-  toolChoice?:  'none' | 'auto' | 'required';
+  toolChoice?: 'none' | 'auto' | 'required';
   parallelToolCalls?: boolean;
   responseFormat?: ResponseFormat;
   options: LLMOptions;

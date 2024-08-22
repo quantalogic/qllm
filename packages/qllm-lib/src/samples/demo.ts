@@ -1,6 +1,7 @@
+import { z } from 'zod';
 import { getEmbeddingProvider, getLLMProvider } from '../providers';
 import { EmbeddingProvider, LLMProvider } from '../types';
-import { createImageContent } from '../utils';
+import { createImageContent, createFunctionToolFromZod } from '../utils';
 
 const demo = async () => {
   console.log('Test demo');
@@ -12,6 +13,8 @@ const demo = async () => {
 
   const models = await provider.listModels();
   console.log(models);
+
+  completionWithTool(provider);
 
   await completionLocalImage(provider);
 
@@ -103,9 +106,9 @@ async function completionImage(provider: LLMProvider) {
 }
 
 async function completionLocalImage(provider: LLMProvider) {
+  const filePath =
+    '/Users/raphaelmansuy/Github/03-working/qllm/packages/qllm-lib/resources/image1.jpeg';
 
-  const filePath = "/Users/raphaelmansuy/Github/03-working/qllm/packages/qllm-lib/resources/image1.jpeg";
-  
   const contentImage = await createImageContent(filePath);
 
   const result = await provider.generateChatCompletion({
@@ -135,4 +138,62 @@ async function embedding(provider: EmbeddingProvider) {
   const model = 'text-embedding-3-small';
   const result = await provider.generateEmbedding({ model, content });
   console.log(result);
+}
+
+async function completionWithTool(provider: LLMProvider) {
+  // Define the weather parameters schema
+  const weatherParams = z.object({
+    city: z.string().describe('The city for which to get the weather'),
+  });
+
+  const weatherTool = createFunctionToolFromZod(
+    'weather',
+    'Get the weather for a city',
+    weatherParams,
+  );
+
+/*  const weatherTool: Tool =  {
+    type: 'function',
+    function: {
+      name: 'get_current_weather',
+      description: 'Get the current weather in a given location',
+      parameters: {
+        type: 'object',
+        properties: {
+          location: {
+            type: 'string',
+            description: 'The city and state, e.g. San Francisco, CA',
+          },
+          unit: {
+            type: 'string',
+            enum: ['celsius', 'fahrenheit'],
+            description: 'The unit of temperature to use',
+          },
+        },
+        required: ['location', 'unit'],
+      },
+    },
+  };*/
+
+  const result = await provider.generateChatCompletion({
+    messages: [
+      {
+        role: 'user',
+        content: {
+          type: 'text',
+          text: 'What is the Weather in Paris?',
+        },
+      },
+    ],
+    parallelToolCalls: true,
+    toolChoice: 'required',
+    tools: [weatherTool],
+
+    options: {
+      model: 'gpt-4o-mini',
+      maxTokens: 1024,
+    },
+  });
+
+  console.log('result:', result);
 }
