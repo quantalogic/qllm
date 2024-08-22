@@ -2,41 +2,63 @@ import { z } from 'zod';
 import { getEmbeddingProvider, getLLMProvider } from '../providers';
 import { EmbeddingProvider, LLMProvider } from '../types';
 import { createImageContent, createFunctionToolFromZod } from '../utils';
-import { exit } from 'process';
 
-const demo = async () => {
-  console.log('Test demo');
+// LLM Tests
 
-  console.log('Creating OpenAIProvider instance');
-  const provider = getLLMProvider('openai');
-  const embedddingProvider = getEmbeddingProvider('openai');
-  console.log('Provider created');
-
-  const models = await provider.listModels();
-  console.log(models);
-
-  completionWithTool(provider);
-
-  await completionLocalImage(provider);
-
-  await completion(provider);
-
-  await stream(provider);
-
-  await embedding(embedddingProvider);
-
-  await completionImage(provider);
+const runLLMTests = async () => {
+  await testLLMModel('ollama', {
+    model: 'gemma2:2b', // Ollama specific model
+    maxTokens: 1024,      // Ollama specific max tokens
+  });
+  
+  await testLLMModel('openai', {
+    model: 'gpt-4o-mini',      // OpenAI specific model
+    maxTokens: 1024,     // OpenAI specific max tokens
+  });
 };
 
-demo()
-  .then(() => {
-    console.log('done');
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+const testLLMModel = async (providerName: string, options: { model: string; maxTokens: number }) => {
+  console.log(`Test LLM model with provider: ${providerName}`);
 
-async function completion(provider: LLMProvider) {
+  // Initialize LLM provider
+  const provider = getLLMProvider(providerName);
+  console.log(`${providerName}Provider instance created`);
+
+  // Execute various completions with options
+  await completion(provider, options);
+  await stream(provider, options);
+  await completionImage(provider, options);
+  await completionWithTool(provider, options);
+};
+
+// Embedding Test
+
+const runEmbeddingTest = async () => {
+/*  await testEmbeddingModel('ollama', {
+    model: 'gemma2:2b', // Ollama specific model
+    maxTokens: 1024,      // Ollama specific max tokens
+  });*/
+  
+  await testEmbeddingModel('openai', {
+    model: 'gpt-4o-mini',      // OpenAI specific model
+    maxTokens: 1024,     // OpenAI specific max tokens
+  });
+};
+
+const testEmbeddingModel = async (providerName: string, options: { model: string; maxTokens: number }) => {
+  console.log(`Test Embedding model with provider: ${providerName}`);
+
+  // Initialize Embedding provider
+  const embeddingProvider = getEmbeddingProvider(providerName);
+  console.log(`${providerName}Provider instance created`);
+
+  // Execute embedding test
+  await embedding(embeddingProvider, options);
+};
+
+// LLM Completion Functions
+
+async function completion(provider: LLMProvider, options: { model: string; maxTokens: number }) {
   const result = await provider.generateChatCompletion({
     messages: [
       {
@@ -48,15 +70,15 @@ async function completion(provider: LLMProvider) {
       },
     ],
     options: {
-      model: 'gpt-4o-mini',
-      maxTokens: 1024,
+      model: options.model,
+      maxTokens: options.maxTokens,
     },
   });
 
-  console.log('result:', result);
+  console.log('Completion result:', result);
 }
 
-async function stream(provider: LLMProvider) {
+async function stream(provider: LLMProvider, options: { model: string; maxTokens: number }) {
   const result = await provider.streamChatCompletion({
     messages: [
       {
@@ -68,8 +90,8 @@ async function stream(provider: LLMProvider) {
       },
     ],
     options: {
-      model: 'gpt-4o-mini',
-      maxTokens: 1024,
+      model: options.model,
+      maxTokens: options.maxTokens,
     },
   });
 
@@ -78,7 +100,7 @@ async function stream(provider: LLMProvider) {
   }
 }
 
-async function completionImage(provider: LLMProvider) {
+async function completionImage(provider: LLMProvider, options: { model: string; maxTokens: number }) {
   const result = await provider.generateChatCompletion({
     messages: [
       {
@@ -98,50 +120,15 @@ async function completionImage(provider: LLMProvider) {
       },
     ],
     options: {
-      model: 'gpt-4o-mini',
-      maxTokens: 1024,
+      model: options.model,
+      maxTokens: options.maxTokens,
     },
   });
 
-  console.log('result:', result);
+  console.log('Image completion result:', result);
 }
 
-async function completionLocalImage(provider: LLMProvider) {
-  const filePath =
-    '/Users/raphaelmansuy/Github/03-working/qllm/packages/qllm-lib/resources/image1.jpeg';
-
-  const contentImage = await createImageContent(filePath);
-
-  const result = await provider.generateChatCompletion({
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: 'Can you describe this image?',
-          },
-          contentImage,
-        ],
-      },
-    ],
-    options: {
-      model: 'gpt-4o-mini',
-      maxTokens: 1024,
-    },
-  });
-
-  console.log('result:', result);
-}
-
-async function embedding(provider: EmbeddingProvider) {
-  const content = 'Hello, world!';
-  const model = 'text-embedding-3-small';
-  const result = await provider.generateEmbedding({ model, content });
-  console.log(result);
-}
-
-async function completionWithTool(provider: LLMProvider) {
+async function completionWithTool(provider: LLMProvider, options: { model: string; maxTokens: number }) {
   // Define the weather parameters schema
   const weatherToolParameters = z.object({
     location: z.string().describe('The city and state, e.g. San Francisco, CA'),
@@ -155,31 +142,7 @@ async function completionWithTool(provider: LLMProvider) {
     strict: true,
   });
 
-  /*  const weatherTool: Tool =  {
-    type: 'function',
-    function: {
-      name: 'get_current_weather',
-      description: 'Get the current weather in a given location',
-      parameters: {
-        type: 'object',
-        properties: {
-          location: {
-            type: 'string',
-            description: 'The city and state, e.g. San Francisco, CA',
-          },
-          unit: {
-            type: 'string',
-            enum: ['celsius', 'fahrenheit'],
-            description: 'The unit of temperature to use',
-          },
-        },
-        required: ['location', 'unit'],
-      },
-    },
-  };*/
-
-  console.log('🔥 weatherTool:');
-  console.dir(weatherTool, { depth: null });
+  console.log('🔥 Weather Tool');
 
   const result = await provider.generateChatCompletion({
     messages: [
@@ -194,13 +157,39 @@ async function completionWithTool(provider: LLMProvider) {
     parallelToolCalls: true,
     toolChoice: 'required',
     tools: [weatherTool],
-
     options: {
-      model: 'gpt-4o-mini',
-      maxTokens: 1024,
+      model: options.model,
+      maxTokens: options.maxTokens,
     },
   });
 
-  console.log('result:');
+  console.log('Tool completion result:');
   console.dir(result, { depth: null });
 }
+
+// Embedding Function
+
+async function embedding(provider: EmbeddingProvider, options: { model: string; maxTokens: number }) {
+  const content = 'Hello, world!';
+  const model = options.model; // Use the model from options
+  const result = await provider.generateEmbedding({ model, content });
+  console.log('Embedding result:', result);
+}
+
+// Execute the LLM Tests
+runLLMTests()
+  .then(() => {
+    console.log('LLM Tests executed successfully');
+  })
+  .catch((error) => {
+    console.error('Error during LLM tests execution:', error);
+  });
+
+// Execute the Embedding Tests
+/*runEmbeddingTest()
+  .then(() => {
+    console.log('Embedding Tests executed successfully');
+  })
+  .catch((error) => {
+    console.error('Error during Embedding Tests execution:', error);
+  });*/

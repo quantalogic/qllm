@@ -1,4 +1,5 @@
 import { EmbeddingProvider, LLMProvider } from '../types/index';
+import { OllamaProvider } from './ollama';
 import { OpenAIProvider } from './openai';
 
 // Provider factory
@@ -6,6 +7,8 @@ export function getLLMProvider(providerName: string): LLMProvider {
   switch (providerName) {
     case 'openai':
       return new OpenAIProvider();
+    case 'ollama':
+      return new OllamaProvider();
     default:
       throw new Error(`Provider "${providerName}" not found.`);
   }
@@ -16,7 +19,7 @@ export function getEmbeddingProvider(provider: string) : EmbeddingProvider {
     case 'openai':
       return new OpenAIProvider();
     default:
-      throw new Error(`Provider "${provider}" not found.`);
+      return new OpenAIProvider();
   }
 }
 
