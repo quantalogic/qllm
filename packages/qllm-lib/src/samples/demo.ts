@@ -148,12 +148,11 @@ async function completionWithTool(provider: LLMProvider) {
     unit: z.enum(['celsius', 'fahrenheit']).describe('The unit of temperature to use'),
   });
 
-
-  const weatherTool = createFunctionToolFromZod(
-    'weather',
-    'Get the weather for a city',
-    weatherToolParameters,
-  );
+  const weatherTool = createFunctionToolFromZod({
+    name: 'get_current_weather',
+    description: 'Get the current weather in a given location',
+    schema: weatherToolParameters,
+  });
 
   /*  const weatherTool: Tool =  {
     type: 'function',
@@ -178,7 +177,7 @@ async function completionWithTool(provider: LLMProvider) {
     },
   };*/
 
-  console.log("🔥 weatherTool:");
+  console.log('🔥 weatherTool:');
   console.dir(weatherTool, { depth: null });
 
   const result = await provider.generateChatCompletion({

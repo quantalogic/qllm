@@ -54,11 +54,15 @@ function zodToJsonSchema(schema: z.ZodType<any, any, any>): any {
   return {}; // fallback for unsupported types
 }
 
-export function createFunctionToolFromZod(
-  name: string,
-  description: string,
-  schema: z.ZodObject<any>,
-): FunctionTool {
+
+export type FunctionToolConfig = {
+  name: string;
+  description: string;
+  schema: z.ZodObject<any>;
+}
+
+export function createFunctionToolFromZod(config: FunctionToolConfig): FunctionTool {
+  const { name, description, schema } = config;
   const jsonSchema = zodToJsonSchema(schema);
   return {
     type: 'function',
