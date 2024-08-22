@@ -13,10 +13,13 @@ import {
   EmbeddingRequestParams,
   ChatStreamCompletionResponse,
   EmbeddingResponse,
+  Tool,
 } from '../../types';
 import {
   ChatCompletionMessageParam,
   ChatCompletionContentPart,
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
 } from 'openai/resources/chat/completions';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
@@ -47,15 +50,20 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
 
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
-      const { messages, options } = params;
+      const { messages, options, tools, toolChoice, parallelToolCalls, responseFormat } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await this.formatMessages(messageWithSystem);
+      const formattedTools = tools ? this.formatTools(tools) : undefined;
 
       const model = options.model || DEFAULT_MODEL;
 
       const response = await this.client.chat.completions.create({
         model: model,
         messages: formattedMessages,
+        tools: formattedTools,
+        parallel_tool_calls: parallelToolCalls,
+        response_format: responseFormat,
+        tool_choice: toolChoice,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topProbability,
@@ -82,15 +90,20 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     params: ChatCompletionParams,
   ): AsyncIterableIterator<ChatStreamCompletionResponse> {
     try {
-      const { messages, options } = params;
+      const { messages, options, tools, toolChoice, parallelToolCalls, responseFormat } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await this.formatMessages(messageWithSystem);
+      const formattedTools = tools ? this.formatTools(tools) : undefined;
 
       const model = options.model || DEFAULT_MODEL;
 
       const stream = await this.client.chat.completions.create({
         model: model,
         messages: formattedMessages,
+        tools: formattedTools,
+        tool_choice: toolChoice,
+        parallel_tool_calls: parallelToolCalls,
+        response_format: responseFormat,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         temperature: options.temperature,
         top_p: options.topProbability,
@@ -201,6 +214,18 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
 
     return formattedMessages;
+  }
+
+  private formatTools(tools?: Tool[]): ChatCompletionTool[] | undefined {
+    if (!tools) return undefined;
+    return tools.map((tool) => ({
+      type: 'function',
+      function: {
+        name: tool.function.name,
+        description: tool.function.description,
+        parameters: tool.function.parameters,
+      },
+    }));
   }
 
   private handleError(error: unknown): never {
