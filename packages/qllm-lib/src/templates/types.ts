@@ -28,7 +28,6 @@ export interface OutputVariable {
   description?: string;
   default?: any;
 }
-
 export interface TemplateDefinition {
   name: string;
   version: string;
@@ -47,7 +46,6 @@ export interface TemplateDefinition {
   };
   resolved_content?: string;
 }
-
 export interface ExecutionContext {
   template: TemplateDefinition;
   variables: Record<string, any>;

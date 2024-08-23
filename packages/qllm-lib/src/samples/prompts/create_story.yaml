@@ -1,0 +1,35 @@
+name: create_story
+version: '1.0'
+description: Create a nice story
+author: Raphaël MANSUY
+#provider: ollama
+#model: mistral
+input_variables:
+  subject:
+    type: string
+    description: The subject of the story
+    default: "Emmanuel Macron dissout l'assemblée"
+  genre:
+    type: string
+    description: The genre of the story
+    default: "Humour et satire"
+  role:
+    type: string
+    description: The role of the user
+    default: "Gaspar PROUST"
+  lang:
+    type: string
+    description: The language of the story
+    default: "Français"
+  max_length:
+    type: number
+    description: The maximum length of the story
+    default: 100
+output_variables:
+  story:
+    type: string
+    description: The story
+
+content: >
+  {{file:./story.md}}
+ 

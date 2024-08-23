@@ -43,13 +43,13 @@ export class TemplateExecutor {
           messages,
           providerOptions,
           writableStream,
-          spinner,
+          spinner
         );
       } else {
         response = await provider.generateMessage(messages, providerOptions);
       }
 
-      const outputVariables = this.processOutputVariables(template, response);
+      const outputVariables = this.processOutputVariables(template., response);
 
       return { response, outputVariables };
     } catch (error) {
