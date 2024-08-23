@@ -1,5 +1,6 @@
 import { EmbeddingProvider, LLMProvider } from '../types/index';
-import { AnthropicProvider, createAwsBedrockAnthropicProvider } from './anthropic';
+import { AnthropicProvider } from './anthropic';
+import { createAwsBedrockAnthropicProvider } from './anthropic/aws-credentials';
 import { OllamaProvider } from './ollama';
 import { OpenAIProvider } from './openai';
 import { GroqProvider } from './qroq';

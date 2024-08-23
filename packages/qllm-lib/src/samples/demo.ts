@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { getEmbeddingProvider, getLLMProvider } from '../providers';
 import { EmbeddingProvider, LLMProvider } from '../types';
 import { createFunctionToolFromZod } from '../utils';
+import { Embeddings } from 'openai/resources';
 
 // LLM Tests
 
@@ -9,10 +10,17 @@ const runLLMTests = async () => {
   console.log('🚀 Starting LLM Tests');
 
 
-  await testListModels('aws-anthropic');
+  /*await testListModels('aws-anthropic');
   await testListModels('groq');
   await testListModels('ollama');
-  await testListModels('openai');
+  await testListModels('openai');*/
+
+  const awsAnthropicModels = {
+    embeddingModelName: "",
+    visionModelName: 'anthropic.claude-3-haiku-20240307-v1:0',
+    toolModelName: 'anthropic.claude-3-haiku-20240307-v1:0',
+    textModelName: 'anthropic.claude-3-haiku-20240307-v1:0',
+  };
 
 
   const groqModels = {
@@ -36,6 +44,7 @@ const runLLMTests = async () => {
     textModelName: 'gpt-4o-mini',
   };
 
+  await testLLMModel('aws-anthropic', { maxTokens: 1024 }, awsAnthropicModels);
   await testLLMModel('groq', { maxTokens: 1024 }, groqModels);
   await testLLMModel('ollama', { maxTokens: 1024 }, ollamaModels);
   await testLLMModel('openai', { maxTokens: 1024 }, openaiModels);

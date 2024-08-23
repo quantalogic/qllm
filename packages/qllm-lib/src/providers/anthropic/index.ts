@@ -15,26 +15,12 @@ import {
 } from '../../types';
 import { formatMessages } from './message-util';
 import { listModels as listBedrockModels } from '../../utils/cloud/aws/bedrock';
-import { getCredentials } from '../../utils/cloud/aws/credential';
+import { profile, region, getAwsCredential } from './aws-credentials';
 
 const DEFAULT_MODEL = 'claude-3-opus-20240229';
 const DEFAULT_MAX_TOKENS = 1024 * 256;
-const DEFAULT_AWS_BEDROCK_REGION = 'us-west-2';
-const DEFAULT_AWS_BEDROCK_PROFILE = 'bedrock';
-
-export const createAwsBedrockAnthropicProvider = async (): Promise<AnthropicProvider> => {
-  const profile = process.env.AWS_BEDROCK_PROFILE || DEFAULT_AWS_BEDROCK_PROFILE;
-  const region = process.env.AWS_BEDROCK_REGION || DEFAULT_AWS_BEDROCK_REGION;
-  const credentials = await getCredentials(profile, region);
-  const client = new AnthropicBedrock({
-    awsSessionToken: credentials.sessionToken,
-    awsRegion: region,
-    awsAccessKey: credentials.accessKeyId,
-    awsSecretKey: credentials.secretAccessKey,
-  });
-
-  return new AnthropicProvider({ client });
-};
+export const DEFAULT_AWS_BEDROCK_REGION = 'us-west-2';
+export const DEFAULT_AWS_BEDROCK_PROFILE = 'bedrock';
 
 export class AnthropicProvider extends BaseLLMProvider {
   private client: Anthropic | AnthropicBedrock;
@@ -62,12 +48,13 @@ export class AnthropicProvider extends BaseLLMProvider {
 
   async listModels(): Promise<Model[]> {
     if (this.client instanceof AnthropicBedrock) {
-      const models = await listBedrockModels();
-      return models.map((model) => ({
-        id: model.id,
-        created: model.created,
-        description: model.description,
-      }));
+      const models = await listBedrockModels(await getAwsCredential(), region());
+      return models
+        .map((model) => ({
+          id: model.id,
+          description: model.description,
+        }))
+        .filter((model) => model.id.startsWith('anthropic.'));
     }
 
     // Anthropic doesn't provide a model listing API, so we'll return a static list
@@ -105,6 +92,7 @@ export class AnthropicProvider extends BaseLLMProvider {
 
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
+
       const { messages, options, tools } = params;
       const messageWithSystem = this.withSystemMessage(options, messages);
       const formattedMessages = await formatMessages(messageWithSystem);
@@ -248,12 +236,13 @@ export class AnthropicProvider extends BaseLLMProvider {
   }
 
   protected handleError(error: unknown): never {
+    const name = this.client instanceof AnthropicBedrock ? 'Anthropic Bedrock' : 'Anthropic';
     if (error instanceof Anthropic.APIError) {
-      throw new LLMProviderError(`Anthropic API error: ${error.message}`, this.name);
+      throw new LLMProviderError(`Anthropic API error: ${error.message}`, name);
     } else if (error instanceof Error) {
-      throw new LLMProviderError(`Unexpected error: ${error.message}`, this.name);
+      throw new LLMProviderError(`Unexpected error: ${error.message}`, name);
     } else {
-      throw new LLMProviderError(`Unknown error occurred: ${error}`, this.name);
+      throw new LLMProviderError(`Unknown error occurred: ${error}`, name);
     }
   }
 }
