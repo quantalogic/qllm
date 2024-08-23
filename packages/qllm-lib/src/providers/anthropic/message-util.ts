@@ -4,8 +4,9 @@ import axios from 'axios';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-export async function formatMessages(messages: ChatMessage[]): Promise<Anthropic.MessageParam[]> {
-  const formattedMessages = await Promise.all(messages.map(async (message): Promise<Anthropic.MessageParam> => {
+
+
+export const formatMessage = async (message : ChatMessage) : Promise<Anthropic.MessageParam> => {
     let content: string | Anthropic.MessageParam['content'];
 
     if (typeof message.content === 'string') {
@@ -17,11 +18,14 @@ export async function formatMessages(messages: ChatMessage[]): Promise<Anthropic
     }
 
     return {
-      role: message.role === 'system' ? 'user' : message.role,
+      role: message.role === 'user' ? 'user' : 'assistant',
+
       content,
     };
-  }));
+}
 
+export async function formatMessages(messages: ChatMessage[]): Promise<Anthropic.MessageParam[]> {
+  const formattedMessages = await Promise.all(messages.map(formatMessage));
   return formattedMessages;
 }
 
@@ -33,7 +37,7 @@ export async function formatContent(content: MessageContent): Promise<Anthropic.
     };
   } else if (isImageUrlContent(content)) {
     const base64Content = await downloadAndConvertToBase64(content.imageUrl.url);
-    return {
+    const imageContent : Anthropic.ImageBlockParam =  {
       type: 'image',
       source: {
         type: 'base64',
@@ -41,6 +45,8 @@ export async function formatContent(content: MessageContent): Promise<Anthropic.
         data: base64Content,
       },
     };
+    console.log(imageContent);
+    return imageContent;
   }
   throw new Error('Unsupported content type');
 }
@@ -79,6 +85,6 @@ function getMediaType(url: string): 'image/jpeg' | 'image/png' | 'image/gif' | '
     case 'webp':
       return 'image/webp';
     default:
-      throw new Error('Unsupported image format');
+      return 'image/jpeg';
   }
 }

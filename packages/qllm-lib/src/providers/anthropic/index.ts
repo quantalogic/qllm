@@ -15,7 +15,7 @@ import {
 } from '../../types';
 import { formatMessages } from './message-util';
 import { listModels as listBedrockModels } from '../../utils/cloud/aws/bedrock';
-import { profile, region, getAwsCredential } from './aws-credentials';
+import {  region, getAwsCredential } from './aws-credentials';
 
 const DEFAULT_MODEL = 'claude-3-opus-20240229';
 const DEFAULT_MAX_TOKENS = 1024 * 256;
@@ -94,11 +94,11 @@ export class AnthropicProvider extends BaseLLMProvider {
     try {
 
       const { messages, options, tools } = params;
-      const messageWithSystem = this.withSystemMessage(options, messages);
-      const formattedMessages = await formatMessages(messageWithSystem);
+      const formattedMessages = await formatMessages(messages);
       const formattedTools = this.formatTools(tools);
 
       const response = await this.client.messages.create({
+        system: options.systemMessage as (string | undefined),
         model: options.model || this.defaultOptions.model,
         messages: formattedMessages,
         max_tokens: options.maxTokens || this.defaultOptions.maxTokens || DEFAULT_MAX_TOKENS,
@@ -157,11 +157,11 @@ export class AnthropicProvider extends BaseLLMProvider {
   ): AsyncIterableIterator<ChatStreamCompletionResponse> {
     try {
       const { messages, options, tools } = params;
-      const messageWithSystem = this.withSystemMessage(options, messages);
-      const formattedMessages = await formatMessages(messageWithSystem);
+      const formattedMessages = await formatMessages(messages);
       const formattedTools = this.formatTools(tools);
 
       const stream = await this.client.messages.create({
+        system: options.systemMessage as (string | undefined),
         model: options.model || this.defaultOptions.model,
         messages: formattedMessages,
         max_tokens: options.maxTokens || this.defaultOptions.maxTokens || DEFAULT_MAX_TOKENS,
