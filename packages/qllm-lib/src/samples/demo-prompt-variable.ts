@@ -72,6 +72,9 @@ async function testCompletion(
   const filePath = path.join(__dirname, './prompts/chain_of_tought_leader.yaml');
   const template = await Template.fromPath(filePath);
 
+  console.log('📝 Template definition:');
+  console.dir(template.input_variables, { depth: null });
+
   const templateExecutor = new TemplateExecutor();
   const { response, outputVariables } = await templateExecutor.execute({
     template: template,
@@ -81,6 +84,9 @@ async function testCompletion(
     spinner: undefined,
     stream: true,
     onPromptForMissingVariables: async (template, initialVariables) => {
+      console.log('🔤 onPromptFromMissingVariables');
+      console.dir(template.input_variables, { depth: null });
+
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -118,15 +124,6 @@ async function testCompletion(
   console.log('📝 Template execution result:', response);
   console.log('📝 Output variables:', outputVariables);
 
-  console.log('🔤 Starting Prompt Test');
-  const messages: ChatMessage[] = [{ role: 'user', content: { type: 'text', text: 'What is the capital of France?' } }];
-  const result = await provider.generateChatCompletion({
-    messages,
-    options: { model: options.model, maxTokens: options.maxTokens },
-  });
-
-  console.log('📝 Completion result:', result);
-  console.log('✅ Text completion test completed');
 }
 
 runLLMTests()

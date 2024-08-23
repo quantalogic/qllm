@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { ExecutionContext, TemplateDefinition,  OutputEvent } from './types';
+import { ExecutionContext, TemplateDefinition, OutputEvent } from './types';
 import { OutputVariableExtractor } from './output-variable-extractor';
 import { logger } from '../utils';
 import { ErrorManager } from '../utils/error';
@@ -9,17 +9,17 @@ import {
   CompleteOutputEvent,
   ErrorOutputEvent,
   StartOutputEvent,
-  StopOutputEvent
+  StopOutputEvent,
 } from './types';
 import { ChatMessage } from '../types';
 
 type VariableResolver = (
   template: TemplateDefinition,
-  initialVariables: Record<string, any>
+  initialVariables: Record<string, any>,
 ) => Promise<Record<string, any>>;
 
 export class TemplateExecutor extends EventEmitter {
-  constructor(private onPromptForMissingVariables?: VariableResolver) {
+  constructor() {
     super();
   }
 
@@ -28,16 +28,27 @@ export class TemplateExecutor extends EventEmitter {
     outputVariables: Record<string, any>;
   }> {
     const { template, variables, providerOptions, provider, stream, spinner, onOutput } = context;
-    
+
     try {
       this.logDebugInfo(template, variables);
-      const resolvedVariables = await this.resolveAndValidateVariables(template, variables);
+      const resolvedVariables = await this.resolveAndValidateVariables(
+        context,
+        template,
+        variables,
+      );
       const content = await this.prepareContent(template, resolvedVariables);
       const messages = this.createChatMessages(content);
-      
+
       logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
-      const response = await this.generateResponse(provider, messages, providerOptions, !!stream, onOutput, spinner);
-      
+      const response = await this.generateResponse(
+        provider,
+        messages,
+        providerOptions,
+        !!stream,
+        onOutput,
+        spinner,
+      );
+
       const outputVariables = this.processOutputVariables(template, response);
       return { response, outputVariables };
     } catch (error) {
@@ -51,37 +62,41 @@ export class TemplateExecutor extends EventEmitter {
   }
 
   private async resolveAndValidateVariables(
+    context: ExecutionContext,
     template: TemplateDefinition,
-    initialVariables: Record<string, any>
+    initialVariables: Record<string, any>,
   ): Promise<Record<string, any>> {
-    const resolvedVariables = await this.resolveVariables(template, initialVariables);
+    const resolvedVariables = await this.resolveVariables(context, template, initialVariables);
     TemplateValidator.validateInputVariables(template, resolvedVariables);
     return resolvedVariables;
   }
 
   private async resolveVariables(
+    context: ExecutionContext,
     template: TemplateDefinition,
-    initialVariables: Record<string, any>
+    initialVariables: Record<string, any>,
   ): Promise<Record<string, any>> {
-    if (!this.onPromptForMissingVariables) return initialVariables;
+    console.log('resolveVariables');
+    if (!context.onPromptForMissingVariables) return initialVariables;
 
     const missingVariables = this.findMissingVariables(template, initialVariables);
+    console.log('missingVariables', missingVariables);
     return missingVariables.length > 0
-      ? await this.onPromptForMissingVariables(template, initialVariables)
+      ? await context.onPromptForMissingVariables(template, initialVariables)
       : initialVariables;
   }
 
   private findMissingVariables(
     template: TemplateDefinition,
-    variables: Record<string, any>
+    variables: Record<string, any>,
   ): string[] {
     const requiredVariables = Object.keys(template.input_variables || {});
-    return requiredVariables.filter(key => !(key in variables));
+    return requiredVariables.filter((key) => !(key in variables));
   }
 
   private async prepareContent(
     template: TemplateDefinition,
-    variables: Record<string, any>
+    variables: Record<string, any>,
   ): Promise<string> {
     let content = template.resolved_content || template.content;
     for (const [key, value] of Object.entries(variables)) {
@@ -104,7 +119,7 @@ export class TemplateExecutor extends EventEmitter {
     providerOptions: any,
     stream: boolean,
     onOutput?: (event: OutputEvent) => void,
-    spinner?: any
+    spinner?: any,
   ): Promise<string> {
     return stream
       ? this.handleStreamingResponse(provider, messages, providerOptions, onOutput, spinner)
@@ -115,7 +130,7 @@ export class TemplateExecutor extends EventEmitter {
     provider: any,
     messages: ChatMessage[],
     providerOptions: any,
-    onOutput?: (event: OutputEvent) => void
+    onOutput?: (event: OutputEvent) => void,
   ): Promise<string> {
     const response = await provider.generateMessage(messages, providerOptions);
     onOutput?.(new CompleteOutputEvent(response));
@@ -127,7 +142,7 @@ export class TemplateExecutor extends EventEmitter {
     messages: ChatMessage[],
     providerOptions: any,
     onOutput?: (event: OutputEvent) => void,
-    spinner?: any
+    spinner?: any,
   ): Promise<string> {
     const chunks: string[] = [];
     spinner?.start();
@@ -154,9 +169,18 @@ export class TemplateExecutor extends EventEmitter {
     }
   }
 
-  private handleStreamingError(error: any, onOutput?: (event: OutputEvent) => void, spinner?: any): void {
+  private handleStreamingError(
+    error: any,
+    onOutput?: (event: OutputEvent) => void,
+    spinner?: any,
+  ): void {
     spinner?.fail('Error during streaming');
-    onOutput?.(new ErrorOutputEvent(error instanceof Error ? error : new Error(String(error)), 'Error during streaming'));
+    onOutput?.(
+      new ErrorOutputEvent(
+        error instanceof Error ? error : new Error(String(error)),
+        'Error during streaming',
+      ),
+    );
   }
 
   private finalizeStreaming(onOutput?: (event: OutputEvent) => void, spinner?: any): void {
@@ -166,7 +190,7 @@ export class TemplateExecutor extends EventEmitter {
 
   private processOutputVariables(
     template: TemplateDefinition,
-    response: string
+    response: string,
   ): Record<string, any> {
     if (!template.output_variables) return { qllm_response: response };
 
@@ -181,7 +205,7 @@ export class TemplateExecutor extends EventEmitter {
     logger.error(`Failed to execute template: ${error}`);
     ErrorManager.throwError(
       'TemplateExecutionError',
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : String(error),
     );
   }
 }
