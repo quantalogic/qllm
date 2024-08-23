@@ -1,33 +1,52 @@
 // packages/qllm-lib/src/templates/types.ts
 
-import { LLMOptions } from "../types";
+import { LLMOptions, ChatMessage } from "../types";
 
-// Utility Interfaces
+// Event Types
+export type OutputEventType = 'chunk' | 'complete' | 'error';
+
+export interface OutputEvent {
+  type: OutputEventType;
+  data: string;
+}
+
+// Utility Types
 export interface Spinner {
-  stop: () => void;
-  start: () => void;
-  fail: (message: string) => void;
-  succeed: (message: string) => void;
-  isActive: () => boolean;
+  stop(): void;
+  start(): void;
+  fail(message: string): void;
+  succeed(message: string): void;
+  isActive(): boolean;
   isSpinning(): boolean;
 }
 
 export interface OutputStream {
-  write: (chunk: string) => void;
+  write(chunk: string): void;
 }
 
-// Template-related Interfaces
+// Template Types
+export type VariableType = 'string' | 'number' | 'boolean' | 'array';
+export type OutputVariableType = 'string' | 'integer' | 'float' | 'boolean' | 'array' | 'object';
+
 export interface TemplateVariable {
-  type: 'string' | 'number' | 'boolean' | 'array';
+  type: VariableType;
   description: string;
   default?: any;
 }
 
 export interface OutputVariable {
-  type: 'string' | 'integer' | 'float' | 'boolean' | 'array' | 'object';
+  type: OutputVariableType;
   description?: string;
   default?: any;
 }
+
+export interface TemplateParameters {
+  max_tokens?: number;
+  temperature?: number;
+  top_p?: number;
+  top_k?: number;
+}
+
 export interface TemplateDefinition {
   name: string;
   version: string;
@@ -38,22 +57,18 @@ export interface TemplateDefinition {
   input_variables: Record<string, TemplateVariable>;
   output_variables?: Record<string, OutputVariable>;
   content: string;
-  parameters?: {
-    max_tokens?: number;
-    temperature?: number;
-    top_p?: number;
-    top_k?: number;
-  };
+  parameters?: TemplateParameters;
   resolved_content?: string;
 }
+
 export interface ExecutionContext {
   template: TemplateDefinition;
   variables: Record<string, any>;
   providerOptions: LLMOptions;
   provider: any;
   stream?: boolean;
-  writableStream?: NodeJS.WritableStream;
   spinner?: Spinner;
+  onOutput?: (event: OutputEvent) => void;
 }
 
 // Error Classes
@@ -61,6 +76,7 @@ export class QllmError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'QllmError';
+    Object.setPrototypeOf(this, QllmError.prototype);
   }
 }
 
@@ -68,6 +84,7 @@ export class ConfigurationError extends QllmError {
   constructor(message: string) {
     super(message);
     this.name = 'ConfigurationError';
+    Object.setPrototypeOf(this, ConfigurationError.prototype);
   }
 }
 
@@ -75,6 +92,7 @@ export class ProviderError extends QllmError {
   constructor(message: string, public providerName: string) {
     super(message);
     this.name = 'ProviderError';
+    Object.setPrototypeOf(this, ProviderError.prototype);
   }
 }
 
@@ -82,6 +100,7 @@ export class TemplateError extends QllmError {
   constructor(message: string) {
     super(message);
     this.name = 'TemplateError';
+    Object.setPrototypeOf(this, TemplateError.prototype);
   }
 }
 
@@ -89,6 +108,7 @@ export class InputValidationError extends QllmError {
   constructor(message: string) {
     super(message);
     this.name = 'InputValidationError';
+    Object.setPrototypeOf(this, InputValidationError.prototype);
   }
 }
 
@@ -96,10 +116,11 @@ export class OutputValidationError extends QllmError {
   constructor(message: string) {
     super(message);
     this.name = 'OutputValidationError';
+    Object.setPrototypeOf(this, OutputValidationError.prototype);
   }
 }
 
-export class TemplateManagerError extends Error {
+export class TemplateManagerError extends QllmError {
   constructor(message: string) {
     super(message);
     this.name = 'TemplateManagerError';

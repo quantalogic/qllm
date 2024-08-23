@@ -7,8 +7,6 @@ import { TemplateExecutor } from "../templates";
 const runLLMTests = async () => {
   console.log('🚀 Starting LLM Prompts Tests');
 
-
-
   const awsAnthropicModels = {
     embeddingModelName: '',
     visionModelName: 'anthropic.claude-3-haiku-20240307-v1:0',
@@ -83,8 +81,18 @@ async function testCompletion(
     provider: provider,
     providerOptions: { model: options.model, maxTokens: options.maxTokens },
     spinner: undefined,
-    stream: process.stdout.isTTY,
-    writableStream: process.stdout, // Write to stdout
+    stream: true,
+    onOutput: (output) => {
+      if (output.type === 'complete') {
+        console.log('📝 Completion result:', output.data);
+      } else if (output.type === 'chunk') {
+        // send directly to the tty
+        process.stdout.write(output.data);
+      } else
+       if (output.type === 'error') {
+        console.error('❌ Error during completion:', output.data);
+      }
+    }
   });
 
   console.log('🔤 Starting Prompt Test');
