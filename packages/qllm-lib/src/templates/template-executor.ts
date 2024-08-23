@@ -49,7 +49,7 @@ export class TemplateExecutor {
         response = await provider.generateMessage(messages, providerOptions);
       }
 
-      const outputVariables = this.processOutputVariables(template., response);
+      const outputVariables = this.processOutputVariables(template, response);
 
       return { response, outputVariables };
     } catch (error) {

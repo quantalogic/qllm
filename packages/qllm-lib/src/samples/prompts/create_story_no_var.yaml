@@ -1,0 +1,7 @@
+name: create_story
+version: '1.0'
+description: Create a nice story
+author: Raphaël MANSUY
+content: >
+  Raconte une histoire sur Verdun dans la meuse en 1971.
+ 

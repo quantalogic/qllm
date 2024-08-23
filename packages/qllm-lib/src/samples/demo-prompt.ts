@@ -72,7 +72,7 @@ async function testCompletion(
 ) {
 
   // Get path file directory
-  const filePath = path.join(__dirname, '../prompts/story_no_variable.md');
+  const filePath = path.join(__dirname, './prompts/create_story_no_var.yaml');
 
   const template = await Template.fromPath(filePath);
 

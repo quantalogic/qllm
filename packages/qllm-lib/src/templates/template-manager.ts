@@ -94,7 +94,7 @@ export class TemplateManager {
 
   async resolveFileInclusions(template: Template): Promise<void> {
     const resolvedContent = await this.resolveFileInclusionsInContent(template.content);
-    template.resolvedContent = resolvedContent;
+    template.resolved_content = resolvedContent;
   }
 
   // Private helper methods

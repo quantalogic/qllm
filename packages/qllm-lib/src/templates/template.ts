@@ -2,16 +2,31 @@
 
 import fs from 'fs/promises';
 import yaml from 'js-yaml';
-import { TemplateDefinition, TemplateVariable } from './types';
+import { TemplateDefinition, TemplateVariable, OutputVariable } from './types';
 import { ErrorManager } from '../utils/error';
 import { InputValidationError } from './types';
 import axios from 'axios';
 
-export class Template {
-  private definition: TemplateDefinition;
+export class Template implements TemplateDefinition {
+  name!: string;
+  version!: string;
+  description!: string;
+  author!: string;
+  provider!: string;
+  model!: string;
+  input_variables!: Record<string, TemplateVariable>;
+  output_variables?: Record<string, OutputVariable>;
+  content!: string;
+  parameters?: {
+    max_tokens?: number;
+    temperature?: number;
+    top_p?: number;
+    top_k?: number;
+  };
+  resolved_content?: string;
 
   constructor(definition: TemplateDefinition) {
-    this.definition = definition;
+    Object.assign(this, definition);
   }
 
   static async fromUrl(url: string): Promise<Template> {
@@ -41,24 +56,12 @@ export class Template {
     return new Template(definition);
   }
 
-  get name(): string {
-    return this.definition.name;
-  }
-
-  get content(): string {
-    return this.definition.content;
-  }
-
-  get inputVariables(): Record<string, TemplateVariable> {
-    return this.definition.input_variables;
-  }
-
-  set resolvedContent(content: string) {
-    this.definition.resolved_content = content;
+  setResolvedContent(content: string): void {
+    this.resolved_content = content;
   }
 
   toYaml(): string {
-    return yaml.dump(this.definition);
+    return yaml.dump(this);
   }
 
   parseVariables(args: string[]): Record<string, any> {
@@ -81,8 +84,8 @@ export class Template {
   }
 
   private castVariable(key: string, value: string): any {
-    if (this.inputVariables && this.inputVariables[key]) {
-      const variableType = this.inputVariables[key].type;
+    if (this.input_variables && this.input_variables[key]) {
+      const variableType = this.input_variables[key].type;
       switch (variableType) {
         case 'number':
           return this.castToNumber(value, key);
@@ -125,7 +128,7 @@ export class Template {
 
   toObject(): TemplateDefinition {
     return {
-      ...this.definition,
+      ...this,
     };
   }
 }
