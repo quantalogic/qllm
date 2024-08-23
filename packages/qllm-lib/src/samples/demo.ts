@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { getEmbeddingProvider, getLLMProvider } from '../providers';
 import { EmbeddingProvider, LLMProvider } from '../types';
-import { createImageContent, createFunctionToolFromZod } from '../utils';
+import { createFunctionToolFromZod } from '../utils';
 
 // LLM Tests
 
@@ -9,6 +9,7 @@ const runLLMTests = async () => {
   console.log('🚀 Starting LLM Tests');
 
 
+  await testListModels('aws-anthropic');
   await testListModels('groq');
   await testListModels('ollama');
   await testListModels('openai');
@@ -44,7 +45,7 @@ const runLLMTests = async () => {
 
 const testListModels = async (providerName: string) => {
   console.log(`📋 Listing models for provider: ${providerName}`);
-  const provider = getLLMProvider(providerName);
+  const provider = await getLLMProvider(providerName);
   const models = await provider.listModels();
   console.log('📊 Available models:');
   console.dir(models, { depth: null });
@@ -63,7 +64,7 @@ const testLLMModel = async (
 ) => {
   console.log(`🧪 Testing LLM model with provider: ${providerName}`);
 
-  const provider = getLLMProvider(providerName);
+  const provider = await getLLMProvider(providerName);
   console.log(`🔧 ${providerName}Provider instance created`);
 
   await testCompletion(provider, { model: models.textModelName, maxTokens: options.maxTokens });
@@ -223,7 +224,7 @@ const testEmbeddingModel = async (
   options: { maxTokens: number; modelName: string },
 ) => {
   console.log(`🧪 Testing Embedding model with provider: ${providerName}`);
-  const embeddingProvider = getEmbeddingProvider(providerName);
+  const embeddingProvider = await getEmbeddingProvider(providerName);
   console.log(`🔧 ${providerName}Provider instance created for embedding`);
   await testEmbedding(embeddingProvider, {
     model: options.modelName,

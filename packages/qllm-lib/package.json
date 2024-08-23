@@ -51,6 +51,10 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@anthropic-ai/bedrock-sdk": "^0.10.2",
+    "@anthropic-ai/sdk": "^0.27.0",
+    "@aws-sdk/client-bedrock": "^3.637.0",
+    "@aws-sdk/credential-providers": "^3.637.0",
     "axios": "^1.7.4",
     "groq-sdk": "^0.5.0",
     "ollama": "^0.5.8",
