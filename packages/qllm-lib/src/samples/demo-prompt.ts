@@ -1,8 +1,9 @@
 import path from "path";
 import { getLLMProvider } from "../providers";
-import { LLMProvider } from "../types";
-import { Template} from "../templates/template";
+import { LLMProvider, ChatMessage } from "../types";
+import { Template } from "../templates/template";
 import { TemplateExecutor } from "../templates";
+import { OutputEvent, OutputEventType } from "../templates/types";
 
 const runLLMTests = async () => {
   console.log('🚀 Starting LLM Prompts Tests');
@@ -43,7 +44,6 @@ const runLLMTests = async () => {
   console.log('✅ LLM Tests completed');
 };
 
-
 const testLLMModel = async (
   providerName: string,
   options: { maxTokens: number },
@@ -68,36 +68,38 @@ async function testCompletion(
   provider: LLMProvider,
   options: { model: string; maxTokens: number },
 ) {
-
   // Get path file directory
   const filePath = path.join(__dirname, './prompts/create_story_no_var.yaml');
 
   const template = await Template.fromPath(filePath);
 
   const templateExecutor = new TemplateExecutor();
-  const resolvedTemplate = templateExecutor.execute({
+  const { response, outputVariables } = await templateExecutor.execute({
     template: template,
     variables: {},
     provider: provider,
     providerOptions: { model: options.model, maxTokens: options.maxTokens },
     spinner: undefined,
     stream: true,
-    onOutput: (output) => {
-      if (output.type === 'complete') {
-        console.log('📝 Completion result:', output.data);
-      } else if (output.type === 'chunk') {
+    onOutput: (output: OutputEvent) => {
+      if (output.type === OutputEventType.COMPLETE) {
+        console.log('📝 Completion result:', (output as any).response);
+      } else if (output.type === OutputEventType.CHUNK) {
         // send directly to the tty
-        process.stdout.write(output.data);
-      } else
-       if (output.type === 'error') {
-        console.error('❌ Error during completion:', output.data);
+        process.stdout.write((output as any).chunk);
+      } else if (output.type === OutputEventType.ERROR) {
+        console.error('❌ Error during completion:', (output as any).error);
       }
     }
   });
 
+  console.log('📝 Template execution result:', response);
+  console.log('📝 Output variables:', outputVariables);
+
   console.log('🔤 Starting Prompt Test');
+  const messages: ChatMessage[] = [{ role: 'user', content: { type: 'text', text: 'What is the capital of France?' } }];
   const result = await provider.generateChatCompletion({
-    messages: [{ role: 'user', content: { type: 'text', text: 'What is the capital of France?' } }],
+    messages,
     options: { model: options.model, maxTokens: options.maxTokens },
   });
 
@@ -108,4 +110,4 @@ async function testCompletion(
 // Execute the LLM Tests
 runLLMTests()
   .then(() => console.log('🎉 All LLM Tests executed successfully'))
-  .catch((error) => console.error('❌ Error during LLM tests execution:', error))
+  .catch((error) => console.error('❌ Error during LLM tests execution:', error));

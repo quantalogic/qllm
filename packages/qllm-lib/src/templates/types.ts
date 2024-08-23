@@ -2,13 +2,52 @@
 
 import { LLMOptions, ChatMessage } from "../types";
 
-// Event Types
-export type OutputEventType = 'chunk' | 'complete' | 'error';
+// Enum for output event types
+// types.ts
 
-export interface OutputEvent {
-  type: OutputEventType;
-  data: string;
+export enum OutputEventType {
+  START = 'start',
+  CHUNK = 'chunk',
+  COMPLETE = 'complete',
+  ERROR = 'error',
+  STOP = 'stop'
 }
+
+export class BaseOutputEvent {
+  constructor(public type: OutputEventType) {}
+}
+
+export class StartOutputEvent extends BaseOutputEvent {
+  constructor() {
+    super(OutputEventType.START);
+  }
+}
+
+export class ChunkOutputEvent extends BaseOutputEvent {
+  constructor(public chunk: string) {
+    super(OutputEventType.CHUNK);
+  }
+}
+
+export class CompleteOutputEvent extends BaseOutputEvent {
+  constructor(public response: string) {
+    super(OutputEventType.COMPLETE);
+  }
+}
+
+export class ErrorOutputEvent extends BaseOutputEvent {
+  constructor(public error: Error, public message: string) {
+    super(OutputEventType.ERROR);
+  }
+}
+
+export class StopOutputEvent extends BaseOutputEvent {
+  constructor() {
+    super(OutputEventType.STOP);
+  }
+}
+
+export type OutputEvent = StartOutputEvent | ChunkOutputEvent | CompleteOutputEvent | ErrorOutputEvent | StopOutputEvent;
 
 // Utility Types
 export interface Spinner {

@@ -108,7 +108,7 @@ async function testStream(provider: LLMProvider, options: { model: string; maxTo
     messages: [
       {
         role: 'user',
-        content: { type: 'text', text: 'Write a small story about Paris. Less than 30 words.' },
+        content: { type: 'text', text: 'Write a small story about Paris. Less than 200 words.' },
       },
     ],
     options: { model: options.model, maxTokens: options.maxTokens },

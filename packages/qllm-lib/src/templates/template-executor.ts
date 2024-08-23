@@ -1,10 +1,18 @@
 import { EventEmitter } from 'events';
-import { ExecutionContext, TemplateDefinition, OutputEvent } from './types';
+import { ExecutionContext, TemplateDefinition } from './types';
 import { OutputVariableExtractor } from './output-variable-extractor';
 import { logger } from '../utils';
 import { ErrorManager } from '../utils/error';
 import { ChatMessage } from '../types';
 import { TemplateValidator } from './template-validator';
+import {
+  ChunkOutputEvent,
+  CompleteOutputEvent,
+  ErrorOutputEvent,
+  StartOutputEvent,
+  StopOutputEvent,
+  OutputEvent
+} from './types';
 
 export class TemplateExecutor extends EventEmitter {
   constructor(
@@ -90,7 +98,7 @@ export class TemplateExecutor extends EventEmitter {
       return this.handleStreamingResponse(provider, messages, providerOptions, onOutput, spinner);
     } else {
       const response = await provider.generateMessage(messages, providerOptions);
-      onOutput?.({ type: 'complete', data: response });
+      onOutput?.(new CompleteOutputEvent(response));
       return response;
     }
   }
@@ -105,24 +113,26 @@ export class TemplateExecutor extends EventEmitter {
     const chunks: string[] = [];
     spinner?.start();
     try {
-      const stream = provider.streamChatCompletion({ messages, options: providerOptions });
+      onOutput?.(new StartOutputEvent());
+      const stream = await provider.streamChatCompletion({ messages, options: providerOptions });
       for await (const chunk of stream) {
         const chunkText = chunk.text;
         if (chunkText) {
-          onOutput?.({ type: 'chunk', data: chunkText });
+          onOutput?.(new ChunkOutputEvent(chunkText));
           chunks.push(chunkText);
         }
       }
       const fullResponse = chunks.join('');
-      onOutput?.({ type: 'complete', data: fullResponse });
+      onOutput?.(new CompleteOutputEvent(fullResponse));
       spinner?.succeed('Response generated');
       return fullResponse;
     } catch (error) {
       spinner?.fail('Error during streaming');
-      onOutput?.({ type: 'error', data: error instanceof Error ? error.message : String(error) });
+      onOutput?.(new ErrorOutputEvent(error instanceof Error ? error : new Error(String(error)), 'Error during streaming'));
       throw error;
     } finally {
       spinner?.stop();
+      onOutput?.(new StopOutputEvent());
     }
   }
 
