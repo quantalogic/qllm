@@ -221,7 +221,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
           } else if (content.type === 'image_url') {
             contentParts.push({
               type: 'image_url',
-              image_url: { url: content.imageUrl.url },
+              image_url: { url: content.url },
             } as ChatCompletionContentPart); // Type assertion
           }
         }

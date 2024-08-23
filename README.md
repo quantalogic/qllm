@@ -1,4 +1,4 @@
-# QLLM: Quantalogic Large Language Model Library
+# QLLM: Quantum Large Language Model Library
 
 QLLM is a robust TypeScript library providing a unified interface for interacting with various Large Language Models (LLMs). It simplifies the process of working with multiple LLM providers, offering a consistent API for chat completions, embeddings, and more.
 
