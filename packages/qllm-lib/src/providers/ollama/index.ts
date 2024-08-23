@@ -2,7 +2,6 @@ import fs from 'fs/promises';
 import path, { format } from 'path';
 import axios from 'axios';
 import {
-  BaseLLMProvider,
   ChatCompletionParams,
   ChatCompletionResponse,
   ChatStreamCompletionResponse,
@@ -155,8 +154,8 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
           content += messageContent.text + '\n';
         } else if (isImageUrlContent(messageContent)) {
           try {
-            const imageContent = await createOllamaImageContent(messageContent.imageUrl.url);
-            images.push(imageContent.imageUrl.url);
+            const imageContent = await createOllamaImageContent(messageContent.url);
+            images.push(imageContent.url);
           } catch (error) {
             console.error('Error processing image:', error);
             throw error;
@@ -211,9 +210,7 @@ export const createOllamaImageContent = async (source: string): Promise<ImageUrl
     // Return the raw base64 string without the data URL prefix
     return {
       type: 'image_url',
-      imageUrl: {
-        url: content,
-      },
+      url: content,
     };
   } catch (error) {
     console.error(`Error processing image from: ${source}`, error);

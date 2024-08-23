@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import axios from "axios";
-import { ChatMessageContent, ImageUrlContent } from "../../types";
+import axios from 'axios';
+import { ChatMessageContent, ImageUrlContent } from '../../types';
 
 export const createTextMessageContent = (content: string | string[]): ChatMessageContent => {
   if (Array.isArray(content)) {
@@ -32,9 +32,7 @@ export const createImageContent = async (source: string): Promise<ImageUrlConten
 
     return {
       type: 'image_url',
-      imageUrl: {
-        url: imageUrl,
-      },
+      url: imageUrl,
     };
   } catch (error) {
     console.error(`Error processing image from: ${source}`, error);

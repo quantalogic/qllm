@@ -136,7 +136,7 @@ async function testCompletionImage(
         role: 'user',
         content: [
           { type: 'text', text: 'Can you describe this image?' },
-          { type: 'image_url', imageUrl: { url: urlDemo } },
+          { type: 'image_url', url: urlDemo  },
         ],
       },
     ],

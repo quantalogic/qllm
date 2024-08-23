@@ -13,9 +13,7 @@ export type TextContent = {
 
 export type ImageUrlContent = {
   type: 'image_url';
-  imageUrl: {
-    url: string;
-  };
+  url: string;
 };
 
 export type MessageContent = TextContent | ImageUrlContent;

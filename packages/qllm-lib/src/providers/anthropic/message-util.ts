@@ -41,7 +41,7 @@ export async function formatContent(
       text: content.text,
     };
   } else if (isImageUrlContent(content)) {
-    const base64Content = await downloadAndConvertToBase64(content.imageUrl.url);
+    const base64Content = await downloadAndConvertToBase64(content.url);
     const imageContent: Anthropic.ImageBlockParam = {
       type: 'image',
       source: {
