@@ -15,7 +15,8 @@ import {
 } from '../../types';
 import { formatMessages } from './message-util';
 import { listModels as listBedrockModels } from '../../utils/cloud/aws/bedrock';
-import {  region, getAwsCredential } from './aws-credentials';
+import { region, getAwsCredential } from './aws-credentials';
+import { get } from 'http';
 
 const DEFAULT_MODEL = 'claude-3-opus-20240229';
 const DEFAULT_MAX_TOKENS = 1024 * 256;
@@ -92,13 +93,12 @@ export class AnthropicProvider extends BaseLLMProvider {
 
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
-
       const { messages, options, tools } = params;
       const formattedMessages = await formatMessages(messages);
       const formattedTools = this.formatTools(tools);
 
-      const response = await this.client.messages.create({
-        system: options.systemMessage as (string | undefined),
+      const request: Anthropic.Messages.MessageCreateParamsNonStreaming = {
+        system: options.systemMessage as string | undefined,
         model: options.model || this.defaultOptions.model,
         messages: formattedMessages,
         max_tokens: options.maxTokens || this.defaultOptions.maxTokens || DEFAULT_MAX_TOKENS,
@@ -111,7 +111,12 @@ export class AnthropicProvider extends BaseLLMProvider {
             : [options.stop]
           : undefined,
         tools: formattedTools,
-      });
+      };
+
+      console.log('AnthropicProvider.generateChatCompletion request:');
+      console.dir(request, { depth: null });
+
+      const response = await this.client.messages.create(request);
 
       const getTextFromContentBlock = (
         contentBlock: Anthropic.Messages.ContentBlock,
@@ -120,6 +125,23 @@ export class AnthropicProvider extends BaseLLMProvider {
           return contentBlock.text;
         }
         return null;
+      };
+
+      const getToolFromContentBlock = (
+        contentBlock: Anthropic.Messages.ContentBlock,
+      ): ToolCall | undefined => {
+        if (contentBlock.type === 'tool_use') {
+          const toolCall: ToolCall = {
+            id: contentBlock.id,
+            type: 'function',
+            function: {
+              name: contentBlock.name,
+              arguments: JSON.stringify(contentBlock.input),
+            },
+          };
+          return toolCall;
+        }
+        return undefined;
       };
 
       const getFirstTextFromContentBlocks = (
@@ -133,13 +155,26 @@ export class AnthropicProvider extends BaseLLMProvider {
         return contentBlock ? getTextFromContentBlock(contentBlock) : null;
       };
 
-      const toolCalls = (response as unknown as any).tool_calls;
+      const getToolsUseFromContentBlocks = (
+        contentBlocks: Anthropic.Messages.ContentBlock[],
+      ): ToolCall[] | undefined => {
+        const toolCalls: ToolCall[] = [];
+        for (const block of contentBlocks) {
+          const tool = getToolFromContentBlock(block);
+          if (tool) {
+            toolCalls.push(tool);
+          }
+        }
+        return toolCalls.length > 0 ? toolCalls : undefined;
+      };
+
+      const toolCalls = getToolsUseFromContentBlocks(response.content);
 
       return {
         model: response.model,
         text: getFirstTextFromContentBlocks(response.content),
         finishReason: response.stop_reason,
-        toolCalls: this.formatToolCalls(toolCalls),
+        toolCalls: toolCalls,
         refusal: null,
         usage: {
           promptTokens: response.usage.input_tokens,
@@ -160,8 +195,8 @@ export class AnthropicProvider extends BaseLLMProvider {
       const formattedMessages = await formatMessages(messages);
       const formattedTools = this.formatTools(tools);
 
-      const stream = await this.client.messages.create({
-        system: options.systemMessage as (string | undefined),
+      const request: Anthropic.Messages.MessageCreateParamsNonStreaming = {
+        system: options.systemMessage as string | undefined,
         model: options.model || this.defaultOptions.model,
         messages: formattedMessages,
         max_tokens: options.maxTokens || this.defaultOptions.maxTokens || DEFAULT_MAX_TOKENS,
@@ -174,8 +209,9 @@ export class AnthropicProvider extends BaseLLMProvider {
             : [options.stop]
           : undefined,
         tools: formattedTools,
-        stream: true,
-      });
+      };
+
+      const stream = await this.client.messages.create({ ...request, stream: true });
 
       const getTextDelta = (content: Anthropic.Messages.RawMessageStreamEvent): string | null => {
         if (content.type === 'content_block_delta' && content.delta.type == 'text_delta') {
@@ -211,19 +247,18 @@ export class AnthropicProvider extends BaseLLMProvider {
     throw new LLMProviderError('Embedding generation is not supported by Anthropic', this.name);
   }
 
-  private formatTools(tools?: Tool[]): any {
+  private formatTools(tools?: Tool[]): Anthropic.Tool[] | undefined {
     if (!tools) return undefined;
     return tools.map((tool) => ({
-      type: 'function',
-      function: {
-        name: tool.function.name,
-        description: tool.function.description,
-        parameters: tool.function.parameters,
-      },
+      name: tool.function.name,
+      description: tool.function.description,
+      input_schema: tool.function.parameters,
     }));
   }
 
   private formatToolCalls(toolCalls?: any): ToolCall[] | undefined {
+    console.log('tool calls:');
+    console.dir(toolCalls, { depth: null });
     if (!toolCalls) return undefined;
     return toolCalls.map((toolCall: any) => ({
       id: toolCall.id,
