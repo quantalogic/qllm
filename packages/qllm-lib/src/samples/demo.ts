@@ -9,19 +9,17 @@ import { Embeddings } from 'openai/resources';
 const runLLMTests = async () => {
   console.log('🚀 Starting LLM Tests');
 
-
-  /*await testListModels('aws-anthropic');
+  await testListModels('aws-anthropic');
   await testListModels('groq');
   await testListModels('ollama');
-  await testListModels('openai');*/
+  await testListModels('openai');
 
   const awsAnthropicModels = {
-    embeddingModelName: "",
+    embeddingModelName: '',
     visionModelName: 'anthropic.claude-3-haiku-20240307-v1:0',
     toolModelName: 'anthropic.claude-3-haiku-20240307-v1:0',
     textModelName: 'anthropic.claude-3-haiku-20240307-v1:0',
   };
-
 
   const groqModels = {
     embeddingModelName: 'nomic-embed-text',
@@ -194,19 +192,6 @@ const runEmbeddingTests = async () => {
   const openaiModels = {
     embeddingModelName: 'text-embedding-3-small',
   };
-
-  const groqModels = {
-    embeddingModelName: 'nomic-embed-text',
-  };
-
-
-  console.log('\n🔍 Testing Groq Embedding Model');
-  console.time('Groq Test Duration');
-  await testEmbeddingModel('groq', {
-    maxTokens: 1024,
-    modelName: groqModels.embeddingModelName,
-  });
-  console.timeEnd('Groq Test Duration');
 
   console.log('\n🔍 Testing Ollama Embedding Model');
   console.time('Ollama Test Duration');
