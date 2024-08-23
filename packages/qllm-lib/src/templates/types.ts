@@ -71,6 +71,7 @@ export interface TemplateVariable {
   type: VariableType;
   description: string;
   default?: any;
+  inferred?: boolean;
 }
 
 export interface OutputVariable {
@@ -108,6 +109,10 @@ export interface ExecutionContext {
   stream?: boolean;
   spinner?: Spinner;
   onOutput?: (event: OutputEvent) => void;
+  onPromptForMissingVariables?: (
+    template: TemplateDefinition,
+    initialVariables: Record<string, any>
+  ) => Promise<Record<string, any>>;
 }
 
 // Error Classes

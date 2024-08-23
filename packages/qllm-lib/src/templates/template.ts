@@ -27,6 +27,7 @@ export class Template implements TemplateDefinition {
 
   constructor(definition: TemplateDefinition) {
     Object.assign(this, definition);
+    this.extractVariablesFromContent();
   }
 
   static async fromUrl(url: string): Promise<Template> {
@@ -130,5 +131,26 @@ export class Template implements TemplateDefinition {
     return {
       ...this,
     };
+  }
+  private extractVariablesFromContent(): void {
+    const variablePattern = /{{([^{}]+)}}/g;
+    const uniqueVariables = new Set<string>();
+    let match;
+  
+    while ((match = variablePattern.exec(this.content)) !== null) {
+      const variableExpression = match[1].trim();
+      const rootVariable = variableExpression.split('.')[0].split('[')[0].split('(')[0].trim();
+      uniqueVariables.add(rootVariable);
+    }
+  
+    uniqueVariables.forEach(variable => {
+      if (!this.input_variables[variable]) {
+        this.input_variables[variable] = {
+          type: 'string',
+          description: `Variable ${variable} found in content`,
+          inferred: true
+        };
+      }
+    });
   }
 }
