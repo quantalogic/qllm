@@ -1,0 +1,7 @@
+name: create_story
+version: '1.0'
+description: Create a nice story
+author: Raphaël MANSUY
+content: >
+  'Write a small story about Paris. Less than 200 words.
+ 

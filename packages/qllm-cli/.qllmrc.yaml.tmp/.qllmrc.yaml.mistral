@@ -1,5 +1,0 @@
-defaultProvider: mistral
-defaultModelAlias: mistral
-logLevel: debug
-defaultMaxTokens: 5012
-promptDirectory: ./prompts

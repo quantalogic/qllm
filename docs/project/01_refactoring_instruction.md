@@ -400,7 +400,7 @@ c. Update import statements in qllm-cli:
 For example, in `packages/qllm-cli/src/cli/commands/ask.ts`:
 
 ```typescript
-import { LLMProviderOptions, Message } from '@qllm/types';
+import { LLMProviderOptions, Message } from 'qllm-types';
 ```
 
 d. Update import statements in qllm-lib:
@@ -408,7 +408,7 @@ d. Update import statements in qllm-lib:
 For example, in `packages/qllm-lib/src/core/providers/llm_provider.ts`:
 
 ```typescript
-import { LLMProviderOptions, Message } from '@qllm/types';
+import { LLMProviderOptions, Message } from 'qllm-types';
 ```
 
 3. Benefits of this approach:
@@ -878,8 +878,8 @@ d. Update the CLI commands:
 ```typescript
 // packages/qllm-cli/src/cli/commands/ask.ts
 
-import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
-import { QllmError } from '@qllm-lib/common/errors/custom_errors';
+import { ErrorHandler } from 'qllm-lib/common/utils/error_handler';
+import { QllmError } from 'qllm-lib/common/errors/custom_errors';
 
 // ...
 
@@ -908,8 +908,8 @@ Finally, let's update the main entry point to use our new error handling system:
 ```typescript
 // packages/qllm-cli/src/cli.ts
 
-import { ErrorHandler } from '@qllm-lib/common/utils/error_handler';
-import { QllmError } from '@qllm-lib/common/errors/custom_errors';
+import { ErrorHandler } from 'qllm-lib/common/utils/error_handler';
+import { QllmError } from 'qllm-lib/common/errors/custom_errors';
 
 // ...
 

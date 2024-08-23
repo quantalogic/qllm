@@ -1,606 +1,357 @@
+# QLLM: Quantum Large Language Model Library
 
-[![GitHub Stars](https://img.shields.io/github/stars/quantalogic/qllm.svg)](https://github.com/quantalogic/qllm/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/quantalogic/qllm.svg)](https://github.com/quantalogic/qllm/network/members)
-[![npm version](https://img.shields.io/npm/v/qllm.svg)](https://www.npmjs.com/package/qllm)
-[![npm downloads](https://img.shields.io/npm/dm/qllm.svg)](https://www.npmjs.com/package/qllm)
+QLLM is a robust TypeScript library providing a unified interface for interacting with various Large Language Models (LLMs). It simplifies the process of working with multiple LLM providers, offering a consistent API for chat completions, embeddings, and more.
 
-# QLLM: Multi-Provider LLM Command CLI
+## Features
 
-QLLM (QuantaLogic LLM) is a powerful and flexible Command Line Interface (CLI) for interacting with multiple Large Language Model (LLM) providers. Built with ❤️ by [@quantalogic](https://github.com/quantalogic), QLLM simplifies the process of leveraging state-of-the-art language models in your projects and workflows.
+- 🚀 Multi-provider support (OpenAI, Anthropic, Groq, Ollama)
+- 🔄 Easy provider switching
+- 📝 Chat completion and streaming
+- 🧮 Embedding generation
+- 🛠 Function calling and tool use
+- 📊 Model listing
+- 🗃 Template management for prompts
 
-⭐ If you find QLLM useful, consider giving us a star on GitHub! It helps us reach more developers and improve the tool. ⭐
-
-## 🌟 Key Features
-
-- 🔄 Multi-provider support (currently featuring AWS Bedrock Anthropic's Claude models, OpenAI and [Ollama](https://ollama.com/))
-- 💬 Interactive chat mode for continuous conversations
-- 🌊 Streaming responses for real-time output
-- ⚙️ Configurable model parameters (temperature, top-p, top-k, etc.)
-- 📁 File input/output support for batch processing
-- 🎨 Customizable output formats (JSON, Markdown, plain text)
-- 🛠️ Easy-to-use configuration management
-- 📝 Template system for reusable prompts and workflows
-
-## 📚 Table of Contents
-
-- [Quick Start](#-quick-start)
-- [Detailed Documentation](#-detailed-documentation)
-- [Examples and Use Cases](#-examples-and-use-cases)
-- [Project Structure](#-project-structure)
-- [Dependencies](#-dependencies)
-- [Contributing](#-contributing)
-- [Testing](#-testing)
-- [Deployment](#-deployment)
-- [Troubleshooting](#-troubleshooting)
-- [Frequently Asked Questions](#-frequently-asked-questions)
-- [Roadmap](#-roadmap)
-- [License](#-license)
-- [Acknowledgments](#-acknowledgments)
-- [Contact](#-contact)
-
-## 🏁 Quick Start
-
-### What is QLLM?
-
-QLLM is a command-line tool that allows you to interact with various Large Language Models (LLMs) through a unified interface. It supports multiple providers, enabling you to leverage different AI models for tasks such as text generation, analysis, and interactive conversations.
-
-### Prerequisites
-
-- Node.js (v16 or later)
-- npm (v6 or later)
-- AWS account with AWS Bedrock access (for Anthropic models)
-
-### Installation
-
-Install QLLM globally using npm:
+## Installation
 
 ```bash
-npm install -g qllm
+npm install qllm-lib
 ```
 
-This makes the `qllm` command available system-wide.
+## Quick Start
 
-### Basic Usage
+```typescript
+import { getLLMProvider } from "qllm-lib";
 
-1. Ask a question:
+async function main() {
+  const provider = await getLLMProvider("openai");
 
-```bash
-qllm ask "Write a 100-word story about a time traveler" --max-tokens 150
-# Or when running from the project directory:
-npm run dev-ask "What is the capital of France?"
+  const response = await provider.generateChatCompletion({
+    messages: [
+      { role: "user", content: { type: "text", text: "Hello, world!" } },
+    ],
+    options: { model: "gpt-4o-mini", maxTokens: 100 },
+  });
+
+  console.log(response.text);
+}
+
+main().catch(console.error);
 ```
 
-2. Start an interactive chat session:
-
-```bash
-qllm chat --max-tokens 150 --provider anthropic --model haiku
-```
-
-3. Stream a response:
-
-```bash
-qllm stream "Explain quantum computing" --max-tokens 200
-```
-
-4. View configuration:
-
-```bash
-qllm config --show
-
-or : 
-
-npm run dev-cli -- config --option
-```
-
-5. Create and use a template:
-
-```bash
-qllm template create
-qllm template execute my-template
-```
-
-6. Generate embeddings for an image:
-
-```bash
-#qllm embed --link https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg --provider openai --model gpt-4-vision-preview
-
-# Or when running from the project directory:
-npm run dev-cli embed -- --link https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg --provider openai --model gpt-4-vision-preview
+Example execution:
 
 ```
-
-7. Generate embeddings for text:
-
-```bash
-qllm embed --text "Hello, world" --provider openai --model text-embedding-ada-002
-
-# Or when running from the project directory:
-npm run dev-cli embed -- --text "Hello, world" --provider openai --model text-embedding-ada-002
+Hello! How can I assist you today?
 ```
 
-8. Use function calling with tools:
+## Supported Providers
 
-```bash
-qllm ask "What's the weather like?" --tools '[{"type":"function","function":{"name":"get_weather","description":"Get the current weather","parameters":{"type":"object","properties":{"location":{"type":"string"}}}}}]' --provider openai --model gpt-4
+QLLM supports the following LLM providers:
 
-# Or when running from the project directory:
-npm run dev-ask "What's the weather like?" -- --tools '[{"type":"function","function":{"name":"get_weather","description":"Get the current weather","parameters":{"type":"object","properties":{"location":{"type":"string"}}}}}]' --provider openai --model gpt-4
+- OpenAI
+- Anthropic (including AWS Bedrock)
+- Groq
+- Ollama
+
+## Usage Examples
+
+### Chat Completion
+
+```typescript
+import { getLLMProvider, ChatMessage } from "qllm-lib";
+
+async function chatExample() {
+  const provider = await getLLMProvider("anthropic");
+
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content: { type: "text", text: "You are a helpful assistant." },
+    },
+    {
+      role: "user",
+      content: { type: "text", text: "What is the capital of France?" },
+    },
+  ];
+
+  const response = await provider.generateChatCompletion({
+    messages,
+    options: { model: "claude-3-opus-20240229", maxTokens: 100 },
+  });
+
+  console.log(response.text);
+}
+
+chatExample();
 ```
 
-9. Generate embeddings for text:
-
-```bash
-qllm embed --text "Hello, world" --provider openai --model text-embedding-ada-002
-
-# Or when running from the project directory:
-npm run dev-cli embed -- --text "Hello, world" --provider openai --model text-embedding-ada-002
-```
-
-10. multimodal chat (ask command ):
-
-```bash
-qllm ask "describe the following image" -- --image "/home/youcef/Bureau/f1.jpg" --provider openai --model gpt-4o-mini
-
-# Or when running from the project directory:
-npm run dev-ask "describe the following image" -- --image "/home/youcef/Bureau/f1.jpg" --provider openai --model gpt-4o-mini
-```
-
-
-
-
-## Configuration
-
-QLLM uses a configuration file to manage various settings. The default configuration file is named `.qllmrc.yaml` and is located in the user's home directory.
-
-### Global Configuration
-
-You can view and modify the global configuration using the `config` command:
-
-```bash
-qllm config --show
-qllm config --set-profile <profile>
-qllm config --set-region <region>
-qllm config --set-provider <provider>
-qllm config --set-model <model>
-qllm config --set-log-level <level>
-qllm config --set-max-tokens <tokens>
-qllm config --set-prompts-dir <directory>
-```
-
-#### Configuration File Format
-
-The configuration file (`.qllmrc.yaml`) uses YAML format. Here's an example of its structure:
-
-```yaml
-awsProfile: default
-awsRegion: us-east-1
-defaultProvider: anthropic
-defaultModel: haiku
-logLevel: info
-defaultMaxTokens: 2048
-promptDirectory: ~/qllm/prompts
-```
-
-#### Configuration Resolution
-
-QLLM resolves configuration in the following order of precedence:
-
-1. Command-line arguments
-2. Template-specific configuration (for template commands)
-3. Global configuration from `.qllmrc.yaml`
-4. Default values
-
-This allows for flexible configuration management, from global defaults to template-specific overrides and per-command customization.
-
-
-## 📚 Detailed Documentation
-
-### Command Structure
-
-QLLM offers several main commands:
-
-1. `ask`: Ask a single question and get a response
-2. `chat`: Start an interactive chat session
-3. `stream`: Stream a response in real-time
-4. `config`: View or update configuration settings
-5. `template`: Manage and execute prompt templates
-
-#### Common Options
-
-Each command supports various options to customize the behavior of the LLM:
-
-- `--max-tokens <number>`: Maximum number of tokens to generate (default: 256)
-- `--temperature <number>`: Controls randomness (0-1, default: 0.7)
-- `--top-p <number>`: Nucleus sampling parameter (0-1, default: 1)
-- `--top-k <number>`: Top-k sampling parameter (1-1000, default: 250)
-- `--system <string>`: System message to set context
-- `--file <path>`: Path to input file
-- `--output <path>`: Path to output file
-- `--format <format>`: Output format (json, markdown, text)
-- `--provider <provider>`: LLM provider (anthropic, openai, ollama)
-- `--model <model>`: Specific model to use
-
-### Template Command
-
-The `template` command allows you to create, manage, and execute reusable prompt templates. This feature is particularly useful for standardizing prompts across your team or for complex multi-step interactions with LLMs.
-
-#### Subcommands
-
-- `list`: List all available templates
-- `create`: Create a new template
-- `execute`: Execute a template
-- `delete`: Delete a template
-- `view`: View the contents of a template
-- `edit`: Edit an existing template
-- `variables`: Display all variables in a template
-
-#### Creating a Template
-
-To create a new template:
-
-```bash
-qllm template create
-```
-
-You will be prompted to enter details such as the template name, description, provider, model, and content. You can also define input and output variables.
-
-#### Executing a Template
-
-To execute a template:
-
-```bash
-qllm template execute template-name -v:variable1=value1 -v:variable2=value2
-```
-
-You can provide values for the template variables using the `-v:` prefix.
-
-#### Template Structure
-
-A template typically includes:
-
-- Name and description
-- Provider and model specifications
-- Input variables with types and descriptions
-- Output variables (optional)
-- The main content with placeholders for variables
-
-Example template structure:
-
-```yaml
-name: summarize-article
-version: 1.0.0
-description: Summarize a given article
-author: QLLM Team
-provider: anthropic
-model: haiku
-input_variables:
-  article_text:
-    type: string
-    description: The text of the article to summarize
-  summary_length:
-    type: number
-    description: The desired length of the summary in words
-    default: 100
-output_variables:
-  summary:
-    type: string
-    description: The generated summary
-content: |
-  Please summarize the following article in approximately {{summary_length}} words:
-
-  {{article_text}}
-
-  Provide a concise and informative summary that captures the main points of the article.
-```
-
-#### File Inclusion in Templates
-
-QLLM supports including external files in your templates, allowing for modular and reusable content. To include a file, use the following syntax in your template content:
+Example execution:
 
 ```
-{{file: path/to/file.txt}}
+The capital of France is Paris. Paris is not only the political capital but also the cultural and economic center of France. It's known for its iconic landmarks such as the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral.
 ```
 
-The file path is relative to the template directory. This feature is useful for:
+### Streaming Chat Completion
 
-- Sharing common prompts across multiple templates
-- Including large datasets or context information
-- Organizing complex templates into smaller, manageable files
+```typescript
+import { getLLMProvider, ChatMessage } from "qllm-lib";
 
-Example template with file inclusion:
+async function streamingExample() {
+  const provider = await getLLMProvider("groq");
 
-```yaml
-name: code-review
-version: 1.0.0
-description: Perform a code review
-author: QLLM Team
-provider: anthropic
-model: opus
-input_variables:
-  code:
-    type: string
-    description: The code to review
-output_variables:
-  review:
-    type: string
-    description: The code review comments
-content: |
-  {{file: prompts/code_review_instructions.txt}}
+  const messages: ChatMessage[] = [
+    {
+      role: "user",
+      content: { type: "text", text: "Write a short story about a robot." },
+    },
+  ];
 
-  Here's the code to review:
+  const stream = provider.streamChatCompletion({
+    messages,
+    options: { model: "mixtral-8x7b-32768", maxTokens: 200 },
+  });
 
-  
-  {{code}}
-  
+  for await (const chunk of stream) {
+    process.stdout.write(chunk.text || "");
+  }
+}
 
-  Please provide a detailed code review based on the instructions above.
+streamingExample();
 ```
 
-In this example, `code_review_instructions.txt` might contain general guidelines for code review, which can be reused across multiple templates.
-
-## 💡 Examples and Use Cases
-
-### Generate a Short Story
-
-```bash
-qllm ask "Write a 100-word story about a time traveler" --max-tokens 150
-```
-
-### Analyze Code
-
-```bash
-qllm stream "Explain the following code: function fibonacci(n) { if (n <= 1) return n; return fibonacci(n - 1) + fibonacci(n - 2); }" --format markdown
-```
-
-### Interactive Coding Assistant
-
-```bash
-qllm chat --system "You are a helpful coding assistant. Provide code examples and explanations."
-```
-
-### Batch Processing
-
-```bash
-qllm ask --file input.txt --output results.json --format json
-```
-
-### Customizing Output
-
-```bash
-qllm ask "Summarize the benefits of exercise" --max-tokens 100 --temperature 0.9 --format markdown
-```
-
-### Using Templates for Consistent Prompts
-
-Create a template for generating product descriptions:
-
-```bash
-qllm template create
-# Follow the prompts to create a template named "product-description"
-```
-
-Execute the template:
-
-```bash
-qllm template execute product-description -v:product_name="Eco-friendly Water Bottle" -v:key_features="Insulated, BPA-free, 24oz capacity"
-```
-
-### Env variables 
-  AWS_PROFILE=
-  AWS_REGION=us-east-2
-
-  #### Default LLM Provider
-  #### Options: anthropic, openai, ollama
-  DEFAULT_PROVIDER=
-  #### Model Configuration
-  #### Use either MODEL_ALIAS or MODEL_ID, not both
-  MODEL_ALIAS=
-  MODEL_ID=
-  #### OpenAI Configuration (required when using OpenAI provider)
-  OPENAI_API_KEY=sk-
-  GROQ_API_KEY=""
-  PERPLEXITY_API_KEY=""
-  MISTRAL_API_KEY=""
-  JINA_API_KEY=""
-  OPENROUTER_API_KEY=""
-  OPENROUTER_TITLE=""
-  PROMPT_DIRECTORY=
-  #### Logging
-  LOG_LEVEL=info
-
-### Multi-step Analysis with Templates
-
-Create a template for analyzing financial data:
-
-```yaml
-name: financial-analysis
-description: Perform a multi-step financial analysis
-provider: anthropic
-model: opus
-input_variables:
-  company_name:
-    type: string
-    description: Name of the company to analyze
-  financial_data:
-    type: string
-    description: Key financial metrics of the company
-output_variables:
-  summary:
-    type: string
-    description: Summary of the financial analysis
-  recommendations:
-    type: array
-    description: List of recommendations based on the analysis
-content: |
-  Perform a comprehensive financial analysis for {{company_name}} based on the following data:
-
-  {{financial_data}}
-
-  1. Summarize the company's financial health.
-  2. Identify key strengths and weaknesses.
-  3. Provide at least three actionable recommendations.
-
-  Format your response as follows:
-
-  <summary>
-  [Your summary here]
-  </summary>
-
-  <recommendations>
-  - [Recommendation 1]
-  - [Recommendation 2]
-  - [Recommendation 3]
-  </recommendations>
-```
-
-Execute the financial analysis template:
-
-```bash
-qllm template execute financial-analysis -v:company_name="TechCorp Inc." -v:financial_data="Revenue: $100M, Profit Margin: 15%, Debt-to-Equity: 0.5" --output analysis_result.json
-```
-
-This example demonstrates how templates can be used for complex, multi-step analyses with structured output.
-
-## 🗂 Project Structure
+Example execution:
 
 ```
-qllm/
-├── src/
-│   ├── commands/         # Implementation of CLI commands
-│   ├── config/           # Configuration management
-│   ├── helpers/          # Utility functions
-│   ├── providers/        # LLM provider integrations
-│   ├── templates/        # Template management and execution
-│   ├── utils/            # General utility functions
-│   └── qllm.ts           # Main entry point
-├── .env                  # Environment variables
-├── package.json          # Project dependencies and scripts
-└── README.md             # Project documentation
+In a world of steel and circuits, a small robot named Pixel came to life. Its creators had given it one simple task: to water the plants in the laboratory. Day after day, Pixel diligently tended to the greenery, its sensors carefully measuring soil moisture and sunlight levels.
+
+One day, as Pixel was making its rounds, it noticed a wilting flower in the corner. This wasn't part of its usual routine, but something in its programming urged it to investigate. As it approached, its optical sensors detected a small crack in the pot, causing water to leak out.
+
+Pixel paused, its processors whirring as it analyzed the situation. It wasn't programmed for repairs, but it was programmed to care for plants. In a moment of what could only be described as robotic creativity, Pixel used a small amount of sealant from its maintenance kit to patch the crack.
+
+As the days passed, Pixel watched the once-wilting flower flourish. Its databanks registered a new sensation - something akin to pride. From that day forward, Pixel not only watered the plants but also looked for ways to help them thrive, proving that even in a world of metal and code, there was room for growth and adaptation.
 ```
 
-## 🔧 Dependencies
+### Embedding Generation
 
-- `@anthropic-ai/bedrock-sdk`: SDK for Anthropic's Bedrock models
-- `commander`: Command-line interface creation
-- `dotenv`: Environment variable management
-- `prompts`: Interactive command-line user interfaces
-- `winston`: Logging library
+```typescript
+import { getEmbeddingProvider } from "qllm-lib";
 
-(See `package.json` for a full list of dependencies and their versions)
+async function embeddingExample() {
+  const provider = await getEmbeddingProvider("openai");
 
-## 🤝 Contributing
+  const result = await provider.generateEmbedding({
+    model: "text-embedding-3-small",
+    content: "Hello, world!",
+  });
 
-We welcome contributions to QLLM! Here's how you can help:
+  console.log(result.embedding.slice(0, 5)); // Show first 5 dimensions
+}
 
-1. Fork the repository
-2. Create a new branch: `git checkout -b feature/your-feature-name`
-3. Make your changes and commit them: `git commit -m 'Add some feature'`
-4. Push to the branch: `git push origin feature/your-feature-name`
-5. Submit a pull request
-
-Please ensure your code adheres to our coding standards:
-- Use TypeScript for all new files
-- Follow the existing code style (we use ESLint and Prettier)
-- Write unit tests for new features
-- Update documentation as necessary
-
-## 🧪 Testing
-
-We use Jest for unit testing. To run the test suite:
-
-```bash
-npm test
+embeddingExample();
 ```
 
-When adding new features, please include appropriate test coverage. Test files should be placed in a `__tests__` directory adjacent to the code being tested.
+Example execution:
 
-## 📦 Deployment
-
-QLLM is designed to be used as a local CLI tool. To create a packaged version for distribution:
-
-```bash
-npm pack
+```
+[
+  -0.03516635298728943,
+  -0.022325780987739563,
+  -0.020604668930172920,
+  0.018447319418191910,
+  -0.00019173165992647409
+]
 ```
 
-This will create a `.tgz` file that can be installed globally:
+### Function Calling
 
-```bash
-npm install -g qllm-x.y.z.tgz
+```typescript
+import {
+  getLLMProvider,
+  ChatMessage,
+  createFunctionToolFromZod,
+} from "qllm-lib";
+import { z } from "zod";
+
+async function functionCallingExample() {
+  const provider = await getLLMProvider("openai");
+
+  const weatherTool = createFunctionToolFromZod({
+    name: "get_current_weather",
+    description: "Get the current weather in a given location",
+    schema: z.object({
+      location: z
+        .string()
+        .describe("The city and state, e.g. San Francisco, CA"),
+      unit: z
+        .enum(["celsius", "fahrenheit"])
+        .describe("The unit of temperature to use"),
+    }),
+    strict: true,
+  });
+
+  const messages: ChatMessage[] = [
+    {
+      role: "user",
+      content: { type: "text", text: "What's the weather like in Paris?" },
+    },
+  ];
+
+  const response = await provider.generateChatCompletion({
+    messages,
+    options: { model: "gpt-4o-mini", maxTokens: 150 },
+    tools: [weatherTool],
+    toolChoice: "auto",
+  });
+
+  console.log("Response:", response.text);
+  console.log("Tool Calls:", JSON.stringify(response.toolCalls, null, 2));
+}
+
+functionCallingExample();
 ```
 
-After installation, you can use QLLM commands directly from your terminal.
+Example execution:
 
-## 🔍 Troubleshooting
+```
+Response: To get the current weather in Paris, I'll need to use the weather tool. Let me do that for you.
 
-- **API Key Issues**: Ensure your AWS credentials are correctly set up using `aws configure`.
-- **Model Not Found**: Verify you're using a supported model name and the correct provider.
-- **Rate Limiting**: If you encounter rate limits, try reducing the frequency of requests or upgrading your API plan.
-- **Template Errors**: Check that all required variables are provided when executing a template.
+Tool Calls: [
+  {
+    "id": "call_abc123",
+    "type": "function",
+    "function": {
+      "name": "get_current_weather",
+      "arguments": "{\"location\":\"Paris, France\",\"unit\":\"celsius\"}"
+    }
+  }
+]
+```
 
-For more issues, please check our GitHub Issues page or submit a new issue.
+### Using Templates
 
-## ❓ Frequently Asked Questions
+```typescript
+import { TemplateManager, TemplateExecutor, getLLMProvider } from "qllm-lib";
 
-1. **Q: How do I update QLLM?**
-   A: Run `npm update -g qllm` to update to the latest version.
+async function templateExample() {
+  const templateManager = new TemplateManager({ promptDirectory: "./prompts" });
+  await templateManager.init();
 
-2. **Q: Can I use QLLM in my scripts?**
-   A: Yes, QLLM can be easily integrated into shell scripts or other automation tools.
+  const template = await templateManager.getTemplate("create_story");
 
-3. **Q: Is my data secure when using QLLM?**
-   A: QLLM does not store any of your prompts or responses. However, please review the privacy policies of the LLM providers you're using.
+  if (template) {
+    const provider = await getLLMProvider("ollama");
+    const templateExecutor = new TemplateExecutor();
 
-4. **Q: How can I create complex workflows with templates?** [Not 
-   A: You can create multiple templates and chain them together using shell scripts or by referencing the output of one template as input to another.
+    const { response } = await templateExecutor.execute({
+      template,
+      variables: {
+        subject: "A day in the life of a programmer",
+        genre: "Comedy",
+        role: "Experienced software developer",
+        lang: "English",
+        max_length: 200,
+      },
+      provider,
+      providerOptions: { model: "gemma2:2b", maxTokens: 300 },
+    });
 
-## 🗺 Roadmap
+    console.log(response);
+  }
+}
 
-- [OK] Add a command to list all the available providers
-- [OK] Add a list command that present all the models available for a provider
-- [ ] Publish and search prompt on a prompts/template marketplace
-- [ ] Plugin for Raycast
-- [ ] Plugin for Chrome
-- [ ] Cost evaluation by providers
-- [OK] Add support for more LLM providers (Perplexity, Groq)
-- [ ] Add support for more LLM providers (Mistral, etc ...)
-- [ ] Implement AI agent capabilities
-- [ ] Expand provider support to include more LLM services
-- [ ] Add safe code interpreter
-- [ ] Add tool support
-- [ ] Multi-Modal Input and Output
-- [ ] Prompt libraries and sharing
-- [ ] Custom Workflows and Pipelines, Enable users to chain multiple LLM calls into a single workflow
-- [ ] API Integration
-- [ ] Advanced Analytics and Monitoring
-- [ ] Semantic Search and Knowledge Base
-- [ ] Plugin Ecosystem
-- [ ] AI-Assisted Prompt Engineering
-- [ ] Plug-In for project code assistance, with diff support
+templateExample();
+```
 
-## Changelog
+Example execution:
 
-The changelog is available at [CHANGELOG](./CHANGELOG.md)
+```
+<artifact>
+<story>
+# A Day in the Life of a Programmer: A Comedy
 
-## 📄 License
+As the sun rises, our intrepid coder, Dave, stumbles out of bed, his eyes still half-closed. He reaches for his glasses, knocking over a tower of energy drink cans in the process. "Another day in paradise," he mumbles.
+
+Dave boots up his computer, which takes approximately three coffee sips to start. He opens his IDE, ready to conquer the digital world, only to be greeted by 47 unread emails and 23 Slack notifications. "Who needs social life when you have merge conflicts?" he chuckles to himself.
+
+As he dives into coding, Dave engages in his favorite pastime: arguing with himself about variable names. "Is 'data' too vague? Maybe 'information'? Or how about 'stuffThingsAndJunk'?" He settles on 'x' and moves on, promising to rename it later (he won't).
+
+Lunch break arrives, and Dave celebrates by moving from his desk chair to his gaming chair, a journey of approximately two feet. He spends the next hour debugging his lunch order on a food delivery app.
+
+As the day winds down, Dave leans back, admiring his work. "56 bugs fixed, 57 new ones created. Perfectly balanced, as all things should be." He shuts down his computer, ready to dream in binary.
+
+Word count: 200
+</story>
+</artifact>
+```
+
+## Advanced Configuration
+
+### AWS Bedrock with Anthropic
+
+To use Anthropic models through AWS Bedrock:
+
+```typescript
+import { createAwsBedrockAnthropicProvider } from "qllm-lib";
+
+async function awsBedrockExample() {
+  const provider = await createAwsBedrockAnthropicProvider();
+
+  const response = await provider.generateChatCompletion({
+    messages: [
+      { role: "user", content: { type: "text", text: "Hello, Bedrock!" } },
+    ],
+    options: {
+      model: "anthropic.claude-3-haiku-20240307-v1:0",
+      maxTokens: 100,
+    },
+  });
+
+  console.log(response.text);
+}
+
+awsBedrockExample();
+```
+
+Example execution:
+
+```
+Hello! I'm Claude, an AI assistant. How can I help you today? I'm happy to assist with a wide range of tasks, from answering questions to helping with analysis and creative projects. Please let me know what you'd like to work on.
+```
+
+## Error Handling
+
+QLLM provides custom error classes for better error handling:
+
+```typescript
+import {
+  LLMProviderError,
+  AuthenticationError,
+  RateLimitError,
+  InvalidRequestError,
+} from "qllm-lib";
+
+try {
+  // Your QLLM code here
+} catch (error) {
+  if (error instanceof AuthenticationError) {
+    console.error("Authentication failed:", error.message);
+  } else if (error instanceof RateLimitError) {
+    console.error("Rate limit exceeded:", error.message);
+  } else if (error instanceof InvalidRequestError) {
+    console.error("Invalid request:", error.message);
+  } else if (error instanceof LLMProviderError) {
+    console.error("LLM provider error:", error.message);
+  } else {
+    console.error("Unexpected error:", error);
+  }
+}
+```
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for more details.
+
+## License
 
 This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Thanks to the Anthropic team for their amazing Claude models
-- Inspired by various CLI tools in the AI community
-- Special thanks to all our contributors and users for their feedback and support
-
-## 📞 Contact
-
-- Project Maintainer: [@raphaelmansuy](https://github.com/raphaelmansuy)
-- Project Homepage: https://github.com/quantalogic/qllm
-- Bug Reports: https://github.com/quantalogic/qllm/issues
-
-
-## Project Growth
-[![Star History Chart](https://api.star-history.com/svg?repos=quantalogic/qllm&type=Date)](https://star-history.com/#quantalogic/qllm&Date)
-
----
-
-Made with ❤️ by the QLLM team. Happy prompting!
