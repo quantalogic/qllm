@@ -128,15 +128,14 @@ async function streamResponse(
     const stream = await provider.streamChatCompletion(params);
     let chunkCount = 0;
 
+    spinner.stop(); // Stop the spinner before streaming
+    spinner.clear();
+
     for await (const chunk of stream) {
       chunkCount++;
       if (chunk.text) {
         process.stdout.write(chunk.text);
         chunks.push(chunk.text);
-      }
-      // Update output without overwriting previous text
-      if (chunk.text) {
-        process.stdout.write(`\rReceiving response... (${chunkCount} chunks received)`);
       }
     }
 
