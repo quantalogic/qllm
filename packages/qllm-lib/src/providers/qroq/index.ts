@@ -17,6 +17,7 @@ import {
   isTextContent,
   isImageUrlContent,
   ToolCall,
+  ChatMessageWithSystem,
 } from '../../types';
 
 const DEFAULT_MODEL = 'mixtral-8x7b-32768';
@@ -148,7 +149,7 @@ export class GroqProvider extends BaseLLMProvider implements EmbeddingProvider {
     }
   }
 
-  private async formatMessages(messages: ChatMessage[]): Promise<any[]> {
+  private async formatMessages(messages: ChatMessageWithSystem[]): Promise<any[]> {
     return messages.map((message) => ({
       role: message.role,
       content: Array.isArray(message.content)

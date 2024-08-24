@@ -1,9 +1,10 @@
 import { strict } from 'assert';
+import { Chat } from 'openai/resources';
 import { z } from 'zod';
 
 // -------------------- Chat Message Types --------------------
 
-export type ChatMessageRole = 'user' | 'assistant' | 'system';
+export type ChatMessageRole = 'user' | 'assistant';
 export type ChatMessageContentType = 'text' | 'image_url';
 
 export type TextContent = {
@@ -23,6 +24,13 @@ export type ChatMessage = {
   role: ChatMessageRole;
   content: ChatMessageContent;
 };
+
+export type SystemMessage = {
+  role: 'system';
+  content: TextContent;
+};
+
+export type ChatMessageWithSystem = ChatMessage | SystemMessage;
 
 // Type guard functions for type checking
 export function isTextContent(content: MessageContent): content is TextContent {

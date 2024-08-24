@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import path, { format } from 'path';
+import path  from 'path';
 import axios from 'axios';
 import {
   ChatCompletionParams,
@@ -19,6 +19,8 @@ import {
   EmbeddingProvider,
   EmbeddingRequestParams,
   EmbeddingResponse,
+  ChatMessageWithSystem,
+  SystemMessage,
 } from '../../types';
 import ollama, {
   ChatRequest,
@@ -137,7 +139,7 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
   }
 
   protected async formatMessages(
-    messages: ChatMessage[],
+    messages: ChatMessageWithSystem[],
   ): Promise<{ role: string; content: string; images?: string[] }[]> {
     const formattedMessages: { role: string; content: string; images?: string[] }[] = [];
 
@@ -181,11 +183,14 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
-  protected withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessage[] {
+  protected withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessageWithSystem[] {
     if (options.systemMessage && options.systemMessage.length > 0) {
-      const systemMessage: ChatMessage = {
+      const systemMessage: SystemMessage = {
         role: 'system',
-        content: createTextMessageContent(options.systemMessage),
+        content: {
+          text: options.systemMessage,
+          type: 'text',
+        }
       };
       return [systemMessage, ...messages];
     }

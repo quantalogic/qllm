@@ -14,6 +14,7 @@ import {
   ChatStreamCompletionResponse,
   EmbeddingResponse,
   Tool,
+  ChatMessageWithSystem,
 } from '../../types';
 import {
   ChatCompletionMessageParam,
@@ -75,8 +76,8 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         top_logprobs: options.topLogprobs,
       });
 
-//      console.log("🍵 Result OpenAIProvider.generateChatCompletion:");
-//      console.dir(response, { depth: null });
+      //      console.log("🍵 Result OpenAIProvider.generateChatCompletion:");
+      //      console.dir(response, { depth: null });
 
       const firstResponse = response.choices[0];
       const usage = response.usage;
@@ -188,23 +189,13 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
-  private withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessage[] {
+  private withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessageWithSystem[] {
     return options.systemMessage && options.systemMessage.length > 0
-      ? [this.createSystemMessage(options.systemMessage), ...messages]
+      ? [{ role: 'system', content: { type: 'text', text: options.systemMessage } }, ...messages]
       : messages;
   }
 
-  private createSystemMessage(systemMessageText: string): ChatMessage {
-    return {
-      role: 'system',
-      content: {
-        type: 'text',
-        text: systemMessageText,
-      },
-    };
-  }
-
-  private async formatMessages(messages: ChatMessage[]): Promise<ChatCompletionMessageParam[]> {
+  private async formatMessages(messages: ChatMessageWithSystem[]): Promise<ChatCompletionMessageParam[]> {
     const formattedMessages: ChatCompletionMessageParam[] = [];
 
     for (const message of messages) {

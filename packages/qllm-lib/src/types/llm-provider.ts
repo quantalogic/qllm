@@ -7,6 +7,7 @@ import {
   EmbeddingResponse,
   LLMOptions,
   Model,
+  ChatMessageWithSystem,
 } from './llm-types';
 
 export interface AIProvider {
@@ -67,7 +68,7 @@ export abstract class BaseLLMProvider implements LLMProvider {
     }
   }
 
-  protected withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessage[] {
+  protected withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessageWithSystem[] {
     return options.systemMessage && options.systemMessage.length > 0
       ? [
           {
