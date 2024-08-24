@@ -45,6 +45,83 @@ Example execution:
 Hello! How can I assist you today?
 ```
 
+## Image Description Example
+
+### Chat Completion (Non-Streaming)
+
+```typescript
+import { getLLMProvider } from "qllm-lib";
+
+async function imageDescriptionExample() {
+  const provider = await getLLMProvider("openai");
+
+  const urlDemo =
+    "https://images.unsplash.com/photo-1613048981304-12e96c2d3ec4?q=80&w=2874&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+
+  const response = await provider.generateChatCompletion({
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Can you describe this image?" },
+          { type: "image_url", url: urlDemo },
+        ],
+      },
+    ],
+    options: { model: "gpt-4o-mini", maxTokens: 200 },
+  });
+
+  console.log("Image description:", response.text);
+}
+
+imageDescriptionExample();
+```
+
+Example execution:
+
+```
+Image description: This image appears to be a scenic view of a city, likely Paris. It shows a cityscape with iconic Parisian architecture, including buildings with ornate facades, domed roofs, and tall spires. In the foreground, there are trees lining the streets, and the image has a warm, golden tone, suggesting it was taken during a sunny day. The overall composition and architectural details suggest this is a picturesque view of the French capital.
+```
+
+### Chat Completion (Streaming)
+
+```typescript
+import { getLLMProvider } from "qllm-lib";
+
+async function streamingImageDescriptionExample() {
+  const provider = await getLLMProvider("openai");
+
+  const urlDemo =
+    "https://images.unsplash.com/photo-1613048981304-12e96c2d3ec4?q=80&w=2874&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+
+  const stream = provider.streamChatCompletion({
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Can you describe this image?" },
+          { type: "image_url", url: urlDemo },
+        ],
+      },
+    ],
+    options: { model: "gpt-4o-mini", maxTokens: 200 },
+  });
+
+  console.log("Image description:");
+  for await (const chunk of stream) {
+    process.stdout.write(chunk.text || "");
+  }
+}
+
+streamingImageDescriptionExample();
+```
+
+Example execution:
+
+```
+Image description: This image appears to be a scenic view of a city, likely Paris. It shows a cityscape with iconic Parisian architecture, including buildings with ornate facades, domed roofs, and tall spires. In the foreground, there are trees lining the streets, and the image has a warm, golden tone, suggesting it was taken during a sunny day. The overall composition and architectural details suggest this is a picturesque view of the French capital.
+```
+
 ## Supported Providers
 
 QLLM supports the following LLM providers:
