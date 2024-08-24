@@ -82,9 +82,6 @@ async function askQuestion(
   options: AskOptions
 ): Promise<string> {
   // Validate options
-  if (options.maxTokens < 1 || options.maxTokens > 4096) {
-    throw new Error("maxTokens must be between 1 and 4096.");
-  }
   if (options.temperature < 0 || options.temperature > 1) {
     throw new Error("Temperature must be between 0 and 1.");
   }
