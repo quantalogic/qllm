@@ -60,7 +60,7 @@ export const askCommand = new Command("ask")
         await saveResponseToFile(response, options.output);
         console.error(kleur.green(`Response saved to ${options.output}`));
       } else {
-        console.log(kleur.cyan("Response:"));
+        console.error(kleur.cyan("Response:"));
         console.log(response);
       }
     } catch (error) {
