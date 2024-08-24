@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import kleur from 'kleur';
 import { table, TableUserConfig } from 'table';
 
 /**
@@ -10,7 +10,7 @@ export class OutputFormatter {
    * @param message The success message to display.
    */
   static success(message: string): void {
-    console.log(chalk.green('✔ ') + message);
+    console.log(kleur.green('✔ ') + message);
   }
 
   /**
@@ -18,7 +18,7 @@ export class OutputFormatter {
    * @param message The error message to display.
    */
   static error(message: string): void {
-    console.error(chalk.red('✖ ') + message);
+    console.error(kleur.red('✖ ') + message);
   }
 
   /**
@@ -26,7 +26,7 @@ export class OutputFormatter {
    * @param message The warning message to display.
    */
   static warn(message: string): void {
-    console.warn(chalk.yellow('⚠ ') + message);
+    console.warn(kleur.yellow('⚠ ') + message);
   }
 
   /**
@@ -34,7 +34,7 @@ export class OutputFormatter {
    * @param message The info message to display.
    */
   static info(message: string): void {
-    console.info(chalk.blue('ℹ ') + message);
+    console.info(kleur.blue('ℹ ') + message);
   }
 
   /**
@@ -48,12 +48,11 @@ export class OutputFormatter {
       columns: headers.map(() => ({ alignment: 'left' as const })),
       header: {
         alignment: 'center' as const,
-        content: headers.map(header => chalk.bold(header)).join(' | '), // Join the headers
+        content: headers.map(header => kleur.bold(header)).join(' | '), // Join the headers
       },
     };
     console.log(table(tableData, config));
   }
-
 
   /**
    * Formats and prints JSON data.
@@ -68,7 +67,7 @@ export class OutputFormatter {
    * @param title The title to display.
    */
   static title(title: string): void {
-    console.log(chalk.bold.underline(title));
+    console.log(kleur.bold().underline(title));
   }
 
   /**
@@ -76,7 +75,7 @@ export class OutputFormatter {
    * @param header The section header to display.
    */
   static sectionHeader(header: string): void {
-    console.log(chalk.bold('\n' + header));
+    console.log(kleur.bold('\n' + header));
   }
 
   /**
@@ -107,11 +106,10 @@ export class OutputFormatter {
    * @param language Optional language for syntax highlighting.
    */
   static codeBlock(code: string, language?: string): void {
-    // Use a more generic color method instead of 'keyword'
-    const formattedCode = language ? chalk.cyan(code) : code;
-    console.log(chalk.gray('```' + (language || '')));
+    const formattedCode = language ? kleur.cyan(code) : code;
+    console.log(kleur.gray('```' + (language || '')));
     console.log(formattedCode);
-    console.log(chalk.gray('```'));
+    console.log(kleur.gray('```'));
   }
 }
 

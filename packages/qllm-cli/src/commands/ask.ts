@@ -128,7 +128,7 @@ function createMessageContent(
   for (const image of images) {
     content.push({
       type: "image_url",
-      url: image,
+      url: image, // Url can be a local file path or a URL, or a base64 string
     });
   }
 

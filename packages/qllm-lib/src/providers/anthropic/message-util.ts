@@ -88,7 +88,8 @@ async function downloadAndConvertToBase64(
       mimeType: mimeType,
     };
   } catch (error) {
-    console.error(`Error processing image from: ${source}`, error);
+    
+    console.error(`Error processing image from: ${source?.substring(0,200)}`, error);
     throw error;
   }
 }
