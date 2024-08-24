@@ -1,4 +1,3 @@
-
 # qllm-lib
 
 ## Table of Contents
@@ -10,6 +9,9 @@
   - [Generating Chat Completions](#generating-chat-completions)
   - [Streaming Chat Completions](#streaming-chat-completions)
   - [Generating Embeddings](#generating-embeddings)
+- [Templates](#templates)
+  - [Example Template](#example-template)
+  - [Inferred Variables](#inferred-variables)
 - [API Reference](#api-reference)
 - [Error Handling](#error-handling)
 - [Contributing](#contributing)
@@ -124,6 +126,78 @@ const imageEmbedding = await provider.generateEmbedding({
 
 console.log(imageEmbedding);
 ```
+
+## Templates
+
+Templates in qllm-lib allow you to define reusable structures for generating complex text outputs. They support variable inputs, file inclusions, and output variable extraction.
+
+### Example Template
+
+Here's an example of a template file `prompts/create_story.yaml`:
+
+```yaml
+name: create_story
+version: '1.0'
+description: Create a nice story
+author: Raphaël MANSUY
+input_variables:
+  subject:
+    type: string
+    description: The subject of the story
+    default: "Emmanuel Macron dissout l'assemblée"
+  genre:
+    type: string
+    description: The genre of the story
+    default: "Humour et satire"
+  role:
+    type: string
+    description: The role of the user
+    default: "Gaspar PROUST"
+  lang:
+    type: string
+    description: The language of the story
+    default: "Français"
+  max_length:
+    type: number
+    description: The maximum length of the story
+    default: 100
+output_variables:
+  story:
+    type: string
+    description: The story
+
+content: >
+  {{file:./story.md}}
+```
+
+This template includes another file `story.md`:
+
+```markdown
+## Your role
+  {{file:./role.md}}
+
+## Your task
+
+  Write a {{genre}} story about {{subject}}
+
+  Use {{lang}} to write the story.
+
+ ## OUTPUT example
+
+```xml
+<artfifact>
+    <story>
+     ... the story formatted using Markdown. . Length {{max_length}} words ...
+    </story>
+</artifact> 
+```
+```
+
+### Inferred Variables
+
+Inferred variables are automatically detected by the template system when they appear in the content but are not explicitly defined in the `input_variables` section. These variables are added to the `input_variables` with a default type of 'string' and marked as `inferred: true`.
+
+For example, if the content includes `{{character_name}}` but it's not defined in `input_variables`, it will be automatically added as an inferred variable. This allows for flexible template creation without the need to explicitly define every variable used in the content.
 
 ## API Reference
 
