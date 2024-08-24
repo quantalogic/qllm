@@ -21,6 +21,7 @@ import {
   ChatCompletionContentPart,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions';
+import fs from 'fs/promises'; // Ensure this import is at the top
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -75,9 +76,6 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         logit_bias: options.logitBias,
         top_logprobs: options.topLogprobs,
       });
-
-      //      console.log("🍵 Result OpenAIProvider.generateChatCompletion:");
-      //      console.dir(response, { depth: null });
 
       const firstResponse = response.choices[0];
       const usage = response.usage;
@@ -210,10 +208,21 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
           if (content.type === 'text') {
             contentParts.push({ type: 'text', text: content.text });
           } else if (content.type === 'image_url') {
-            contentParts.push({
-              type: 'image_url',
-              image_url: { url: content.url },
-            } as ChatCompletionContentPart); // Type assertion
+            // Check if the URL is a local file or a remote URL
+            if (content.url.startsWith('http://') || content.url.startsWith('https://')) {
+              // Handle remote URL (if needed, you can implement fetching here)
+              contentParts.push({
+                type: 'image_url',
+                image_url: { url: content.url }, // Keep the URL as is for remote
+              } as ChatCompletionContentPart); // Type assertion
+            } else {
+              // Convert local image file to base64
+              const base64Image = await imageToBase64(content.url);
+              contentParts.push({
+                type: 'image_url',
+                image_url: { url: base64Image }, // Use the base64 image
+              } as ChatCompletionContentPart); // Type assertion
+            }
           }
         }
         formattedMessage.content = contentParts;
