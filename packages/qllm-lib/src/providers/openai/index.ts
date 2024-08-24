@@ -21,7 +21,7 @@ import {
   ChatCompletionContentPart,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions';
-import fs from 'fs/promises'; // Ensure this import is at the top
+import { imageToBase64 } from '../../utils/images/image-to-base64';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
 const DEFAULT_MODEL = 'gpt-4o-mini';
