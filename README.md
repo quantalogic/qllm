@@ -296,59 +296,84 @@ Image description: This image appears to be a scenic view of a city, likely Pari
 
 ## Using Templates
 
-```typescript
-import { TemplateManager, TemplateExecutor, getLLMProvider } from "qllm-lib";
+Templates are a powerful feature in QLLM that allow you to define a structure for generating complex text outputs. The purpose of templates is to simplify the generation of similar types of content with slight variations, such as stories, reports, or responses.
 
-async function templateExample() {
-  const templateManager = new TemplateManager({ promptDirectory: "./prompts" });
-  await templateManager.init();
+### Purpose of Templates
 
-  const template = await templateManager.getTemplate("create_story");
+The purpose of templates is to provide a reusable structure that can be filled with different data. This is particularly useful in scenarios where you need to generate similar types of content with slight variations.
 
-  if (template) {
-    const provider = await getLLMProvider("ollama");
-    const templateExecutor = new TemplateExecutor();
+### Example of a Simple Template
 
-    const { response } = await templateExecutor.execute({
-      template,
-      variables: {
-        subject: "A day in the life of a programmer",
-        genre: "Comedy",
-        role: "Experienced software developer",
-        lang: "English",
-        max_length: 200,
-      },
-      provider,
-      providerOptions: { model: "gemma2:2b", maxTokens: 300 },
-    });
+A simple example of a template for generating a greeting message:
 
-    console.log(response);
-  }
-}
-
-templateExample();
+```yaml
+# greeting.yaml
+name: greeting
+description: A simple greeting template
+input_variables:
+  name:
+    type: string
+    description: The name of the person to greet
+content: "Hello, {{name}}!"
 ```
 
-Example execution:
+### Example of Increasing Complexity
 
+1. **Basic Story Template**: A template for generating a simple story.
+
+```yaml
+# basic_story.yaml
+name: basic_story
+description: A basic story template
+input_variables:
+  location:
+    type: string
+    description: The location of the story
+  character:
+    type: string
+    description: The main character of the story
+content: "Once upon a time in {{location}}, there lived a character named {{character}}."
 ```
-<artifact>
-<story>
-# A Day in the Life of a Programmer: A Comedy
 
-As the sun rises, our intrepid coder, Dave, stumbles out of bed, his eyes still half-closed. He reaches for his glasses, knocking over a tower of energy drink cans in the process. "Another day in paradise," he mumbles.
+2. **Detailed Report Template**: A template for generating a detailed report.
 
-Dave boots up his computer, which takes approximately three coffee sips to start. He opens his IDE, ready to conquer the digital world, only to be greeted by 47 unread emails and 23 Slack notifications. "Who needs social life when you have merge conflicts?" he chuckles to himself.
+```yaml
+# detailed_report.yaml
+name: detailed_report
+description: A detailed report template
+input_variables:
+  title:
+    type: string
+    description: The title of the report
+  date:
+    type: string
+    description: The date of the report
+  summary:
+    type: string
+    description: A brief summary of the report
+content: "Report Title: {{title}}\nDate: {{date}}\nSummary: {{summary}}"
+```
 
-As he dives into coding, Dave engages in his favorite pastime: arguing with himself about variable names. "Is 'data' too vague? Maybe 'information'? Or how about 'stuffThingsAndJunk'?" He settles on 'x' and moves on, promising to rename it later (he won't).
+3. **Complex Story with Multiple Variables**: A more complex story template.
 
-Lunch break arrives, and Dave celebrates by moving from his desk chair to his gaming chair, a journey of approximately two feet. He spends the next hour debugging his lunch order on a food delivery app.
-
-As the day winds down, Dave leans back, admiring his work. "56 bugs fixed, 57 new ones created. Perfectly balanced, as all things should be." He shuts down his computer, ready to dream in binary.
-
-Word count: 200
-</story>
-</artifact>
+```yaml
+# complex_story.yaml
+name: complex_story
+description: A complex story template
+input_variables:
+  year:
+    type: number
+    description: The year the story takes place
+  character:
+    type: string
+    description: The main character of the story
+  goal:
+    type: string
+    description: The goal of the character
+  obstacle:
+    type: string
+    description: The obstacle the character faces
+content: "In the year {{year}}, {{character}} set out to {{goal}}, but faced the challenge of {{obstacle}}."
 ```
 
 ## Advanced Configuration
