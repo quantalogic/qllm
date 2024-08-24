@@ -10,7 +10,7 @@ export class OutputFormatter {
    * @param message The success message to display.
    */
   static success(message: string): void {
-    console.log(kleur.green('✔ ') + message);
+    console.error(kleur.green('✔ ') + message);
   }
 
   /**
@@ -34,7 +34,7 @@ export class OutputFormatter {
    * @param message The info message to display.
    */
   static info(message: string): void {
-    console.info(kleur.blue('ℹ ') + message);
+    console.error(kleur.blue('ℹ ') + message);
   }
 
   /**
