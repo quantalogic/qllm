@@ -12,3 +12,4 @@ package-lock.json
 dist
 *.tsbuildinfo
 coverage
+.aider*

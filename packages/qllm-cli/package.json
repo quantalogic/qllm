@@ -51,6 +51,8 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "commander": "^12.1.0",
+    "zod": "^3.23.8",
+    "qllm-lib": "file:../qllm-lib"
   }
 }
