@@ -133,11 +133,9 @@ async function streamResponse(
         process.stdout.write(chunk.text);
         chunks.push(chunk.text);
       }
-      // Update spinner with chunk count
+      // Update output without overwriting previous text
       if (chunk.text) {
-        process.stdout.write(
-          `\rReceiving response... (${chunkCount} chunks received)`
-        );
+        process.stdout.write(`\rReceiving response... (${chunkCount} chunks received)`);
       }
     }
 
