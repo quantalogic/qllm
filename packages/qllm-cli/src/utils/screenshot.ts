@@ -4,14 +4,28 @@ import * as os from 'os';
 import screenshot from 'screenshot-desktop';
 import { v4 as uuidv4 } from 'uuid';
 
-export class ScreenshotCapture {
-  private tempDir: string;
-  private maxRetries: number;
-  private retryDelay: number;
+// Define our own ScreenshotOptions interface
+interface ScreenshotOptions {
+  filename?: string;
+  screen?: number;
+}
 
-  constructor(maxRetries: number = 3, retryDelay: number = 1000) {
-    this.maxRetries = maxRetries;
-    this.retryDelay = retryDelay;
+export interface ScreenshotCaptureOptions {
+  maxRetries?: number;
+  retryDelay?: number;
+  defaultScreen?: number;
+}
+
+export class ScreenshotCapture {
+  private readonly tempDir: string;
+  private readonly maxRetries: number;
+  private readonly retryDelay: number;
+  private readonly defaultScreen?: number;
+
+  constructor(options: ScreenshotCaptureOptions = {}) {
+    this.maxRetries = options.maxRetries ?? 3;
+    this.retryDelay = options.retryDelay ?? 1000;
+    this.defaultScreen = options.defaultScreen;
     this.tempDir = this.createTempDir();
   }
 
@@ -30,15 +44,13 @@ export class ScreenshotCapture {
     }
   }
 
-  async captureAndGetBase64(): Promise<string> {
-    let attempts = 0;
-    while (attempts < this.maxRetries) {
+  async captureAndGetBase64(screen?: number): Promise<string> {
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
-        return await this.capture();
+        return await this.capture(screen ? screen : undefined);
       } catch (error) {
-        console.warn(`Screenshot capture attempt ${attempts + 1} failed:`, error);
-        attempts++;
-        if (attempts >= this.maxRetries) {
+        console.warn(`Screenshot capture attempt ${attempt} failed:`, error);
+        if (attempt === this.maxRetries) {
           throw new Error(`Failed to capture screenshot after ${this.maxRetries} attempts`);
         }
         await this.delay(this.retryDelay);
@@ -47,15 +59,21 @@ export class ScreenshotCapture {
     throw new Error('Unexpected error in captureAndGetBase64');
   }
 
-  private async capture(): Promise<string> {
+  private async capture(screen?: number): Promise<string> {
     const filename = `screenshot-${Date.now()}.png`;
     const filePath = path.join(this.tempDir, filename);
 
     try {
-      await screenshot({ filename: filePath });
+      const options: ScreenshotOptions = { filename: filePath };
+      if (screen !== undefined) {
+        options.screen = screen;
+      } else if (this.defaultScreen !== undefined) {
+        options.screen = this.defaultScreen;
+      }
+
+      await screenshot(options);
       const imageBuffer = await fs.readFile(filePath);
-      const base64Image = imageBuffer.toString('base64');
-      return `data:image/png;base64,${base64Image}`;
+      return `data:image/png;base64,${imageBuffer.toString('base64')}`;
     } finally {
       await this.cleanup(filePath);
     }
@@ -83,5 +101,9 @@ export class ScreenshotCapture {
     } catch (error) {
       console.error('Error cleaning up temporary directory:', error);
     }
+  }
+
+  static async getScreensInfo() {
+    return screenshot.listDisplays();
   }
 }

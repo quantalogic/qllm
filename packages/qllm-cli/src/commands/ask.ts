@@ -5,7 +5,13 @@ import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
 import kleur from "kleur";
 import { AskOptions } from "../types/ask";
-import  Clipboard  from  "../utils/clipboard";
+import Clipboard from "../utils/clipboard";
+import { ScreenshotCapture } from "../utils/screenshot";
+import {
+  readImageFileAndConvertToBase64,
+  isImageFile,
+} from "../utils/image-utils";
+import { output } from "../utils/output";
 
 export const askCommand = new Command("ask")
   .description("Ask a question to an LLM provider")
@@ -32,11 +38,16 @@ export const askCommand = new Command("ask")
   )
   .option(
     "-i, --image <path>",
-    "Path to image file or URL (can be used multiple times)",
+    "Path to image file, or URL (can be used multiple times)",
     (value, previous) => previous.concat([value]),
     [] as string[]
   )
-  .option("--use-clipboard", "Use image from clipboard", "false")
+  .option("--use-clipboard", "Use image from clipboard", false)
+  .option(
+    "--screenshot <display>",
+    "Capture screenshot from specified display number",
+    (value) => parseInt(value, 10)
+  )
   .action(async (question: string, options: AskOptions) => {
     const spinner = createSpinner("Processing...").start();
     const startTime = Date.now();
@@ -46,7 +57,6 @@ export const askCommand = new Command("ask")
       const provider = await getLLMProvider(options.provider);
 
       spinner.update({ text: "Preparing input..." });
-
       const imageInputs = await prepareImageInputs(options);
 
       spinner.update({ text: "Sending request..." });
@@ -64,47 +74,82 @@ export const askCommand = new Command("ask")
 
       if (options.output) {
         await saveResponseToFile(response, options.output);
-        console.error(kleur.green(`Response saved to ${options.output}`));
+        output.success(`Response saved to ${options.output}`);
       } else {
-        console.error(kleur.cyan("Response:"));
+        output.info("Response:");
         console.log(response);
       }
     } catch (error) {
       spinner.error({
         text: kleur.red("An error occurred while processing your request."),
       });
-      console.error(
-        kleur.red("Error:"),
-        error instanceof Error ? error.message : String(error)
-      );
+      output.error(error instanceof Error ? error.message : String(error));
       process.exit(1);
     }
   });
 
 async function prepareImageInputs(options: AskOptions): Promise<string[]> {
-  const images: string[] = [...(options.image ?? [])];
-  if (options.useClipboard) {
-    console.log("Checking clipboard for images...");
-    const clipboardImage = await Clipboard.getImageFromClipboard();
-    
-    if (clipboardImage) {
-      images.push(clipboardImage);
-      console.error(
-        kleur.green('🎆 Image found in clipboard, size ') +
-        kleur.yellow(formatBytes(clipboardImage.length)) +
-        kleur.green(' bytes')
+  const images: string[] = [];
+
+  if (options.screenshot !== undefined) {
+    try {
+      const screenshotCapture = new ScreenshotCapture();
+      await screenshotCapture.initialize();
+      const screenshotBase64 = await screenshotCapture.captureAndGetBase64(
+        options.screenshot
       );
-    } else {
-      console.error(kleur.red("No image found in clipboard."));
+      images.push(screenshotBase64);
+      output.success(
+        `Screenshot captured successfully from display ${options.screenshot}`
+      );
+    } catch (error) {
+      output.error(
+        `Failed to capture screenshot from display ${options.screenshot}: ${error}`
+      );
     }
   }
+
+  for (const item of options.image) {
+    try {
+      if (await isImageFile(item)) {
+        const base64Image = await readImageFileAndConvertToBase64(item);
+        images.push(base64Image);
+        output.success(`Image loaded successfully: ${item}`);
+      } else {
+        // Assume it's a URL
+        images.push(item);
+        output.success(`Image URL added: ${item}`);
+      }
+    } catch (error) {
+      output.error(`Failed to process image input ${item}: ${error}`);
+    }
+  }
+
+  if (options.useClipboard) {
+    try {
+      output.info("Checking clipboard for images...");
+      const clipboardImage = await Clipboard.getImageFromClipboard();
+      if (clipboardImage) {
+        images.push(clipboardImage);
+        output.success(
+          `Image found in clipboard, size ${formatBytes(
+            clipboardImage.length
+          )} bytes`
+        );
+      } else {
+        output.warn("No image found in clipboard.");
+      }
+    } catch (error) {
+      output.error(`Failed to get image from clipboard: ${error}`);
+    }
+  }
+
   return images;
 }
 
-// Function to format bytes into a more readable format
 function formatBytes(bytes: number): string {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  if (bytes === 0) return '0 Byte';
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  if (bytes === 0) return "0 Byte";
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
@@ -151,12 +196,14 @@ function createMessageContent(
   images: string[]
 ): ChatMessage["content"] {
   const content: ChatMessage["content"] = [{ type: "text", text: question }];
+
   for (const image of images) {
     content.push({
       type: "image_url",
-      url: image, // Url can be a local file path or a URL, or a base64 string
+      url: image, // Url can be a local file path, URL, or base64 string
     });
   }
+
   return content;
 }
 
@@ -165,6 +212,7 @@ async function streamResponse(
   params: any
 ): Promise<string> {
   const chunks: string[] = [];
+
   try {
     const stream = await provider.streamChatCompletion(params);
     for await (const chunk of stream) {
@@ -184,7 +232,11 @@ async function saveResponseToFile(
   response: string,
   outputPath: string
 ): Promise<void> {
-  const directory = path.dirname(outputPath);
-  await fs.mkdir(directory, { recursive: true });
-  await fs.writeFile(outputPath, response, "utf-8");
+  try {
+    const directory = path.dirname(outputPath);
+    await fs.mkdir(directory, { recursive: true });
+    await fs.writeFile(outputPath, response, "utf-8");
+  } catch (error) {
+    throw new Error(`Failed to save response to file: ${error}`);
+  }
 }
