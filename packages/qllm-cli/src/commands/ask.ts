@@ -23,12 +23,14 @@ export const askCommand = new Command("ask")
   .option(
     "-t, --max-tokens <number>",
     "Maximum number of tokens to generate",
-    "1024"
+    (value) => parseInt(value, 10), // Convert to integer
+    1024 // Default value
   )
   .option(
     "--temperature <number>",
     "Temperature for response generation",
-    "0.7"
+    (value) => parseFloat(value), // Convert to float
+    0.7 // Default value
   )
   .option("-s, --stream", "Stream the response", false)
   .option("-o, --output <file>", "Output file for the response")
