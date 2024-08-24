@@ -23,7 +23,7 @@ export const createConversationManager = (): ConversationManager => {
 }
 
 export class ConversationManagerImpl implements ConversationManager {
-  private storageProvider: StorageProvider;
+  public storageProvider: StorageProvider;
 
   constructor(storageProvider?: StorageProvider) {
     this.storageProvider = storageProvider || new InMemoryStorageProvider();

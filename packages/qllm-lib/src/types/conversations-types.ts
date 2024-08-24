@@ -51,7 +51,7 @@ export class InMemoryStorageProvider implements StorageProvider {
   }
 
   async list(): Promise<ConversationMetadata[]> {
-    return Array.from(this.conversations.values()).map(conv => conv.metadata);
+    return Array.from(this.conversations.values()).map((conv) => conv.metadata);
   }
 }
 
@@ -61,11 +61,19 @@ export interface ConversationManager {
   updateConversation(id: ConversationId, updates: Partial<Conversation>): Promise<Conversation>;
   deleteConversation(id: ConversationId): Promise<void>;
   listConversations(): Promise<ConversationMetadata[]>;
-  addMessage(id: ConversationId, message: Omit<ConversationMessage, 'id' | 'timestamp'>): Promise<Conversation>;
+  addMessage(
+    id: ConversationId,
+    message: Omit<ConversationMessage, 'id' | 'timestamp'>,
+  ): Promise<Conversation>;
   getHistory(id: ConversationId): Promise<ConversationMessage[]>;
   setMetadata(id: ConversationId, metadata: Partial<ConversationMetadata>): Promise<Conversation>;
   addProvider(id: ConversationId, providerId: ProviderId): Promise<Conversation>;
   removeProvider(id: ConversationId, providerId: ProviderId): Promise<Conversation>;
+  clearHistory(id: ConversationId): Promise<Conversation>;
+  searchConversations(query: string): Promise<ConversationMetadata[]>;
+  exportConversation(id: ConversationId): Promise<string>;
+  importConversation(conversationData: string): Promise<Conversation>;
+  storageProvider: StorageProvider;
 }
 
 export interface CreateConversationOptions {

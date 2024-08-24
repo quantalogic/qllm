@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { askCommand } from './commands/ask';
 import { listCommand } from './commands/list-command';
+import { chatCommand } from './commands/chat-command';
 
 const VERSION = '1.7.0';
 
@@ -21,6 +22,9 @@ export async function main() {
 
     // Add the list command
     program.addCommand(listCommand);
+
+    // Add chat command
+    program.addCommand(chatCommand);
 
     // Add other commands here as needed
     // For example:
