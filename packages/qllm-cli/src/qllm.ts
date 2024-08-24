@@ -2,8 +2,9 @@
 
 import { Command } from 'commander';
 import { askCommand } from './commands/ask';
+import { listCommand } from './commands/list-command';
 
-const VERSION = '1.6.0';
+const VERSION = '1.7.0';
 
 export async function main() {
   try {
@@ -18,9 +19,11 @@ export async function main() {
     // Add the ask command
     program.addCommand(askCommand);
 
+    // Add the list command
+    program.addCommand(listCommand);
+
     // Add other commands here as needed
     // For example:
-    // program.addCommand(listModelsCommand);
     // program.addCommand(generateEmbeddingCommand);
 
     await program.parseAsync(process.argv);

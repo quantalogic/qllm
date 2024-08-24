@@ -55,6 +55,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "cli-table3": "^0.6.5",
     "clipboardy": "^2.3.0",
     "commander": "^12.1.0",
     "copy-paste": "^1.5.3",
