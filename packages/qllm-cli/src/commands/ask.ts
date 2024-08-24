@@ -58,7 +58,7 @@ export const askCommand = new Command("ask")
 
       if (options.output) {
         await saveResponseToFile(response, options.output);
-        console.log(kleur.green(`Response saved to ${options.output}`));
+        console.error(kleur.green(`Response saved to ${options.output}`));
       } else {
         console.log(kleur.cyan("Response:"));
         console.log(response);
