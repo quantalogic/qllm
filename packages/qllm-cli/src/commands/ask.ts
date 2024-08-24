@@ -87,12 +87,27 @@ async function prepareImageInputs(options: AskOptions): Promise<string[]> {
     console.log("Checking clipboard for images...");
     const x = Clipboard.getTextFromClipboard();
     const clipboardImage = await Clipboard.getImageFromClipboard();
-    console.log("Clipboard image:", clipboardImage?.substring(0, 50));
+    
     if (clipboardImage) {
       images.push(clipboardImage);
+      console.error(
+        kleur.green('🎆 Image found in clipboard, size ') +
+        kleur.yellow(formatBytes(clipboardImage?.length)) +
+        kleur.green(' bytes')
+      );
+    } else {
+      console.error(kleur.red("No image found in clipboard."));
     }
   }
   return images;
+}
+
+// Function to format bytes into a more readable format
+function formatBytes(bytes: number): string {
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  if (bytes === 0) return '0 Byte';
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
 
 async function askQuestion(
