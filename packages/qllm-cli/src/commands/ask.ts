@@ -5,7 +5,7 @@ import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
 import kleur from "kleur";
 import { AskOptions } from "../types/ask";
-import Clipboard from "../utils/clipboard";
+import  Clipboard  from  "../utils/clipboard";
 
 export const askCommand = new Command("ask")
   .description("Ask a question to an LLM provider")
@@ -85,14 +85,13 @@ async function prepareImageInputs(options: AskOptions): Promise<string[]> {
   const images: string[] = [...(options.image ?? [])];
   if (options.useClipboard) {
     console.log("Checking clipboard for images...");
-    const x = Clipboard.getTextFromClipboard();
     const clipboardImage = await Clipboard.getImageFromClipboard();
     
     if (clipboardImage) {
       images.push(clipboardImage);
       console.error(
         kleur.green('🎆 Image found in clipboard, size ') +
-        kleur.yellow(formatBytes(clipboardImage?.length)) +
+        kleur.yellow(formatBytes(clipboardImage.length)) +
         kleur.green(' bytes')
       );
     } else {

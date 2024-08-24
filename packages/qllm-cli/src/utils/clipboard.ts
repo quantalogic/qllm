@@ -1,5 +1,6 @@
 // src/utils/clipboard.ts
 
+import clipboardy from 'clipboardy';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -12,58 +13,46 @@ class Clipboard {
     return Clipboard.base64Regex.test(str);
   }
 
-  private static readClipboard(): string {
+  private static async readClipboardImage(): Promise<string | null> {
+    const tempDir = os.tmpdir();
+    const tempFilePath = path.join(tempDir, 'clipboard_image.png');
+
     try {
       if (process.platform === 'darwin') {
-        const tempDir = os.tmpdir();
-        const tempFilePath = path.join(tempDir, 'clipboard_image.png');
-        
-        try {
-          // Attempt to save clipboard content as image
-          execSync(`pngpaste "${tempFilePath}"`);
-          const imageData = fs.readFileSync(tempFilePath);
-          fs.unlinkSync(tempFilePath); // Clean up temp file
-          return `data:image/png;base64,${imageData.toString('base64')}`;
-        } catch (imageError) {
-          // If not an image, read as text
-          return execSync('pbpaste').toString().trim();
-        }
+        // macOS
+        execSync(`pngpaste "${tempFilePath}"`, { stdio: 'ignore' });
       } else if (process.platform === 'win32') {
-        return execSync('powershell.exe -command "Get-Clipboard -Raw"').toString().trim();
+        // Windows
+        execSync(`powershell -command "Add-Type -AssemblyName System.Windows.Forms;$clip=[Windows.Forms.Clipboard]::GetImage();if($clip -ne $null){$clip.Save('${tempFilePath}')}"`);
       } else {
-        // For Linux, we'll need to handle images differently
-        // This example only handles text for Linux
-        return execSync('xclip -selection clipboard -o').toString().trim();
+        // Linux
+        execSync(`xclip -selection clipboard -t image/png -o > "${tempFilePath}"`, { stdio: 'ignore' });
+      }
+
+      if (fs.existsSync(tempFilePath) && fs.statSync(tempFilePath).size > 0) {
+        const imageData = await fs.promises.readFile(tempFilePath);
+        await fs.promises.unlink(tempFilePath); // Clean up temp file
+        return `data:image/png;base64,${imageData.toString('base64')}`;
       }
     } catch (error) {
-      console.error('Error reading from clipboard:', error);
-      throw new Error('Failed to read from clipboard');
+      console.error('Error reading image from clipboard:', error);
     }
+
+    return null;
   }
 
-  static isImageInClipboard(): boolean {
-    try {
-      const clipboardContent = Clipboard.readClipboard();
-      return Clipboard.isBase64Image(clipboardContent);
-    } catch (error) {
-      console.error('Error checking for image in clipboard:', error);
-      return false;
-    }
+  static async isImageInClipboard(): Promise<boolean> {
+    const imageData = await Clipboard.readClipboardImage();
+    return imageData !== null;
   }
 
-  static getImageFromClipboard(): string | null {
-    try {
-      const clipboardContent = Clipboard.readClipboard();
-      return Clipboard.isBase64Image(clipboardContent) ? clipboardContent : null;
-    } catch (error) {
-      console.error('Error getting image from clipboard:', error);
-      return null;
-    }
+  static async getImageFromClipboard(): Promise<string | null> {
+    return await Clipboard.readClipboardImage();
   }
 
-  static isTextInClipboard(): boolean {
+  static async isTextInClipboard(): Promise<boolean> {
     try {
-      const clipboardContent = Clipboard.readClipboard();
+      const clipboardContent = clipboardy.readSync();
       return clipboardContent.length > 0 && !Clipboard.isBase64Image(clipboardContent);
     } catch (error) {
       console.error('Error checking for text in clipboard:', error);
@@ -71,9 +60,9 @@ class Clipboard {
     }
   }
 
-  static getTextFromClipboard(): string | null {
+  static async getTextFromClipboard(): Promise<string | null> {
     try {
-      const clipboardContent = Clipboard.readClipboard();
+      const clipboardContent = clipboardy.readSync();
       return Clipboard.isBase64Image(clipboardContent) ? null : clipboardContent;
     } catch (error) {
       console.error('Error getting text from clipboard:', error);
@@ -81,15 +70,9 @@ class Clipboard {
     }
   }
 
-  static writeToClipboard(content: string): boolean {
+  static async writeToClipboard(content: string): Promise<boolean> {
     try {
-      if (process.platform === 'darwin') {
-        execSync(`echo "${content}" | pbcopy`);
-      } else if (process.platform === 'win32') {
-        execSync(`echo ${content} | clip`);
-      } else {
-        execSync(`echo "${content}" | xclip -selection clipboard`);
-      }
+      clipboardy.writeSync(content);
       return true;
     } catch (error) {
       console.error('Error writing to clipboard:', error);
