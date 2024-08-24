@@ -4,11 +4,9 @@
 - [Introduction](#introduction)
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Initializing a Provider](#initializing-a-provider)
-  - [Listing Models](#listing-models)
-  - [Generating Chat Completions](#generating-chat-completions)
-  - [Streaming Chat Completions](#streaming-chat-completions)
-  - [Generating Embeddings](#generating-embeddings)
+  - [Basic Usage](#basic-usage)
+  - [Intermediate Usage](#intermediate-usage)
+  - [Advanced Usage](#advanced-usage)
 - [Templates](#templates)
   - [Example Template](#example-template)
   - [Inferred Variables](#inferred-variables)
@@ -31,7 +29,9 @@ npm install qllm-lib
 
 ## Usage
 
-### Initializing a Provider
+### Basic Usage
+
+#### Initializing a Provider
 
 To start using the API, first import the necessary functions and initialize a provider:
 
@@ -43,7 +43,7 @@ const provider: LLMProvider = getProvider('openai');
 
 Make sure to set the `OPENAI_API_KEY` environment variable before initializing the OpenAI provider.
 
-### Listing Models
+#### Listing Models
 
 To get a list of available models:
 
@@ -52,7 +52,9 @@ const models = await provider.listModels();
 console.log(models);
 ```
 
-### Generating Chat Completions
+### Intermediate Usage
+
+#### Generating Chat Completions
 
 To generate a chat completion:
 
@@ -76,7 +78,7 @@ const result = await provider.generateChatCompletion({
 console.log(result.text);
 ```
 
-### Streaming Chat Completions
+#### Streaming Chat Completions
 
 To stream a chat completion:
 
@@ -102,9 +104,11 @@ for await (const chunk of stream) {
 }
 ```
 
-### Generating Embeddings
+### Advanced Usage
 
-To generate embeddings for text or images:
+#### Generating Embeddings
+
+To generate embeddings for text:
 
 ```typescript
 const embedding = await provider.generateEmbedding({
@@ -116,7 +120,7 @@ const embedding = await provider.generateEmbedding({
 console.log(embedding);
 ```
 
-For images:
+To generate embeddings for images:
 
 ```typescript
 const imageEmbedding = await provider.generateEmbedding({
@@ -125,6 +129,46 @@ const imageEmbedding = await provider.generateEmbedding({
 });
 
 console.log(imageEmbedding);
+```
+
+#### Using Templates
+
+Templates in qllm-lib allow you to define reusable structures for generating complex text outputs. Here's an example of how to use a template:
+
+```typescript
+import { Template } from 'qllm-lib';
+
+const template = await Template.fromPath('./prompts/create_story.yaml');
+
+const result = await template.execute({
+  subject: 'A day in Paris',
+  genre: 'Adventure',
+  role: 'Narrator',
+  lang: 'English',
+  max_length: 200,
+});
+
+console.log(result.story);
+```
+
+#### Combining Multiple Features
+
+You can combine multiple features, such as generating embeddings and using templates together:
+
+```typescript
+const embedding = await provider.generateEmbedding({
+  content: 'What is the weather like today?',
+  type: 'text',
+});
+
+const template = await Template.fromPath('./prompts/weather_report.yaml');
+
+const report = await template.execute({
+  location: 'Paris',
+  embedding: embedding,
+});
+
+console.log(report);
 ```
 
 ## Templates
