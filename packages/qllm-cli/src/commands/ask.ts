@@ -108,7 +108,7 @@ async function askQuestion(
 
   // Stream or generate response
   if (options.stream) {
-    spinner.stop();
+    spinner.stop(); // Stop the spinner before streaming
     spinner.clear();
     return streamResponse(provider, params);
   } else {
