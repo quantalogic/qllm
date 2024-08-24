@@ -45,6 +45,178 @@ Example execution:
 Hello! How can I assist you today?
 ```
 
+## Embedding Generation
+
+```typescript
+import { getEmbeddingProvider } from "qllm-lib";
+
+async function embeddingExample() {
+  const provider = await getEmbeddingProvider("openai");
+
+  const result = await provider.generateEmbedding({
+    model: "text-embedding-3-small",
+    content: "Hello, world!",
+  });
+
+  console.log(result.embedding.slice(0, 5)); // Show first 5 dimensions
+}
+
+embeddingExample();
+```
+
+Example execution:
+
+```
+[
+  -0.03516635298728943,
+  -0.022325780987739563,
+  -0.020604668930172920,
+  0.018447319418191910,
+  -0.00019173165992647409
+]
+```
+
+## Chat Completion
+
+```typescript
+import { getLLMProvider, ChatMessage } from "qllm-lib";
+
+async function chatExample() {
+  const provider = await getLLMProvider("anthropic");
+
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content: { type: "text", text: "You are a helpful assistant." },
+    },
+    {
+      role: "user",
+      content: { type: "text", text: "What is the capital of France?" },
+    },
+  ];
+
+  const response = await provider.generateChatCompletion({
+    messages,
+    options: { model: "claude-3-opus-20240229", maxTokens: 100 },
+  });
+
+  console.log(response.text);
+}
+
+chatExample();
+```
+
+Example execution:
+
+```
+The capital of France is Paris. Paris is not only the political capital but also the cultural and economic center of France. It's known for its iconic landmarks such as the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral.
+```
+
+## Streaming Chat Completion
+
+```typescript
+import { getLLMProvider, ChatMessage } from "qllm-lib";
+
+async function streamingExample() {
+  const provider = await getLLMProvider("groq");
+
+  const messages: ChatMessage[] = [
+    {
+      role: "user",
+      content: { type: "text", text: "Write a short story about a robot." },
+    },
+  ];
+
+  const stream = provider.streamChatCompletion({
+    messages,
+    options: { model: "mixtral-8x7b-32768", maxTokens: 200 },
+  });
+
+  for await (const chunk of stream) {
+    process.stdout.write(chunk.text || "");
+  }
+}
+
+streamingExample();
+```
+
+Example execution:
+
+```
+In a world of steel and circuits, a small robot named Pixel came to life. Its creators had given it one simple task: to water the plants in the laboratory. Day after day, Pixel diligently tended to the greenery, its sensors carefully measuring soil moisture and sunlight levels.
+
+One day, as Pixel was making its rounds, it noticed a wilting flower in the corner. This wasn't part of its usual routine, but something in its programming urged it to investigate. As it approached, its optical sensors detected a small crack in the pot, causing water to leak out.
+
+Pixel paused, its processors whirring as it analyzed the situation. It wasn't programmed for repairs, but it was programmed to care for plants. In a moment of what could only be described as robotic creativity, Pixel used a small amount of sealant from its maintenance kit to patch the crack.
+
+As the days passed, Pixel watched the once-wilting flower flourish. Its databanks registered a new sensation - something akin to pride. From that day forward, Pixel not only watered the plants but also looked for ways to help them thrive, proving that even in a world of metal and code, there was room for growth and adaptation.
+```
+
+## Function Calling
+
+```typescript
+import {
+  getLLMProvider,
+  ChatMessage,
+  createFunctionToolFromZod,
+} from "qllm-lib";
+import { z } from "zod";
+
+async function functionCallingExample() {
+  const provider = await getLLMProvider("openai");
+
+  const weatherTool = createFunctionToolFromZod({
+    name: "get_current_weather",
+    description: "Get the current weather in a given location",
+    schema: z.object({
+      location: z
+        .string()
+        .describe("The city and state, e.g. San Francisco, CA"),
+      unit: z
+        .enum(["celsius", "fahrenheit"])
+        .describe("The unit of temperature to use"),
+    }),
+    strict: true,
+  });
+
+  const messages: ChatMessage[] = [
+    {
+      role: "user",
+      content: { type: "text", text: "What's the weather like in Paris?" },
+    },
+  ];
+
+  const response = await provider.generateChatCompletion({
+    messages,
+    options: { model: "gpt-4o-mini", maxTokens: 150 },
+    tools: [weatherTool],
+    toolChoice: "auto",
+  });
+
+  console.log("Response:", response.text);
+  console.log("Tool Calls:", JSON.stringify(response.toolCalls, null, 2));
+}
+
+functionCallingExample();
+```
+
+Example execution:
+
+```
+Response: To get the current weather in Paris, I'll need to use the weather tool. Let me do that for you.
+
+Tool Calls: [
+  {
+    "id": "call_abc123",
+    "type": "function",
+    "function": {
+      "name": "get_current_weather",
+      "arguments": "{\"location\":\"Paris, France\",\"unit\":\"celsius\"}"
+    }
+  }
+]
+```
+
 ## Image Description Example
 
 ### Chat Completion (Non-Streaming)
@@ -122,190 +294,7 @@ Example execution:
 Image description: This image appears to be a scenic view of a city, likely Paris. It shows a cityscape with iconic Parisian architecture, including buildings with ornate facades, domed roofs, and tall spires. In the foreground, there are trees lining the streets, and the image has a warm, golden tone, suggesting it was taken during a sunny day. The overall composition and architectural details suggest this is a picturesque view of the French capital.
 ```
 
-## Supported Providers
-
-QLLM supports the following LLM providers:
-
-- OpenAI
-- Anthropic (including AWS Bedrock)
-- Groq
-- Ollama
-
-## Usage Examples
-
-### Chat Completion
-
-```typescript
-import { getLLMProvider, ChatMessage } from "qllm-lib";
-
-async function chatExample() {
-  const provider = await getLLMProvider("anthropic");
-
-  const messages: ChatMessage[] = [
-    {
-      role: "system",
-      content: { type: "text", text: "You are a helpful assistant." },
-    },
-    {
-      role: "user",
-      content: { type: "text", text: "What is the capital of France?" },
-    },
-  ];
-
-  const response = await provider.generateChatCompletion({
-    messages,
-    options: { model: "claude-3-opus-20240229", maxTokens: 100 },
-  });
-
-  console.log(response.text);
-}
-
-chatExample();
-```
-
-Example execution:
-
-```
-The capital of France is Paris. Paris is not only the political capital but also the cultural and economic center of France. It's known for its iconic landmarks such as the Eiffel Tower, the Louvre Museum, and Notre-Dame Cathedral.
-```
-
-### Streaming Chat Completion
-
-```typescript
-import { getLLMProvider, ChatMessage } from "qllm-lib";
-
-async function streamingExample() {
-  const provider = await getLLMProvider("groq");
-
-  const messages: ChatMessage[] = [
-    {
-      role: "user",
-      content: { type: "text", text: "Write a short story about a robot." },
-    },
-  ];
-
-  const stream = provider.streamChatCompletion({
-    messages,
-    options: { model: "mixtral-8x7b-32768", maxTokens: 200 },
-  });
-
-  for await (const chunk of stream) {
-    process.stdout.write(chunk.text || "");
-  }
-}
-
-streamingExample();
-```
-
-Example execution:
-
-```
-In a world of steel and circuits, a small robot named Pixel came to life. Its creators had given it one simple task: to water the plants in the laboratory. Day after day, Pixel diligently tended to the greenery, its sensors carefully measuring soil moisture and sunlight levels.
-
-One day, as Pixel was making its rounds, it noticed a wilting flower in the corner. This wasn't part of its usual routine, but something in its programming urged it to investigate. As it approached, its optical sensors detected a small crack in the pot, causing water to leak out.
-
-Pixel paused, its processors whirring as it analyzed the situation. It wasn't programmed for repairs, but it was programmed to care for plants. In a moment of what could only be described as robotic creativity, Pixel used a small amount of sealant from its maintenance kit to patch the crack.
-
-As the days passed, Pixel watched the once-wilting flower flourish. Its databanks registered a new sensation - something akin to pride. From that day forward, Pixel not only watered the plants but also looked for ways to help them thrive, proving that even in a world of metal and code, there was room for growth and adaptation.
-```
-
-### Embedding Generation
-
-```typescript
-import { getEmbeddingProvider } from "qllm-lib";
-
-async function embeddingExample() {
-  const provider = await getEmbeddingProvider("openai");
-
-  const result = await provider.generateEmbedding({
-    model: "text-embedding-3-small",
-    content: "Hello, world!",
-  });
-
-  console.log(result.embedding.slice(0, 5)); // Show first 5 dimensions
-}
-
-embeddingExample();
-```
-
-Example execution:
-
-```
-[
-  -0.03516635298728943,
-  -0.022325780987739563,
-  -0.020604668930172920,
-  0.018447319418191910,
-  -0.00019173165992647409
-]
-```
-
-### Function Calling
-
-```typescript
-import {
-  getLLMProvider,
-  ChatMessage,
-  createFunctionToolFromZod,
-} from "qllm-lib";
-import { z } from "zod";
-
-async function functionCallingExample() {
-  const provider = await getLLMProvider("openai");
-
-  const weatherTool = createFunctionToolFromZod({
-    name: "get_current_weather",
-    description: "Get the current weather in a given location",
-    schema: z.object({
-      location: z
-        .string()
-        .describe("The city and state, e.g. San Francisco, CA"),
-      unit: z
-        .enum(["celsius", "fahrenheit"])
-        .describe("The unit of temperature to use"),
-    }),
-    strict: true,
-  });
-
-  const messages: ChatMessage[] = [
-    {
-      role: "user",
-      content: { type: "text", text: "What's the weather like in Paris?" },
-    },
-  ];
-
-  const response = await provider.generateChatCompletion({
-    messages,
-    options: { model: "gpt-4o-mini", maxTokens: 150 },
-    tools: [weatherTool],
-    toolChoice: "auto",
-  });
-
-  console.log("Response:", response.text);
-  console.log("Tool Calls:", JSON.stringify(response.toolCalls, null, 2));
-}
-
-functionCallingExample();
-```
-
-Example execution:
-
-```
-Response: To get the current weather in Paris, I'll need to use the weather tool. Let me do that for you.
-
-Tool Calls: [
-  {
-    "id": "call_abc123",
-    "type": "function",
-    "function": {
-      "name": "get_current_weather",
-      "arguments": "{\"location\":\"Paris, France\",\"unit\":\"celsius\"}"
-    }
-  }
-]
-```
-
-### Using Templates
+## Using Templates
 
 ```typescript
 import { TemplateManager, TemplateExecutor, getLLMProvider } from "qllm-lib";
