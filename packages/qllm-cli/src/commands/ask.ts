@@ -13,6 +13,7 @@ interface AskOptions {
   stream: boolean;
   output: string | undefined;
   systemMessage: string | undefined;
+  image: string[];
 }
 
 export const askCommand = new Command("ask")
@@ -23,20 +24,26 @@ export const askCommand = new Command("ask")
   .option(
     "-t, --max-tokens <number>",
     "Maximum number of tokens to generate",
-    (value) => parseInt(value, 10), // Convert to integer
-    1024 // Default value
+    (value) => parseInt(value, 10),
+    1024
   )
   .option(
     "--temperature <number>",
     "Temperature for response generation",
-    (value) => parseFloat(value), // Convert to float
-    0.7 // Default value
+    (value) => parseFloat(value),
+    0.7
   )
   .option("-s, --stream", "Stream the response", false)
   .option("-o, --output <file>", "Output file for the response")
   .option(
     "--system-message <message>",
     "System message to prepend to the conversation"
+  )
+  .option(
+    "-i, --image <path>",
+    "Path to image file or URL (can be used multiple times)",
+    (value, previous) => previous.concat([value]),
+    [] as string[]
   )
   .action(async (question: string, options: AskOptions) => {
     const spinner = createSpinner("Processing...").start();
@@ -51,7 +58,7 @@ export const askCommand = new Command("ask")
 
       const duration = Date.now() - startTime;
       if (duration < 1000) {
-        await new Promise((resolve) => setTimeout(resolve, 1000 - duration)); // Ensure spinner is visible for at least 1 second
+        await new Promise((resolve) => setTimeout(resolve, 1000 - duration));
       }
 
       spinner.success({ text: kleur.green("Response received successfully!") });
@@ -81,7 +88,6 @@ async function askQuestion(
   provider: LLMProvider,
   options: AskOptions
 ): Promise<string> {
-  // Validate options
   if (options.temperature < 0 || options.temperature > 1) {
     throw new Error("Temperature must be between 0 and 1.");
   }
@@ -89,7 +95,7 @@ async function askQuestion(
   const messages: ChatMessage[] = [
     {
       role: "user",
-      content: { type: "text", text: question },
+      content: createMessageContent(question, options.image),
     },
   ];
 
@@ -103,15 +109,30 @@ async function askQuestion(
     },
   };
 
-  // Stream or generate response
   if (options.stream) {
-    spinner.stop(); // Stop the spinner before streaming
+    spinner.stop();
     spinner.clear();
-    return streamResponse(provider, params); // Pass only provider and params to streamResponse
+    return streamResponse(provider, params);
   } else {
     const response = await provider.generateChatCompletion(params);
     return response.text || "No response generated.";
   }
+}
+
+function createMessageContent(
+  question: string,
+  images: string[]
+): ChatMessage["content"] {
+  const content: ChatMessage["content"] = [{ type: "text", text: question }];
+
+  for (const image of images) {
+    content.push({
+      type: "image_url",
+      url: image,
+    });
+  }
+
+  return content;
 }
 
 async function streamResponse(
@@ -122,10 +143,8 @@ async function streamResponse(
 
   try {
     const stream = await provider.streamChatCompletion(params);
-    let chunkCount = 0;
 
     for await (const chunk of stream) {
-      chunkCount++;
       if (chunk.text) {
         process.stdout.write(chunk.text);
         chunks.push(chunk.text);
