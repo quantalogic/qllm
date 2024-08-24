@@ -171,6 +171,23 @@ const report = await template.execute({
 console.log(report);
 ```
 
+You can also generate an image embedding and use it in a template:
+
+```typescript
+const imageEmbedding = await provider.generateEmbedding({
+  content: '/path/to/image.jpg',
+  type: 'image',
+});
+
+const imageTemplate = await Template.fromPath('./prompts/image_description.yaml');
+
+const imageDescription = await imageTemplate.execute({
+  imageEmbedding: imageEmbedding,
+});
+
+console.log(imageDescription);
+```
+
 ## Templates
 
 Templates in qllm-lib allow you to define reusable structures for generating complex text outputs. They support variable inputs, file inclusions, and output variable extraction.
