@@ -110,7 +110,7 @@ async function askQuestion(
   if (options.stream) {
     spinner.stop(); // Stop the spinner before streaming
     spinner.clear();
-    return streamResponse(provider, params);
+    return streamResponse(spinner, provider, params); // Pass spinner to streamResponse
   } else {
     const response = await provider.generateChatCompletion(params);
     return response.text || "No response generated.";
@@ -118,6 +118,7 @@ async function askQuestion(
 }
 
 async function streamResponse(
+  spinner: Spinner, // Accept spinner as parameter
   provider: LLMProvider,
   params: any
 ): Promise<string> {
