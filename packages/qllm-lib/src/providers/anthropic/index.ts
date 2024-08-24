@@ -16,7 +16,6 @@ import {
 import { formatMessages } from './message-util';
 import { listModels as listBedrockModels } from '../../utils/cloud/aws/bedrock';
 import { region, getAwsCredential } from './aws-credentials';
-import { get } from 'http';
 
 const DEFAULT_MODEL = 'claude-3-opus-20240229';
 const DEFAULT_MAX_TOKENS = 1024 * 256;

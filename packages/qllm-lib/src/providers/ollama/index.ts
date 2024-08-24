@@ -28,7 +28,7 @@ import ollama, {
   ToolCall as OllamaToolCall,
   Options as OllamaOptions,
 } from 'ollama';
-import { createTextMessageContent } from '../../utils/images';
+import { createTextMessageContent, imageToBase64 } from '../../utils/images';
 import { listModels } from './list-models';
 
 const DEFAULT_MODEL = 'llama3.1';
@@ -200,22 +200,12 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
 
 export const createOllamaImageContent = async (source: string): Promise<ImageUrlContent> => {
   try {
-    let content: string;
-
-    if (source.startsWith('http://') || source.startsWith('https://')) {
-      // Handle URL
-      const response = await axios.get(source, { responseType: 'arraybuffer' });
-      content = Buffer.from(response.data).toString('base64');
-    } else {
-      // Handle local file path
-      const absolutePath = path.resolve(source);
-      content = await fs.readFile(absolutePath, { encoding: 'base64' });
-    }
+    const content = await imageToBase64(source);
 
     // Return the raw base64 string without the data URL prefix
     return {
       type: 'image_url',
-      url: content,
+      url: content.base64,
     };
   } catch (error) {
     console.error(`Error processing image from: ${source}`, error);

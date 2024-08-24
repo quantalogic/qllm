@@ -4,8 +4,8 @@ import { Command } from "commander";
 import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
 import kleur from "kleur";
-import { Clipboard } from "../utils/clipboard";
 import { AskOptions } from "../types/ask";
+import Clipboard from "../utils/clipboard";
 
 export const askCommand = new Command("ask")
   .description("Ask a question to an LLM provider")
@@ -85,8 +85,9 @@ async function prepareImageInputs(options: AskOptions): Promise<string[]> {
   const images: string[] = [...(options.image ?? [])];
   if (options.useClipboard) {
     console.log("Checking clipboard for images...");
+    const x = Clipboard.getTextFromClipboard();
     const clipboardImage = await Clipboard.getImageFromClipboard();
-    console.log(clipboardImage ? "Image found in clipboard!" : "No image found in clipboard.");
+    console.log("Clipboard image:", clipboardImage?.substring(0, 50));
     if (clipboardImage) {
       images.push(clipboardImage);
     }

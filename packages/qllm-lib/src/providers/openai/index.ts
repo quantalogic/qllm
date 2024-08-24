@@ -21,7 +21,7 @@ import {
   ChatCompletionContentPart,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions';
-import { imageToBase64 } from '../../utils/images/image-to-base64';
+import { createBase64Url, imageToBase64 } from '../../utils/images/image-to-base64';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -217,10 +217,11 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
               } as ChatCompletionContentPart); // Type assertion
             } else {
               // Convert local image file to base64
-              const base64Image = await imageToBase64(content.url);
+              const contentImage = await imageToBase64(content.url);
+              const urlBase64Image = createBase64Url(contentImage.mimeType, contentImage.base64);
               contentParts.push({
                 type: 'image_url',
-                image_url: { url: base64Image }, // Use the base64 image
+                image_url: { url: urlBase64Image }, // Use the base64 image
               } as ChatCompletionContentPart); // Type assertion
             }
           }

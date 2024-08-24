@@ -1,14 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
-import {
-  ChatMessage,
-  isImageUrlContent,
-  isTextContent,
-  MessageContent,
-} from '../../types';
+import { ChatMessage, isImageUrlContent, isTextContent, MessageContent } from '../../types';
 import axios from 'axios';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as mime from 'mime-types';
+import { imageToBase64 } from '../../utils';
+import { extractMimeType } from '../../utils/images/image-to-base64';
 
 export const formatMessage = async (message: ChatMessage): Promise<Anthropic.MessageParam> => {
   let content: string | Anthropic.MessageParam['content'];
@@ -41,55 +38,17 @@ export async function formatContent(
       text: content.text,
     };
   } else if (isImageUrlContent(content)) {
-    const base64Content = await downloadAndConvertToBase64(content.url);
+    const base64Content = await imageToBase64(content.url);
+    // Extract mime type from base64 string
     const imageContent: Anthropic.ImageBlockParam = {
       type: 'image',
       source: {
         type: 'base64',
-        media_type: base64Content.mimeType as
-          | 'image/jpeg'
-          | 'image/png'
-          | 'image/gif'
-          | 'image/webp',
+        media_type: base64Content.mimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
         data: base64Content.base64,
       },
     };
     return imageContent;
   }
   throw new Error('Unsupported content type');
-}
-
-async function downloadAndConvertToBase64(
-  source: string,
-): Promise<{ base64: string; mimeType: string }> {
-  try {
-    let buffer: Buffer;
-    let mimeType: string;
-
-    if (source.startsWith('http://') || source.startsWith('https://')) {
-      // Handle URL
-      const response = await axios.get(source, { responseType: 'arraybuffer' });
-      buffer = Buffer.from(response.data);
-      mimeType = response.headers['content-type'] || mime.lookup(source) || 'application/octet-stream';
-    } else {
-      // Handle local file path
-      const absolutePath = path.resolve(source);
-      buffer = await fs.readFile(absolutePath);
-      mimeType = mime.lookup(absolutePath) || 'application/octet-stream';
-    }
-
-    // Ensure the mimeType is a valid image type
-    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mimeType)) {
-      throw new Error(`Unsupported image type: ${mimeType}`);
-    }
-
-    return {
-      base64: buffer.toString('base64'),
-      mimeType: mimeType,
-    };
-  } catch (error) {
-    
-    console.error(`Error processing image from: ${source?.substring(0,200)}`, error);
-    throw error;
-  }
 }
