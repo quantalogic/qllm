@@ -4,17 +4,8 @@ import { Command } from "commander";
 import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
 import kleur from "kleur";
-
-interface AskOptions {
-  provider: string;
-  model: string;
-  maxTokens: number;
-  temperature: number;
-  stream: boolean;
-  output: string | undefined;
-  systemMessage: string | undefined;
-  image: string[];
-}
+import { Clipboard } from "../utils/clipboard";
+import { AskOptions } from "../types/ask";
 
 export const askCommand = new Command("ask")
   .description("Ask a question to an LLM provider")
@@ -45,6 +36,7 @@ export const askCommand = new Command("ask")
     (value, previous) => previous.concat([value]),
     [] as string[]
   )
+  .option("--use-clipboard", "Use image from clipboard", "false")
   .action(async (question: string, options: AskOptions) => {
     const spinner = createSpinner("Processing...").start();
     const startTime = Date.now();
@@ -53,8 +45,15 @@ export const askCommand = new Command("ask")
       spinner.update({ text: "Connecting to provider..." });
       const provider = await getLLMProvider(options.provider);
 
+      spinner.update({ text: "Preparing input..." });
+
+      const imageInputs = await prepareImageInputs(options);
+
       spinner.update({ text: "Sending request..." });
-      const response = await askQuestion(spinner, question, provider, options);
+      const response = await askQuestion(spinner, question, provider, {
+        ...options,
+        image: imageInputs,
+      });
 
       const duration = Date.now() - startTime;
       if (duration < 1000) {
@@ -81,6 +80,19 @@ export const askCommand = new Command("ask")
       process.exit(1);
     }
   });
+
+async function prepareImageInputs(options: AskOptions): Promise<string[]> {
+  const images: string[] = [...(options.image ?? [])];
+  if (options.useClipboard) {
+    console.log("Checking clipboard for images...");
+    const clipboardImage = await Clipboard.getImageFromClipboard();
+    console.log(clipboardImage ? "Image found in clipboard!" : "No image found in clipboard.");
+    if (clipboardImage) {
+      images.push(clipboardImage);
+    }
+  }
+  return images;
+}
 
 async function askQuestion(
   spinner: Spinner,
@@ -124,14 +136,12 @@ function createMessageContent(
   images: string[]
 ): ChatMessage["content"] {
   const content: ChatMessage["content"] = [{ type: "text", text: question }];
-
   for (const image of images) {
     content.push({
       type: "image_url",
       url: image, // Url can be a local file path or a URL, or a base64 string
     });
   }
-
   return content;
 }
 
@@ -140,17 +150,14 @@ async function streamResponse(
   params: any
 ): Promise<string> {
   const chunks: string[] = [];
-
   try {
     const stream = await provider.streamChatCompletion(params);
-
     for await (const chunk of stream) {
       if (chunk.text) {
         process.stdout.write(chunk.text);
         chunks.push(chunk.text);
       }
     }
-
     console.log(); // New line after streaming
     return chunks.join("");
   } catch (error) {
