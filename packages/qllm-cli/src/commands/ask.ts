@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { Command } from 'commander';
-import { getLLMProvider, ChatMessage, LLMProvider, ChatCompletionResponse } from 'qllm-lib';
+import { getLLMProvider, ChatMessage, LLMProvider } from 'qllm-lib';
 import { createSpinner, Spinner } from 'nanospinner';
 import kleur from 'kleur';
 
@@ -27,12 +27,21 @@ export const askCommand = new Command('ask')
   .option('--system-message <message>', 'System message to prepend to the conversation')
   .action(async (question: string, options: AskOptions) => {
     const spinner = createSpinner('Processing...').start();
+    const startTime = Date.now();
+
     try {
+      spinner.update({ text: 'Connecting to provider...' });
       const provider = await getLLMProvider(options.provider);
-      spinner.update({ text: 'Thinking...' });
-      const response = await askQuestion(spinner,question, provider, options);
-      spinner.start();
-      spinner.success({ text: kleur.green('Response received!') });
+      
+      spinner.update({ text: 'Sending request...' });
+      const response = await askQuestion(spinner, question, provider, options);
+      
+      const duration = Date.now() - startTime;
+      if (duration < 1000) {
+        await new Promise(resolve => setTimeout(resolve, 1000 - duration)); // Ensure spinner is visible for at least 1 second
+      }
+
+      spinner.success({ text: kleur.green('Response received successfully!') });
 
       if (options.output) {
         await saveResponseToFile(response, options.output);
@@ -42,30 +51,37 @@ export const askCommand = new Command('ask')
         console.log(response);
       }
     } catch (error) {
-      spinner.error({ text: kleur.red('An error occurred') });
+      spinner.error({ text: kleur.red('An error occurred while processing your request.') });
       console.error(kleur.red('Error:'), error instanceof Error ? error.message : String(error));
       process.exit(1);
     }
   });
 
 async function askQuestion(spinner: Spinner, question: string, provider: LLMProvider, options: AskOptions): Promise<string> {
-  const messages: ChatMessage[] = [];
+  // Validate options
+  if (options.maxTokens < 1 || options.maxTokens > 4096) {
+    throw new Error('maxTokens must be between 1 and 4096.');
+  }
+  if (options.temperature < 0 || options.temperature > 1) {
+    throw new Error('Temperature must be between 0 and 1.');
+  }
 
-  messages.push({
+  const messages: ChatMessage[] = [{
     role: 'user',
     content: { type: 'text', text: question },
-  });
+  }];
 
   const params = {
     messages,
     options: {
       systemMessage: options.systemMessage,
       model: options.model,
-      maxTokens: parseInt(options.maxTokens.toString(), 10),
-      temperature: parseFloat(options.temperature.toString()),
+      maxTokens: options.maxTokens,
+      temperature: options.temperature,
     },
   };
 
+  // Stream or generate response
   if (options.stream) {
     spinner.stop();
     spinner.clear();
@@ -81,12 +97,15 @@ async function streamResponse(provider: LLMProvider, params: any): Promise<strin
   
   try {
     const stream = await provider.streamChatCompletion(params);
-    
-    
+    let chunkCount = 0;
+
     for await (const chunk of stream) {
+      chunkCount++;
+      process.stdout.write(chunk.text);
+      chunks.push(chunk.text);
+      // Update spinner with chunk count
       if (chunk.text) {
-        process.stdout.write(chunk.text);
-        chunks.push(chunk.text);
+        process.stdout.write(`\rReceiving response... (${chunkCount} chunks received)`);
       }
     }
     
