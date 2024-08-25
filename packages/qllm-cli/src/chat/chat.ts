@@ -1,4 +1,5 @@
 // packages/qllm-cli/src/chat/chat.ts
+
 import { ConversationManager, LLMProvider, ChatMessage } from "qllm-lib";
 import { createConversationManager, getLLMProvider } from "qllm-lib";
 import { ChatConfig } from "./chat-config";
@@ -66,6 +67,9 @@ export class Chat {
         await this.handleSpecialCommand(input);
       } else {
         await this.sendUserMessage(input, this.imageManager.getImages());
+        if(this.imageManager.hasImages()) {
+           this.imageManager.clearImages(false);
+        }
       }
       this.promptUser();
     });
@@ -74,14 +78,11 @@ export class Chat {
   private async handleSpecialCommand(input: string): Promise<void> {
     try {
       const [command, ...args] = input.trim().split(/\s+/);
-      
       if (!command) {
         output.error("No command provided");
         return;
       }
-  
       const cleanCommand = command.substring(1).toLowerCase();
-      
       const context = {
         config: this.config,
         configManager: this.configManager,
@@ -90,10 +91,9 @@ export class Chat {
         ioManager: this.ioManager,
         imageManager: this.imageManager,
       };
-  
       await this.commandProcessor.processCommand(cleanCommand, args, context);
     } catch (error) {
-        output.error("Error processing special command: " + (error instanceof Error ? error.message : String(error)));
+      output.error("Error processing special command: " + (error instanceof Error ? error.message : String(error)));
     }
   }
 
@@ -102,16 +102,12 @@ export class Chat {
       output.error("No active conversation. Please start a chat first.");
       return;
     }
-
     const currentProviderName = this.configManager.getProvider();
-
     const provider = await getLLMProvider(currentProviderName);
     const messages = await this.conversationManager.getHistory(
       this.conversationId
     );
-
     console.dir(messages, { depth: null });
-
     await this.messageHandler.generateAndSaveResponse(
       provider,
       message,
