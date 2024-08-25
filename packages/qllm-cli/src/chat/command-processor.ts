@@ -1,5 +1,5 @@
 // packages/qllm-cli/src/chat/command-processor.ts
-import { ConversationManager, LLMProvider } from "qllm-lib";
+import { ConversationManager, getLLMProvider, LLMOptions, LLMProvider } from "qllm-lib";
 import { ChatConfig } from "./chat-config";
 import { ConfigManager } from "./config-manager";
 import { IOManager } from "./io-manager";
@@ -8,7 +8,6 @@ import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 interface CommandContext {
   config: ChatConfig;
   configManager: ConfigManager;
-  provider: LLMProvider;
   conversationId: string | null;
   conversationManager: ConversationManager;
   ioManager: IOManager;
@@ -32,10 +31,13 @@ export class CommandProcessor {
     await handler.call(this, args, context);
   }
 
-  private async listModels(args: string[], { provider, ioManager }: CommandContext): Promise<void> {
+  private async listModels(args: string[], { ioManager,configManager }: CommandContext): Promise<void> {
     const spinner = ioManager.createSpinner("Fetching models...");
     spinner.start();
     try {
+      const config = configManager.getConfig();
+      const providerName = config.getProvider() || DEFAULT_PROVIDER;
+      const provider = await getLLMProvider(providerName);  
       const models = await provider.listModels();
       spinner.success("Models fetched successfully");
       const modelData = models.map((model) => [model.id, model.description || "N/A"]);
@@ -70,7 +72,6 @@ export class CommandProcessor {
     } else {
       configManager.setModel(modelName);
     }
-    ioManager.displaySuccess(`Model set to: ${configManager.getModel()}`);
   }
 
   private async setProvider(args: string[], { configManager, ioManager }: CommandContext): Promise<void> {
@@ -80,7 +81,6 @@ export class CommandProcessor {
       return;
     }
     await configManager.setProvider(providerName);
-    ioManager.displaySuccess(`Provider set to: ${configManager.getProvider()}`);
   }
 
   private async addImage(args: string[], { conversationId, conversationManager, configManager, ioManager }: CommandContext): Promise<void> {
@@ -131,7 +131,6 @@ export class CommandProcessor {
       return;
     }
     await configManager.setOption(option, value);
-    ioManager.displaySuccess(`Option ${option} set to: ${value}`);
   }
 
   private showHelp(args: string[], { ioManager }: CommandContext): Promise<void> {

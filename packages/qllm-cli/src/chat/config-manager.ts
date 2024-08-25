@@ -11,6 +11,7 @@ export class ConfigManager {
     try {
       await getLLMProvider(providerName);
       this.config.setProvider(providerName);
+      output.success(`Provider set to: ${providerName}`);
     } catch (error) {
       output.error(`Failed to set provider: ${(error as Error).message}`);
     }

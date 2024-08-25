@@ -10,7 +10,6 @@ import { output } from "../utils/output";
 
 export class Chat {
   private conversationManager: ConversationManager;
-  private provider!: LLMProvider;
   private conversationId: string | null = null;
   private config: ChatConfig;
   private messageHandler: MessageHandler;
@@ -18,7 +17,10 @@ export class Chat {
   private ioManager: IOManager;
   private configManager: ConfigManager;
 
-  constructor(private providerName: string, private modelName: string) {
+  constructor(
+    private readonly providerName: string,
+    private readonly modelName: string
+  ) {
     this.conversationManager =
       createConversationManager() as ConversationManager;
     this.config = ChatConfig.getInstance();
@@ -34,7 +36,6 @@ export class Chat {
   async initialize(): Promise<void> {
     try {
       await this.config.initialize();
-      this.provider = await getLLMProvider(this.providerName);
       this.configManager.setProvider(this.providerName);
       this.configManager.setModel(this.modelName);
       output.success(
@@ -76,7 +77,6 @@ export class Chat {
     await this.commandProcessor.processCommand(command, args, {
       config: this.config,
       configManager: this.configManager,
-      provider: this.provider,
       conversationId: this.conversationId,
       conversationManager: this.conversationManager,
       ioManager: this.ioManager,
@@ -93,16 +93,15 @@ export class Chat {
     const history = await this.conversationManager.getHistory(
       this.conversationId
     );
-    const messages: ChatMessage[] = history.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    }));
+
+    const currentProviderName = this.configManager.getProvider();
+
+    const provider = await getLLMProvider(currentProviderName);
 
     await this.messageHandler.generateAndSaveResponse(
-      this.provider,
-      messages,
-      this.conversationId,
-      this.configManager.getAllSettings()
+      provider,
+      history,
+      this.conversationId
     );
   }
 }
