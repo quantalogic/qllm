@@ -27,8 +27,11 @@ async function main() {
     await conversationManager.addMessage(conversation.id, {
       role: 'user',
       content: { type: 'text', text: userMessage },
-      providerId: "openai"
-    });
+      providerId: "openai",
+        options: {
+          model: "gpt-4o-mini"
+        }
+      });
 
     // Get the conversation history
     const history = await conversationManager.getHistory(conversation.id);
@@ -43,7 +46,7 @@ async function main() {
     const aiResponse = await openaiProvider.generateChatCompletion({
       messages,
       options: {
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         maxTokens: 150
       }
     });
@@ -52,7 +55,10 @@ async function main() {
     await conversationManager.addMessage(conversation.id, {
       role: 'assistant',
       content: { type: 'text', text: aiResponse.text || "Sorry, I couldn't generate a response." },
-      providerId: "openai"
+      providerId: "openai",
+      options: {
+        model: "gpt-4o-mini"
+      }
     });
 
     console.log("User:", userMessage);

@@ -1,6 +1,6 @@
 // src/types/conversation-types.ts
 
-import { ChatMessage } from './llm-types';
+import { ChatMessage, LLMOptions } from './llm-types';
 
 export type ConversationId = string;
 export type ProviderId = string;
@@ -17,6 +17,7 @@ export interface ConversationMessage extends ChatMessage {
   id: string;
   timestamp: Date;
   providerId: ProviderId;
+  options?: Partial<LLMOptions>;
   metadata?: Record<string, any>;
 }
 

@@ -52,6 +52,8 @@ export class ConversationManagerImpl implements ConversationManager {
         content: { type: 'text', text: options.initialMessage },
         timestamp: now,
         providerId: options.providerIds?.[0] || '',
+        options: {
+        },
       });
     }
 
