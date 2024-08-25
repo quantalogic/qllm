@@ -4,11 +4,22 @@ import path from 'path';
 import os from 'os';
 import { lookup } from 'mime-types';
 
-
 export type ImageToBase64Output = {
   base64: string;
   mimeType: string;
 };
+
+/**
+ * Expands the tilde (~) in a file path to the user's home directory.
+ * @param filePath The file path to expand.
+ * @returns The expanded file path.
+ */
+function expandTilde(filePath: string): string {
+  if (filePath.startsWith('~/') || filePath === '~') {
+    return path.join(os.homedir(), filePath.slice(1));
+  }
+  return filePath;
+}
 
 /**
  * Converts an image to a base64-encoded string or returns the input if it's already base64-encoded.
@@ -17,46 +28,37 @@ export type ImageToBase64Output = {
  */
 export async function imageToBase64(source: string): Promise<ImageToBase64Output> {
   // Check if the input is already a base64-encoded string
-  // The data URL format is 'data:[<MIME-type>][;charset=<encoding>][;base64],<data>'
   if (source.startsWith('data:') && source.includes(';base64,')) {
-    // Extract the MIME type
-    const mimeType = source.split(';')[0].split(':')[1];
-    // The base64-encoded string is everything after the comma
-    const base64 = source.split(';base64,')[1];
-
-    return { base64, mimeType };
+    const [mimeType, base64] = source.split(';base64,');
+    return { base64, mimeType: mimeType.split(':')[1] };
   }
 
   let buffer: Buffer;
-  let mimeType: string | false;
-
-  // Handle file:// protocol
-  if (source.startsWith('file://')) {
-    source = source.slice(7);
-  }
-
-  // Expand ~ to home directory
-  if (source.startsWith('~/')) {
-    source = path.join(os.homedir(), source.slice(2));
-  }
-
-  // Resolve relative paths
-  source = path.resolve(source);
+  let mimeType: string;
 
   if (source.startsWith('http://') || source.startsWith('https://')) {
     // Handle URL
     const response = await axios.get(source, { responseType: 'arraybuffer' });
-    buffer = Buffer.from(response.data, 'binary');
-    mimeType = response.headers['content-type'];
+    buffer = Buffer.from(response.data);
+    mimeType = response.headers['content-type'] as string;
   } else {
     // Handle local file path
+    // Expand ~ to home directory and resolve relative paths
+    source = path.resolve(expandTilde(source));
+
+    // Handle file:// protocol
+    if (source.startsWith('file://')) {
+      source = source.slice(7);
+    }
+
     buffer = await fs.readFile(source);
-    mimeType = lookup(source);
+    const lookupResult = lookup(source);
+    if (!lookupResult) {
+      throw new Error(`Could not determine MIME type for: ${source}`);
+    }
+    mimeType = lookupResult;
   }
 
-  if (!mimeType) {
-    throw new Error(`Could not determine MIME type for: ${source}`);
-  }
   const base64 = buffer.toString('base64');
   return { base64, mimeType };
 }
