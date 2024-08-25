@@ -1,3 +1,5 @@
+// packages/qllm-cli/src/utils/cli-config-manager.ts
+
 import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
@@ -11,6 +13,12 @@ const CliConfigSchema = z.object({
   logLevel: z.enum(["error", "warn", "info", "debug"]).default("info"),
   apiKeys: z.record(z.string()).optional(),
   customPromptDirectory: z.string().optional(),
+  temperature: z.number().min(0).max(1).optional(),
+  maxTokens: z.number().positive().optional(),
+  topP: z.number().min(0).max(1).optional(),
+  frequencyPenalty: z.number().min(-2).max(2).optional(),
+  presencePenalty: z.number().min(-2).max(2).optional(),
+  stopSequence: z.array(z.string()).optional(),
 });
 
 type Config = z.infer<typeof CliConfigSchema>;
@@ -64,19 +72,6 @@ export class CliConfigManager {
     }
   }
 
-  public saveSync(): void {
-    try {
-      console.log("Saving configuration...", this.config);
-      fsSync.writeFileSync(
-        this.configPath,
-        JSON.stringify(this.config, null, 2),
-        "utf8"
-      );
-      //console.log('Configuration saved successfully.');
-    } catch (error) {
-      console.error(`Error saving config: ${error}`);
-    }
-  }
 
   public get<K extends keyof Config>(key: K): Config[K] {
     return this.config[key];
@@ -103,7 +98,37 @@ export class CliConfigManager {
   }
 
   public configCopy(): Config {
-    return JSON.parse(JSON.stringify(this.config)) as Config;
+    return {
+      defaultProvider: this.config.defaultProvider,
+      defaultModel: this.config.defaultModel,
+      logLevel: this.config.logLevel,
+      apiKeys: this.config.apiKeys ? { ...this.config.apiKeys } : undefined,
+      customPromptDirectory: this.config.customPromptDirectory,
+      temperature: this.config.temperature,
+      maxTokens: this.config.maxTokens,
+      topP: this.config.topP,
+      frequencyPenalty: this.config.frequencyPenalty,
+      presencePenalty: this.config.presencePenalty,
+      stopSequence: this.config.stopSequence,
+    };
+  }
+
+  public getAllSettings(): Config {
+    return this.configCopy();
+  }
+
+
+  public async setMultiple(settings: Partial<Config>): Promise<void> {
+    Object.entries(settings).forEach(([key, value]) => {
+      if (key in this.config) {
+        (this.config as any)[key] = value;
+      }
+    });
+    await this.save();
+  }
+
+  public getConfigPath(): string {
+    return this.configPath;
   }
 }
 

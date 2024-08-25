@@ -60,18 +60,26 @@ export class Chat {
     this.promptUser();
   }
 
-  private promptUser(): void {
-    this.ioManager.getUserInput("You: ", async (input) => {
+  private async promptUser(): Promise<void> {
+    try {
+      const input = await this.ioManager.getUserInput("You: ");
+
+       // Check if input is undefined (e.g., due to Ctrl+C)
+    if (input === undefined) {
+      process.exit(0);
+    }
+
       if (input.startsWith("/")) {
         await this.handleSpecialCommand(input);
       } else {
         await this.sendUserMessage(input, this.imageManager.getImages());
       }
-      /*if (this.imageManager.hasImages()) {
-        this.imageManager.clearImages();
-      }*/
+    } catch (error) {
+      console.error("Error getting user input:", error);
+    } finally {
+      // Continue prompting the user
       this.promptUser();
-    });
+    }
   }
 
   private async handleSpecialCommand(input: string): Promise<void> {

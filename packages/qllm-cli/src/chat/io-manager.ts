@@ -3,7 +3,8 @@ import readline from "readline";
 import kleur from "kleur";
 import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
-import { Table } from 'console-table-printer';  
+import { Table } from "console-table-printer";
+import prompts from 'prompts';
 
 interface Spinner {
   start: () => void;
@@ -23,10 +24,17 @@ export class IOManager {
     });
   }
 
-  getUserInput(prompt: string, callback: (input: string) => void): void {
-    this.rl.question(this.colorize(prompt, "green"), (input) => {
-      callback(input);
+  async getUserInput(prompt: string): Promise<string> {
+    const response = await prompts({
+      type: 'text',
+      name: 'userInput',
+      message: this.colorize(prompt, "green"),
     });
+    return response.userInput;
+  }
+
+  async getAsyncUserInput(prompt: string): Promise<string> {
+    return this.getUserInput(prompt);
   }
 
   displayUserMessage(message: string): void {
@@ -130,24 +138,32 @@ export class IOManager {
     });
   }
 
-  promptForConversationSelection(callback: (input: string) => void): void {
-    this.getUserInput(
-      "Enter conversation number to select (or 'c' to cancel): ",
-      callback
-    );
-  }
-
-  promptForConversationDeletion(callback: (input: string) => void): void {
-    this.getUserInput(
-      "Enter conversation number to delete (or 'c' to cancel): ",
-      callback
-    );
-  }
-
-  confirmAction(message: string, callback: (confirmed: boolean) => void): void {
-    this.getUserInput(`${message} (y/n): `, (input) => {
-      callback(input.toLowerCase() === "y");
+  async promptForConversationSelection(): Promise<string> {
+    const response = await prompts({
+      type: 'text',
+      name: 'selection',
+      message: 'Enter conversation number to select (or \'c\' to cancel): ',
     });
+    return response.selection;
+  }
+
+  async promptForConversationDeletion(): Promise<string> {
+    const response = await prompts({
+      type: 'text',
+      name: 'selection',
+      message: 'Enter conversation number to delete (or \'c\' to cancel): ',
+    });
+    return response.selection;
+  }
+
+  async confirmAction(message: string): Promise<boolean> {
+    const response = await prompts({
+      type: 'confirm',
+      name: 'confirmed',
+      message: message,
+      initial: false,
+    });
+    return response.confirmed;
   }
 
   colorize(text: string, color: string): string {
@@ -194,14 +210,14 @@ export class IOManager {
   displayModelTable(models: { id: string; description: string }[]): void {
     const p = new Table({
       columns: [
-        { name: 'id', alignment: 'left', color: 'cyan' },
-        { name: 'description', alignment: 'left', color: 'white' },
+        { name: "id", alignment: "left", color: "cyan" },
+        { name: "description", alignment: "left", color: "white" },
       ],
       sort: (row1, row2) => row1.id.localeCompare(row2.id),
     });
 
-    models.forEach(model => {
-      p.addRow({ id: model.id, description: model.description || 'N/A' });
+    models.forEach((model) => {
+      p.addRow({ id: model.id, description: model.description || "N/A" });
     });
 
     p.printTable();
@@ -210,19 +226,24 @@ export class IOManager {
   displayConfigOptions(options: Array<{ name: string; value: any }>): void {
     this.displaySectionHeader("Current Configuration");
 
-    const longestNameLength = Math.max(...options.map(opt => opt.name.length));
+    const longestNameLength = Math.max(
+      ...options.map((opt) => opt.name.length)
+    );
 
     options.forEach(({ name, value }) => {
       const paddedName = name.padEnd(longestNameLength);
       const formattedValue = value !== undefined ? value.toString() : "Not set";
-      const coloredValue = value !== undefined 
-        ? this.colorize(formattedValue, "green") 
-        : this.colorize(formattedValue, "yellow");
+      const coloredValue =
+        value !== undefined
+          ? this.colorize(formattedValue, "green")
+          : this.colorize(formattedValue, "yellow");
       this.displayInfo(`${this.colorize(paddedName, "cyan")}: ${coloredValue}`);
     });
 
     this.newLine();
-    this.displayInfo(this.colorize("Use 'set <option> <value>' to change a setting", "dim"));
+    this.displayInfo(
+      this.colorize("Use 'set <option> <value>' to change a setting", "dim")
+    );
     this.displayInfo(this.colorize("Example: set provider openai", "dim"));
   }
 
@@ -233,13 +254,24 @@ export class IOManager {
       this.displayInfo(this.colorize("No providers available.", "yellow"));
     } else {
       providers.forEach((provider, index) => {
-        this.displayInfo(`${this.colorize(`${index + 1}.`, "cyan")} ${this.colorize(provider, "green")}`);
+        this.displayInfo(
+          `${this.colorize(`${index + 1}.`, "cyan")} ${this.colorize(
+            provider,
+            "green"
+          )}`
+        );
       });
     }
 
     this.newLine();
-    this.displayInfo(this.colorize("To set a provider, use: set provider <provider_name>", "dim"));
+    this.displayInfo(
+      this.colorize(
+        "To set a provider, use: set provider <provider_name>",
+        "dim"
+      )
+    );
   }
+
   displayGroupHeader(header: string): void {
     this.displayInfo(this.colorize(`\n${header}:`, "magenta"));
   }

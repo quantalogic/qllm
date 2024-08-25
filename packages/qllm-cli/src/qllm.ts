@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { askCommand } from "./commands/ask";
+import { askCommand } from "./commands/ask-command";
 import { listCommand } from "./commands/list-command";
 import { chatCommand } from "./commands/chat-command";
 import { CliConfigManager } from "./utils/cli-config-manager";
+import { configureCommand } from "./commands/configure-command";
+import { IOManager } from "./chat/io-manager";
 
 const VERSION = "1.8.0";
 
@@ -36,19 +38,24 @@ export async function main() {
     // Add chat command
     program.addCommand(chatCommand);
 
+    // Add the configure command
+    program.addCommand(configureCommand);
+
     // Add other commands here as needed
     // For example:
     // program.addCommand(generateEmbeddingCommand);
 
-      // Set up the exit handler
-      process.on('exit', () => {
-        configManager.saveSync();
-      });
-  
-      // Handle SIGINT (Ctrl+C)
-      process.on('SIGINT', async () => {
-        process.exit(0);
-      });
+    // Set up the exit handler
+    // Set up the exit handler
+    // Set up the exit handler
+    process.on("exit", (code) => {
+      console.log();
+      if (code !== 0) {
+        console.log(`👋 Bye bye. Exit code: ${code}`);
+      } else {
+        console.log("👋 Bye bye.");
+      }
+    });
 
     await program.parseAsync(process.argv);
   } catch (error) {

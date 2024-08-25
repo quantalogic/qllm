@@ -5,6 +5,7 @@ import { getListProviderNames, getLLMProvider } from "qllm-lib";
 import { Chat } from "../chat/chat";
 import { chatConfig } from "../chat/chat-config";
 import { output } from "../utils/output";
+import { CliConfigManager } from "../utils/cli-config-manager";
 
 export const chatCommand = new Command("chat")
   .description("Start an interactive chat session with an LLM")
@@ -42,29 +43,36 @@ export const chatCommand = new Command("chat")
       await chatConfig.initialize();
 
       const providerName =
-        options.provider || chatConfig.getProvider() || "openai";
-      const modelName = options.model || chatConfig.getModel() || "gpt-4o-mini";
+        options.provider ||
+        CliConfigManager.getInstance().get("defaultProvider") ||
+        "openai";
+      const modelName =
+        options.model ||
+        CliConfigManager.getInstance().get("defaultModel") ||
+        "gpt-4o-mini";
 
       const availableProviders = getListProviderNames();
       if (!availableProviders.includes(providerName)) {
-        output.error(
+        output.warn(
           `Invalid provider "${providerName}". Available providers: ${availableProviders.join(
             ", "
           )}`
         );
-        return;
+        output.info("Use the 'configure' command to set a valid provider.");
+        output.info("Use the '/providers' command to see available providers."); 
       }
 
       const provider = await getLLMProvider(providerName);
       const models = await provider.listModels();
 
       if (!models.some((m) => m.id === modelName)) {
-        output.error(
+        output.warn(
           `Invalid model "${modelName}" for provider "${providerName}".`
         );
         output.info("Available models:");
         models.forEach((m) => output.info(`- ${m.id}`));
-        return;
+        output.info("Use the 'configure' command to set a valid model.");
+        output.info("Use the '/models' command to see available models.");
       }
 
       const chat = new Chat(providerName, modelName);

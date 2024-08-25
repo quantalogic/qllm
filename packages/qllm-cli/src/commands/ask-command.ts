@@ -4,7 +4,7 @@ import { Command } from "commander";
 import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
 import kleur from "kleur";
-import { AskOptions } from "../types/ask";
+import { AskOptions } from "../types/ask-types";
 import Clipboard from "../utils/clipboard";
 import { ScreenshotCapture } from "../utils/screenshot";
 import {
