@@ -17,7 +17,7 @@ export class ConfigManager {
     }
   }
 
-  getConfig(): ChatConfig { 
+  getConfig(): ChatConfig {
     return this.config;
   }
 

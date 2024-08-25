@@ -10,7 +10,7 @@ export class ImageManager {
     this.images = new Set<string>();
   }
 
-  hasImages(): boolean {  
+  hasImages(): boolean {
     return this.images.size > 0;
   }
 

@@ -92,11 +92,17 @@ export class Chat {
       };
       await this.commandProcessor.processCommand(cleanCommand, args, context);
     } catch (error) {
-      output.error("Error processing special command: " + (error instanceof Error ? error.message : String(error)));
+      output.error(
+        "Error processing special command: " +
+          (error instanceof Error ? error.message : String(error))
+      );
     }
   }
 
-  private async sendUserMessage(message: string, images: string[]): Promise<void> {
+  private async sendUserMessage(
+    message: string,
+    images: string[]
+  ): Promise<void> {
     if (!this.conversationId) {
       output.error("No active conversation. Please start a chat first.");
       return;

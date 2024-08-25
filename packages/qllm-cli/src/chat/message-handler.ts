@@ -31,25 +31,24 @@ export class MessageHandler {
   ): ConversationMessageWithoutIdAndTimestamp {
     const config = this.configManager.getConfig();
 
-    const content: ChatMessageContent = images.length === 0
-      ? {
-          type: "text",
-          text: message,
-        }
-      : [
-          {
+    const content: ChatMessageContent =
+      images.length === 0
+        ? {
             type: "text",
             text: message,
-          } as TextContent,
-          ...images.map((image) => {
-            return (
-              {
+          }
+        : [
+            {
+              type: "text",
+              text: message,
+            } as TextContent,
+            ...images.map((image) => {
+              return {
                 type: "image_url",
                 url: image,
-              }
-            ) as ImageUrlContent;
-          }),
-        ];
+              } as ImageUrlContent;
+            }),
+          ];
 
     const conversationMessage: ConversationMessageWithoutIdAndTimestamp = {
       role: "user",
@@ -78,7 +77,7 @@ export class MessageHandler {
   ): Promise<void> {
     const spinner = createSpinner("Generating response...").start();
 
-    const queryMessage = this.toUserConversationMessage(query,images);
+    const queryMessage = this.toUserConversationMessage(query, images);
     const options = queryMessage.options;
 
     const messages = [...history, queryMessage];

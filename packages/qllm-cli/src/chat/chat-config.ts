@@ -1,8 +1,8 @@
 // packages/qllm-cli/src/chat/chat-config.ts
-import fs from 'fs/promises';
-import path from 'path';
-import os from 'os';
-import { z } from 'zod';
+import fs from "fs/promises";
+import path from "path";
+import os from "os";
+import { z } from "zod";
 
 const ChatConfigSchema = z.object({
   provider: z.string().optional(),
@@ -24,7 +24,7 @@ export class ChatConfig {
   private configPath: string;
 
   private constructor() {
-    this.configPath = path.join(os.homedir(), '.qllm-chat-config.json');
+    this.configPath = path.join(os.homedir(), ".qllm-chat-config.json");
   }
 
   public static getInstance(): ChatConfig {
@@ -36,11 +36,11 @@ export class ChatConfig {
 
   public async load(): Promise<void> {
     try {
-      const configData = await fs.readFile(this.configPath, 'utf-8');
+      const configData = await fs.readFile(this.configPath, "utf-8");
       const parsedConfig = JSON.parse(configData);
       this.config = ChatConfigSchema.parse(parsedConfig);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
         console.warn(`Error loading config: ${error}`);
       }
       // If file doesn't exist or is invalid, we'll use default config
@@ -59,7 +59,10 @@ export class ChatConfig {
     return this.config[key];
   }
 
-  public set<K extends keyof ChatConfigType>(key: K, value: ChatConfigType[K]): void {
+  public set<K extends keyof ChatConfigType>(
+    key: K,
+    value: ChatConfigType[K]
+  ): void {
     this.config[key] = value;
   }
 
