@@ -49,12 +49,6 @@ export async function main() {
     // Set up the exit handler
     // Set up the exit handler
     process.on("exit", (code) => {
-      console.log();
-      if (code !== 0) {
-        console.log(`👋 Bye bye. Exit code: ${code}`);
-      } else {
-        console.log("👋 Bye bye.");
-      }
     });
 
     await program.parseAsync(process.argv);

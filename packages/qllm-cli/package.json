@@ -57,7 +57,6 @@
   },
   "dependencies": {
     "cli-table3": "^0.6.5",
-    "clipboardy": "^2.3.0",
     "commander": "^12.1.0",
     "console-table-printer": "^2.12.1",
     "copy-paste": "^1.5.3",

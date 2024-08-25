@@ -65,11 +65,6 @@ export const askCommand = new Command("ask")
         image: imageInputs,
       });
 
-      const duration = Date.now() - startTime;
-      if (duration < 1000) {
-        await new Promise((resolve) => setTimeout(resolve, 1000 - duration));
-      }
-
       spinner.success({ text: kleur.green("Response received successfully!") });
 
       if (options.output) {
@@ -79,12 +74,14 @@ export const askCommand = new Command("ask")
         output.info("Response:");
         console.log(response);
       }
+      process.exit(0);
     } catch (error) {
       spinner.error({
         text: kleur.red("An error occurred while processing your request."),
       });
       output.error(error instanceof Error ? error.message : String(error));
       process.exit(1);
+    } finally {
     }
   });
 
@@ -182,9 +179,7 @@ async function askQuestion(
   };
 
   if (options.stream) {
-    spinner.stop();
-    spinner.clear();
-    return streamResponse(provider, params);
+    return streamResponse(spinner, provider, params);
   } else {
     const response = await provider.generateChatCompletion(params);
     return response.text || "No response generated.";
@@ -208,18 +203,29 @@ function createMessageContent(
 }
 
 async function streamResponse(
+  spinner: Spinner,
   provider: LLMProvider,
   params: any
 ): Promise<string> {
   const chunks: string[] = [];
 
+  let chunkNumber = 0;
+
+  spinner.update({ text: "Waiting response..." });
+
   try {
     const stream = await provider.streamChatCompletion(params);
     for await (const chunk of stream) {
+      if (chunkNumber === 0) {
+        spinner.update({ text: "" });
+        spinner.stop();
+      }
+
       if (chunk.text) {
         process.stdout.write(chunk.text);
         chunks.push(chunk.text);
       }
+      chunkNumber++;
     }
     console.log(); // New line after streaming
     return chunks.join("");
