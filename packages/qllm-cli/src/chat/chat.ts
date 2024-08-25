@@ -7,6 +7,7 @@ import { CommandProcessor } from "./command-processor";
 import { IOManager } from "./io-manager";
 import { ConfigManager } from "./config-manager";
 import { output } from "../utils/output";
+import ImageManager from "./image-manager";
 
 export class Chat {
   private conversationManager: ConversationManager;
@@ -16,6 +17,7 @@ export class Chat {
   private commandProcessor: CommandProcessor;
   private ioManager: IOManager;
   private configManager: ConfigManager;
+  private imageManager: ImageManager;
 
   constructor(
     private readonly providerName: string,
@@ -23,6 +25,7 @@ export class Chat {
   ) {
     this.conversationManager = createConversationManager();
     this.config = ChatConfig.getInstance();
+    this.imageManager = new ImageManager();
     this.configManager = new ConfigManager(this.config);
     this.messageHandler = new MessageHandler(
       this.conversationManager,
@@ -62,24 +65,26 @@ export class Chat {
       if (input.startsWith("/")) {
         await this.handleSpecialCommand(input);
       } else {
-        await this.sendUserMessage(input);
+        await this.sendUserMessage(input, this.imageManager.getImages());
       }
       this.promptUser();
     });
   }
 
   private async handleSpecialCommand(input: string): Promise<void> {
-    const [command, ...args] = input.slice(1).split(" ");
+    const command = input.split(" ")[0].substring(1);
+    const args = input.split(" ").slice(1).map((arg) => arg.trim());
     await this.commandProcessor.processCommand(command, args, {
       config: this.config,
       configManager: this.configManager,
       conversationId: this.conversationId,
       conversationManager: this.conversationManager,
       ioManager: this.ioManager,
+      imageManager: this.imageManager,
     });
   }
 
-  private async sendUserMessage(message: string): Promise<void> {
+  private async sendUserMessage(message: string, images: string[]): Promise<void> {
     if (!this.conversationId) {
       output.error("No active conversation. Please start a chat first.");
       return;
@@ -97,6 +102,7 @@ export class Chat {
     await this.messageHandler.generateAndSaveResponse(
       provider,
       message,
+      images,
       messages,
       this.conversationId
     );

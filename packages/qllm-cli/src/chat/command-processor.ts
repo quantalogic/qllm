@@ -4,6 +4,7 @@ import { ChatConfig } from "./chat-config";
 import { ConfigManager } from "./config-manager";
 import { IOManager } from "./io-manager";
 import { DEFAULT_PROVIDER } from "../constants";
+import ImageManager from "./image-manager";
 
 interface CommandContext {
   config: ChatConfig;
@@ -11,6 +12,7 @@ interface CommandContext {
   conversationId: string | null;
   conversationManager: ConversationManager;
   ioManager: IOManager;
+  imageManager: ImageManager;
 }
 
 export class CommandProcessor {
@@ -86,7 +88,7 @@ export class CommandProcessor {
     await configManager.setProvider(providerName);
   }
 
-  private async addImage(args: string[], { conversationId, conversationManager, configManager, ioManager }: CommandContext): Promise<void> {
+  private async addImage(args: string[], { conversationId, ioManager, imageManager }: CommandContext): Promise<void> {
     const imageUrl = args[0];
     if (!imageUrl) {
       ioManager.displayError("Please provide an image URL or local file path.");
@@ -99,11 +101,13 @@ export class CommandProcessor {
     const spinner = ioManager.createSpinner("Processing image...");
     spinner.start();
     try {
-      await conversationManager.addMessage(conversationId, {
+      /*await conversationManager.addMessage(conversationId, {
         role: "user",
         content: [{ type: "image_url", url: imageUrl }],
         providerId: configManager.getProvider() || DEFAULT_PROVIDER,
-      });
+      });*/
+      imageManager.addImage(imageUrl);
+
       spinner.success("Image added to the conversation.");
     } catch (error) {
       spinner.error(`Failed to add image: ${(error as Error).message}`);
@@ -144,7 +148,7 @@ export class CommandProcessor {
       "/stop - Stop the chat session",
       "/model <name> - Set the model",
       "/provider <name> - Set the provider",
-      "/image <url> - Add an image to the conversation",
+      "/image <url> - Add an image to the current query",
       "/options - Display current options",
       "/set <option> <value> - Set an option",
       "/help - Show this help message",

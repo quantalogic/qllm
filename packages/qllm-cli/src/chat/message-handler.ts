@@ -3,6 +3,11 @@ import {
   ConversationManager,
   LLMProvider,
   ConversationMessage,
+  ChatMessage,
+  ChatMessageContent,
+  MessageContent,
+  ImageUrlContent,
+  TextContent,
 } from "qllm-lib";
 import { createSpinner } from "nanospinner";
 import { output } from "../utils/output";
@@ -21,16 +26,34 @@ export class MessageHandler {
   ) {}
 
   private toUserConversationMessage(
-    message: string
+    message: string,
+    images: string[]
   ): ConversationMessageWithoutIdAndTimestamp {
     const config = this.configManager.getConfig();
 
+    const content: ChatMessageContent = images.length === 0
+      ? {
+          type: "text",
+          text: message,
+        }
+      : [
+          {
+            type: "text",
+            text: message,
+          } as TextContent,
+          ...images.map((image) => {
+            return (
+              {
+                type: "image_url",
+                url: image,
+              }
+            ) as ImageUrlContent;
+          }),
+        ];
+
     const conversationMessage: ConversationMessageWithoutIdAndTimestamp = {
       role: "user",
-      content: {
-        type: "text",
-        text: message,
-      },
+      content,
       providerId: config.getProvider() || DEFAULT_PROVIDER,
       options: {
         model: config.getModel() || DEFAULT_MODEL,
@@ -49,12 +72,13 @@ export class MessageHandler {
   async generateAndSaveResponse(
     provider: LLMProvider,
     query: string,
+    images: string[],
     history: ConversationMessage[],
     conversationId: string
   ): Promise<void> {
     const spinner = createSpinner("Generating response...").start();
 
-    const queryMessage = this.toUserConversationMessage(query);
+    const queryMessage = this.toUserConversationMessage(query,images);
     const options = queryMessage.options;
 
     const messages = [...history, queryMessage];
