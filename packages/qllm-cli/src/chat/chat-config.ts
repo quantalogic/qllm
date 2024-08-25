@@ -1,5 +1,4 @@
 // packages/qllm-cli/src/chat/chat-config.ts
-
 import fs from 'fs/promises';
 import path from 'path';
 import os from 'os';
@@ -14,6 +13,7 @@ const ChatConfigSchema = z.object({
   frequencyPenalty: z.number().min(-2).max(2).optional(),
   presencePenalty: z.number().min(-2).max(2).optional(),
   stopSequence: z.array(z.string()).optional(),
+  currentConversationId: z.string().optional(),
 });
 
 type ChatConfigType = z.infer<typeof ChatConfigSchema>;
@@ -125,6 +125,14 @@ export class ChatConfig {
 
   public setStopSequence(stopSequence: string[]): void {
     this.config.stopSequence = stopSequence;
+  }
+
+  public getCurrentConversationId(): string | undefined {
+    return this.config.currentConversationId;
+  }
+
+  public setCurrentConversationId(conversationId: string | undefined): void {
+    this.config.currentConversationId = conversationId;
   }
 
   public async initialize(): Promise<void> {

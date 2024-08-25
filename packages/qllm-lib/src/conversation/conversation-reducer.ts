@@ -1,5 +1,4 @@
-// src/conversation/conversation-manager.ts
-
+// packages/qllm-lib/src/conversation/conversation-reducer.ts
 import { v4 as uuidv4 } from 'uuid';
 import {
   Conversation,
@@ -15,24 +14,18 @@ import {
   InvalidConversationOperationError,
 } from '../types';
 
-type ConversationAction =
+export type ConversationAction =
   | { type: 'CREATE_CONVERSATION'; payload: CreateConversationOptions }
   | { type: 'UPDATE_CONVERSATION'; payload: { id: ConversationId; updates: Partial<Conversation> } }
   | { type: 'DELETE_CONVERSATION'; payload: ConversationId }
-  | {
-      type: 'ADD_MESSAGE';
-      payload: { id: ConversationId; message: Omit<ConversationMessage, 'id' | 'timestamp'> };
-    }
-  | {
-      type: 'SET_METADATA';
-      payload: { id: ConversationId; metadata: Partial<ConversationMetadata> };
-    }
+  | { type: 'ADD_MESSAGE'; payload: { id: ConversationId; message: Omit<ConversationMessage, 'id'> } }
+  | { type: 'SET_METADATA'; payload: { id: ConversationId; metadata: Partial<ConversationMetadata> } }
   | { type: 'ADD_PROVIDER'; payload: { id: ConversationId; providerId: ProviderId } }
   | { type: 'REMOVE_PROVIDER'; payload: { id: ConversationId; providerId: ProviderId } }
   | { type: 'CLEAR_HISTORY'; payload: ConversationId }
   | { type: 'IMPORT_CONVERSATION'; payload: string };
 
-const conversationReducer = (
+export const conversationReducer = (
   state: Map<ConversationId, Conversation>,
   action: ConversationAction,
 ): Map<ConversationId, Conversation> => {
@@ -52,18 +45,19 @@ const conversationReducer = (
         },
         activeProviders: new Set(action.payload.providerIds || []),
       };
-
       if (action.payload.initialMessage) {
         conversation.messages.push({
           id: uuidv4(),
           role: 'user',
-          content: { type: 'text', text: action.payload.initialMessage },
+          content: {
+            type: 'text',
+            text: action.payload.initialMessage,
+          },
           timestamp: now,
           providerId: action.payload.providerIds?.[0] || '',
           options: {},
         });
       }
-
       return new Map(state).set(id, conversation);
     }
 
@@ -71,7 +65,6 @@ const conversationReducer = (
       const { id, updates } = action.payload;
       const conversation = state.get(id);
       if (!conversation) throw new ConversationNotFoundError(id);
-
       const updatedConversation: Conversation = {
         ...conversation,
         ...updates,
@@ -81,7 +74,6 @@ const conversationReducer = (
           updatedAt: new Date(),
         },
       };
-
       return new Map(state).set(id, updatedConversation);
     }
 
@@ -95,13 +87,11 @@ const conversationReducer = (
       const { id, message } = action.payload;
       const conversation = state.get(id);
       if (!conversation) throw new ConversationNotFoundError(id);
-
       const newMessage: ConversationMessage = {
         ...message,
         id: uuidv4(),
         timestamp: new Date(),
       };
-
       const updatedConversation: Conversation = {
         ...conversation,
         messages: [...conversation.messages, newMessage],
@@ -111,7 +101,6 @@ const conversationReducer = (
           updatedAt: new Date(),
         },
       };
-
       return new Map(state).set(id, updatedConversation);
     }
 
@@ -119,7 +108,6 @@ const conversationReducer = (
       const { id, metadata } = action.payload;
       const conversation = state.get(id);
       if (!conversation) throw new ConversationNotFoundError(id);
-
       const updatedConversation: Conversation = {
         ...conversation,
         metadata: {
@@ -128,7 +116,6 @@ const conversationReducer = (
           updatedAt: new Date(),
         },
       };
-
       return new Map(state).set(id, updatedConversation);
     }
 
@@ -136,7 +123,6 @@ const conversationReducer = (
       const { id, providerId } = action.payload;
       const conversation = state.get(id);
       if (!conversation) throw new ConversationNotFoundError(id);
-
       const updatedConversation: Conversation = {
         ...conversation,
         activeProviders: new Set(conversation.activeProviders).add(providerId),
@@ -145,7 +131,6 @@ const conversationReducer = (
           updatedAt: new Date(),
         },
       };
-
       return new Map(state).set(id, updatedConversation);
     }
 
@@ -158,10 +143,8 @@ const conversationReducer = (
           `Provider ${providerId} is not active in conversation ${id}`,
         );
       }
-
       const updatedProviders = new Set(conversation.activeProviders);
       updatedProviders.delete(providerId);
-
       const updatedConversation: Conversation = {
         ...conversation,
         activeProviders: updatedProviders,
@@ -170,14 +153,12 @@ const conversationReducer = (
           updatedAt: new Date(),
         },
       };
-
       return new Map(state).set(id, updatedConversation);
     }
 
     case 'CLEAR_HISTORY': {
       const conversation = state.get(action.payload);
       if (!conversation) throw new ConversationNotFoundError(action.payload);
-
       const updatedConversation: Conversation = {
         ...conversation,
         messages: [],
@@ -186,7 +167,6 @@ const conversationReducer = (
           updatedAt: new Date(),
         },
       };
-
       return new Map(state).set(action.payload, updatedConversation);
     }
 
@@ -216,5 +196,3 @@ const isValidConversation = (data: any): data is Conversation => {
     data.activeProviders instanceof Set
   );
 };
-
-export { conversationReducer, ConversationAction };

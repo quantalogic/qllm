@@ -1,14 +1,14 @@
 // packages/qllm-cli/src/chat/io-manager.ts
-import readline from 'readline';
-import kleur from 'kleur';
-import { output } from '../utils/output';
-import { table } from 'table';
+import readline from "readline";
+import kleur from "kleur";
+import { getBorderCharacters, table } from "table";
+import { createSpinner } from "nanospinner";
 
 interface Spinner {
   start: () => void;
   stop: () => void;
-  success: (text: string) => void;
-  error: (text: string) => void;
+  success: (options: { text: string }) => void;
+  error: (options: { text: string }) => void;
 }
 
 export class IOManager {
@@ -23,50 +23,59 @@ export class IOManager {
   }
 
   getUserInput(prompt: string, callback: (input: string) => void): void {
-    this.rl.question(kleur.green(prompt), (input) => {
+    this.rl.question(this.colorize(prompt, "green"), (input) => {
       callback(input);
     });
   }
 
   displayUserMessage(message: string): void {
-    output.info(kleur.green(`You: ${message}`));
+    this.displayInfo(this.colorize(`You: ${message}`, "green"));
   }
 
   displayAssistantMessage(message: string): void {
-    output.info(kleur.blue(`Assistant: ${message}`));
+    this.displayInfo(this.colorize(`Assistant: ${message}`, "blue"));
   }
 
   displaySystemMessage(message: string): void {
-    output.info(kleur.yellow(`System: ${message}`));
+    this.displayInfo(this.colorize(`System: ${message}`, "yellow"));
   }
 
   displayError(message: string): void {
-    output.error(message);
+    console.error(this.colorize(`✖ ${message}`, "red"));
   }
 
   displaySuccess(message: string): void {
-    output.success(message);
+    console.log(this.colorize(`✔ ${message}`, "green"));
   }
 
   displayWarning(message: string): void {
-    output.warn(message);
+    console.warn(this.colorize(`⚠ ${message}`, "yellow"));
   }
 
   displayInfo(message: string): void {
-    output.info(message);
+    console.log(message);
   }
 
   displayTable(headers: string[], data: string[][]): void {
-    const tableData = [headers, ...data];
-    console.log(table(tableData));
+    const tableData = [headers.map((h) => this.colorize(h, "cyan")), ...data];
+    console.log(
+      table(tableData, {
+        border: getBorderCharacters("norc"),
+        columnDefault: {
+          paddingLeft: 0,
+          paddingRight: 1,
+        },
+        drawHorizontalLine: () => false,
+      })
+    );
   }
 
   displayList(items: string[]): void {
-    items.forEach(item => this.displayInfo(`- ${item}`));
+    items.forEach((item) => this.displayInfo(`• ${item}`));
   }
 
   clearLine(): void {
-    process.stdout.write('\r\x1b[K');
+    process.stdout.write("\r\x1b[K");
   }
 
   newLine(): void {
@@ -78,38 +87,7 @@ export class IOManager {
   }
 
   createSpinner(message: string): Spinner {
-    let spinning = false;
-    const spinnerChars = ['|', '/', '-', '\\'];
-    let i = 0;
-    let intervalId: NodeJS.Timeout;
-
-    const spinner: Spinner = {
-      start: () => {
-        spinning = true;
-        intervalId = setInterval(() => {
-          process.stdout.write(`\r${spinnerChars[i]} ${message}`);
-          i = (i + 1) % spinnerChars.length;
-        }, 100);
-      },
-      stop: () => {
-        spinning = false;
-        clearInterval(intervalId);
-        this.clearLine();
-      },
-      success: (text: string) => {
-        if (spinning) {
-          spinner.stop();
-        }
-        this.displaySuccess(text);
-      },
-      error: (text: string) => {
-        if (spinning) {
-          spinner.stop();
-        }
-        this.displayError(text);
-      },
-    };
-
+    const spinner = createSpinner(message);
     this.currentSpinner = spinner;
     return spinner;
   }
@@ -123,5 +101,92 @@ export class IOManager {
 
   write(text: string): void {
     process.stdout.write(text);
+  }
+
+  displayConversationList(
+    conversations: { id: string; createdAt: Date }[]
+  ): void {
+    this.displayInfo("Conversations:");
+    conversations.forEach((conv, index) => {
+      this.displayInfo(
+        `${index + 1}. ID: ${
+          conv.id
+        }, Created: ${conv.createdAt.toLocaleString()}`
+      );
+    });
+  }
+
+  displayConversationDetails(
+    id: string,
+    messages: { role: string; content: string }[]
+  ): void {
+    this.displayInfo(`Conversation ${id}:`);
+    messages.forEach((msg, index) => {
+      const roleColor = msg.role === "user" ? "green" : "blue";
+      this.displayInfo(
+        `${index + 1}. ${this.colorize(msg.role, roleColor)}: ${msg.content}`
+      );
+    });
+  }
+
+  promptForConversationSelection(callback: (input: string) => void): void {
+    this.getUserInput(
+      "Enter conversation number to select (or 'c' to cancel): ",
+      callback
+    );
+  }
+
+  promptForConversationDeletion(callback: (input: string) => void): void {
+    this.getUserInput(
+      "Enter conversation number to delete (or 'c' to cancel): ",
+      callback
+    );
+  }
+
+  confirmAction(message: string, callback: (confirmed: boolean) => void): void {
+    this.getUserInput(`${message} (y/n): `, (input) => {
+      callback(input.toLowerCase() === "y");
+    });
+  }
+
+  colorize(text: string, color: string): string {
+    switch (color) {
+      case "green":
+        return kleur.green(text);
+      case "blue":
+        return kleur.blue(text);
+      case "yellow":
+        return kleur.yellow(text);
+      case "red":
+        return kleur.red(text);
+      case "cyan":
+        return kleur.cyan(text);
+      default:
+        return text;
+    }
+  }
+
+  displayGroupedInfo(title: string, items: string[]): void {
+    this.displayInfo(this.colorize(`\n${title}:`, "yellow"));
+    items.forEach((item) => this.displayInfo(`  ${item}`));
+  }
+
+  displayTitle(title: string): void {
+    console.log(this.colorize(title, "cyan"));
+  }
+
+  displayCodeBlock(code: string, language?: string): void {
+    const formattedCode = language ? this.colorize(code, "cyan") : code;
+    console.log(this.colorize("```" + (language || ""), "gray"));
+    console.log(formattedCode);
+    console.log(this.colorize("```", "gray"));
+  }
+
+  clear(): void {
+    console.clear();
+  }
+
+  displaySectionHeader(header: string): void {
+    console.log(kleur.bold().yellow(`\n${header}`));
   }
 }

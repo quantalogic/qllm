@@ -33,27 +33,8 @@ export interface StorageProvider {
   load(id: ConversationId): Promise<Conversation | null>;
   delete(id: ConversationId): Promise<void>;
   list(): Promise<ConversationMetadata[]>;
-}
+  listConversations(): Promise<Conversation[]>; // Add this new method
 
-export class InMemoryStorageProvider implements StorageProvider {
-  private conversations = new Map<ConversationId, Conversation>();
-
-  async save(conversation: Conversation): Promise<void> {
-    this.conversations.set(conversation.id, structuredClone(conversation));
-  }
-
-  async load(id: ConversationId): Promise<Conversation | null> {
-    const conversation = this.conversations.get(id);
-    return conversation ? structuredClone(conversation) : null;
-  }
-
-  async delete(id: ConversationId): Promise<void> {
-    this.conversations.delete(id);
-  }
-
-  async list(): Promise<ConversationMetadata[]> {
-    return Array.from(this.conversations.values()).map((conv) => conv.metadata);
-  }
 }
 
 export interface ConversationManager {
@@ -61,7 +42,7 @@ export interface ConversationManager {
   getConversation(id: ConversationId): Promise<Conversation>;
   updateConversation(id: ConversationId, updates: Partial<Conversation>): Promise<Conversation>;
   deleteConversation(id: ConversationId): Promise<void>;
-  listConversations(): Promise<ConversationMetadata[]>;
+  listConversations(): Promise<Conversation[]>;
   addMessage(
     id: ConversationId,
     message: Omit<ConversationMessage, 'id' | 'timestamp'>,
@@ -74,6 +55,12 @@ export interface ConversationManager {
   searchConversations(query: string): Promise<ConversationMetadata[]>;
   exportConversation(id: ConversationId): Promise<string>;
   importConversation(conversationData: string): Promise<Conversation>;
+  clearConversation(id: ConversationId): Promise<Conversation>;
+  startNewConversation(options: CreateConversationOptions): Promise<Conversation>;
+  listAllConversations(): Promise<Conversation[]>;
+  displayConversation(id: ConversationId): Promise<ConversationMessage[]>; 
+  selectConversation(id: ConversationId): Promise<Conversation>;
+  deleteAllConversations(): Promise<void>;
   storageProvider: StorageProvider;
 }
 

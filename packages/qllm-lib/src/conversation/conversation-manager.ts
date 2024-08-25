@@ -1,5 +1,5 @@
-// src/conversation/conversation-manager.ts
-
+// packages/qllm-lib/src/conversation/conversation-manager.ts
+import { v4 as uuidv4 } from 'uuid';
 import {
   Conversation,
   ConversationId,
@@ -10,7 +10,7 @@ import {
   ProviderId,
   StorageProvider,
 } from '../types';
-import { InMemoryStorageProvider } from '../types/conversations-types';
+import { InMemoryStorageProvider } from '../storage/in-memory-storage-provider';
 import { ConversationError, ConversationNotFoundError } from '../types';
 import { ConversationAction, conversationReducer } from './conversation-reducer';
 
@@ -20,7 +20,6 @@ export const createConversationManager = (
   let state = new Map<ConversationId, Conversation>();
   const storageProvider = initialStorageProvider || new InMemoryStorageProvider();
 
-
   const dispatch = (action: ConversationAction): void => {
     state = conversationReducer(state, action);
   };
@@ -29,7 +28,10 @@ export const createConversationManager = (
     storageProvider,
 
     async createConversation(options: CreateConversationOptions = {}): Promise<Conversation> {
-      const action: ConversationAction = { type: 'CREATE_CONVERSATION', payload: options };
+      const action: ConversationAction = {
+        type: 'CREATE_CONVERSATION',
+        payload: options,
+      };
       dispatch(action);
       const newConversation = Array.from(state.values()).pop();
       if (!newConversation) throw new ConversationError('Failed to create conversation');
@@ -52,7 +54,10 @@ export const createConversationManager = (
       id: ConversationId,
       updates: Partial<Conversation>,
     ): Promise<Conversation> {
-      const action: ConversationAction = { type: 'UPDATE_CONVERSATION', payload: { id, updates } };
+      const action: ConversationAction = {
+        type: 'UPDATE_CONVERSATION',
+        payload: { id, updates },
+      };
       dispatch(action);
       const updatedConversation = state.get(id);
       if (!updatedConversation) throw new ConversationNotFoundError(id);
@@ -65,15 +70,18 @@ export const createConversationManager = (
       await storageProvider.delete(id);
     },
 
-    async listConversations(): Promise<ConversationMetadata[]> {
-      return storageProvider.list();
+    async listConversations(): Promise<Conversation[]> {
+      return storageProvider.listConversations();
     },
 
     async addMessage(
       id: ConversationId,
-      message: Omit<ConversationMessage, 'id' | 'timestamp'>,
+      message: Omit<ConversationMessage, 'id'>,
     ): Promise<Conversation> {
-      const action: ConversationAction = { type: 'ADD_MESSAGE', payload: { id, message } };
+      const action: ConversationAction = {
+        type: 'ADD_MESSAGE',
+        payload: { id, message },
+      };
       dispatch(action);
       const updatedConversation = state.get(id);
       if (!updatedConversation) throw new ConversationNotFoundError(id);
@@ -90,7 +98,10 @@ export const createConversationManager = (
       id: ConversationId,
       metadata: Partial<ConversationMetadata>,
     ): Promise<Conversation> {
-      const action: ConversationAction = { type: 'SET_METADATA', payload: { id, metadata } };
+      const action: ConversationAction = {
+        type: 'SET_METADATA',
+        payload: { id, metadata },
+      };
       dispatch(action);
       const updatedConversation = state.get(id);
       if (!updatedConversation) throw new ConversationNotFoundError(id);
@@ -99,7 +110,10 @@ export const createConversationManager = (
     },
 
     async addProvider(id: ConversationId, providerId: ProviderId): Promise<Conversation> {
-      const action: ConversationAction = { type: 'ADD_PROVIDER', payload: { id, providerId } };
+      const action: ConversationAction = {
+        type: 'ADD_PROVIDER',
+        payload: { id, providerId },
+      };
       dispatch(action);
       const updatedConversation = state.get(id);
       if (!updatedConversation) throw new ConversationNotFoundError(id);
@@ -108,7 +122,10 @@ export const createConversationManager = (
     },
 
     async removeProvider(id: ConversationId, providerId: ProviderId): Promise<Conversation> {
-      const action: ConversationAction = { type: 'REMOVE_PROVIDER', payload: { id, providerId } };
+      const action: ConversationAction = {
+        type: 'REMOVE_PROVIDER',
+        payload: { id, providerId },
+      };
       dispatch(action);
       const updatedConversation = state.get(id);
       if (!updatedConversation) throw new ConversationNotFoundError(id);
@@ -117,7 +134,10 @@ export const createConversationManager = (
     },
 
     async clearHistory(id: ConversationId): Promise<Conversation> {
-      const action: ConversationAction = { type: 'CLEAR_HISTORY', payload: id };
+      const action: ConversationAction = {
+        type: 'CLEAR_HISTORY',
+        payload: id,
+      };
       dispatch(action);
       const updatedConversation = state.get(id);
       if (!updatedConversation) throw new ConversationNotFoundError(id);
@@ -127,11 +147,13 @@ export const createConversationManager = (
 
     async searchConversations(query: string): Promise<ConversationMetadata[]> {
       const allConversations = await this.listConversations();
-      return allConversations.filter(
-        (conv) =>
-          conv.title?.toLowerCase().includes(query.toLowerCase()) ||
-          conv.description?.toLowerCase().includes(query.toLowerCase()),
-      );
+      return allConversations
+        .filter(
+          (conv) =>
+            conv.metadata.title?.toLowerCase().includes(query.toLowerCase()) ||
+            conv.metadata.description?.toLowerCase().includes(query.toLowerCase()),
+        )
+        .map((conv) => conv.metadata);
     },
 
     async exportConversation(id: ConversationId): Promise<string> {
@@ -140,12 +162,44 @@ export const createConversationManager = (
     },
 
     async importConversation(conversationData: string): Promise<Conversation> {
-      const action: ConversationAction = { type: 'IMPORT_CONVERSATION', payload: conversationData };
+      const action: ConversationAction = {
+        type: 'IMPORT_CONVERSATION',
+        payload: conversationData,
+      };
       dispatch(action);
       const importedConversation = Array.from(state.values()).pop();
       if (!importedConversation) throw new ConversationError('Failed to import conversation');
       await storageProvider.save(importedConversation);
       return importedConversation;
+    },
+
+    // New methods for conversation management
+
+    async clearConversation(id: ConversationId): Promise<Conversation> {
+      return this.clearHistory(id);
+    },
+
+    async startNewConversation(options: CreateConversationOptions = {}): Promise<Conversation> {
+      return this.createConversation(options);
+    },
+
+    async listAllConversations(): Promise<Conversation[]> {
+      return this.listConversations();
+    },
+
+    async displayConversation(id: ConversationId): Promise<ConversationMessage[]> {
+      return this.getHistory(id);
+    },
+
+    async selectConversation(id: ConversationId): Promise<Conversation> {
+      return this.getConversation(id);
+    },
+
+    async deleteAllConversations(): Promise<void> {
+      const allConversations = await this.listConversations();
+      for (const conversation of allConversations) {
+        await this.deleteConversation(conversation.id);
+      }
     },
   };
 

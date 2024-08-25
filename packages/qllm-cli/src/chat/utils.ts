@@ -90,5 +90,47 @@ export const utils = {
   isImageFile(filename: string): boolean {
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
     return imageExtensions.includes(this.getFileExtension(filename));
+  },
+
+  // New utility functions for conversation management
+
+  formatConversationSummary(conversation: { id: string; createdAt: Date; messages: any[] }): string {
+    const { id, createdAt, messages } = conversation;
+    const messageCount = messages.length;
+    const firstMessage = messages[0]?.content?.text || 'No messages';
+    return `ID: ${id} | Created: ${createdAt.toLocaleString()} | Messages: ${messageCount} | First message: ${this.truncateString(firstMessage, 50)}`;
+  },
+
+  formatMessageContent(content: any): string {
+    if (typeof content === 'string') {
+      return content;
+    } else if (content.type === 'text') {
+      return content.text;
+    } else if (content.type === 'image_url') {
+      return `[Image: ${content.url}]`;
+    } else {
+      return JSON.stringify(content);
+    }
+  },
+
+  formatConversationMessage(message: { role: string; content: any; timestamp?: Date }): string {
+    const { role, content, timestamp } = message;
+    const formattedContent = this.formatMessageContent(content);
+    const timeString = timestamp ? `[${timestamp.toLocaleTimeString()}] ` : '';
+    return `${timeString}${role.charAt(0).toUpperCase() + role.slice(1)}: ${formattedContent}`;
+  },
+
+  async ensureDirectoryExists(dirPath: string): Promise<void> {
+    try {
+      await fs.mkdir(dirPath, { recursive: true });
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+        throw error;
+      }
+    }
+  },
+
+  generateUniqueId(): string {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 };
