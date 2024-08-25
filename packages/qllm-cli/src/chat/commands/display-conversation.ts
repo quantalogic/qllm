@@ -1,4 +1,9 @@
 import { CommandContext } from "../command-processor";
+import { IOManager } from "../io-manager";
+import { ConversationMessage, ChatMessageContent, LLMOptions } from "qllm-lib";
+
+const MESSAGES_PER_PAGE = 5;
+const MAX_CONTENT_LENGTH = 100;
 
 export async function displayConversation(
   args: string[],
@@ -11,61 +16,177 @@ export async function displayConversation(
   }
 
   try {
-    const conversation = await conversationManager.getConversation(
-      conversationId
-    );
+    const conversation = await conversationManager.getConversation(conversationId);
     const messages = conversation.messages;
 
-    // Display conversation header
-    ioManager.displayInfo(`Conversation ${conversationId}`);
-    ioManager.displayInfo(
-      `Title: ${conversation.metadata.title || "Untitled"}`
-    );
-    ioManager.displayInfo(
-      `Created: ${conversation.metadata.createdAt.toLocaleString()}`
-    );
-    ioManager.displayInfo(
-      `Updated: ${conversation.metadata.updatedAt.toLocaleString()}`
-    );
-    ioManager.displayInfo(`Messages: ${messages.length}`);
-    ioManager.newLine();
+    displayConversationSummary(conversation, ioManager);
 
-    // Display messages
-    messages.forEach((message, index) => {
-      const roleColor = message.role === "user" ? "green" : "blue";
-      const formattedContent = formatMessageContent(message.content);
-      const timestamp = message.timestamp
-        ? `[${message.timestamp.toLocaleTimeString()}] `
-        : "";
+    let currentPage = 1;
+    let filter: string | null = null;
+    let expandedMessageIndex: number | null = null;
 
-      ioManager.displayInfo(`${index + 1}. ${message.role.toUpperCase()}`);
-      ioManager.displayInfo(`   ${timestamp}${formattedContent}`);
+    while (true) {
+      displayMessages(messages, currentPage, filter, expandedMessageIndex, ioManager);
+      const action = await promptForAction(ioManager);
 
-      if (message.providerId) {
-        ioManager.displayInfo(`   Provider: ${message.providerId}`);
+      switch (action) {
+        case 'next':
+          if (currentPage * MESSAGES_PER_PAGE < messages.length) currentPage++;
+          expandedMessageIndex = null;
+          break;
+        case 'prev':
+          if (currentPage > 1) currentPage--;
+          expandedMessageIndex = null;
+          break;
+        case 'filter':
+          filter = await promptForFilter(ioManager);
+          currentPage = 1;
+          expandedMessageIndex = null;
+          break;
+        case 'expand':
+          expandedMessageIndex = await promptForExpand(ioManager, messages.length);
+          break;
+        case 'exit':
+          return;
       }
-
-      if (index < messages.length - 1) {
-        ioManager.newLine();
-      }
-    });
+    }
   } catch (error) {
-    ioManager.displayError(
-      `Failed to display conversation: ${(error as Error).message}`
-    );
+    ioManager.displayError(`Failed to display conversation: ${(error as Error).message}`);
   }
 }
 
-function formatMessageContent(content: any): string {
-  if (typeof content === "string") {
-    return content;
-  } else if (content.type === "text") {
-    return content.text;
-  } else if (content.type === "image_url") {
-    return `[Image: ${content.url}]`;
-  } else if (Array.isArray(content)) {
-    return content.map((item) => formatMessageContent(item)).join("\n   ");
-  } else {
-    return JSON.stringify(content, null, 2);
+function displayConversationSummary(conversation: any, ioManager: IOManager): void {
+  ioManager.displaySectionHeader(`Conversation: ${conversation.id}`);
+  ioManager.displayInfo(`Title: ${ioManager.colorize(conversation.metadata.title || "Untitled", "cyan")}`);
+  ioManager.displayInfo(`Created: ${ioManager.colorize(conversation.metadata.createdAt.toLocaleString(), "yellow")}`);
+  ioManager.displayInfo(`Updated: ${ioManager.colorize(conversation.metadata.updatedAt.toLocaleString(), "yellow")}`);
+  ioManager.displayInfo(`Messages: ${ioManager.colorize(conversation.messages.length.toString(), "green")}`);
+  ioManager.newLine();
+}
+
+function displayMessages(
+  messages: ConversationMessage[], 
+  page: number, 
+  filter: string | null, 
+  expandedIndex: number | null,
+  ioManager: IOManager
+): void {
+  const startIndex = (page - 1) * MESSAGES_PER_PAGE;
+  const endIndex = startIndex + MESSAGES_PER_PAGE;
+  const filteredMessages = filter 
+    ? messages.filter(m => m.role === filter || m.providerId === filter)
+    : messages;
+  const displayedMessages = filteredMessages.slice(startIndex, endIndex);
+
+  displayedMessages.forEach((message, index) => {
+    const globalIndex = startIndex + index;
+    displayMessage(message, globalIndex + 1, globalIndex === expandedIndex, ioManager);
+    ioManager.displayInfo(ioManager.colorize('─'.repeat(50), 'dim'));
+  });
+
+  ioManager.displayInfo(`Page ${page} of ${Math.ceil(filteredMessages.length / MESSAGES_PER_PAGE)}`);
+}
+
+function displayMessage(message: ConversationMessage, index: number, isExpanded: boolean, ioManager: IOManager): void {
+  const roleColor = message.role === "user" ? "green" : "blue";
+  const timestamp = message.timestamp
+    ? ioManager.colorize(`[${message.timestamp.toLocaleTimeString()}]`, "dim")
+    : "";
+
+  ioManager.displayInfo(`${ioManager.colorize(`${index}.`, "cyan")} ${ioManager.colorize(message.role.toUpperCase(), roleColor)} ${timestamp}`);
+  
+  displayMessageContent(message.content, ioManager, isExpanded);
+
+  if (message.providerId) {
+    ioManager.displayInfo(`   Provider: ${ioManager.colorize(message.providerId, "magenta")}`);
   }
+
+  if (message.options) {
+    displayLLMOptions(message.options, ioManager);
+  }
+}
+
+function displayMessageContent(content: ChatMessageContent, ioManager: IOManager, isExpanded: boolean, indent: string = "   "): void {
+  if (typeof content === "string") {
+    displayTruncatedContent(content, ioManager, isExpanded, indent);
+  } else if (Array.isArray(content)) {
+    content.forEach(item => displayMessageContent(item, ioManager, isExpanded, indent + "   "));
+  } else if (content.type === "text") {
+    displayTruncatedContent(content.text, ioManager, isExpanded, indent);
+  } else if (content.type === "image_url") {
+    ioManager.displayInfo(`${indent}${ioManager.colorize("[Image]", "yellow")} ${content.url}`);
+  } else {
+    ioManager.displayInfo(`${indent}${JSON.stringify(content, null, 2)}`);
+  }
+}
+
+function displayTruncatedContent(content: string, ioManager: IOManager, isExpanded: boolean, indent: string): void {
+  if (isExpanded || content.length <= MAX_CONTENT_LENGTH) {
+    ioManager.displayInfo(`${indent}${content}`);
+  } else {
+    const truncated = content.slice(0, MAX_CONTENT_LENGTH) + "...";
+    ioManager.displayInfo(`${indent}${truncated}`);
+    ioManager.displayInfo(`${indent}${ioManager.colorize("[Content truncated. Use 'e' to expand]", "dim")}`);
+  }
+}
+
+function displayLLMOptions(options: Partial<LLMOptions>, ioManager: IOManager): void {
+  ioManager.displayInfo("   LLM Options:");
+  Object.entries(options).forEach(([key, value]) => {
+    if (value !== undefined) {
+      let displayValue = value;
+      if (typeof value === 'object') {
+        displayValue = JSON.stringify(value);
+      }
+      ioManager.displayInfo(`      ${ioManager.colorize(key, "cyan")}: ${ioManager.colorize(String(displayValue), "yellow")}`);
+    }
+  });
+}
+
+async function promptForAction(ioManager: IOManager): Promise<string> {
+  return new Promise((resolve) => {
+    ioManager.getUserInput(
+      "Enter action (n: next, p: prev, f: filter, e: expand, x: exit): ",
+      (input) => {
+        switch (input.toLowerCase()) {
+          case 'n': resolve('next'); break;
+          case 'p': resolve('prev'); break;
+          case 'f': resolve('filter'); break;
+          case 'e': resolve('expand'); break;
+          case 'x': resolve('exit'); break;
+          default: resolve(promptForAction(ioManager));
+        }
+      }
+    );
+  });
+}
+
+async function promptForFilter(ioManager: IOManager): Promise<string | null> {
+  return new Promise((resolve) => {
+    ioManager.getUserInput(
+      "Enter filter (user, assistant, provider name, or empty to clear): ",
+      (input) => resolve(input || null)
+    );
+  });
+}
+
+async function promptForExpand(ioManager: IOManager, messageCount: number): Promise<number | null> {
+  return new Promise((resolve) => {
+    ioManager.getUserInput(
+      `Enter message number to expand (1-${messageCount}) or 'c' to cancel: `,
+      (input) => {
+        if (input.toLowerCase() === 'c') {
+          resolve(null);
+        } else {
+          const index = parseInt(input, 10) - 1;
+          if (isNaN(index) || index < 0 || index >= messageCount) {
+            ioManager.displayError("Invalid message number. Please try again.");
+            resolve(promptForExpand(ioManager, messageCount));
+          } else {
+            resolve(index);
+          }
+        }
+      }
+    );
+  });
 }

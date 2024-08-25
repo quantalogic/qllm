@@ -225,4 +225,22 @@ export class IOManager {
     this.displayInfo(this.colorize("Use 'set <option> <value>' to change a setting", "dim"));
     this.displayInfo(this.colorize("Example: set provider openai", "dim"));
   }
+
+  displayProviderList(providers: string[]): void {
+    this.displaySectionHeader("Available Providers");
+
+    if (providers.length === 0) {
+      this.displayInfo(this.colorize("No providers available.", "yellow"));
+    } else {
+      providers.forEach((provider, index) => {
+        this.displayInfo(`${this.colorize(`${index + 1}.`, "cyan")} ${this.colorize(provider, "green")}`);
+      });
+    }
+
+    this.newLine();
+    this.displayInfo(this.colorize("To set a provider, use: set provider <provider_name>", "dim"));
+  }
+  displayGroupHeader(header: string): void {
+    this.displayInfo(this.colorize(`\n${header}:`, "magenta"));
+  }
 }
