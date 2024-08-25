@@ -49,6 +49,7 @@ export async function main() {
     // Set up the exit handler
     // Set up the exit handler
     process.on("exit", (code) => {
+      process.exit(code);
     });
 
     await program.parseAsync(process.argv);

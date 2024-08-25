@@ -12,6 +12,42 @@ import {
   isImageFile,
 } from "../utils/image-utils";
 import { output } from "../utils/output";
+import { processAndExit } from "../utils/common";
+
+const askCommandAction = async (question: string, options: AskOptions) => {
+  const spinner = createSpinner("Processing...").start();
+
+  try {
+    spinner.update({ text: "Connecting to provider..." });
+    const provider = await getLLMProvider(options.provider);
+
+    spinner.update({ text: "Preparing input..." });
+    const imageInputs = await prepareImageInputs(options);
+
+    spinner.update({ text: "Sending request..." });
+    const response = await askQuestion(spinner, question, provider, {
+      ...options,
+      image: imageInputs,
+    });
+
+    spinner.success({ text: kleur.green("Response received successfully!") });
+
+    if (options.output) {
+      await saveResponseToFile(response, options.output);
+      output.success(`Response saved to ${options.output}`);
+    } else {
+      output.info("Response:");
+      console.log(response);
+    }
+  } catch (error) {
+    spinner.error({
+      text: kleur.red("An error occurred while processing your request."),
+    });
+    output.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  } finally {
+  }
+};
 
 export const askCommand = new Command("ask")
   .description("Ask a question to an LLM provider")
@@ -48,42 +84,7 @@ export const askCommand = new Command("ask")
     "Capture screenshot from specified display number",
     (value) => parseInt(value, 10)
   )
-  .action(async (question: string, options: AskOptions) => {
-    const spinner = createSpinner("Processing...").start();
-    const startTime = Date.now();
-
-    try {
-      spinner.update({ text: "Connecting to provider..." });
-      const provider = await getLLMProvider(options.provider);
-
-      spinner.update({ text: "Preparing input..." });
-      const imageInputs = await prepareImageInputs(options);
-
-      spinner.update({ text: "Sending request..." });
-      const response = await askQuestion(spinner, question, provider, {
-        ...options,
-        image: imageInputs,
-      });
-
-      spinner.success({ text: kleur.green("Response received successfully!") });
-
-      if (options.output) {
-        await saveResponseToFile(response, options.output);
-        output.success(`Response saved to ${options.output}`);
-      } else {
-        output.info("Response:");
-        console.log(response);
-      }
-      process.exit(0);
-    } catch (error) {
-      spinner.error({
-        text: kleur.red("An error occurred while processing your request."),
-      });
-      output.error(error instanceof Error ? error.message : String(error));
-      process.exit(1);
-    } finally {
-    }
-  });
+  .action(processAndExit(askCommandAction));
 
 async function prepareImageInputs(options: AskOptions): Promise<string[]> {
   const images: string[] = [];

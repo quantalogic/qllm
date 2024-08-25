@@ -6,6 +6,53 @@ import { Chat } from "../chat/chat";
 import { chatConfig } from "../chat/chat-config";
 import { output } from "../utils/output";
 import { CliConfigManager } from "../utils/cli-config-manager";
+import { processAndExit } from "../utils/common";
+
+const chatAction = async (options: {provider: string, model: string}) => {
+  try {
+    await chatConfig.initialize();
+
+    const providerName =
+      options.provider ||
+      CliConfigManager.getInstance().get("defaultProvider") ||
+      "openai";
+    const modelName =
+      options.model ||
+      CliConfigManager.getInstance().get("defaultModel") ||
+      "gpt-4o-mini";
+
+    const availableProviders = getListProviderNames();
+    if (!availableProviders.includes(providerName)) {
+      output.warn(
+        `Invalid provider "${providerName}". Available providers: ${availableProviders.join(
+          ", "
+        )}`
+      );
+      output.info("Use the 'configure' command to set a valid provider.");
+      output.info("Use the '/providers' command to see available providers.");
+    }
+
+    const provider = await getLLMProvider(providerName);
+    const models = await provider.listModels();
+
+    if (!models.some((m) => m.id === modelName)) {
+      output.warn(
+        `Invalid model "${modelName}" for provider "${providerName}".`
+      );
+      output.info("Available models:");
+      models.forEach((m) => output.info(`- ${m.id}`));
+      output.info("Use the 'configure' command to set a valid model.");
+      output.info("Use the '/models' command to see available models.");
+    }
+
+    const chat = new Chat(providerName, modelName);
+
+    await chat.start();
+  } catch (error) {
+    output.error("An error occurred while starting the chat:");
+    console.error(error);
+  }
+};
 
 export const chatCommand = new Command("chat")
   .description("Start an interactive chat session with an LLM")
@@ -38,48 +85,4 @@ export const chatCommand = new Command("chat")
     (value, previous) => previous.concat([value]),
     [] as string[]
   )
-  .action(async (options) => {
-    try {
-      await chatConfig.initialize();
-
-      const providerName =
-        options.provider ||
-        CliConfigManager.getInstance().get("defaultProvider") ||
-        "openai";
-      const modelName =
-        options.model ||
-        CliConfigManager.getInstance().get("defaultModel") ||
-        "gpt-4o-mini";
-
-      const availableProviders = getListProviderNames();
-      if (!availableProviders.includes(providerName)) {
-        output.warn(
-          `Invalid provider "${providerName}". Available providers: ${availableProviders.join(
-            ", "
-          )}`
-        );
-        output.info("Use the 'configure' command to set a valid provider.");
-        output.info("Use the '/providers' command to see available providers."); 
-      }
-
-      const provider = await getLLMProvider(providerName);
-      const models = await provider.listModels();
-
-      if (!models.some((m) => m.id === modelName)) {
-        output.warn(
-          `Invalid model "${modelName}" for provider "${providerName}".`
-        );
-        output.info("Available models:");
-        models.forEach((m) => output.info(`- ${m.id}`));
-        output.info("Use the 'configure' command to set a valid model.");
-        output.info("Use the '/models' command to see available models.");
-      }
-
-      const chat = new Chat(providerName, modelName);
-
-      await chat.start();
-    } catch (error) {
-      output.error("An error occurred while starting the chat:");
-      console.error(error);
-    }
-  });
+  .action(processAndExit(chatAction));

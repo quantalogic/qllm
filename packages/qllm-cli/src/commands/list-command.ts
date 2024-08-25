@@ -3,13 +3,17 @@ import Table from 'cli-table3';
 import kleur from 'kleur';
 import { createSpinner } from 'nanospinner';
 import { getListProviderNames, getLLMProvider, LLMProvider, Model } from 'qllm-lib';
+import { processAndExit } from '../utils/common';
+
+
+
 
 export const listCommand = new Command('list')
   .description('List providers and models')
   .addCommand(
     new Command('providers')
       .description('List all available providers')
-      .action(listProviders)
+      .action(processAndExit(listProviders))
   )
   .addCommand(
     new Command('models')
@@ -19,7 +23,7 @@ export const listCommand = new Command('list')
       .option('-s, --sort <field>', 'Sort models by field (id, created)', 'id')
       .option('-r, --reverse', 'Reverse sort order')
       .option('-c, --columns <columns>', 'Select columns to display (comma-separated: id,description,created)', 'id,description,created')
-      .action(listModels)
+      .action(processAndExit(listModels))
   );
 
 async function listProviders() {
@@ -41,6 +45,7 @@ async function listProviders() {
     spinner.error({ text: 'Error listing providers' });
     console.error(kleur.red('Error:'), error instanceof Error ? error.message : String(error));
   }
+
 }
 
 async function listModels(providerName: string, options: { full?: boolean, sort?: string, reverse?: boolean, columns?: string }) {
