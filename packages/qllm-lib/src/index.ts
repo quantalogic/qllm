@@ -19,7 +19,6 @@ import { OpenAIProvider } from './providers/openai';
 import { AnthropicProvider } from './providers/anthropic';
 import { OllamaProvider } from './providers/ollama';
 import { GroqProvider } from './providers/qroq';
-import { ConversationManagerImpl } from './conversation/conversation-manager';
 import { TemplateManager } from './templates/template-manager';
 
 // Factory function for creating providers
@@ -77,14 +76,13 @@ export {
   AnthropicProvider,
   OllamaProvider,
   GroqProvider,
-  ConversationManagerImpl as ConversationManager,
   TemplateManager,
+
 };
 
 // Default export (if needed)
 export default {
   createLLMProvider,
   createEmbeddingProvider,
-  ConversationManager: ConversationManagerImpl,
   TemplateManager,
 };

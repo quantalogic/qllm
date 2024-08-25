@@ -21,8 +21,7 @@ export class Chat {
     private readonly providerName: string,
     private readonly modelName: string
   ) {
-    this.conversationManager =
-      createConversationManager() as ConversationManager;
+    this.conversationManager = createConversationManager();
     this.config = ChatConfig.getInstance();
     this.configManager = new ConfigManager(this.config);
     this.messageHandler = new MessageHandler(
@@ -49,10 +48,7 @@ export class Chat {
 
   async start(): Promise<void> {
     await this.initialize();
-    const conversation = await this.conversationManager.createConversation({
-      metadata: { title: "CLI Chat Session" },
-      providerIds: [this.providerName],
-    });
+    const conversation = await this.conversationManager.createConversation();
     this.conversationId = conversation.id;
     output.info(
       "Chat session started. Type your messages or use special commands."
@@ -66,7 +62,7 @@ export class Chat {
       if (input.startsWith("/")) {
         await this.handleSpecialCommand(input);
       } else {
-        await this.sendMessage(input);
+        await this.sendUserMessage(input);
       }
       this.promptUser();
     });
@@ -83,24 +79,25 @@ export class Chat {
     });
   }
 
-  private async sendMessage(message: string): Promise<void> {
+  private async sendUserMessage(message: string): Promise<void> {
     if (!this.conversationId) {
       output.error("No active conversation. Please start a chat first.");
       return;
     }
 
-    await this.messageHandler.addUserMessage(this.conversationId, message);
-    const history = await this.conversationManager.getHistory(
-      this.conversationId
-    );
-
     const currentProviderName = this.configManager.getProvider();
 
     const provider = await getLLMProvider(currentProviderName);
+    const messages = await this.conversationManager.getHistory(
+      this.conversationId
+    );
+
+    console.dir(messages, { depth: null });
 
     await this.messageHandler.generateAndSaveResponse(
       provider,
-      history,
+      message,
+      messages,
       this.conversationId
     );
   }

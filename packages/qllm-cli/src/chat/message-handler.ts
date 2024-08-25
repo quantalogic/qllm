@@ -6,8 +6,13 @@ import {
 } from "qllm-lib";
 import { createSpinner } from "nanospinner";
 import { output } from "../utils/output";
-import { DEFAULT_PROVIDER, DEFAULT_MODEL, DEFAULT_MAX_TOKENS } from "../constants";
+import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 import { ConfigManager } from "./config-manager";
+
+type ConversationMessageWithoutIdAndTimestamp = Omit<
+  ConversationMessage,
+  "id" | "timestamp"
+>;
 
 export class MessageHandler {
   constructor(
@@ -15,9 +20,12 @@ export class MessageHandler {
     private configManager: ConfigManager
   ) {}
 
-  async addUserMessage(conversationId: string, message: string): Promise<void> {
+  private toUserConversationMessage(
+    message: string
+  ): ConversationMessageWithoutIdAndTimestamp {
     const config = this.configManager.getConfig();
-    await this.conversationManager.addMessage(conversationId, {
+
+    const conversationMessage: ConversationMessageWithoutIdAndTimestamp = {
       role: "user",
       content: {
         type: "text",
@@ -27,31 +35,29 @@ export class MessageHandler {
       options: {
         model: config.getModel() || DEFAULT_MODEL,
         temperature: config.getTemperature(),
-        maxTokens: config.getMaxTokens() ,
+        maxTokens: config.getMaxTokens(),
         topProbability: config.getTopP(),
         frequencyPenalty: config.getFrequencyPenalty(),
         presencePenalty: config.getPresencePenalty(),
         stop: config.getStopSequence(),
       },
-    });
+    };
+
+    return conversationMessage;
   }
 
   async generateAndSaveResponse(
     provider: LLMProvider,
-    messages: ConversationMessage[],
+    query: string,
+    history: ConversationMessage[],
     conversationId: string
   ): Promise<void> {
     const spinner = createSpinner("Generating response...").start();
 
-    if (messages.length === 0) {
-      spinner.error({
-        text: "No messages to generate a response from.",
-      });
-      return;
-    }
+    const queryMessage = this.toUserConversationMessage(query);
+    const options = queryMessage.options;
 
-    const lastMessage = messages[messages.length - 1];
-    const options = lastMessage.options;
+    const messages = [...history, queryMessage];
 
     let chunkNumber = 0;
     try {
@@ -81,11 +87,8 @@ export class MessageHandler {
         chunkNumber++;
       }
       console.log("\n");
-      await this.saveResponse(
-        conversationId,
-        fullResponse,
-        provider.name
-      );
+      await this.conversationManager.addMessage(conversationId, queryMessage);
+      await this.saveResponse(conversationId, fullResponse, provider.name);
     } catch (error) {
       spinner.error({
         text: `Error generating response: ${(error as Error).message}`,

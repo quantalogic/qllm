@@ -1,6 +1,5 @@
 // src/conversation/conversation-manager.ts
 
-import { v4 as uuidv4 } from 'uuid';
 import {
   Conversation,
   ConversationId,
@@ -12,177 +11,143 @@ import {
   StorageProvider,
 } from '../types';
 import { InMemoryStorageProvider } from '../types/conversations-types';
-import {
-  ConversationError,
-  ConversationNotFoundError,
-  InvalidConversationOperationError,
-} from '../types';
+import { ConversationError, ConversationNotFoundError } from '../types';
+import { ConversationAction, conversationReducer } from './conversation-reducer';
 
-export const createConversationManager = (): ConversationManager => {
-  return new ConversationManagerImpl();
-}
+export const createConversationManager = (
+  initialStorageProvider?: StorageProvider,
+): ConversationManager => {
+  let state = new Map<ConversationId, Conversation>();
+  const storageProvider = initialStorageProvider || new InMemoryStorageProvider();
 
-export class ConversationManagerImpl implements ConversationManager {
-  public storageProvider: StorageProvider;
 
-  constructor(storageProvider?: StorageProvider) {
-    this.storageProvider = storageProvider || new InMemoryStorageProvider();
-  }
+  const dispatch = (action: ConversationAction): void => {
+    state = conversationReducer(state, action);
+  };
 
-  async createConversation(options: CreateConversationOptions = {}): Promise<Conversation> {
-    const id = uuidv4();
-    const now = new Date();
-    const conversation: Conversation = {
-      id,
-      messages: [],
-      metadata: {
-        createdAt: now,
-        updatedAt: now,
-        title: options.metadata?.title || `Conversation ${id}`,
-        description: options.metadata?.description || '',
-        ...options.metadata,
-      },
-      activeProviders: new Set(options.providerIds || []),
-    };
+  const manager: ConversationManager = {
+    storageProvider,
 
-    if (options.initialMessage) {
-      conversation.messages.push({
-        id: uuidv4(),
-        role: 'user',
-        content: { type: 'text', text: options.initialMessage },
-        timestamp: now,
-        providerId: options.providerIds?.[0] || '',
-        options: {
-        },
-      });
-    }
+    async createConversation(options: CreateConversationOptions = {}): Promise<Conversation> {
+      const action: ConversationAction = { type: 'CREATE_CONVERSATION', payload: options };
+      dispatch(action);
+      const newConversation = Array.from(state.values()).pop();
+      if (!newConversation) throw new ConversationError('Failed to create conversation');
+      await storageProvider.save(newConversation);
+      return newConversation;
+    },
 
-    await this.storageProvider.save(conversation);
-    return conversation;
-  }
-
-  async getConversation(id: ConversationId): Promise<Conversation> {
-    const conversation = await this.storageProvider.load(id);
-    if (!conversation) {
-      throw new ConversationNotFoundError(id);
-    }
-    return conversation;
-  }
-
-  async updateConversation(id: ConversationId, updates: Partial<Conversation>): Promise<Conversation> {
-    const conversation = await this.getConversation(id);
-    const updatedConversation: Conversation = {
-      ...conversation,
-      ...updates,
-      metadata: {
-        ...conversation.metadata,
-        ...updates.metadata,
-        updatedAt: new Date(),
-      },
-    };
-    await this.storageProvider.save(updatedConversation);
-    return updatedConversation;
-  }
-
-  async deleteConversation(id: ConversationId): Promise<void> {
-    await this.storageProvider.delete(id);
-  }
-
-  async listConversations(): Promise<ConversationMetadata[]> {
-    return this.storageProvider.list();
-  }
-
-  async addMessage(id: ConversationId, message: Omit<ConversationMessage, 'id' | 'timestamp'>): Promise<Conversation> {
-    const conversation = await this.getConversation(id);
-    const newMessage: ConversationMessage = {
-      ...message,
-      id: uuidv4(),
-      timestamp: new Date(),
-    };
-    conversation.messages.push(newMessage);
-    conversation.activeProviders.add(message.providerId);
-    conversation.metadata.updatedAt = new Date();
-    await this.storageProvider.save(conversation);
-    return conversation;
-  }
-
-  async getHistory(id: ConversationId): Promise<ConversationMessage[]> {
-    const conversation = await this.getConversation(id);
-    return conversation.messages;
-  }
-
-  async setMetadata(id: ConversationId, metadata: Partial<ConversationMetadata>): Promise<Conversation> {
-    const conversation = await this.getConversation(id);
-    conversation.metadata = {
-      ...conversation.metadata,
-      ...metadata,
-      updatedAt: new Date(),
-    };
-    await this.storageProvider.save(conversation);
-    return conversation;
-  }
-
-  async addProvider(id: ConversationId, providerId: ProviderId): Promise<Conversation> {
-    const conversation = await this.getConversation(id);
-    conversation.activeProviders.add(providerId);
-    conversation.metadata.updatedAt = new Date();
-    await this.storageProvider.save(conversation);
-    return conversation;
-  }
-
-  async removeProvider(id: ConversationId, providerId: ProviderId): Promise<Conversation> {
-    const conversation = await this.getConversation(id);
-    if (!conversation.activeProviders.has(providerId)) {
-      throw new InvalidConversationOperationError(`Provider ${providerId} is not active in conversation ${id}`);
-    }
-    conversation.activeProviders.delete(providerId);
-    conversation.metadata.updatedAt = new Date();
-    await this.storageProvider.save(conversation);
-    return conversation;
-  }
-
-  async clearHistory(id: ConversationId): Promise<Conversation> {
-    const conversation = await this.getConversation(id);
-    conversation.messages = [];
-    conversation.metadata.updatedAt = new Date();
-    await this.storageProvider.save(conversation);
-    return conversation;
-  }
-
-  async searchConversations(query: string): Promise<ConversationMetadata[]> {
-    const allConversations = await this.listConversations();
-    return allConversations.filter(
-      (conv) =>
-        conv.title?.toLowerCase().includes(query.toLowerCase()) ||
-        conv.description?.toLowerCase().includes(query.toLowerCase())
-    );
-  }
-
-  async exportConversation(id: ConversationId): Promise<string> {
-    const conversation = await this.getConversation(id);
-    return JSON.stringify(conversation, null, 2);
-  }
-
-  async importConversation(conversationData: string): Promise<Conversation> {
-    try {
-      const parsedData = JSON.parse(conversationData) as Conversation;
-      if (!this.isValidConversation(parsedData)) {
-        throw new Error('Invalid conversation data structure');
+    async getConversation(id: ConversationId): Promise<Conversation> {
+      const conversation = state.get(id);
+      if (!conversation) {
+        const loadedConversation = await storageProvider.load(id);
+        if (!loadedConversation) throw new ConversationNotFoundError(id);
+        state.set(id, loadedConversation);
+        return loadedConversation;
       }
-      await this.storageProvider.save(parsedData);
-      return parsedData;
-    } catch (error) {
-      throw new ConversationError(`Failed to import conversation: ${(error as Error).message}`);
-    }
-  }
+      return conversation;
+    },
 
-  private isValidConversation(data: any): data is Conversation {
-    return (
-      typeof data === 'object' &&
-      typeof data.id === 'string' &&
-      Array.isArray(data.messages) &&
-      typeof data.metadata === 'object' &&
-      data.activeProviders instanceof Set
-    );
-  }
-}
+    async updateConversation(
+      id: ConversationId,
+      updates: Partial<Conversation>,
+    ): Promise<Conversation> {
+      const action: ConversationAction = { type: 'UPDATE_CONVERSATION', payload: { id, updates } };
+      dispatch(action);
+      const updatedConversation = state.get(id);
+      if (!updatedConversation) throw new ConversationNotFoundError(id);
+      await storageProvider.save(updatedConversation);
+      return updatedConversation;
+    },
+
+    async deleteConversation(id: ConversationId): Promise<void> {
+      dispatch({ type: 'DELETE_CONVERSATION', payload: id });
+      await storageProvider.delete(id);
+    },
+
+    async listConversations(): Promise<ConversationMetadata[]> {
+      return storageProvider.list();
+    },
+
+    async addMessage(
+      id: ConversationId,
+      message: Omit<ConversationMessage, 'id' | 'timestamp'>,
+    ): Promise<Conversation> {
+      const action: ConversationAction = { type: 'ADD_MESSAGE', payload: { id, message } };
+      dispatch(action);
+      const updatedConversation = state.get(id);
+      if (!updatedConversation) throw new ConversationNotFoundError(id);
+      await storageProvider.save(updatedConversation);
+      return updatedConversation;
+    },
+
+    async getHistory(id: ConversationId): Promise<ConversationMessage[]> {
+      const conversation = await this.getConversation(id);
+      return conversation.messages;
+    },
+
+    async setMetadata(
+      id: ConversationId,
+      metadata: Partial<ConversationMetadata>,
+    ): Promise<Conversation> {
+      const action: ConversationAction = { type: 'SET_METADATA', payload: { id, metadata } };
+      dispatch(action);
+      const updatedConversation = state.get(id);
+      if (!updatedConversation) throw new ConversationNotFoundError(id);
+      await storageProvider.save(updatedConversation);
+      return updatedConversation;
+    },
+
+    async addProvider(id: ConversationId, providerId: ProviderId): Promise<Conversation> {
+      const action: ConversationAction = { type: 'ADD_PROVIDER', payload: { id, providerId } };
+      dispatch(action);
+      const updatedConversation = state.get(id);
+      if (!updatedConversation) throw new ConversationNotFoundError(id);
+      await storageProvider.save(updatedConversation);
+      return updatedConversation;
+    },
+
+    async removeProvider(id: ConversationId, providerId: ProviderId): Promise<Conversation> {
+      const action: ConversationAction = { type: 'REMOVE_PROVIDER', payload: { id, providerId } };
+      dispatch(action);
+      const updatedConversation = state.get(id);
+      if (!updatedConversation) throw new ConversationNotFoundError(id);
+      await storageProvider.save(updatedConversation);
+      return updatedConversation;
+    },
+
+    async clearHistory(id: ConversationId): Promise<Conversation> {
+      const action: ConversationAction = { type: 'CLEAR_HISTORY', payload: id };
+      dispatch(action);
+      const updatedConversation = state.get(id);
+      if (!updatedConversation) throw new ConversationNotFoundError(id);
+      await storageProvider.save(updatedConversation);
+      return updatedConversation;
+    },
+
+    async searchConversations(query: string): Promise<ConversationMetadata[]> {
+      const allConversations = await this.listConversations();
+      return allConversations.filter(
+        (conv) =>
+          conv.title?.toLowerCase().includes(query.toLowerCase()) ||
+          conv.description?.toLowerCase().includes(query.toLowerCase()),
+      );
+    },
+
+    async exportConversation(id: ConversationId): Promise<string> {
+      const conversation = await this.getConversation(id);
+      return JSON.stringify(conversation, null, 2);
+    },
+
+    async importConversation(conversationData: string): Promise<Conversation> {
+      const action: ConversationAction = { type: 'IMPORT_CONVERSATION', payload: conversationData };
+      dispatch(action);
+      const importedConversation = Array.from(state.values()).pop();
+      if (!importedConversation) throw new ConversationError('Failed to import conversation');
+      await storageProvider.save(importedConversation);
+      return importedConversation;
+    },
+  };
+
+  return manager;
+};
