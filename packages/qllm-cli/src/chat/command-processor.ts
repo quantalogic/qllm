@@ -1,9 +1,9 @@
 // packages/qllm-cli/src/chat/command-processor.ts
-import { ConversationManager, getLLMProvider, LLMOptions, LLMProvider } from "qllm-lib";
+import { ConversationManager, getLLMProvider, getListProviderNames } from "qllm-lib";
 import { ChatConfig } from "./chat-config";
 import { ConfigManager } from "./config-manager";
 import { IOManager } from "./io-manager";
-import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
+import { DEFAULT_PROVIDER } from "../constants";
 
 interface CommandContext {
   config: ChatConfig;
@@ -32,11 +32,14 @@ export class CommandProcessor {
   }
 
   private async listModels(args: string[], { ioManager,configManager }: CommandContext): Promise<void> {
+
+    const argProviderName = args.length > 0 ? args[0] : null;
+
     const spinner = ioManager.createSpinner("Fetching models...");
     spinner.start();
     try {
       const config = configManager.getConfig();
-      const providerName = config.getProvider() || DEFAULT_PROVIDER;
+      const providerName = argProviderName || config.getProvider() || DEFAULT_PROVIDER;
       const provider = await getLLMProvider(providerName);  
       const models = await provider.listModels();
       spinner.success("Models fetched successfully");
@@ -46,9 +49,9 @@ export class CommandProcessor {
       spinner.error(`Failed to list models: ${(error as Error).message}`);
     }
   }
-
+ 
   private listProviders(args: string[], { ioManager }: CommandContext): Promise<void> {
-    const providers = ["openai", "anthropic", "ollama", "groq"];
+    const providers = getListProviderNames();
     ioManager.displayTable(["Provider"], providers.map((p) => [p]));
     return Promise.resolve();
   }
