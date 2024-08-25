@@ -179,13 +179,12 @@ export class Chat {
     }
     const spinner = createSpinner("Processing image...").start();
     try {
-      const base64Image = await imageToBase64(imageUrl);
       await this.conversationManager.addMessage(this.conversationId, {
         role: "user",
         content: [
           {
             type: "image_url",
-            url: `data:${base64Image.mimeType};base64,${base64Image.base64}`,
+            url: imageUrl,
           },
         ],
         providerId: this.config.getProvider() || DEFAULT_PROVIDER,
