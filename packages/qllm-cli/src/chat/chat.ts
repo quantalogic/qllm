@@ -91,25 +91,6 @@ export class Chat {
         imageManager: this.imageManager,
       };
       await this.commandProcessor.processCommand(cleanCommand, args, context);
-
-      // Handle conversation changes after command execution
-      /*if (cleanCommand === "new") {
-        const newConversation = await this.conversationManager.createConversation();
-        this.conversationId = newConversation.id;
-        output.success(`New conversation started. ID: ${this.conversationId}`);
-      } else if (cleanCommand === "select") {
-        this.conversationId = args[0];
-        output.success(`Switched to conversation: ${this.conversationId}`);
-      } else if (cleanCommand === "clear") {
-        await this.conversationManager.clearConversation(this.conversationId!);
-        output.success("Current conversation cleared.");
-      } else if (cleanCommand === "delete" && this.conversationId === args[0]) {
-        this.conversationId = null;
-        output.success("Current conversation deleted. Please start a new one.");
-      } else if (cleanCommand === "deleteall") {
-        this.conversationId = null;
-        output.success("All conversations deleted. Please start a new one.");
-      }*/
     } catch (error) {
       output.error("Error processing special command: " + (error instanceof Error ? error.message : String(error)));
     }
