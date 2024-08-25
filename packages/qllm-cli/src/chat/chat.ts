@@ -72,16 +72,29 @@ export class Chat {
   }
 
   private async handleSpecialCommand(input: string): Promise<void> {
-    const command = input.split(" ")[0].substring(1);
-    const args = input.split(" ").slice(1).map((arg) => arg.trim());
-    await this.commandProcessor.processCommand(command, args, {
-      config: this.config,
-      configManager: this.configManager,
-      conversationId: this.conversationId,
-      conversationManager: this.conversationManager,
-      ioManager: this.ioManager,
-      imageManager: this.imageManager,
-    });
+    try {
+      const [command, ...args] = input.trim().split(/\s+/);
+      
+      if (!command) {
+        output.error("No command provided");
+        return;
+      }
+  
+      const cleanCommand = command.substring(1).toLowerCase();
+      
+      const context = {
+        config: this.config,
+        configManager: this.configManager,
+        conversationId: this.conversationId,
+        conversationManager: this.conversationManager,
+        ioManager: this.ioManager,
+        imageManager: this.imageManager,
+      };
+  
+      await this.commandProcessor.processCommand(cleanCommand, args, context);
+    } catch (error) {
+        output.error("Error processing special command: " + (error instanceof Error ? error.message : String(error)));
+    }
   }
 
   private async sendUserMessage(message: string, images: string[]): Promise<void> {
