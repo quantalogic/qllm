@@ -42,11 +42,6 @@ export const chatCommand = new Command('chat')
       }
 
       const chat = new Chat(providerName, modelName);
-      //await chat.initialize();
-
-      // Set options from command line or config
-      chat.setMaxTokens(options.maxTokens || chatConfig.getMaxTokens() || DEFAULT_MAX_TOKENS);
-      chat.setTemperature(options.temperature || chatConfig.getTemperature() || DEFAULT_TEMPERATURE);
 
       await chat.start();
     } catch (error) {
