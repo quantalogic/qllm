@@ -2,6 +2,7 @@
 import readline from 'readline';
 import kleur from 'kleur';
 import { output } from '../utils/output';
+import { table } from 'table';
 
 interface Spinner {
   start: () => void;
@@ -49,6 +50,19 @@ export class IOManager {
 
   displayWarning(message: string): void {
     output.warn(message);
+  }
+
+  displayInfo(message: string): void {
+    output.info(message);
+  }
+
+  displayTable(headers: string[], data: string[][]): void {
+    const tableData = [headers, ...data];
+    console.log(table(tableData));
+  }
+
+  displayList(items: string[]): void {
+    items.forEach(item => this.displayInfo(`- ${item}`));
   }
 
   clearLine(): void {
@@ -105,5 +119,9 @@ export class IOManager {
       this.currentSpinner.stop();
       this.currentSpinner = null;
     }
+  }
+
+  write(text: string): void {
+    process.stdout.write(text);
   }
 }

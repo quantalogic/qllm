@@ -19,12 +19,16 @@ export class Chat {
   private configManager: ConfigManager;
 
   constructor(private providerName: string, private modelName: string) {
-    this.conversationManager = createConversationManager() as ConversationManager;
+    this.conversationManager =
+      createConversationManager() as ConversationManager;
     this.config = ChatConfig.getInstance();
-    this.messageHandler = new MessageHandler(this.conversationManager);
+    this.configManager = new ConfigManager(this.config);
+    this.messageHandler = new MessageHandler(
+      this.conversationManager,
+      this.configManager
+    );
     this.commandProcessor = new CommandProcessor();
     this.ioManager = new IOManager();
-    this.configManager = new ConfigManager(this.config);
   }
 
   async initialize(): Promise<void> {
@@ -49,7 +53,9 @@ export class Chat {
       providerIds: [this.providerName],
     });
     this.conversationId = conversation.id;
-    output.info("Chat session started. Type your messages or use special commands.");
+    output.info(
+      "Chat session started. Type your messages or use special commands."
+    );
     output.info("Type /help for available commands.");
     this.promptUser();
   }
@@ -83,8 +89,10 @@ export class Chat {
       return;
     }
 
-    await this.messageHandler.addUserMessage(this.conversationId, message, this.configManager.getProvider());
-    const history = await this.conversationManager.getHistory(this.conversationId);
+    await this.messageHandler.addUserMessage(this.conversationId, message);
+    const history = await this.conversationManager.getHistory(
+      this.conversationId
+    );
     const messages: ChatMessage[] = history.map((msg) => ({
       role: msg.role,
       content: msg.content,

@@ -1,10 +1,9 @@
 // packages/qllm-cli/src/chat/command-processor.ts
 import { ConversationManager, LLMProvider } from "qllm-lib";
-import { createSpinner } from "nanospinner";
-import { output } from "../utils/output";
 import { ChatConfig } from "./chat-config";
 import { ConfigManager } from "./config-manager";
 import { IOManager } from "./io-manager";
+import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 
 interface CommandContext {
   config: ChatConfig;
@@ -33,34 +32,35 @@ export class CommandProcessor {
     await handler.call(this, args, context);
   }
 
-  private async listModels(args: string[], { provider }: CommandContext): Promise<void> {
-    const spinner = createSpinner("Fetching models...").start();
+  private async listModels(args: string[], { provider, ioManager }: CommandContext): Promise<void> {
+    const spinner = ioManager.createSpinner("Fetching models...");
+    spinner.start();
     try {
       const models = await provider.listModels();
-      spinner.success({ text: "Models fetched successfully" });
+      spinner.success("Models fetched successfully");
       const modelData = models.map((model) => [model.id, model.description || "N/A"]);
-      output.table(["Model ID", "Description"], modelData);
+      ioManager.displayTable(["Model ID", "Description"], modelData);
     } catch (error) {
-      spinner.error({ text: `Failed to list models: ${(error as Error).message}` });
+      spinner.error(`Failed to list models: ${(error as Error).message}`);
     }
   }
 
-  private listProviders(args: string[], context: CommandContext): Promise<void> {
+  private listProviders(args: string[], { ioManager }: CommandContext): Promise<void> {
     const providers = ["openai", "anthropic", "ollama", "groq"];
-    output.table(["Provider"], providers.map((p) => [p]));
+    ioManager.displayTable(["Provider"], providers.map((p) => [p]));
     return Promise.resolve();
   }
 
   private stopChat(args: string[], { ioManager }: CommandContext): Promise<void> {
-    output.info("Stopping chat session...");
+    ioManager.displaySystemMessage("Stopping chat session...");
     ioManager.close();
     process.exit(0);
   }
 
-  private async setModel(args: string[], { configManager }: CommandContext): Promise<void> {
+  private async setModel(args: string[], { configManager, ioManager }: CommandContext): Promise<void> {
     const modelName = args.join(" ");
     if (!modelName) {
-      output.error("Please provide a model name.");
+      ioManager.displayError("Please provide a model name.");
       return;
     }
     if (modelName.includes("/")) {
@@ -70,63 +70,73 @@ export class CommandProcessor {
     } else {
       configManager.setModel(modelName);
     }
-    output.success(`Model set to: ${configManager.getModel()}`);
+    ioManager.displaySuccess(`Model set to: ${configManager.getModel()}`);
   }
 
-  private async setProvider(args: string[], { configManager }: CommandContext): Promise<void> {
+  private async setProvider(args: string[], { configManager, ioManager }: CommandContext): Promise<void> {
     const providerName = args[0];
     if (!providerName) {
-      output.error("Please provide a provider name.");
+      ioManager.displayError("Please provide a provider name.");
       return;
     }
     await configManager.setProvider(providerName);
-    output.success(`Provider set to: ${configManager.getProvider()}`);
+    ioManager.displaySuccess(`Provider set to: ${configManager.getProvider()}`);
   }
 
-  private async addImage(args: string[], { conversationId, conversationManager, configManager }: CommandContext): Promise<void> {
+  private async addImage(args: string[], { conversationId, conversationManager, configManager, ioManager }: CommandContext): Promise<void> {
     const imageUrl = args[0];
     if (!imageUrl) {
-      output.error("Please provide an image URL or local file path.");
+      ioManager.displayError("Please provide an image URL or local file path.");
       return;
     }
     if (!conversationId) {
-      output.error("No active conversation. Please start a chat first.");
+      ioManager.displayError("No active conversation. Please start a chat first.");
       return;
     }
-    const spinner = createSpinner("Processing image...").start();
+    const spinner = ioManager.createSpinner("Processing image...");
+    spinner.start();
     try {
       await conversationManager.addMessage(conversationId, {
         role: "user",
         content: [{ type: "image_url", url: imageUrl }],
-        providerId: configManager.getProvider(),
+        providerId: configManager.getProvider() || DEFAULT_PROVIDER,
       });
-      spinner.success({ text: "Image added to the conversation." });
+      spinner.success("Image added to the conversation.");
     } catch (error) {
-      spinner.error({ text: `Failed to add image: ${(error as Error).message}` });
+      spinner.error(`Failed to add image: ${(error as Error).message}`);
     }
   }
 
-  private displayCurrentOptions(args: string[], { configManager }: CommandContext): Promise<void> {
-    const options = configManager.getAllSettings();
-    const optionsTable = Object.entries(options).map(([key, value]) => [key, value?.toString() || "Not set"]);
-    output.table(["Option", "Value"], optionsTable);
+  private displayCurrentOptions(args: string[], { configManager, ioManager }: CommandContext): Promise<void> {
+    const config = configManager.getConfig();
+    const options = [
+      ["provider", "Provider", configManager.getProvider() || "Not set"],
+      ["model", "Model", configManager.getModel() || "Not set"],
+      ["temperature", "Temperature", config.getTemperature()?.toString() || "Not set"],
+      ["max_tokens", "Max Tokens", config.getMaxTokens()?.toString() || "Not set"],
+      ["top_p", "Top P", config.getTopP()?.toString() || "Not set"],
+      ["frequency_penalty", "Frequency Penalty", config.getFrequencyPenalty()?.toString() || "Not set"],
+      ["presence_penalty", "Presence Penalty", config.getPresencePenalty()?.toString() || "Not set"],
+      ["stop_sequence", "Stop Sequence", config.getStopSequence()?.join(", ") || "Not set"],
+    ];
+    ioManager.displayTable(["ID", "Option", "Value"], options);
     return Promise.resolve();
   }
 
-  private async setOption(args: string[], { configManager }: CommandContext): Promise<void> {
+  private async setOption(args: string[], { configManager, ioManager }: CommandContext): Promise<void> {
     const [option, ...valueArgs] = args;
     const value = valueArgs.join(" ");
     if (!option || !value) {
-      output.error("Please provide both option and value.");
+      ioManager.displayError("Please provide both option and value.");
       return;
     }
     await configManager.setOption(option, value);
-    output.success(`Option ${option} set to: ${value}`);
+    ioManager.displaySuccess(`Option ${option} set to: ${value}`);
   }
 
-  private showHelp(): Promise<void> {
-    output.info("Available commands:");
-    output.list([
+  private showHelp(args: string[], { ioManager }: CommandContext): Promise<void> {
+    ioManager.displaySystemMessage("Available commands:");
+    ioManager.displayList([
       "/models - List available models",
       "/providers - List available providers",
       "/stop - Stop the chat session",

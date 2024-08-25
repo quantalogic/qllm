@@ -2,23 +2,24 @@
 import { ConversationManager, LLMProvider, ChatMessage } from "qllm-lib";
 import { createSpinner } from "nanospinner";
 import { output } from "../utils/output";
-import { DEFAULT_PROVIDER } from "../constants";
+import { DEFAULT_PROVIDER,DEFAULT_MODEL } from "../constants";
+import { ConfigManager } from "./config-manager";
 
 export class MessageHandler {
-  constructor(private conversationManager: ConversationManager) {}
+  constructor(private conversationManager: ConversationManager, private configManager: ConfigManager) {}
 
   async addUserMessage(
     conversationId: string,
-    message: string,
-    providerId: string
+    message: string
   ): Promise<void> {
+    const config = this.configManager.getConfig();
     await this.conversationManager.addMessage(conversationId, {
       role: "user",
       content: {
         type: "text",
         text: message,
       },
-      providerId: providerId || DEFAULT_PROVIDER,
+      providerId: config.getProvider() || DEFAULT_PROVIDER,
     });
   }
 
