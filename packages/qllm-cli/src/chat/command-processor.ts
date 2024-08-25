@@ -277,7 +277,7 @@ export class CommandProcessor {
     args: string[],
     cmdContext: CommandContext
   ): Promise<void> {
-    const { conversationId, conversationManager, ioManager } = cmdContext;
+    const { conversationId, ioManager } = cmdContext;
     if (!conversationId) {
       ioManager.displayError("No active conversation.");
       return;
