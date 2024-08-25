@@ -9,7 +9,6 @@ import { createConversationManager, getLLMProvider } from "qllm-lib";
 import readline from "readline";
 import kleur from "kleur";
 import { createSpinner } from "nanospinner";
-import { imageToBase64 } from "qllm-lib";
 import { ChatConfig } from "./chat-config";
 import { output } from "../utils/output";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
