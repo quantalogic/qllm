@@ -3,6 +3,7 @@ import readline from "readline";
 import kleur from "kleur";
 import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
+import { Table } from 'console-table-printer';  
 
 interface Spinner {
   start: () => void;
@@ -188,5 +189,40 @@ export class IOManager {
 
   displaySectionHeader(header: string): void {
     console.log(kleur.bold().yellow(`\n${header}`));
+  }
+
+  displayModelTable(models: { id: string; description: string }[]): void {
+    const p = new Table({
+      columns: [
+        { name: 'id', alignment: 'left', color: 'cyan' },
+        { name: 'description', alignment: 'left', color: 'white' },
+      ],
+      sort: (row1, row2) => row1.id.localeCompare(row2.id),
+    });
+
+    models.forEach(model => {
+      p.addRow({ id: model.id, description: model.description || 'N/A' });
+    });
+
+    p.printTable();
+  }
+
+  displayConfigOptions(options: Array<{ name: string; value: any }>): void {
+    this.displaySectionHeader("Current Configuration");
+
+    const longestNameLength = Math.max(...options.map(opt => opt.name.length));
+
+    options.forEach(({ name, value }) => {
+      const paddedName = name.padEnd(longestNameLength);
+      const formattedValue = value !== undefined ? value.toString() : "Not set";
+      const coloredValue = value !== undefined 
+        ? this.colorize(formattedValue, "green") 
+        : this.colorize(formattedValue, "yellow");
+      this.displayInfo(`${this.colorize(paddedName, "cyan")}: ${coloredValue}`);
+    });
+
+    this.newLine();
+    this.displayInfo(this.colorize("Use 'set <option> <value>' to change a setting", "dim"));
+    this.displayInfo(this.colorize("Example: set provider openai", "dim"));
   }
 }
