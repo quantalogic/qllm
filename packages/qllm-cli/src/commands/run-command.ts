@@ -67,7 +67,11 @@ const runAction = async (templateSource: string, options: RunCommandOptions) => 
 
       if (Object.keys(result.outputVariables).length > 0) {
         ioManager.displayInfo("Extracted Output Variables:");
-        console.log(JSON.stringify(result.outputVariables, null, 2));
+        for (const [key, value] of Object.entries(result.outputVariables)) {
+          console.log(`${ioManager.colorize(key, "green")}:`);
+          console.log(`${ioManager.colorize(value, "yellow")}`);
+          console.log('-------------------------');
+        }
       }
     } catch (error) {
       spinner.error({ text: `Error executing template: ${(error as Error).message}` });
