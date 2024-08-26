@@ -10,7 +10,7 @@ import { validateOptions } from "../utils/validate-options";
 import { IOManager } from "../chat/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
-import { createSpinner, Spinner } from "nanospinner";
+import { createSpinner } from "nanospinner";
 
 const runAction = async (templateSource: string, options: RunCommandOptions) => {
   const ioManager = new IOManager();
@@ -29,6 +29,7 @@ const runAction = async (templateSource: string, options: RunCommandOptions) => 
     try {
       spinner.update({ text: "Loading template..." });
       const template = await loadTemplate(templateSource, validOptions.type || "file");
+      spinner.update({ text: "" });
       spinner.stop();
 
       const variables = parseVariables(validOptions.variables);
@@ -55,7 +56,7 @@ const runAction = async (templateSource: string, options: RunCommandOptions) => 
         },
       });
 
-
+      spinner.start();
       spinner.success({ text: "Template executed successfully" });
 
       if (validOptions.output) {
