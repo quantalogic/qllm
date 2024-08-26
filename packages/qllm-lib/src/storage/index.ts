@@ -19,7 +19,7 @@ export default function createStorageProvider(
       if (!dbPath) {
         throw new Error('dbPath must be provided for SQLite storage provider');
       }
-      return new SQLiteConversationStorageProvider(dbPath);
+     // return new SQLiteConversationStorageProvider(dbPath);
     default:
       throw new Error(`Unsupported provider: ${name}`);
   }
