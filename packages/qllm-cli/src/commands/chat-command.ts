@@ -8,9 +8,10 @@ import { output } from "../utils/output";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import {
   ChatCommandOptions,
-  validateChatCommandOptions,
+  ChatCommandOptionsSchema,
 } from "../types/chat-command-options";
 import { IOManager } from "../chat/io-manager";
+import { validateOptions } from "../utils/validate-options";
 
 const chatAction = async (options: ChatCommandOptions) => {
   try {
@@ -20,7 +21,11 @@ const chatAction = async (options: ChatCommandOptions) => {
 
     try {
       // validate use zod schema
-      validOptions = await validateChatCommandOptions(options, new IOManager());
+      validOptions = await validateOptions(
+        ChatCommandOptionsSchema,
+        options,
+        new IOManager()
+      );
     } catch (error) {
       if (error instanceof Error) {
         output.error(

@@ -1,37 +1,47 @@
-import { LLMProvider } from 'qllm-lib';
+import { LLMProvider } from "qllm-lib";
+import { z } from "zod";
 
-/** Options for the ask command */
-export interface AskCommandOptions {
-  /** The LLM provider to use */
-  provider: string;
-
-  /** The specific model to use */
-  model: string;
+/** Base Zod schema for the ask command options */
+const BaseAskCommandOptionsSchema = z.object({
 
   /** Maximum number of tokens to generate */
-  maxTokens: number;
+  maxTokens: z.number().int().positive().optional(),
 
   /** Temperature for response generation */
-  temperature: number;
+  temperature: z.number().min(0).max(1).optional(),
 
   /** Whether to stream the response */
-  stream: boolean;
+  stream: z.boolean().optional(),
 
   /** Output file for the response */
-  output?: string;
+  output: z.string().optional(),
 
   /** System message to prepend to the conversation */
-  systemMessage?: string;
+  systemMessage: z.string().optional(),
 
   /** Array of image paths, URLs, or 'screenshot' */
-  image: string[];
+  image: z.array(z.string()).optional(),
 
   /** Whether to use clipboard for image input */
-  useClipboard: boolean;
+  useClipboard: z.boolean().optional(),
 
   /** Display number for screenshot capture */
-  screenshot?: number;
-}
+  screenshot: z.number().int().positive().optional(),
+});
+
+export const AskCommandOptionsPartialSchema = BaseAskCommandOptionsSchema.extend({
+  provider: z.string().optional(), // LLM provider to use
+  model: z.string().optional(), // Specific model to use
+});
+
+export const AskCommandOptionsSchema = BaseAskCommandOptionsSchema.extend({
+  provider: z.string(), // LLM provider to use
+  model: z.string(), // Specific model to use
+});
+
+export type AskCommandOptions = z.infer<typeof AskCommandOptionsSchema>;
+
+export type PartialAskCommandOptions = z.infer<typeof AskCommandOptionsPartialSchema>;
 
 /** Configuration for the ask command */
 export interface AskConfig {
@@ -89,10 +99,15 @@ export interface AskResult {
 export type AskExecutor = (context: AskContext) => Promise<AskResult>;
 
 /** Function type for saving the response to a file */
-export type ResponseSaver = (response: string, outputPath: string) => Promise<void>;
+export type ResponseSaver = (
+  response: string,
+  outputPath: string
+) => Promise<void>;
 
 /** Function type for preparing image inputs */
-export type ImageInputPreparer = (options: AskCommandOptions) => Promise<string[]>;
+export type ImageInputPreparer = (
+  options: AskCommandOptions
+) => Promise<string[]>;
 
 /** Function type for creating message content */
 export type MessageContentCreator = (question: string, images: string[]) => any;

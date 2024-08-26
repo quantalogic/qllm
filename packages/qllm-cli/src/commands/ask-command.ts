@@ -4,7 +4,11 @@ import { Command } from "commander";
 import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
 import kleur from "kleur";
-import { AskCommandOptions } from "../types/ask-command-options";
+import {
+  AskCommandOptions,
+  AskCommandOptionsPartialSchema,
+  PartialAskCommandOptions,
+} from "../types/ask-command-options";
 import Clipboard from "../utils/clipboard";
 import { ScreenshotCapture } from "../utils/screenshot";
 import {
@@ -13,24 +17,74 @@ import {
 } from "../utils/image-utils";
 import { output } from "../utils/output";
 import { processAndExit } from "../utils/common";
+import { validateOptions } from "../utils/validate-options";
+import { IOManager } from "../chat/io-manager";
+import { CliConfigManager } from "../utils/cli-config-manager";
+import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 
-const askCommandAction = async (question: string, options: AskCommandOptions) => {
+const askCommandAction = async (
+  question: string,
+  options: AskCommandOptions
+) => {
+  let validOptions: PartialAskCommandOptions = options;
+
+  try {
+    // validate use zod schema
+    validOptions = await validateOptions(
+      AskCommandOptionsPartialSchema,
+      options,
+      new IOManager()
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      output.error(
+        `An error occurred while validating the options: ${error.message}`
+      );
+      process.exit(1);
+    }
+  }
+
+  const cliConfig = CliConfigManager.getInstance();
+
+  const providerName =
+    validOptions.provider ||
+    cliConfig.get("defaultProvider") ||
+    DEFAULT_PROVIDER;
+  const modelName =
+    validOptions.model || cliConfig.get("defaultModel") || DEFAULT_MODEL;
+
   const spinner = createSpinner("Processing...").start();
 
   try {
     spinner.update({ text: "Connecting to provider..." });
-    const provider = await getLLMProvider(options.provider);
+    const provider = await getLLMProvider(providerName);
 
     spinner.update({ text: "Preparing input..." });
-    const imageInputs = await prepareImageInputs(options);
-
-    spinner.update({ text: "Sending request..." });
-    const response = await askQuestion(spinner, question, provider, {
-      ...options,
-      image: imageInputs,
+    const imageInputs = await prepareImageInputs({
+      image: options.image || [],
+      useClipboard: options.useClipboard || false,
+      screenshot: options.screenshot,
     });
 
-    spinner.success({ text: kleur.green("Response received successfully!") });
+    spinner.update({ text: "Sending request..." });
+
+    const usedOptions: AskCommandOptions = {
+      ...validOptions,
+      image: imageInputs,
+      provider: providerName,
+      model: modelName,
+    };
+
+    // console.dir(usedOptions, { depth: null });
+
+    const response = await askQuestion(
+      spinner,
+      question,
+      provider,
+      usedOptions
+    );
+
+    spinner.success({ text: kleur.green("response received successfully!") });
 
     if (options.output) {
       await saveResponseToFile(response, options.output);
@@ -86,28 +140,38 @@ export const askCommand = new Command("ask")
   )
   .action(processAndExit(askCommandAction));
 
-async function prepareImageInputs(options: AskCommandOptions): Promise<string[]> {
+interface ImageInputOptions {
+  image: string[];
+  useClipboard: boolean;
+  screenshot?: number;
+}
+
+async function prepareImageInputs({
+  image,
+  useClipboard,
+  screenshot,
+}: ImageInputOptions): Promise<string[]> {
   const images: string[] = [];
 
-  if (options.screenshot !== undefined) {
+  if (screenshot !== undefined) {
     try {
       const screenshotCapture = new ScreenshotCapture();
       await screenshotCapture.initialize();
       const screenshotBase64 = await screenshotCapture.captureAndGetBase64(
-        options.screenshot
+        screenshot
       );
       images.push(screenshotBase64);
       output.success(
-        `Screenshot captured successfully from display ${options.screenshot}`
+        `Screenshot captured successfully from display ${screenshot}`
       );
     } catch (error) {
       output.error(
-        `Failed to capture screenshot from display ${options.screenshot}: ${error}`
+        `Failed to capture screenshot from display ${screenshot}: ${error}`
       );
     }
   }
 
-  for (const item of options.image) {
+  for (const item of image) {
     try {
       if (await isImageFile(item)) {
         const base64Image = await readImageFileAndConvertToBase64(item);
@@ -123,7 +187,7 @@ async function prepareImageInputs(options: AskCommandOptions): Promise<string[]>
     }
   }
 
-  if (options.useClipboard) {
+  if (useClipboard) {
     try {
       output.info("Checking clipboard for images...");
       const clipboardImage = await Clipboard.getImageFromClipboard();
@@ -158,14 +222,10 @@ async function askQuestion(
   provider: LLMProvider,
   options: AskCommandOptions
 ): Promise<string> {
-  if (options.temperature < 0 || options.temperature > 1) {
-    throw new Error("Temperature must be between 0 and 1.");
-  }
-
   const messages: ChatMessage[] = [
     {
       role: "user",
-      content: createMessageContent(question, options.image),
+      content: createMessageContent(question, options.image || []),
     },
   ];
 
