@@ -66,6 +66,7 @@ qllm ask --stream --model gemma2:2b --provider ollama "Write a short blog post a
 ```
 
 # Describe a picture
+```bash
 qllm ask --stream --model llava:latest --provider ollama "Describe the picture" -i "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Kowloon_Waterfront%2C_Hong_Kong%2C_2013-08-09%2C_DD_05.jpg/640px-Kowloon_Waterfront%2C_Hong_Kong%2C_2013-08-09%2C_DD_05.jpg"
 ```
 
