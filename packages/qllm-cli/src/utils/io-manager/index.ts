@@ -2,10 +2,20 @@
 
 import readline from "readline";
 import kleur from "kleur";
-import { getBorderCharacters, table  } from "table";
+import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
 import { Table } from "console-table-printer";
 import prompts from "prompts";
+
+type ColorName = keyof typeof kleur;
+
+interface IOManagerConfig {
+  defaultColor: ColorName;
+  errorColor: ColorName;
+  successColor: ColorName;
+  warningColor: ColorName;
+  infoColor: ColorName;
+}
 
 interface Spinner {
   start: () => void;
@@ -15,59 +25,33 @@ interface Spinner {
   error: (options: { text: string }) => void;
 }
 
-export class IOManager {
-  private rl: readline.Interface;
-  private currentSpinner: Spinner | null = null;
+class DisplayManager {
+  constructor(private config: IOManagerConfig) {}
 
-  constructor() {
-    this.rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
+  colorize(text: string, color: ColorName): string {
+    if (typeof kleur[color] === "function") {
+      return (kleur[color] as (...text: string[]) => string)(text);
+    }
+    return text; // Fallback to uncolored text if the color function doesn't exist
   }
 
-  async getUserInput(prompt: string): Promise<string> {
-    const response = await prompts({
-      type: "text",
-      name: "userInput",
-      message: this.colorize(prompt, "green"),
-    });
-    return response.userInput;
+  error(message: string): void {
+    console.error(this.colorize(`✖ ${message}`, this.config.errorColor));
   }
 
-  async getAsyncUserInput(prompt: string): Promise<string> {
-    return this.getUserInput(prompt);
+  success(message: string): void {
+    console.log(this.colorize(`✔ ${message}`, this.config.successColor));
   }
 
-  displayUserMessage(message: string): void {
-    this.displayInfo(this.colorize(`You: ${message}`, "green"));
+  warning(message: string): void {
+    console.warn(this.colorize(`⚠ ${message}`, this.config.warningColor));
   }
 
-  displayAssistantMessage(message: string): void {
-    this.displayInfo(this.colorize(`Assistant: ${message}`, "blue"));
+  info(message: string): void {
+    console.log(this.colorize(message, this.config.infoColor));
   }
 
-  displaySystemMessage(message: string): void {
-    this.displayInfo(this.colorize(`System: ${message}`, "yellow"));
-  }
-
-  displayError(message: string): void {
-    console.error(this.colorize(`✖ ${message}`, "red"));
-  }
-
-  displaySuccess(message: string): void {
-    console.log(this.colorize(`✔ ${message}`, "green"));
-  }
-
-  displayWarning(message: string): void {
-    console.warn(this.colorize(`⚠ ${message}`, "yellow"));
-  }
-
-  displayInfo(message: string): void {
-    console.log(message);
-  }
-
-  displayTable(headers: string[], data: string[][]): void {
+  table(headers: string[], data: string[][]): void {
     const tableData = [headers.map((h) => this.colorize(h, "cyan")), ...data];
     console.log(
       table(tableData, {
@@ -81,10 +65,158 @@ export class IOManager {
     );
   }
 
-  displayList(items: string[]): void {
-    items.forEach((item) => this.displayInfo(`• ${item}`));
+  list(items: string[]): void {
+    items.forEach((item) => this.info(`• ${item}`));
   }
 
+  title(text: string): void {
+    console.log(kleur.bold().underline(text));
+  }
+
+  codeBlock(code: string, language?: string): void {
+    const formattedCode = language ? this.colorize(code, "cyan") : code;
+    console.log(this.colorize("```" + (language || ""), "gray"));
+    console.log(formattedCode);
+    console.log(this.colorize("```", "gray"));
+  }
+
+  sectionHeader(header: string): void {
+    console.log(kleur.bold().yellow(`\n${header}`));
+  }
+
+  json(data: unknown): void {
+    console.log(JSON.stringify(data, null, 2));
+  }
+}
+
+class InputManager {
+  private rl: readline.Interface;
+
+  constructor() {
+    this.rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+  }
+
+  async getUserInput(prompt: string): Promise<string> {
+    const response = await prompts({
+      type: "text",
+      name: "userInput",
+      message: prompt,
+    });
+    return response.userInput;
+  }
+
+  async confirm(message: string): Promise<boolean> {
+    const response = await prompts({
+      type: "confirm",
+      name: "confirmed",
+      message: message,
+      initial: false,
+    });
+    return response.confirmed;
+  }
+
+  close(): void {
+    this.rl.close();
+  }
+}
+
+class SpinnerManager {
+  private currentSpinner: Spinner | null = null;
+
+  create(message: string): Spinner {
+    this.currentSpinner = createSpinner(message);
+    return this.currentSpinner;
+  }
+
+  stop(): void {
+    if (this.currentSpinner) {
+      this.currentSpinner.stop();
+      this.currentSpinner = null;
+    }
+  }
+}
+
+export class IOManager {
+  private display: DisplayManager;
+  private input: InputManager;
+  private spinner: SpinnerManager;
+
+  constructor(config: Partial<IOManagerConfig> = {}) {
+    const fullConfig: IOManagerConfig = {
+      defaultColor: "white",
+      errorColor: "red",
+      successColor: "green",
+      warningColor: "yellow",
+      infoColor: "blue",
+      ...config,
+    };
+    this.display = new DisplayManager(fullConfig);
+    this.input = new InputManager();
+    this.spinner = new SpinnerManager();
+  }
+
+  displayGroupHeader(header: string): void {
+    this.display.sectionHeader(header);
+  }
+
+  colorize(text: string, color: ColorName): string {
+    return this.display.colorize(text, color);
+  }
+
+  // Display methods
+  displayError(message: string): void {
+    this.display.error(message);
+  }
+  displaySuccess(message: string): void {
+    this.display.success(message);
+  }
+  displayWarning(message: string): void {
+    this.display.warning(message);
+  }
+  displayInfo(message: string): void {
+    this.display.info(message);
+  }
+  displayTable(headers: string[], data: string[][]): void {
+    this.display.table(headers, data);
+  }
+  displayList(items: string[]): void {
+    this.display.list(items);
+  }
+  displayTitle(title: string): void {
+    this.display.title(title);
+  }
+  displayCodeBlock(code: string, language?: string): void {
+    this.display.codeBlock(code, language);
+  }
+  displaySectionHeader(header: string): void {
+    this.display.sectionHeader(header);
+  }
+  json(data: unknown): void {
+    this.display.json(data);
+  }
+
+  // Input methods
+  async getUserInput(prompt: string): Promise<string> {
+    return this.input.getUserInput(this.display.colorize(prompt, "green"));
+  }
+
+  async confirmAction(message: string): Promise<boolean> {
+    return this.input.confirm(message);
+  }
+
+  // Spinner methods
+  createSpinner(message: string): Spinner {
+    return this.spinner.create(message);
+  }
+
+  stopSpinner(): void {
+    this.spinner.stop();
+  }
+
+  // Utility methods
   clearLine(): void {
     process.stdout.write("\r\x1b[K");
   }
@@ -93,25 +225,29 @@ export class IOManager {
     console.log();
   }
 
-  close(): void {
-    this.rl.close();
-  }
-
-  createSpinner(message: string): Spinner {
-    const spinner = createSpinner(message);
-    this.currentSpinner = spinner;
-    return spinner;
-  }
-
-  stopSpinner(): void {
-    if (this.currentSpinner) {
-      this.currentSpinner.stop();
-      this.currentSpinner = null;
-    }
+  clear(): void {
+    console.clear();
   }
 
   write(text: string): void {
     process.stdout.write(text);
+  }
+
+  close(): void {
+    this.input.close();
+  }
+
+  // Specialized display methods
+  displayUserMessage(message: string): void {
+    this.displayInfo(this.display.colorize(`You: ${message}`, "green"));
+  }
+
+  displayAssistantMessage(message: string): void {
+    this.displayInfo(this.display.colorize(`Assistant: ${message}`, "blue"));
+  }
+
+  displaySystemMessage(message: string): void {
+    this.displayInfo(this.display.colorize(`System: ${message}`, "yellow"));
   }
 
   displayConversationList(
@@ -133,87 +269,14 @@ export class IOManager {
     messages.forEach((msg, index) => {
       const roleColor = msg.role === "user" ? "green" : "blue";
       this.displayInfo(
-        `${index + 1}. ${this.colorize(msg.role, roleColor)}: ${msg.content}`
+        `${index + 1}. ${this.display.colorize(msg.role, roleColor)}: ${msg.content}`
       );
     });
   }
 
-  async promptForConversationSelection(): Promise<string> {
-    const response = await prompts({
-      type: "text",
-      name: "selection",
-      message: "Enter conversation number to select (or 'c' to cancel): ",
-    });
-    return response.selection;
-  }
-
-  async promptForConversationDeletion(): Promise<string> {
-    const response = await prompts({
-      type: "text",
-      name: "selection",
-      message: "Enter conversation number to delete (or 'c' to cancel): ",
-    });
-    return response.selection;
-  }
-
-  async confirmAction(message: string): Promise<boolean> {
-    const response = await prompts({
-      type: "confirm",
-      name: "confirmed",
-      message: message,
-      initial: false,
-    });
-    return response.confirmed;
-  }
-
-  colorize(
-    text: string,
-    color: "green" | "blue" | "yellow" | "red" | "cyan" | "magenta" | "dim" | "gray"
-  ): string {
-    switch (color) {
-      case "green":
-        return kleur.green(text);
-      case "blue":
-        return kleur.blue(text);
-      case "yellow":
-        return kleur.yellow(text);
-      case "red":
-        return kleur.red(text);
-      case "cyan":
-        return kleur.cyan(text);
-      case "magenta":
-        return kleur.magenta(text);
-      case "dim":
-        return kleur.dim(text);
-      case "gray":
-        return kleur.grey(text);
-      default:
-        return text;
-    }
-  }
-
   displayGroupedInfo(title: string, items: string[]): void {
-    this.displayInfo(this.colorize(`\n${title}:`, "yellow"));
+    this.displayInfo(this.display.colorize(`\n${title}:`, "yellow"));
     items.forEach((item) => this.displayInfo(` ${item}`));
-  }
-
-  displayTitle(title: string): void {
-    console.log(kleur.bold().underline(title));
-  }
-
-  displayCodeBlock(code: string, language?: string): void {
-    const formattedCode = language ? this.colorize(code, "cyan") : code;
-    console.log(this.colorize("```" + (language || ""), "gray"));
-    console.log(formattedCode);
-    console.log(this.colorize("```", "gray"));
-  }
-
-  clear(): void {
-    console.clear();
-  }
-
-  displaySectionHeader(header: string): void {
-    console.log(kleur.bold().yellow(`\n${header}`));
   }
 
   displayModelTable(models: { id: string; description: string }[]): void {
@@ -230,51 +293,66 @@ export class IOManager {
     p.printTable();
   }
 
-  displayConfigOptions(options: Array<{ name: string; value: any }>): void {
+  displayConfigOptions(options: Array<{ name: string; value: unknown }>): void {
     this.displaySectionHeader("Current Configuration");
     const longestNameLength = Math.max(
       ...options.map((opt) => opt.name.length)
     );
     options.forEach(({ name, value }) => {
       const paddedName = name.padEnd(longestNameLength);
-      const formattedValue = value !== undefined ? value.toString() : "Not set";
+      const formattedValue = value !== undefined ? String(value) : "Not set";
       const coloredValue =
         value !== undefined
-          ? this.colorize(formattedValue, "green")
-          : this.colorize(formattedValue, "yellow");
-      this.displayInfo(`${this.colorize(paddedName, "cyan")}: ${coloredValue}`);
+          ? this.display.colorize(formattedValue, "green")
+          : this.display.colorize(formattedValue, "yellow");
+      this.displayInfo(
+        `${this.display.colorize(paddedName, "cyan")}: ${coloredValue}`
+      );
     });
     this.newLine();
-    this.displayInfo(this.colorize("Use 'set ' to change a setting", "dim"));
-    this.displayInfo(this.colorize("Example: set provider openai", "dim"));
+    this.displayInfo(
+      this.display.colorize("Use 'set ' to change a setting", "dim")
+    );
+    this.displayInfo(
+      this.display.colorize("Example: set provider openai", "dim")
+    );
   }
 
   displayProviderList(providers: string[]): void {
     this.displaySectionHeader("Available Providers");
     if (providers.length === 0) {
-      this.displayInfo(this.colorize("No providers available.", "yellow"));
+      this.displayInfo(
+        this.display.colorize("No providers available.", "yellow")
+      );
     } else {
       providers.forEach((provider, index) => {
         this.displayInfo(
-          `${this.colorize(`${index + 1}.`, "cyan")} ${this.colorize(provider, "green")}`
+          `${this.display.colorize(`${index + 1}.`, "cyan")} ${this.display.colorize(provider, "green")}`
         );
       });
     }
     this.newLine();
     this.displayInfo(
-      this.colorize(
+      this.display.colorize(
         "To set a provider, use: set provider <provider_name>",
         "dim"
       )
     );
   }
 
-  displayGroupHeader(header: string): void {
-    this.displayInfo(this.colorize(`\n${header}:`, "magenta"));
-  }
-
-  json(data: any): void {
-    console.log(JSON.stringify(data, null, 2));
+  // Async utility method
+  async safeExecute<T>(
+    fn: () => Promise<T>,
+    errorMessage: string
+  ): Promise<T | undefined> {
+    try {
+      return await fn();
+    } catch (error) {
+      this.displayError(
+        `${errorMessage}: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return undefined;
+    }
   }
 }
 
