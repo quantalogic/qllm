@@ -7,7 +7,7 @@ import { chatCommand } from "./commands/chat-command";
 import { CliConfigManager } from "./utils/cli-config-manager";
 import { configureCommand } from "./commands/configure-command";
 
-const VERSION = "1.8.0";
+const VERSION = "1.8.2";
 
 export async function main() {
   try {
