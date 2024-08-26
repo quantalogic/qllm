@@ -253,8 +253,6 @@ console.log('Conversation History:', finalHistory);
 
 ## 📄 Templates
 
-Certainly! I'll create a comprehensive documentation for templates in QLLM, covering the aspects you've mentioned. Here's an improved documentation:
-
 # QLLM Templates
 
 ## 1. What is a Template?
