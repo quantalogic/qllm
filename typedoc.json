@@ -1,5 +1,5 @@
 {
-    "entryPoints": ["packages/qllm-lib/src/index.ts", "packages/qllm-cli/src/index.ts"],
+    "entryPoints": ["packages/qllm-lib/src/index.ts", "packages/qllm-cli/src/qllm.ts"],
     "out": "docs/api",
     "name": "QLLM API Documentation",
     "theme": "default",
