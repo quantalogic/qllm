@@ -5,12 +5,10 @@ import { RunCommandOptions, RunCommandOptionsSchema } from "../types/run-command
 import { TemplateExecutor, getLLMProvider } from "qllm-lib";
 import { loadTemplate, parseVariables } from "../utils/template-utils";
 import { promptForVariables } from "../utils/variable-utils";
-import { output } from "../utils/output";
 import { validateOptions } from "../utils/validate-options";
-import { IOManager } from "../chat/io-manager";
+import { IOManager } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
-import { createSpinner } from "nanospinner";
 
 const runAction = async (templateSource: string, options: RunCommandOptions) => {
   const ioManager = new IOManager();
@@ -23,7 +21,7 @@ const runAction = async (templateSource: string, options: RunCommandOptions) => 
     const providerName = validOptions.provider || cliConfig.get("defaultProvider") || DEFAULT_PROVIDER;
     const modelName = validOptions.model || cliConfig.get("defaultModel") || DEFAULT_MODEL;
 
-    const spinner = createSpinner("Processing template...");
+    const spinner = ioManager.createSpinner("Processing template...");
     spinner.start();
 
     try {
@@ -61,21 +59,21 @@ const runAction = async (templateSource: string, options: RunCommandOptions) => 
 
       if (validOptions.output) {
         await saveResponseToFile(result.response, validOptions.output);
-        output.success(`Response saved to ${validOptions.output}`);
+        ioManager.displaySuccess(`Response saved to ${validOptions.output}`);
       } else {
-        output.info("Template Execution Result:");
+        ioManager.displayInfo("Template Execution Result:");
         console.log(result.response);
       }
 
       if (Object.keys(result.outputVariables).length > 0) {
-        output.info("Extracted Output Variables:");
+        ioManager.displayInfo("Extracted Output Variables:");
         console.log(JSON.stringify(result.outputVariables, null, 2));
       }
     } catch (error) {
       spinner.error({ text: `Error executing template: ${(error as Error).message}` });
     }
   } catch (error) {
-    output.error(`An error occurred: ${(error as Error).message}`);
+   ioManager.displayError(`An error occurred: ${(error as Error).message}`);
   }
 };
 

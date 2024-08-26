@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 import { CliConfigManager } from "../utils/cli-config-manager";
-import { IOManager } from "../chat/io-manager";
+import { IOManager } from "../utils/io-manager";
 import { validateSingleOption } from "../utils/input-validator";
 import { Config } from "../types/config-types";
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IOManager } from "../chat/io-manager";
+import { IOManager } from "./io-manager";
 
 export async function validateOptions<T extends z.ZodType>(
   schema: T,

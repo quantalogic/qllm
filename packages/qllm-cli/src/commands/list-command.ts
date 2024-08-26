@@ -5,9 +5,6 @@ import { createSpinner } from 'nanospinner';
 import { getListProviderNames, getLLMProvider, LLMProvider, Model } from 'qllm-lib';
 import { processAndExit } from '../utils/common';
 
-
-
-
 export const listCommand = new Command('list')
   .description('List providers and models')
   .addCommand(

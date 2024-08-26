@@ -1,14 +1,16 @@
-// packages/qllm-cli/src/chat/io-manager.ts
+// packages/qllm-cli/src/utils/io-manager/io-manager.ts
+
 import readline from "readline";
 import kleur from "kleur";
-import { getBorderCharacters, table } from "table";
+import { getBorderCharacters, table  } from "table";
 import { createSpinner } from "nanospinner";
 import { Table } from "console-table-printer";
-import prompts from 'prompts';
+import prompts from "prompts";
 
 interface Spinner {
   start: () => void;
   stop: () => void;
+  update: (options: { text: string }) => void;
   success: (options: { text: string }) => void;
   error: (options: { text: string }) => void;
 }
@@ -26,8 +28,8 @@ export class IOManager {
 
   async getUserInput(prompt: string): Promise<string> {
     const response = await prompts({
-      type: 'text',
-      name: 'userInput',
+      type: "text",
+      name: "userInput",
       message: this.colorize(prompt, "green"),
     });
     return response.userInput;
@@ -118,9 +120,7 @@ export class IOManager {
     this.displayInfo("Conversations:");
     conversations.forEach((conv, index) => {
       this.displayInfo(
-        `${index + 1}. ID: ${
-          conv.id
-        }, Created: ${conv.createdAt.toLocaleString()}`
+        `${index + 1}. ID: ${conv.id}, Created: ${conv.createdAt.toLocaleString()}`
       );
     });
   }
@@ -140,33 +140,36 @@ export class IOManager {
 
   async promptForConversationSelection(): Promise<string> {
     const response = await prompts({
-      type: 'text',
-      name: 'selection',
-      message: 'Enter conversation number to select (or \'c\' to cancel): ',
+      type: "text",
+      name: "selection",
+      message: "Enter conversation number to select (or 'c' to cancel): ",
     });
     return response.selection;
   }
 
   async promptForConversationDeletion(): Promise<string> {
     const response = await prompts({
-      type: 'text',
-      name: 'selection',
-      message: 'Enter conversation number to delete (or \'c\' to cancel): ',
+      type: "text",
+      name: "selection",
+      message: "Enter conversation number to delete (or 'c' to cancel): ",
     });
     return response.selection;
   }
 
   async confirmAction(message: string): Promise<boolean> {
     const response = await prompts({
-      type: 'confirm',
-      name: 'confirmed',
+      type: "confirm",
+      name: "confirmed",
       message: message,
       initial: false,
     });
     return response.confirmed;
   }
 
-  colorize(text: string, color: string): string {
+  colorize(
+    text: string,
+    color: "green" | "blue" | "yellow" | "red" | "cyan" | "magenta" | "dim" | "gray"
+  ): string {
     switch (color) {
       case "green":
         return kleur.green(text);
@@ -178,6 +181,12 @@ export class IOManager {
         return kleur.red(text);
       case "cyan":
         return kleur.cyan(text);
+      case "magenta":
+        return kleur.magenta(text);
+      case "dim":
+        return kleur.dim(text);
+      case "gray":
+        return kleur.grey(text);
       default:
         return text;
     }
@@ -185,11 +194,11 @@ export class IOManager {
 
   displayGroupedInfo(title: string, items: string[]): void {
     this.displayInfo(this.colorize(`\n${title}:`, "yellow"));
-    items.forEach((item) => this.displayInfo(`  ${item}`));
+    items.forEach((item) => this.displayInfo(` ${item}`));
   }
 
   displayTitle(title: string): void {
-    console.log(this.colorize(title, "cyan"));
+    console.log(kleur.bold().underline(title));
   }
 
   displayCodeBlock(code: string, language?: string): void {
@@ -215,21 +224,17 @@ export class IOManager {
       ],
       sort: (row1, row2) => row1.id.localeCompare(row2.id),
     });
-
     models.forEach((model) => {
       p.addRow({ id: model.id, description: model.description || "N/A" });
     });
-
     p.printTable();
   }
 
   displayConfigOptions(options: Array<{ name: string; value: any }>): void {
     this.displaySectionHeader("Current Configuration");
-
     const longestNameLength = Math.max(
       ...options.map((opt) => opt.name.length)
     );
-
     options.forEach(({ name, value }) => {
       const paddedName = name.padEnd(longestNameLength);
       const formattedValue = value !== undefined ? value.toString() : "Not set";
@@ -239,30 +244,22 @@ export class IOManager {
           : this.colorize(formattedValue, "yellow");
       this.displayInfo(`${this.colorize(paddedName, "cyan")}: ${coloredValue}`);
     });
-
     this.newLine();
-    this.displayInfo(
-      this.colorize("Use 'set <option> <value>' to change a setting", "dim")
-    );
+    this.displayInfo(this.colorize("Use 'set ' to change a setting", "dim"));
     this.displayInfo(this.colorize("Example: set provider openai", "dim"));
   }
 
   displayProviderList(providers: string[]): void {
     this.displaySectionHeader("Available Providers");
-
     if (providers.length === 0) {
       this.displayInfo(this.colorize("No providers available.", "yellow"));
     } else {
       providers.forEach((provider, index) => {
         this.displayInfo(
-          `${this.colorize(`${index + 1}.`, "cyan")} ${this.colorize(
-            provider,
-            "green"
-          )}`
+          `${this.colorize(`${index + 1}.`, "cyan")} ${this.colorize(provider, "green")}`
         );
       });
     }
-
     this.newLine();
     this.displayInfo(
       this.colorize(
@@ -275,4 +272,11 @@ export class IOManager {
   displayGroupHeader(header: string): void {
     this.displayInfo(this.colorize(`\n${header}:`, "magenta"));
   }
+
+  json(data: any): void {
+    console.log(JSON.stringify(data, null, 2));
+  }
 }
+
+// Create a singleton instance for easy access
+export const ioManager = new IOManager();

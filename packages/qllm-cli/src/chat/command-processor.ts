@@ -2,7 +2,7 @@
 import { ConversationManager } from "qllm-lib";
 import { ChatConfig } from "./chat-config";
 import { ConfigManager } from "./config-manager";
-import { IOManager } from "./io-manager";
+import { IOManager } from "../utils/io-manager";
 
 import ImageManager from "./image-manager";
 import { showHelp } from "./commands/show-help";

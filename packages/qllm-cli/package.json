@@ -44,6 +44,7 @@
   "devDependencies": {
     "@types/copy-paste": "^1.1.33",
     "@types/jest": "^29.5.12",
+    "@types/mime-types": "^2.1.4",
     "@types/node": "^22.5.0",
     "@types/prompts": "^2.4.9",
     "@types/screenshot-desktop": "^1.12.3",
