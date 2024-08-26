@@ -84,7 +84,7 @@ npm install qllm-lib
 To use qllm-cli globally:
 
 ```bash
-npm install -g qllm-cli
+npm install -g qllm
 ```
 
 ## 🛠️ Development
