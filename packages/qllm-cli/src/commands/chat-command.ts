@@ -4,13 +4,13 @@ import { Command } from "commander";
 import { getListProviderNames, getLLMProvider } from "qllm-lib";
 import { Chat } from "../chat/chat";
 import { chatConfig } from "../chat/chat-config";
-import { output } from "../utils/output";
+import { ioManager} from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import {
   ChatCommandOptions,
   ChatCommandOptionsSchema,
 } from "../types/chat-command-options";
-import { IOManager } from "../chat/io-manager";
+import { IOManager } from "../utils/io-manager";
 import { validateOptions } from "../utils/validate-options";
 
 const chatAction = async (options: ChatCommandOptions) => {
@@ -28,7 +28,7 @@ const chatAction = async (options: ChatCommandOptions) => {
       );
     } catch (error) {
       if (error instanceof Error) {
-        output.error(
+       ioManager.displayError(
           `An error occurred while validating the options: ${error.message}`
         );
         process.exit(1);
@@ -46,13 +46,13 @@ const chatAction = async (options: ChatCommandOptions) => {
 
     const availableProviders = getListProviderNames();
     if (!availableProviders.includes(providerName)) {
-      output.warn(
+      ioManager.displayWarning(
         `Invalid provider "${providerName}". Available providers: ${availableProviders.join(
           ", "
         )}`
       );
-      output.info("Use the 'configure' command to set a valid provider.");
-      output.info("Use the '/providers' command to see available providers.");
+      ioManager.displayInfo("Use the 'configure' command to set a valid provider.");
+      ioManager.displayInfo("Use the '/providers' command to see available providers.");
     }
 
     chatConfig.set("maxTokens", validOptions.maxTokens);
@@ -66,20 +66,20 @@ const chatAction = async (options: ChatCommandOptions) => {
     const models = await provider.listModels();
 
     if (!models.some((m) => m.id === modelName)) {
-      output.warn(
+      ioManager.displayWarning(
         `Invalid model "${modelName}" for provider "${providerName}".`
       );
-      output.info("Available models:");
-      models.forEach((m) => output.info(`- ${m.id}`));
-      output.info("Use the 'configure' command to set a valid model.");
-      output.info("Use the '/models' command to see available models.");
+      ioManager.displayInfo("Available models:");
+      models.forEach((m) => ioManager.displayInfo(`- ${m.id}`));
+      ioManager.displayInfo("Use the 'configure' command to set a valid model.");
+      ioManager.displayInfo("Use the '/models' command to see available models.");
     }
 
     const chat = new Chat(providerName, modelName);
 
     await chat.start();
   } catch (error) {
-    output.error("An error occurred while starting the chat:");
+   ioManager.displayError("An error occurred while starting the chat:");
     console.error(error);
   }
 };

@@ -11,12 +11,9 @@ import {
   StartOutputEvent,
   StopOutputEvent,
 } from './types';
-import { ChatMessage } from '../types';
+import { ChatMessage, LLMProvider } from '../types';
 
-type VariableResolver = (
-  template: TemplateDefinition,
-  initialVariables: Record<string, any>,
-) => Promise<Record<string, any>>;
+
 
 export class TemplateExecutor extends EventEmitter {
   constructor() {
@@ -114,7 +111,7 @@ export class TemplateExecutor extends EventEmitter {
   }
 
   private async generateResponse(
-    provider: any,
+    provider: LLMProvider,
     messages: ChatMessage[],
     providerOptions: any,
     stream: boolean,
@@ -127,14 +124,15 @@ export class TemplateExecutor extends EventEmitter {
   }
 
   private async handleNonStreamingResponse(
-    provider: any,
+    provider: LLMProvider,
     messages: ChatMessage[],
     providerOptions: any,
     onOutput?: (event: OutputEvent) => void,
   ): Promise<string> {
-    const response = await provider.generateMessage(messages, providerOptions);
-    onOutput?.(new CompleteOutputEvent(response));
-    return response;
+    const response = await provider.generateChatCompletion({ messages, options: providerOptions });
+    const textResponse = response.text || '';
+    onOutput?.(new CompleteOutputEvent(textResponse));
+    return textResponse;
   }
 
   private async handleStreamingResponse(

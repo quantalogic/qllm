@@ -1,5 +1,5 @@
 import { CommandContext } from "../command-processor";
-import { IOManager } from "../io-manager";
+import { IOManager } from "../../utils/io-manager";
 import { ConversationMessage, ChatMessageContent, LLMOptions } from "qllm-lib";
 
 const MESSAGES_PER_PAGE = 5;

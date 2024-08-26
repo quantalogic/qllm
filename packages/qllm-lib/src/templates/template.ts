@@ -97,7 +97,10 @@ export class Template implements TemplateDefinition {
         case 'string':
           return value;
         default:
-          ErrorManager.throw(InputValidationError, `Unknown variable type '${variableType}' for variable '${key}'`);
+          ErrorManager.throw(
+            InputValidationError,
+            `Unknown variable type '${variableType}' for variable '${key}'`,
+          );
       }
     }
     return value;
@@ -106,7 +109,10 @@ export class Template implements TemplateDefinition {
   private castToNumber(value: string, key: string): number {
     const numberValue = Number(value);
     if (isNaN(numberValue)) {
-      ErrorManager.throw(InputValidationError, `Failed to cast '${value}' to number for variable '${key}'`);
+      ErrorManager.throw(
+        InputValidationError,
+        `Failed to cast '${value}' to number for variable '${key}'`,
+      );
     }
     return numberValue;
   }
@@ -114,7 +120,10 @@ export class Template implements TemplateDefinition {
   private castToBoolean(value: string, key: string): boolean {
     const lowerValue = value.toLowerCase();
     if (lowerValue !== 'true' && lowerValue !== 'false') {
-      ErrorManager.throw(InputValidationError, `Failed to cast '${value}' to boolean for variable '${key}'. Use 'true' or 'false'`);
+      ErrorManager.throw(
+        InputValidationError,
+        `Failed to cast '${value}' to boolean for variable '${key}'. Use 'true' or 'false'`,
+      );
     }
     return lowerValue === 'true';
   }
@@ -132,25 +141,54 @@ export class Template implements TemplateDefinition {
       ...this,
     };
   }
-  private extractVariablesFromContent(): void {
-    const variablePattern = /{{([^{}]+)}}/g;
+  private extractVariablesFromContent(
+    options: {
+      allowDotNotation?: boolean;
+      allowBracketNotation?: boolean;
+      allowFunctionCalls?: boolean;
+    } = {},
+  ): void {
+    const {
+      allowDotNotation = true,
+      allowBracketNotation = false,
+      allowFunctionCalls = false,
+    } = options;
+
+    // Build the regex pattern based on options
+    const variableNamePattern = '[a-zA-Z_$][\\w$]*';
+    const dotNotationPattern = allowDotNotation ? `(?:\\.${variableNamePattern})*` : '';
+    const bracketNotationPattern = allowBracketNotation
+      ? '(?:\\[(?:[^\\[\\]]*|\\[[^\\[\\]]*\\])*\\])*'
+      : '';
+    const functionCallPattern = allowFunctionCalls ? '(?:\\([^()]*\\))?' : '';
+
+    const variablePattern = new RegExp(
+      `{{\\s*(${variableNamePattern}${dotNotationPattern}${bracketNotationPattern}${functionCallPattern})\\s*}}`,
+      'g',
+    );
+
     const uniqueVariables = new Set<string>();
     let match;
-  
-    while ((match = variablePattern.exec(this.content)) !== null) {
-      const variableExpression = match[1].trim();
-      const rootVariable = variableExpression.split('.')[0].split('[')[0].split('(')[0].trim();
-      uniqueVariables.add(rootVariable);
-    }
-  
-    uniqueVariables.forEach(variable => {
-      if (!this.input_variables[variable]) {
-        this.input_variables[variable] = {
-          type: 'string',
-          description: `Variable ${variable} found in content`,
-          inferred: true
-        };
+
+    try {
+      while ((match = variablePattern.exec(this.content)) !== null) {
+        const variableExpression = match[1].trim();
+        const rootVariable = variableExpression.split(/[.[(]/)[0];
+        uniqueVariables.add(rootVariable);
       }
-    });
+
+      uniqueVariables.forEach((variable) => {
+        if (!this.input_variables[variable]) {
+          this.input_variables[variable] = {
+            type: 'string',
+            description: `Variable ${variable} found in content`,
+            inferred: true,
+          };
+        }
+      });
+    } catch (error) {
+      console.error('Error extracting variables:', error);
+      // Optionally, you could throw the error or handle it in a way that fits your application's needs
+    }
   }
 }

@@ -3,7 +3,6 @@ import path from "path";
 import { Command } from "commander";
 import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
-import kleur from "kleur";
 import {
   AskCommandOptions,
   AskCommandOptionsPartialSchema,
@@ -15,10 +14,10 @@ import {
   readImageFileAndConvertToBase64,
   isImageFile,
 } from "../utils/image-utils";
-import { output } from "../utils/output";
+import { ioManager } from "../utils/io-manager";
 import { processAndExit } from "../utils/common";
 import { validateOptions } from "../utils/validate-options";
-import { IOManager } from "../chat/io-manager";
+import { IOManager } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 
@@ -37,7 +36,7 @@ const askCommandAction = async (
     );
   } catch (error) {
     if (error instanceof Error) {
-      output.error(
+      ioManager.displayError(
         `An error occurred while validating the options: ${error.message}`
       );
       process.exit(1);
@@ -84,20 +83,27 @@ const askCommandAction = async (
       usedOptions
     );
 
-    spinner.success({ text: kleur.green("response received successfully!") });
+    spinner.success({
+      text: ioManager.colorize("response received successfully!", "green"),
+    });
 
     if (options.output) {
       await saveResponseToFile(response, options.output);
-      output.success(`Response saved to ${options.output}`);
+      ioManager.displaySuccess(`Response saved to ${options.output}`);
     } else {
-      output.info("Response:");
+      ioManager.displayInfo("Response:");
       console.log(response);
     }
   } catch (error) {
     spinner.error({
-      text: kleur.red("An error occurred while processing your request."),
+      text: ioManager.colorize(
+        "An error occurred while processing your request.",
+        "red"
+      ),
     });
-    output.error(error instanceof Error ? error.message : String(error));
+    ioManager.displayError(
+      error instanceof Error ? error.message : String(error)
+    );
     process.exit(1);
   } finally {
   }
@@ -157,15 +163,14 @@ async function prepareImageInputs({
     try {
       const screenshotCapture = new ScreenshotCapture();
       await screenshotCapture.initialize();
-      const screenshotBase64 = await screenshotCapture.captureAndGetBase64(
-        screenshot
-      );
+      const screenshotBase64 =
+        await screenshotCapture.captureAndGetBase64(screenshot);
       images.push(screenshotBase64);
-      output.success(
+      ioManager.displaySuccess(
         `Screenshot captured successfully from display ${screenshot}`
       );
     } catch (error) {
-      output.error(
+      ioManager.displayError(
         `Failed to capture screenshot from display ${screenshot}: ${error}`
       );
     }
@@ -176,33 +181,33 @@ async function prepareImageInputs({
       if (await isImageFile(item)) {
         const base64Image = await readImageFileAndConvertToBase64(item);
         images.push(base64Image);
-        output.success(`Image loaded successfully: ${item}`);
+        ioManager.displaySuccess(`Image loaded successfully: ${item}`);
       } else {
         // Assume it's a URL
         images.push(item);
-        output.success(`Image URL added: ${item}`);
+        ioManager.displaySuccess(`Image URL added: ${item}`);
       }
     } catch (error) {
-      output.error(`Failed to process image input ${item}: ${error}`);
+      ioManager.displayError(`Failed to process image input ${item}: ${error}`);
     }
   }
 
   if (useClipboard) {
     try {
-      output.info("Checking clipboard for images...");
+      ioManager.displayInfo("Checking clipboard for images...");
       const clipboardImage = await Clipboard.getImageFromClipboard();
       if (clipboardImage) {
         images.push(clipboardImage);
-        output.success(
+        ioManager.displaySuccess(
           `Image found in clipboard, size ${formatBytes(
             clipboardImage.length
           )} bytes`
         );
       } else {
-        output.warn("No image found in clipboard.");
+        ioManager.displayWarning("No image found in clipboard.");
       }
     } catch (error) {
-      output.error(`Failed to get image from clipboard: ${error}`);
+      ioManager.displayError(`Failed to get image from clipboard: ${error}`);
     }
   }
 

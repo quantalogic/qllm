@@ -10,7 +10,7 @@ import {
   TextContent,
 } from "qllm-lib";
 import { createSpinner } from "nanospinner";
-import { output } from "../utils/output";
+import { ioManager } from "../utils/io-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 import { ConfigManager } from "./config-manager";
 
@@ -101,7 +101,7 @@ export class MessageHandler {
           spinner.stop();
           process.stdout.write("\r\x1b[K"); // Clear the entire line
           spinner.clear();
-          output.info("\nAssistant: ");
+          ioManager.displayInfo("\nAssistant: ");
         }
         if (chunk.text) {
           process.stdout.write(chunk.text);

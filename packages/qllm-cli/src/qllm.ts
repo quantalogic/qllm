@@ -6,6 +6,7 @@ import { listCommand } from "./commands/list-command";
 import { chatCommand } from "./commands/chat-command";
 import { CliConfigManager } from "./utils/cli-config-manager";
 import { configureCommand } from "./commands/configure-command";
+import { runCommand } from "./commands/run-command";
 
 const VERSION = "1.8.6";
 
@@ -39,6 +40,9 @@ export async function main() {
 
     // Add the configure command
     program.addCommand(configureCommand);
+
+    // Add to program commands
+    program.addCommand(runCommand);
 
     // Add other commands here as needed
     // For example:

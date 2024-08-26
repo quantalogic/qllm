@@ -1,7 +1,7 @@
 // packages/qllm-cli/src/chat/config-manager.ts
 import { ChatConfig } from "./chat-config";
 import { getLLMProvider } from "qllm-lib";
-import { output } from "../utils/output";
+import { ioManager } from "../utils/io-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 
 export class ConfigManager {
@@ -11,9 +11,11 @@ export class ConfigManager {
     try {
       await getLLMProvider(providerName);
       this.config.setProvider(providerName);
-      output.success(`Provider set to: ${providerName}`);
+      ioManager.displaySuccess(`Provider set to: ${providerName}`);
     } catch (error) {
-      output.error(`Failed to set provider: ${(error as Error).message}`);
+      ioManager.displayError(
+        `Failed to set provider: ${(error as Error).message}`
+      );
     }
   }
 
@@ -27,7 +29,7 @@ export class ConfigManager {
 
   setModel(modelName: string): void {
     this.config.setModel(modelName);
-    output.success(`Model set to: ${modelName}`);
+    ioManager.displaySuccess(`Model set to: ${modelName}`);
   }
 
   getModel(): string {
@@ -56,11 +58,12 @@ export class ConfigManager {
         this.config.setStopSequence(value.split(","));
         break;
       default:
-        output.error(`Unknown option: ${option}`);
+        ioManager.displayError(`Unknown option: ${option}`);
         this.showValidOptions();
         return;
     }
-    output.success(`Option ${evalOption} set to: ${value}`);
+
+    ioManager.displaySuccess(`Option ${evalOption} set to: ${value}`);
   }
 
   getAllSettings(): Record<string, any> {
@@ -77,7 +80,7 @@ export class ConfigManager {
   }
 
   private showValidOptions(): void {
-    output.info("Valid options are:");
+    ioManager.displayInfo("Valid options are:");
     [
       "temperature",
       "max_tokens",
@@ -85,7 +88,7 @@ export class ConfigManager {
       "frequency_penalty",
       "presence_penalty",
       "stop_sequence",
-    ].forEach((opt) => output.info(`- ${opt}`));
+    ].forEach((opt) => ioManager.displayInfo(`- ${opt}`));
   }
 
   async initialize(): Promise<void> {

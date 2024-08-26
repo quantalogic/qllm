@@ -4,9 +4,9 @@ import { createConversationManager, getLLMProvider } from "qllm-lib";
 import { ChatConfig } from "./chat-config";
 import { MessageHandler } from "./message-handler";
 import { CommandProcessor } from "./command-processor";
-import { IOManager } from "./io-manager";
+import { IOManager } from "../utils/io-manager";
 import { ConfigManager } from "./config-manager";
-import { output } from "../utils/output";
+import { ioManager} from "../utils/io-manager";
 import ImageManager from "./image-manager";
 
 export class Chat {
@@ -40,11 +40,11 @@ export class Chat {
       await this.config.initialize();
       this.configManager.setProvider(this.providerName);
       this.configManager.setModel(this.modelName);
-      output.success(
+      ioManager.displaySuccess(
         `Chat initialized with ${this.providerName} provider and ${this.modelName} model.`
       );
     } catch (error) {
-      output.error(`Failed to initialize chat: ${(error as Error).message}`);
+     ioManager.displayError(`Failed to initialize chat: ${(error as Error).message}`);
       process.exit(1);
     }
   }
@@ -53,10 +53,10 @@ export class Chat {
     await this.initialize();
     const conversation = await this.conversationManager.createConversation();
     this.conversationId = conversation.id;
-    output.info(
+    ioManager.displayInfo(
       "Chat session started. Type your messages or use special commands."
     );
-    output.info("Type /help for available commands.");
+    ioManager.displayInfo("Type /help for available commands.");
     this.promptUser();
   }
 
@@ -86,7 +86,7 @@ export class Chat {
     try {
       const [command, ...args] = input.trim().split(/\s+/);
       if (!command) {
-        output.error("No command provided");
+       ioManager.displayError("No command provided");
         return;
       }
       const cleanCommand = command.substring(1).toLowerCase();
@@ -100,7 +100,7 @@ export class Chat {
       };
       await this.commandProcessor.processCommand(cleanCommand, args, context);
     } catch (error) {
-      output.error(
+     ioManager.displayError(
         "Error processing special command: " +
           (error instanceof Error ? error.message : String(error))
       );
@@ -112,7 +112,7 @@ export class Chat {
     images: string[]
   ): Promise<void> {
     if (!this.conversationId) {
-      output.error("No active conversation. Please start a chat first.");
+     ioManager.displayError("No active conversation. Please start a chat first.");
       return;
     }
     const currentProviderName = this.configManager.getProvider();

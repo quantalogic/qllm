@@ -2,7 +2,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { createSpinner } from "nanospinner";
-import { output } from "../utils/output";
+import { ioManager } from "../utils/io-manager";
 
 export const utils = {
   async readLocalFile(filePath: string): Promise<string> {
@@ -72,7 +72,7 @@ export const utils = {
         return await operation();
       } catch (error) {
         if (i === maxRetries - 1) throw error;
-        output.warn(`Operation failed, retrying in ${delayMs}ms...`);
+        ioManager.displayWarning(`Operation failed, retrying in ${delayMs}ms...`);
         await this.delay(delayMs);
       }
     }
