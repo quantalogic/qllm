@@ -38,8 +38,8 @@ content: |
 
   Format markdown:
 
-  <ideas>ideas</ideas> 
-  <outline>outline</outline>
-  <story> The story </story>
+  <ideas>ideas (markdown format)</ideas> 
+  <outline>outline (markdown format)</outline>
+  <story> The story (markdown format)</story>
 
   END.
