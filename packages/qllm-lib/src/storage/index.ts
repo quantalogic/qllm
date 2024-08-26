@@ -1,6 +1,6 @@
 import { StorageProvider } from '../types';
 import { InMemoryStorageProvider } from './in-memory-storage-provider';
-import { SQLiteConversationStorageProvider } from './sqlite-conversation-storage-provider';
+//import { SQLiteConversationStorageProvider } from './sqlite-conversation-storage-provider';
 
 export type StorageProviderName = 'in-memory' | 'sqlite';
 
