@@ -1,4 +1,4 @@
-import sqlite3 from 'sqlite3';
+/*import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import { 
   Conversation, 
@@ -173,4 +173,4 @@ export class SQLiteConversationStorageProvider implements StorageProvider {
       this.db = null;
     }
   }
-}
+}*/

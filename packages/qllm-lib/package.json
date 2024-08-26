@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -67,7 +67,6 @@
     "ollama": "^0.5.8",
     "openai": "^4.56.0",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
     "uuid": "^10.0.0",
     "zod": "^3.23.8"
   },
