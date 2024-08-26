@@ -4,7 +4,7 @@ import { Command } from "commander";
 import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
 import kleur from "kleur";
-import { AskOptions } from "../types/ask-types";
+import { AskCommandOptions } from "../types/ask-command-options";
 import Clipboard from "../utils/clipboard";
 import { ScreenshotCapture } from "../utils/screenshot";
 import {
@@ -14,7 +14,7 @@ import {
 import { output } from "../utils/output";
 import { processAndExit } from "../utils/common";
 
-const askCommandAction = async (question: string, options: AskOptions) => {
+const askCommandAction = async (question: string, options: AskCommandOptions) => {
   const spinner = createSpinner("Processing...").start();
 
   try {
@@ -86,7 +86,7 @@ export const askCommand = new Command("ask")
   )
   .action(processAndExit(askCommandAction));
 
-async function prepareImageInputs(options: AskOptions): Promise<string[]> {
+async function prepareImageInputs(options: AskCommandOptions): Promise<string[]> {
   const images: string[] = [];
 
   if (options.screenshot !== undefined) {
@@ -156,7 +156,7 @@ async function askQuestion(
   spinner: Spinner,
   question: string,
   provider: LLMProvider,
-  options: AskOptions
+  options: AskCommandOptions
 ): Promise<string> {
   if (options.temperature < 0 || options.temperature > 1) {
     throw new Error("Temperature must be between 0 and 1.");

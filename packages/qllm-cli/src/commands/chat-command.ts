@@ -6,18 +6,36 @@ import { Chat } from "../chat/chat";
 import { chatConfig } from "../chat/chat-config";
 import { output } from "../utils/output";
 import { CliConfigManager } from "../utils/cli-config-manager";
-import { processAndExit } from "../utils/common";
+import {
+  ChatCommandOptions,
+  validateChatCommandOptions,
+} from "../types/chat-command-options";
+import { IOManager } from "../chat/io-manager";
 
-const chatAction = async (options: {provider: string, model: string}) => {
+const chatAction = async (options: ChatCommandOptions) => {
   try {
     await chatConfig.initialize();
 
+    let validOptions = options;
+
+    try {
+      // validate use zod schema
+      validOptions = await validateChatCommandOptions(options, new IOManager());
+    } catch (error) {
+      if (error instanceof Error) {
+        output.error(
+          `An error occurred while validating the options: ${error.message}`
+        );
+        process.exit(1);
+      }
+    }
+
     const providerName =
-      options.provider ||
+      validOptions.provider ||
       CliConfigManager.getInstance().get("defaultProvider") ||
       "openai";
     const modelName =
-      options.model ||
+      validOptions.model ||
       CliConfigManager.getInstance().get("defaultModel") ||
       "gpt-4o-mini";
 
@@ -31,6 +49,13 @@ const chatAction = async (options: {provider: string, model: string}) => {
       output.info("Use the 'configure' command to set a valid provider.");
       output.info("Use the '/providers' command to see available providers.");
     }
+
+    chatConfig.set("maxTokens", validOptions.maxTokens);
+    chatConfig.set("temperature", validOptions.temperature);
+    chatConfig.set("topP", validOptions.topP);
+    chatConfig.set("frequencyPenalty", validOptions.frequencyPenalty);
+    chatConfig.set("presencePenalty", validOptions.presencePenalty);
+    chatConfig.set("stopSequence", validOptions.stopSequence);
 
     const provider = await getLLMProvider(providerName);
     const models = await provider.listModels();
@@ -85,4 +110,4 @@ export const chatCommand = new Command("chat")
     (value, previous) => previous.concat([value]),
     [] as string[]
   )
-  .action(processAndExit(chatAction));
+  .action(chatAction);

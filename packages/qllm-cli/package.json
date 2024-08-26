@@ -1,7 +1,7 @@
 {
-  "name": "qllm-lib",
+  "name": "qllm",
   "version": "1.6.0",
-  "description": "A CLI  AI engineering toolbox tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
+  "description": "QLLM CLI: A versatile CLI tool for interacting with multiple AI/LLM providers. Features include chat sessions, one-time queries, image handling, and conversation management. Streamlines AI development with easy provider/model switching and configuration.",
   "keywords": [
     "ai",
     "llm",
@@ -11,9 +11,9 @@
     "aws-sdk"
   ],
   "type": "commonjs",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/qllm.js",
+  "module": "dist/qllm.js",
+  "types": "dist/qllm.d.ts",
   "files": [
     "dist"
   ],

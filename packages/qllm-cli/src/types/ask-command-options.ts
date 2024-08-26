@@ -1,7 +1,7 @@
 import { LLMProvider } from 'qllm-lib';
 
 /** Options for the ask command */
-export interface AskOptions {
+export interface AskCommandOptions {
   /** The LLM provider to use */
   provider: string;
 
@@ -60,7 +60,7 @@ export interface AskContext {
   question: string;
 
   /** Options for the ask command */
-  options: AskOptions;
+  options: AskCommandOptions;
 
   /** The LLM provider instance */
   provider: LLMProvider;
@@ -92,7 +92,7 @@ export type AskExecutor = (context: AskContext) => Promise<AskResult>;
 export type ResponseSaver = (response: string, outputPath: string) => Promise<void>;
 
 /** Function type for preparing image inputs */
-export type ImageInputPreparer = (options: AskOptions) => Promise<string[]>;
+export type ImageInputPreparer = (options: AskCommandOptions) => Promise<string[]>;
 
 /** Function type for creating message content */
 export type MessageContentCreator = (question: string, images: string[]) => any;
