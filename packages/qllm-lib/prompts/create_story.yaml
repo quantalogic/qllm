@@ -28,5 +28,18 @@ output_variables:
     type: string
     description: The story
 
-content: >
-  {{file:./story.md}}
+content: |
+  Write a story about {{subject}} as {{role}} in {{lang}} with a max length of {{max_length}}.
+
+  1. First, find funny and subversive ideas formatted as a table.
+  2. Select the best 3 ideas in ideas
+  3. Create the outline of the story in outline tags.
+  4. Write the full story in <story> tags.
+
+  Format markdown:
+
+  <ideas>ideas</ideas> 
+  <outline>outline</outline>
+  <story> The story </story>
+
+  END.
