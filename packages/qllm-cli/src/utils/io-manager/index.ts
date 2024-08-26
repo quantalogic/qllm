@@ -6,6 +6,7 @@ import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
 import { Table } from "console-table-printer";
 import prompts from "prompts";
+import gradient from 'gradient-string';
 
 type ColorName = keyof typeof kleur;
 
@@ -15,6 +16,9 @@ interface IOManagerConfig {
   successColor: ColorName;
   warningColor: ColorName;
   infoColor: ColorName;
+  highlightColor: ColorName;
+  dimColor: ColorName;
+  useColors: boolean;
 }
 
 interface Spinner {
@@ -29,6 +33,7 @@ class DisplayManager {
   constructor(private config: IOManagerConfig) {}
 
   colorize(text: string, color: ColorName): string {
+    if (!this.config.useColors) return text;
     if (typeof kleur[color] === "function") {
       return (kleur[color] as (...text: string[]) => string)(text);
     }
@@ -70,18 +75,18 @@ class DisplayManager {
   }
 
   title(text: string): void {
-    console.log(kleur.bold().underline(text));
+    console.log(gradient.pastel.multiline(text));
   }
 
   codeBlock(code: string, language?: string): void {
     const formattedCode = language ? this.colorize(code, "cyan") : code;
-    console.log(this.colorize("```" + (language || ""), "gray"));
+    console.log(this.colorize("```" + (language || ""), this.config.dimColor));
     console.log(formattedCode);
-    console.log(this.colorize("```", "gray"));
+    console.log(this.colorize("```", this.config.dimColor));
   }
 
   sectionHeader(header: string): void {
-    console.log(kleur.bold().yellow(`\n${header}`));
+    console.log(kleur.bold().underline().yellow(`\n${header}`));
   }
 
   json(data: unknown): void {
@@ -151,6 +156,9 @@ export class IOManager {
       successColor: "green",
       warningColor: "yellow",
       infoColor: "blue",
+      highlightColor: "magenta",
+      dimColor: "gray",
+      useColors: true,
       ...config,
     };
     this.display = new DisplayManager(fullConfig);
@@ -170,30 +178,39 @@ export class IOManager {
   displayError(message: string): void {
     this.display.error(message);
   }
+
   displaySuccess(message: string): void {
     this.display.success(message);
   }
+
   displayWarning(message: string): void {
     this.display.warning(message);
   }
+
   displayInfo(message: string): void {
     this.display.info(message);
   }
+
   displayTable(headers: string[], data: string[][]): void {
     this.display.table(headers, data);
   }
+
   displayList(items: string[]): void {
     this.display.list(items);
   }
+
   displayTitle(title: string): void {
     this.display.title(title);
   }
+
   displayCodeBlock(code: string, language?: string): void {
     this.display.codeBlock(code, language);
   }
+
   displaySectionHeader(header: string): void {
     this.display.sectionHeader(header);
   }
+
   json(data: unknown): void {
     this.display.json(data);
   }
@@ -311,7 +328,7 @@ export class IOManager {
     });
     this.newLine();
     this.displayInfo(
-      this.display.colorize("Use 'set ' to change a setting", "dim")
+      this.display.colorize("Use '/set <option> <value>' to change a setting", "dim")
     );
     this.displayInfo(
       this.display.colorize("Example: set provider openai", "dim")

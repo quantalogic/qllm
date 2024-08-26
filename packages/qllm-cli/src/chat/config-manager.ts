@@ -1,7 +1,7 @@
 // packages/qllm-cli/src/chat/config-manager.ts
 import { ChatConfig } from "./chat-config";
 import { getLLMProvider } from "qllm-lib";
-import { ioManager} from "../utils/io-manager";
+import { ioManager } from "../utils/io-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 
 export class ConfigManager {
@@ -13,7 +13,9 @@ export class ConfigManager {
       this.config.setProvider(providerName);
       ioManager.displaySuccess(`Provider set to: ${providerName}`);
     } catch (error) {
-      ioManager.displayError(`Failed to set provider: ${(error as Error).message}`);
+      ioManager.displayError(
+        `Failed to set provider: ${(error as Error).message}`
+      );
     }
   }
 
@@ -60,6 +62,7 @@ export class ConfigManager {
         this.showValidOptions();
         return;
     }
+
     ioManager.displaySuccess(`Option ${evalOption} set to: ${value}`);
   }
 

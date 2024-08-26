@@ -1,4 +1,3 @@
-// packages/qllm-cli/src/chat/chat-config.ts
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
@@ -63,7 +62,9 @@ export class ChatConfig {
     key: K,
     value: ChatConfigType[K]
   ): void {
-    this.config[key] = value;
+    const partialConfig = { [key]: value };
+    const validatedConfig = ChatConfigSchema.partial().parse(partialConfig);
+    this.config[key] = validatedConfig[key] as ChatConfigType[K];
   }
 
   public getProvider(): string | undefined {
@@ -71,7 +72,7 @@ export class ChatConfig {
   }
 
   public setProvider(provider: string): void {
-    this.config.provider = provider;
+    this.set("provider", provider);
   }
 
   public getModel(): string | undefined {
@@ -79,7 +80,7 @@ export class ChatConfig {
   }
 
   public setModel(model: string): void {
-    this.config.model = model;
+    this.set("model", model);
   }
 
   public getTemperature(): number | undefined {
@@ -87,7 +88,7 @@ export class ChatConfig {
   }
 
   public setTemperature(temperature: number): void {
-    this.config.temperature = temperature;
+    this.set("temperature", temperature);
   }
 
   public getMaxTokens(): number | undefined {
@@ -95,7 +96,7 @@ export class ChatConfig {
   }
 
   public setMaxTokens(maxTokens: number): void {
-    this.config.maxTokens = maxTokens;
+    this.set("maxTokens", maxTokens);
   }
 
   public getTopP(): number | undefined {
@@ -103,7 +104,7 @@ export class ChatConfig {
   }
 
   public setTopP(topP: number): void {
-    this.config.topP = topP;
+    this.set("topP", topP);
   }
 
   public getFrequencyPenalty(): number | undefined {
@@ -111,7 +112,7 @@ export class ChatConfig {
   }
 
   public setFrequencyPenalty(frequencyPenalty: number): void {
-    this.config.frequencyPenalty = frequencyPenalty;
+    this.set("frequencyPenalty", frequencyPenalty);
   }
 
   public getPresencePenalty(): number | undefined {
@@ -119,7 +120,7 @@ export class ChatConfig {
   }
 
   public setPresencePenalty(presencePenalty: number): void {
-    this.config.presencePenalty = presencePenalty;
+    this.set("presencePenalty", presencePenalty);
   }
 
   public getStopSequence(): string[] | undefined {
@@ -127,7 +128,7 @@ export class ChatConfig {
   }
 
   public setStopSequence(stopSequence: string[]): void {
-    this.config.stopSequence = stopSequence;
+    this.set("stopSequence", stopSequence);
   }
 
   public getCurrentConversationId(): string | undefined {
@@ -135,7 +136,7 @@ export class ChatConfig {
   }
 
   public setCurrentConversationId(conversationId: string | undefined): void {
-    this.config.currentConversationId = conversationId;
+    this.set("currentConversationId", conversationId);
   }
 
   public async initialize(): Promise<void> {
