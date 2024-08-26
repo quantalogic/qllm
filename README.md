@@ -56,13 +56,13 @@ qllm-cli is a command-line interface that leverages qllm-lib to provide easy acc
 
 ```bash
 # Generate a product description
-qllm chat "Write a 50-word product description for a smart home security camera with night vision and two-way audio."
+qllm ask "Write a 50-word product description for a smart home security camera with night vision and two-way audio."
 
 # Use a specific model for market analysis
-qllm chat --model gpt-4 "Analyze the potential market impact of electric vehicles in the next 5 years. Provide 3 key points."
+qllm ask --model gpt-4 "Analyze the potential market impact of electric vehicles in the next 5 years. Provide 3 key points."
 
 # Stream a response for real-time content generation
-qllm chat --stream "Write a short blog post about the benefits of remote work."
+qllm ask --stream "Write a short blog post about the benefits of remote work."
 ```
 
 These examples show how qllm-cli can be used for various business tasks, from content creation to market analysis.
