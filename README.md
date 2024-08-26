@@ -59,11 +59,16 @@ qllm-cli is a command-line interface that leverages qllm-lib to provide easy acc
 qllm ask "Write a 50-word product description for a smart home security camera with night vision and two-way audio."
 
 # Use a specific model for market analysis
-qllm ask --model gpt-4 "Analyze the potential market impact of electric vehicles in the next 5 years. Provide 3 key points."
+qllm ask --model gpt-4o-mini --provider openai "Analyze the potential market impact of electric vehicles in the next 5 years. Provide 3 key points."
 
 # Stream a response for real-time content generation
-qllm ask --stream "Write a short blog post about the benefits of remote work."
+qllm ask --stream --model gemma2:2b --provider ollama "Write a short blog post about the benefits of remote work."
 ```
+
+# Describe a picture
+qllm ask --stream --model llava:latest --provider ollama "Describe the picture" -i "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Kowloon_Waterfront%2C_Hong_Kong%2C_2013-08-09%2C_DD_05.jpg/640px-Kowloon_Waterfront%2C_Hong_Kong%2C_2013-08-09%2C_DD_05.jpg"
+```
+
 
 These examples show how qllm-cli can be used for various business tasks, from content creation to market analysis.
 
