@@ -69,10 +69,6 @@ qllm ask --stream --model llava:latest --provider ollama "Describe the picture" 
 
 # Chat
 qllm chat --provider ollama --model gemma2:2b
-
-# Bedrock 
-
-  qllm chat --provider aws-anthropic --model  anthropic.claude-3-5-sonnet-20240620-v1:0
 ```
 
 
