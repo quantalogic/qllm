@@ -43,7 +43,7 @@ content: >
     // Load and resolve the local template
     const localLoader = new TemplateLoader();
     const localResolvedTemplate: TemplateDefinitionWithResolvedContent =
-      await localLoader.load(templatePath);
+      await TemplateLoader.load(templatePath);
 
     console.log('Locally Resolved Template:');
     console.dir(localResolvedTemplate, { depth: null });
@@ -61,8 +61,8 @@ content: >
     }
 
     // Load and resolve the template from GitHub
-    const githubLoader = new TemplateLoader();
-    const githubResolvedTemplate: TemplateDefinitionWithResolvedContent = await githubLoader.load(
+
+    const githubResolvedTemplate: TemplateDefinitionWithResolvedContent = await TemplateLoader.load(
       'https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/create_story.yaml',
     );
 
