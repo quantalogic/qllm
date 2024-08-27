@@ -6,11 +6,11 @@ input_variables:
   Topic:
     type: string
     description: The topic to explore from thought leaders
-    default: "SEO Strategies"
+    place_holder: "SEO Strategies"
   Language:
     type: string
     description: The language of the story
-    default: "English"
+    place_holder: "English"
 content: >
     ## Chain of Thought Leaders Prompting - Exploring the Top Insights on {{Topic}}
 
