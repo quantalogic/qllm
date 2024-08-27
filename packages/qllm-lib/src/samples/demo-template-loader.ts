@@ -7,7 +7,7 @@ async function loadChainOfThoughtLeaderTemplate(): Promise<TemplateDefinition> {
     const templateLoader = new TemplateLoader();
     const filePath = path.resolve(__dirname, './prompts/chain_of_tought_leader.yaml');
     
-    const templateDefinition = await templateLoader.load(filePath);
+    const templateDefinition = await TemplateLoader.load(filePath);
     
     console.log('Successfully loaded template:');
     console.log(templateDefinition);

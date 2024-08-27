@@ -42,9 +42,7 @@ const runAction = async (
     try {
       spinner.update({ text: "Loading template..." });
 
-      const templateLoader = new TemplateLoader();
-
-      const template = await templateLoader.load(templateSource);
+      const template = await TemplateLoader.load(templateSource);
 
       spinner.update({ text: "" });
       spinner.stop();
