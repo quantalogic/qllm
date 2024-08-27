@@ -74,8 +74,6 @@ const askCommandAction = async (
       model: modelName,
     };
 
-    // console.dir(usedOptions, { depth: null });
-
     const response = await askQuestion(
       spinner,
       question,
@@ -83,17 +81,20 @@ const askCommandAction = async (
       usedOptions
     );
 
-    spinner.success({
-      text: ioManager.colorize("response received successfully!", "green"),
-    });
+    if (!usedOptions.stream) {
+      spinner.success({
+        text: ioManager.colorize("response received successfully!", "green"),
+      });
+    }
 
     if (options.output) {
       await saveResponseToFile(response, options.output);
       ioManager.displaySuccess(`Response saved to ${options.output}`);
-    } else {
-      ioManager.displayInfo("Response:");
-      console.log(response);
+    } 
+    if(!usedOptions.stream) {
+      ioManager.stdout.log(response);
     }
+    
   } catch (error) {
     spinner.error({
       text: ioManager.colorize(
@@ -279,21 +280,25 @@ async function streamResponse(
 
   spinner.update({ text: "Waiting response..." });
 
+
   try {
     const stream = await provider.streamChatCompletion(params);
     for await (const chunk of stream) {
       if (chunkNumber === 0) {
         spinner.update({ text: "" });
         spinner.stop();
+        spinner.clear(); // Clear the spinner from the console
       }
 
       if (chunk.text) {
-        process.stdout.write(chunk.text);
+        ioManager.stdout.write(chunk.text);
         chunks.push(chunk.text);
       }
       chunkNumber++;
     }
-    console.log(); // New line after streaming
+    spinner.start();
+    spinner.update({ text: "Response completed ..." });
+    spinner.stop();
     return chunks.join("");
   } catch (error) {
     throw error;

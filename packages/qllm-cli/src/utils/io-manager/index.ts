@@ -6,7 +6,28 @@ import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
 import { Table } from "console-table-printer";
 import prompts from "prompts";
-import gradient from 'gradient-string';
+import { write } from "fs";
+
+const stdout = {
+  log: (...args: any[]) => {
+    console.log(...args);
+  },
+  write: (text: string) => {
+    process.stdout.write(text);
+  }
+}
+
+const stderr = {
+  log: (...args: any[]) => {
+    console.error(...args);
+  },
+  warn: (...args: any[]) => {
+    console.warn(...args);
+  },
+  error: (...args: any[]) => {
+    console.error(...args);
+  },
+}
 
 type ColorName = keyof typeof kleur;
 
@@ -41,24 +62,24 @@ class DisplayManager {
   }
 
   error(message: string): void {
-    console.error(this.colorize(`✖ ${message}`, this.config.errorColor));
+    stderr.error(this.colorize(`✖ ${message}`, this.config.errorColor));
   }
 
   success(message: string): void {
-    console.log(this.colorize(`✔ ${message}`, this.config.successColor));
+    stderr.log(this.colorize(`✔ ${message}`, this.config.successColor));
   }
 
   warning(message: string): void {
-    console.warn(this.colorize(`⚠ ${message}`, this.config.warningColor));
+    stderr.warn(this.colorize(`⚠ ${message}`, this.config.warningColor));
   }
 
   info(message: string): void {
-    console.log(this.colorize(message, this.config.infoColor));
+    stderr.log(this.colorize(message, this.config.infoColor));
   }
 
   table(headers: string[], data: string[][]): void {
     const tableData = [headers.map((h) => this.colorize(h, "cyan")), ...data];
-    console.log(
+    stderr.log(
       table(tableData, {
         border: getBorderCharacters("norc"),
         columnDefault: {
@@ -75,22 +96,22 @@ class DisplayManager {
   }
 
   title(text: string): void {
-    console.log(gradient.pastel.multiline(text));
+    stderr.log(kleur.bold().underline().yellow(text));
   }
 
   codeBlock(code: string, language?: string): void {
     const formattedCode = language ? this.colorize(code, "cyan") : code;
-    console.log(this.colorize("```" + (language || ""), this.config.dimColor));
-    console.log(formattedCode);
-    console.log(this.colorize("```", this.config.dimColor));
+    stderr.log(this.colorize("```" + (language || ""), this.config.dimColor));
+    stderr.log(formattedCode);
+    stderr.log(this.colorize("```", this.config.dimColor));
   }
 
   sectionHeader(header: string): void {
-    console.log(kleur.bold().underline().yellow(`\n${header}`));
+    stderr.log(kleur.bold().underline().yellow(`\n${header}`));
   }
 
   json(data: unknown): void {
-    console.log(JSON.stringify(data, null, 2));
+    stdout.log(JSON.stringify(data, null, 2));
   }
 }
 
@@ -166,6 +187,8 @@ export class IOManager {
     this.spinner = new SpinnerManager();
   }
 
+  readonly stdout = stdout;
+
   displayGroupHeader(header: string): void {
     this.display.sectionHeader(header);
   }
@@ -239,7 +262,7 @@ export class IOManager {
   }
 
   newLine(): void {
-    console.log();
+    stderr.log();
   }
 
   clear(): void {
@@ -328,7 +351,10 @@ export class IOManager {
     });
     this.newLine();
     this.displayInfo(
-      this.display.colorize("Use '/set <option> <value>' to change a setting", "dim")
+      this.display.colorize(
+        "Use '/set <option> <value>' to change a setting",
+        "dim"
+      )
     );
     this.displayInfo(
       this.display.colorize("Example: set provider openai", "dim")

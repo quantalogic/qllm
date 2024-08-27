@@ -1,45 +1,82 @@
-name: create_story
-version: '1.0'
-description: Create a nice story
+name: create_satirical_story
+version: '1.1'
+description: Create a witty and satirical story based on a given subject
 author: Raphaël MANSUY
 input_variables:
   subject:
     type: string
-    description: The subject of the story
-    default: "Emmanuel Macron dissout l'assemblée"
+    description: The main topic or event for the story
+    place_holder: "Emmanuel Macron dissout l'assemblée"
   genre:
     type: string
-    description: The genre of the story
-    default: "Humour et satire"
+    description: The specific genre or style of the story
+    place_holder: "Humour et satire politique"
   role:
     type: string
-    description: The role of the user
-    default: "Gaspar PROUST"
+    description: The persona or character perspective to write from
+    place_holder: "Gaspar PROUST"
   lang:
     type: string
-    description: The language of the story
-    default: "Français"
+    description: The language in which the story should be written
+    place_holder: "Français"
   max_length:
     type: number
-    description: The maximum length of the story
-    default: 100
+    description: The maximum word count for the story
+    default: 1000
 output_variables:
   story:
     type: string
-    description: The story
+    description: The complete satirical story
 
 content: |
-  Write a story about {{subject}} as {{role}} in {{lang}} with a max length of {{max_length}}.
+  Craft a satirical story about {{subject}} from the perspective of {{role}} in {{lang}}, adhering to the {{genre}} style. The story should not exceed {{max_length}} words.
 
-  1. First, find funny and subversive ideas formatted as a table.
-  2. Select the best 3 ideas in ideas
-  3. Create the outline of the story in outline tags.
-  4. Write the full story in <story> tags.
+  The story MUST WRITEN in {{lang}} LANGAGE.
 
-  Format markdown:
+  Follow these steps:
 
-  <ideas>ideas (markdown format)</ideas> 
-  <outline>outline (markdown format)</outline>
-  <story> The story (markdown format)</story>
+  1. Brainstorm 5-7 witty and subversive ideas related to the subject. Present these ideas in a markdown table with columns for "Idea" and "Satirical Angle".
+
+  2. Select the top 3 ideas based on their potential for humor and social commentary.
+
+  3. Develop a compelling outline for the story, incorporating the chosen ideas. Use markdown headers to structure the outline.
+
+  4. Write the full story, ensuring it's engaging, humorous, and thought-provoking. Use markdown formatting to enhance readability and emphasis.
+
+  5. Conclude with a punchy, memorable ending that ties back to the main subject.
+
+  Format your response as follows:
+
+  <ideas>
+  | Idea | Satirical Angle |
+  |------|-----------------|
+  | Idea 1 | Angle 1 |
+  | ... | ... |
+  </ideas>
+
+  <outline>
+  ## Introduction
+  - Point 1
+  - Point 2
+
+  ## Main Body
+  ### Section 1
+  - Subpoint a
+  - Subpoint b
+
+  ### Section 2
+  - Subpoint a
+  - Subpoint b
+
+  ## Conclusion
+  - Final thought
+  </outline>
+
+  <story>
+  # Title of the Story
+
+  [Your full story here, using markdown for formatting]
+
+  </story>
 
   END.

@@ -11,7 +11,7 @@ export async function promptForVariables(
   console.log(kleur.cyan().bold('\n🔍 Collecting input variables\n'));
 
   try {
-    for (const [key, variable] of Object.entries(template.input_variables)) {
+    for (const [key, variable] of Object.entries(template.input_variables || {})) {
       if (!(key in providedVariables)) {
         console.log(kleur.cyan(`📝 Input required for: ${kleur.bold(key)}`));
         
@@ -19,7 +19,7 @@ export async function promptForVariables(
           type: getPromptType(variable) as any,
           name: "value",
           message: formatPromptMessage(variable),
-          initial: variable.default,
+          initial: variable.place_holder,
           validate: (value) => validateInput(value, variable),
           choices: getChoices(variable),
         });

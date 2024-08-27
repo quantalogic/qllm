@@ -1,121 +1,30 @@
 // packages/qllm-lib/src/templates/types.ts
 
-import { LLMOptions, ChatMessage } from "../types";
+import { LLMOptions } from '../types';
+import * as z from 'zod';
+import { TemplateDefinition } from './template-schema';
 
-// Enum for output event types
-// types.ts
+export * from './template-schema';
+export * from './template-definition-builder';
 
-export enum OutputEventType {
-  START = 'start',
-  CHUNK = 'chunk',
-  COMPLETE = 'complete',
-  ERROR = 'error',
-  STOP = 'stop'
-}
-
-export class BaseOutputEvent {
-  constructor(public type: OutputEventType) {}
-}
-
-export class StartOutputEvent extends BaseOutputEvent {
-  constructor() {
-    super(OutputEventType.START);
-  }
-}
-
-export class ChunkOutputEvent extends BaseOutputEvent {
-  constructor(public chunk: string) {
-    super(OutputEventType.CHUNK);
-  }
-}
-
-export class CompleteOutputEvent extends BaseOutputEvent {
-  constructor(public response: string) {
-    super(OutputEventType.COMPLETE);
-  }
-}
-
-export class ErrorOutputEvent extends BaseOutputEvent {
-  constructor(public error: Error, public message: string) {
-    super(OutputEventType.ERROR);
-  }
-}
-
-export class StopOutputEvent extends BaseOutputEvent {
-  constructor() {
-    super(OutputEventType.STOP);
-  }
-}
-
-export type OutputEvent = StartOutputEvent | ChunkOutputEvent | CompleteOutputEvent | ErrorOutputEvent | StopOutputEvent;
-
-// Utility Types
-export interface Spinner {
-  stop(): void;
-  start(): void;
-  fail(message: string): void;
-  succeed(message: string): void;
-  isActive(): boolean;
-  isSpinning(): boolean;
-}
-
-export interface OutputStream {
-  write(chunk: string): void;
-}
-
-// Template Types
-export type VariableType = 'string' | 'number' | 'boolean' | 'array';
-export type OutputVariableType = 'string' | 'integer' | 'float' | 'boolean' | 'array' | 'object';
-
-export interface TemplateVariable {
-  type: VariableType;
-  description: string;
-  default?: any;
-  inferred?: boolean;
-}
-
-export interface OutputVariable {
-  type: OutputVariableType;
-  description?: string;
-  default?: any;
-}
-
-export interface TemplateParameters {
-  max_tokens?: number;
-  temperature?: number;
-  top_p?: number;
-  top_k?: number;
-}
-
-export interface TemplateDefinition {
-  name: string;
-  version: string;
-  description: string;
-  author: string;
-  provider: string;
-  model: string;
-  input_variables: Record<string, TemplateVariable>;
-  output_variables?: Record<string, OutputVariable>;
-  content: string;
-  parameters?: TemplateParameters;
-  resolved_content?: string;
-}
-
+// ==============================
+// Execution Context Interface
+// ==============================
 export interface ExecutionContext {
   template: TemplateDefinition;
   variables: Record<string, any>;
   providerOptions: LLMOptions;
   provider: any;
   stream?: boolean;
-  spinner?: Spinner;
-  onOutput?: (event: OutputEvent) => void;
   onPromptForMissingVariables?: (
     template: TemplateDefinition,
-    initialVariables: Record<string, any>
+    initialVariables: Record<string, any>,
   ) => Promise<Record<string, any>>;
 }
 
+// ==============================
 // Error Classes
+// ==============================
 export class QllmError extends Error {
   constructor(message: string) {
     super(message);
@@ -133,7 +42,10 @@ export class ConfigurationError extends QllmError {
 }
 
 export class ProviderError extends QllmError {
-  constructor(message: string, public providerName: string) {
+  constructor(
+    message: string,
+    public providerName: string,
+  ) {
     super(message);
     this.name = 'ProviderError';
     Object.setPrototypeOf(this, ProviderError.prototype);

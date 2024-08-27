@@ -9,8 +9,8 @@ input_variables:
     place_holder: "SEO Strategies"
   Language:
     type: string
-    description: The language of the story
-    place_holder: "English"
+    description: The Language in which the content should be written
+    place_holder:: "English"
 content: >
     ## Chain of Thought Leaders Prompting - Exploring the Top Insights on {{Topic}}
 

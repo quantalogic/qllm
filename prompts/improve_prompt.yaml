@@ -9,7 +9,7 @@ input_variables:
   prompt:
     type: string
     description: The prompt to improve
-    default: ""
+    place_holder: ""
 output_variables:
   prompt_final:
     type: string

@@ -20,6 +20,7 @@ import { AnthropicProvider } from './providers/anthropic';
 import { OllamaProvider } from './providers/ollama';
 import { GroqProvider } from './providers/qroq';
 import { TemplateManager } from './templates/template-manager';
+import { TemplateLoader } from './templates';
 
 // Factory function for creating providers
 export function createLLMProvider({
@@ -77,6 +78,7 @@ export {
   OllamaProvider,
   GroqProvider,
   TemplateManager,
+  TemplateLoader,
 };
 
 // Default export (if needed)

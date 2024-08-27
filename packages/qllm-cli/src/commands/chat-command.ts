@@ -4,7 +4,7 @@ import { Command } from "commander";
 import { getListProviderNames, getLLMProvider } from "qllm-lib";
 import { Chat } from "../chat/chat";
 import { chatConfig } from "../chat/chat-config";
-import { ioManager} from "../utils/io-manager";
+import { ioManager } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import {
   ChatCommandOptions,
@@ -12,6 +12,7 @@ import {
 } from "../types/chat-command-options";
 import { IOManager } from "../utils/io-manager";
 import { validateOptions } from "../utils/validate-options";
+import { DEFAULT_MODEL, DEFAULT_PROVIDER } from "../constants";
 
 const chatAction = async (options: ChatCommandOptions) => {
   try {
@@ -28,7 +29,7 @@ const chatAction = async (options: ChatCommandOptions) => {
       );
     } catch (error) {
       if (error instanceof Error) {
-       ioManager.displayError(
+        ioManager.displayError(
           `An error occurred while validating the options: ${error.message}`
         );
         process.exit(1);
@@ -38,11 +39,11 @@ const chatAction = async (options: ChatCommandOptions) => {
     const providerName =
       validOptions.provider ||
       CliConfigManager.getInstance().get("defaultProvider") ||
-      "openai";
+      DEFAULT_MODEL;
     const modelName =
       validOptions.model ||
       CliConfigManager.getInstance().get("defaultModel") ||
-      "gpt-4o-mini";
+      DEFAULT_PROVIDER;
 
     const availableProviders = getListProviderNames();
     if (!availableProviders.includes(providerName)) {
@@ -51,8 +52,12 @@ const chatAction = async (options: ChatCommandOptions) => {
           ", "
         )}`
       );
-      ioManager.displayInfo("Use the 'configure' command to set a valid provider.");
-      ioManager.displayInfo("Use the '/providers' command to see available providers.");
+      ioManager.displayInfo(
+        "Use the 'configure' command to set a valid provider."
+      );
+      ioManager.displayInfo(
+        "Use the '/providers' command to see available providers."
+      );
     }
 
     chatConfig.set("maxTokens", validOptions.maxTokens);
@@ -71,15 +76,19 @@ const chatAction = async (options: ChatCommandOptions) => {
       );
       ioManager.displayInfo("Available models:");
       models.forEach((m) => ioManager.displayInfo(`- ${m.id}`));
-      ioManager.displayInfo("Use the 'configure' command to set a valid model.");
-      ioManager.displayInfo("Use the '/models' command to see available models.");
+      ioManager.displayInfo(
+        "Use the 'configure' command to set a valid model."
+      );
+      ioManager.displayInfo(
+        "Use the '/models' command to see available models."
+      );
     }
 
     const chat = new Chat(providerName, modelName);
 
     await chat.start();
   } catch (error) {
-   ioManager.displayError("An error occurred while starting the chat:");
+    ioManager.displayError("An error occurred while starting the chat:");
     console.error(error);
   }
 };
