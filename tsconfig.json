@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+      "target": "ES2020",
+      "module": "commonjs",
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "strict": true,
+      "skipLibCheck": true
+    },
+    "references": [
+      { "path": "./packages/qllm-lib" },
+      { "path": "./packages/qllm-cli" }
+    ]
+  }
