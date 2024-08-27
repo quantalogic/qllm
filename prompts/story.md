@@ -1,5 +1,5 @@
 ## Your role
-  {{file:./role.md}}
+  {{include:role.md}}
 
 ## Your task
 
