@@ -5,9 +5,16 @@ import { TemplateDefinitionWithResolvedContent } from './template-schema';
 import { TemplateDefinitionBuilder } from './template-definition-builder';
 
 export class TemplateLoader {
+  private loadedPaths: Set<string> = new Set();
+
   private async getContent(inputPath: string, basePath: string): Promise<{ content: string; mimeType: string }> {
     try {
       const fullPath = this.resolveFullPath(inputPath, basePath);
+      if (this.loadedPaths.has(fullPath)) {
+        throw new Error(`Circular dependency detected: ${fullPath}`);
+      }
+      this.loadedPaths.add(fullPath);
+
       const loader = new DocumentLoader(fullPath);
       const result = await loader.loadAsString();
       if (!result || !result.content) {
@@ -81,7 +88,8 @@ export class TemplateLoader {
         const [fullMatch, includePath] = match;
         const fullPath = this.resolveFullPath(includePath, basePath);
         const includedContent = await this.getContent(fullPath, basePath);
-        resolvedContent = resolvedContent.replace(fullMatch, includedContent.content);
+        const recursivelyResolvedContent = await this.resolveIncludedContent(includedContent.content, fullPath);
+        resolvedContent = resolvedContent.replace(fullMatch, recursivelyResolvedContent);
       } catch (error) {
         console.warn(`Failed to resolve included content: ${error instanceof Error ? error.message : String(error)}`);
         // Optionally, you can replace the include directive with an error message
@@ -104,6 +112,7 @@ export class TemplateLoader {
 
   async load(inputFilePath: string): Promise<TemplateDefinitionWithResolvedContent> {
     try {
+      this.loadedPaths.clear(); // Reset loaded paths for each new load operation
       const content = await this.getContent(inputFilePath, inputFilePath);
       const builder = this.getBuilder(content);
       const template = builder.build();
@@ -112,7 +121,7 @@ export class TemplateLoader {
       
       return {
         ...template,
-        resolved_content: resolvedContent,
+        content: resolvedContent,
       };
     } catch (error) {
       throw new Error(`Error loading template from ${inputFilePath}: ${error instanceof Error ? error.message : String(error)}`);
@@ -121,6 +130,7 @@ export class TemplateLoader {
 
   async loadAsBuilder(inputFilePath: string): Promise<TemplateDefinitionBuilder> {
     try {
+      this.loadedPaths.clear(); // Reset loaded paths for each new load operation
       const content = await this.getContent(inputFilePath, inputFilePath);
       const builder = this.getBuilder(content);
       
