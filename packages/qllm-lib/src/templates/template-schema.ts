@@ -89,6 +89,13 @@ export const templateDefinitionSchema = z
   })
   .describe('Schema for defining a template.');
 
+export const templateDefinitionSchemaWithResolvedContent = templateDefinitionSchema.extend({
+  resolved_content: z.string().optional().describe('The resolved content of the variable.'),
+});
+
 export type TemplateDefinition = z.infer<typeof templateDefinitionSchema>;
+export type TemplateDefinitionWithResolvedContent = z.infer<
+  typeof templateDefinitionSchemaWithResolvedContent
+>;
 export type TemplateVariable = z.infer<typeof templateVariableSchema>;
 export type OutputVariable = z.infer<typeof outputVariableSchema>;

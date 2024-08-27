@@ -1,13 +1,16 @@
+import * as path from 'path';
+import { URL } from 'url';
 import { DocumentLoader } from '../utils/document/document-loader';
-import { TemplateDefinition } from './template-schema';
+import { TemplateDefinitionWithResolvedContent } from './template-schema';
 import { TemplateDefinitionBuilder } from './template-definition-builder';
 
 export class TemplateLoader {
-  private async getContent(inputFilePath: string) {
-    const loader = new DocumentLoader(inputFilePath);
+  private async getContent(inputPath: string, basePath: string) {
+    const fullPath = this.resolveFullPath(inputPath, basePath);
+    const loader = new DocumentLoader(fullPath);
     const content = await loader.loadAsString();
     if (!content) {
-      throw new Error(`Failed to load template content for file: ${inputFilePath}`);
+      throw new Error(`Failed to load template content for file: ${fullPath}`);
     }
     return content;
   }
@@ -23,7 +26,48 @@ export class TemplateLoader {
     }
   }
 
-  static async load(inputFilePath: string): Promise<TemplateDefinition> {
+  private resolveFullPath(inputPath: string, basePath: string): string {
+    if (this.isUrl(inputPath)) {
+      return inputPath; // Return the URL as-is
+    } else if (this.isFileUrl(inputPath)) {
+      const filePath = this.fileUrlToPath(inputPath);
+      return path.resolve(path.dirname(basePath), filePath);
+    } else if (path.isAbsolute(inputPath)) {
+      return inputPath;
+    } else {
+      return path.resolve(path.dirname(basePath), inputPath);
+    }
+  }
+
+  private isUrl(input: string): boolean {
+    return input.startsWith('http://') || input.startsWith('https://');
+  }
+
+  private isFileUrl(input: string): boolean {
+    return input.startsWith('file://');
+  }
+
+  private fileUrlToPath(fileUrl: string): string {
+    const url = new URL(fileUrl);
+    return decodeURIComponent(url.pathname);
+  }
+
+  private async resolveIncludedContent(content: string, basePath: string): Promise<string> {
+    const includeRegex = /{{include:([^}]+)}}/g;
+    let match;
+    let resolvedContent = content;
+
+    while ((match = includeRegex.exec(content)) !== null) {
+      const [fullMatch, includePath] = match;
+      const fullPath = this.resolveFullPath(includePath, basePath);
+      const includedContent = await this.getContent(fullPath, basePath);
+      resolvedContent = resolvedContent.replace(fullMatch, includedContent.content);
+    }
+
+    return resolvedContent;
+  }
+
+  static async load(inputFilePath: string): Promise<TemplateDefinitionWithResolvedContent> {
     const loader = new TemplateLoader();
     return loader.load(inputFilePath);
   }
@@ -33,13 +77,25 @@ export class TemplateLoader {
     return loader.loadAsBuilder(inputFilePath);
   }
 
-  async load(inputFilePath: string): Promise<TemplateDefinition> {
-    const content = await this.getContent(inputFilePath);
-    return this.getBuilder(content).build();
+  async load(inputFilePath: string): Promise<TemplateDefinitionWithResolvedContent> {
+    const content = await this.getContent(inputFilePath, inputFilePath);
+    const builder = this.getBuilder(content);
+    const template = builder.build();
+    
+    const resolvedContent = await this.resolveIncludedContent(template.content, inputFilePath);
+    
+    return {
+      ...template,
+      content: resolvedContent,
+    };
   }
 
   async loadAsBuilder(inputFilePath: string): Promise<TemplateDefinitionBuilder> {
-    const content = await this.getContent(inputFilePath);
-    return this.getBuilder(content);
+    const content = await this.getContent(inputFilePath, inputFilePath);
+    const builder = this.getBuilder(content);
+    
+    const resolvedContent = await this.resolveIncludedContent(builder.build().content, inputFilePath);
+    
+    return builder.setResolvedContent(resolvedContent);
   }
 }

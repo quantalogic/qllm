@@ -9,11 +9,11 @@ import {
   TemplateDefinition,
   TemplateVariable,
   OutputVariable,
+  TemplateDefinitionWithResolvedContent,
 } from './template-schema';
 
-
 export class TemplateDefinitionBuilder {
-  private definition: Partial<TemplateDefinition>;
+  private definition: Partial<TemplateDefinitionWithResolvedContent>;
 
   private constructor(definition: Partial<TemplateDefinition>) {
     this.definition = definition;
@@ -54,6 +54,11 @@ export class TemplateDefinitionBuilder {
       'AI Assistant',
       content,
     );
+  }
+
+  setResolvedContent(content: string): this {
+    this.definition.resolved_content = content;
+    return this;
   }
 
   clone(): TemplateDefinitionBuilder {
@@ -312,11 +317,11 @@ export class TemplateDefinitionBuilder {
   }
 
   toYAML(): string {
-    return yaml.dump(this.definition, { 
-      skipInvalid: true, 
-      noRefs: true, 
+    return yaml.dump(this.definition, {
+      skipInvalid: true,
+      noRefs: true,
       noCompatMode: true,
-      lineWidth: -1  // Don't wrap long lines
+      lineWidth: -1, // Don't wrap long lines
     });
   }
 
@@ -356,7 +361,10 @@ export function createOutputVariable(
 }
 
 // Add this function at the end of the file
-export function generatePromptFromTemplate(template: TemplateDefinition, inputs: Record<string, any>): string {
+export function generatePromptFromTemplate(
+  template: TemplateDefinition,
+  inputs: Record<string, any>,
+): string {
   let content = template.content || '';
   for (const [key, value] of Object.entries(inputs)) {
     const regex = new RegExp(`{{${key}}}`, 'g');
