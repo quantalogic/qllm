@@ -4,7 +4,8 @@ import axios from 'axios';
 import { TemplateDefinition, TemplateVariable, OutputVariable } from './types';
 import { ErrorManager } from '../utils/error';
 import { InputValidationError } from './types';
-import { templateDefinitionSchema } from './validators';
+import { templateDefinitionSchema } from './template-schema';
+import { extractVariablesFromContent  } from './utils/extract-variable-from-content';
 
 export class Template implements TemplateDefinition {
   name!: string;
@@ -27,7 +28,8 @@ export class Template implements TemplateDefinition {
   constructor(definition: TemplateDefinition) {
     const validatedDefinition = templateDefinitionSchema.parse(definition);
     Object.assign(this, validatedDefinition);
-    this.extractVariablesFromContent();
+    const extractedVariables = extractVariablesFromContent({ content: this.content , input_variables: this.input_variables });
+    this.input_variables = { ...this.input_variables, ...extractedVariables };
   }
 
   static async fromUrl(url: string): Promise<Template> {
@@ -140,41 +142,4 @@ export class Template implements TemplateDefinition {
     };
   }
 
-  private extractVariablesFromContent(
-    options: {
-      allowDotNotation?: boolean;
-      allowBracketNotation?: boolean;
-      allowFunctionCalls?: boolean;
-    } = {}
-  ): void {
-    const { allowDotNotation = true, allowBracketNotation = false, allowFunctionCalls = false } = options;
-    const variableNamePattern = '[a-zA-Z_$][\\w$]*';
-    const dotNotationPattern = allowDotNotation ? `(?:\\.${variableNamePattern})*` : '';
-    const bracketNotationPattern = allowBracketNotation ? '(?:\\[(?:[^\\[\\]]*|\\[[^\\[\\]]*\\])*\\])*' : '';
-    const functionCallPattern = allowFunctionCalls ? '(?:\\([^()]*\\))?' : '';
-    const variablePattern = new RegExp(
-      `{{\\s*(${variableNamePattern}${dotNotationPattern}${bracketNotationPattern}${functionCallPattern})\\s*}}`,
-      'g'
-    );
-    const uniqueVariables = new Set<string>();
-    let match;
-    try {
-      while ((match = variablePattern.exec(this.content)) !== null) {
-        const variableExpression = match[1].trim();
-        const rootVariable = variableExpression.split(/[.[(]/)[0];
-        uniqueVariables.add(rootVariable);
-      }
-      uniqueVariables.forEach((variable) => {
-        if (!this.input_variables[variable]) {
-          this.input_variables[variable] = {
-            type: 'string',
-            description: `Variable ${variable} found in content`,
-            inferred: true,
-          };
-        }
-      });
-    } catch (error) {
-      console.error('Error extracting variables:', error);
-    }
-  }
 }

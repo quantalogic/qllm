@@ -69,7 +69,7 @@ describe('Template', () => {
 
     it('should not override existing variable definitions', () => {
       const template = new Template(mockTemplateDefinition);
-      expect(template.input_variables.name).toEqual(mockTemplateDefinition.input_variables.name);
+      expect(template.input_variables.name).toEqual(mockTemplateDefinition.input_variables?.name);
       expect(template.input_variables.undeclared).toEqual({
         type: 'string',
         description: 'Variable undeclared found in content',

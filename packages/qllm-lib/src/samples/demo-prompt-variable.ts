@@ -101,7 +101,7 @@ async function testCompletion(
       };
 
       const resolvedVariables = { ...initialVariables };
-      for (const [key, value] of Object.entries(template.input_variables)) {
+      for (const [key, value] of Object.entries(template.input_variables || {})) {
         if (!(key in resolvedVariables)) {
           resolvedVariables[key] = await promptForVariable(key, value);
         }

@@ -1,21 +1,32 @@
 // packages/qllm-lib/src/templates/types.ts
 
-import { LLMOptions, ChatMessage } from "../types";
+import { LLMOptions } from '../types';
 import * as z from 'zod';
+import { TemplateDefinition } from './template-schema';
 
-// Enum for output event types
+export * from './template-schema';
+
+// ==============================
+// Enum for Output Event Types
+// ==============================
 export enum OutputEventType {
   START = 'start',
   CHUNK = 'chunk',
   COMPLETE = 'complete',
   ERROR = 'error',
-  STOP = 'stop'
+  STOP = 'stop',
 }
 
+// ==============================
+// Base Output Event Class
+// ==============================
 export class BaseOutputEvent {
   constructor(public type: OutputEventType) {}
 }
 
+// ==============================
+// Specific Output Event Classes
+// ==============================
 export class StartOutputEvent extends BaseOutputEvent {
   constructor() {
     super(OutputEventType.START);
@@ -35,7 +46,10 @@ export class CompleteOutputEvent extends BaseOutputEvent {
 }
 
 export class ErrorOutputEvent extends BaseOutputEvent {
-  constructor(public error: Error, public message: string) {
+  constructor(
+    public error: Error,
+    public message: string,
+  ) {
     super(OutputEventType.ERROR);
   }
 }
@@ -46,6 +60,9 @@ export class StopOutputEvent extends BaseOutputEvent {
   }
 }
 
+// ==============================
+// Output Event Type Union
+// ==============================
 export type OutputEvent =
   | StartOutputEvent
   | ChunkOutputEvent
@@ -53,7 +70,9 @@ export type OutputEvent =
   | ErrorOutputEvent
   | StopOutputEvent;
 
+// ==============================
 // Utility Types
+// ==============================
 export interface Spinner {
   stop(): void;
   start(): void;
@@ -63,7 +82,9 @@ export interface Spinner {
   isSpinning(): boolean;
 }
 
+// ==============================
 // Template Types
+// ==============================
 export type VariableType = 'string' | 'number' | 'boolean' | 'array';
 export type OutputVariableType = 'string' | 'integer' | 'float' | 'boolean' | 'array' | 'object';
 
@@ -80,49 +101,9 @@ export interface OutputVariable {
   default?: any;
 }
 
-// Zod schema for TemplateVariable
-export const templateVariableSchema = z.object({
-  type: z.enum(['string', 'number', 'boolean', 'array']),
-  description: z.string(),
-  default: z.any().optional(),
-  inferred: z.boolean().optional(),
-});
-
-// Zod schema for OutputVariable
-export const outputVariableSchema = z.object({
-  type: z.enum(['string', 'integer', 'float', 'boolean', 'array', 'object']),
-  description: z.string().optional(),
-  default: z.any().optional(),
-});
-
-// Zod schema for TemplateParameters
-export const templateParametersSchema = z.object({
-  max_tokens: z.number().optional(),
-  temperature: z.number().optional(),
-  top_p: z.number().optional(),
-  top_k: z.number().optional(),
-});
-
-// Zod schema for TemplateDefinition
-export const templateDefinitionSchema = z.object({
-  name: z.string(),
-  version: z.string(),
-  description: z.string(),
-  author: z.string(),
-  provider: z.string(),
-  model: z.string(),
-  input_variables: z.record(z.string(), templateVariableSchema),
-  output_variables: z.record(z.string(), outputVariableSchema).optional(),
-  content: z.string(),
-  parameters: templateParametersSchema.optional(),
-  resolved_content: z.string().optional(),
-});
-
-// Type inference from Zod schemas
-export type TemplateDefinition = z.infer<typeof templateDefinitionSchema>;
-export type TemplateParameters = z.infer<typeof templateParametersSchema>;
-
-// Execution Context interface
+// ==============================
+// Execution Context Interface
+// ==============================
 export interface ExecutionContext {
   template: TemplateDefinition;
   variables: Record<string, any>;
@@ -133,11 +114,13 @@ export interface ExecutionContext {
   onOutput?: (event: OutputEvent) => void;
   onPromptForMissingVariables?: (
     template: TemplateDefinition,
-    initialVariables: Record<string, any>
+    initialVariables: Record<string, any>,
   ) => Promise<Record<string, any>>;
 }
 
+// ==============================
 // Error Classes
+// ==============================
 export class QllmError extends Error {
   constructor(message: string) {
     super(message);
@@ -155,7 +138,10 @@ export class ConfigurationError extends QllmError {
 }
 
 export class ProviderError extends QllmError {
-  constructor(message: string, public providerName: string) {
+  constructor(
+    message: string,
+    public providerName: string,
+  ) {
     super(message);
     this.name = 'ProviderError';
     Object.setPrototypeOf(this, ProviderError.prototype);

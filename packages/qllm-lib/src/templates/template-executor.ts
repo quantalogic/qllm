@@ -22,10 +22,8 @@ export class TemplateExecutor extends EventEmitter {
     context: ExecutionContext,
   ): Promise<{ response: string; outputVariables: Record<string, any> }> {
     const { template, variables, providerOptions, provider, stream, spinner, onOutput } = context;
-
     try {
       this.logDebugInfo(template, variables);
-
       const resolvedVariables = await this.resolveAndValidateVariables(
         context,
         template,
@@ -33,9 +31,7 @@ export class TemplateExecutor extends EventEmitter {
       );
       const content = await this.prepareContent(template, resolvedVariables);
       const messages = this.createChatMessages(content);
-
       logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
-
       const response = await this.generateResponse(
         provider,
         messages,
@@ -45,7 +41,6 @@ export class TemplateExecutor extends EventEmitter {
         spinner,
       );
       const outputVariables = this.processOutputVariables(template, response);
-
       return { response, outputVariables };
     } catch (error) {
       this.handleExecutionError(error);
@@ -72,12 +67,30 @@ export class TemplateExecutor extends EventEmitter {
     template: TemplateDefinition,
     initialVariables: Record<string, any>,
   ): Promise<Record<string, any>> {
-    if (!context.onPromptForMissingVariables) return initialVariables;
-
+    if (!context.onPromptForMissingVariables)
+      return this.applyDefaultValues(template, initialVariables);
     const missingVariables = this.findMissingVariables(template, initialVariables);
-    return missingVariables.length > 0
-      ? await context.onPromptForMissingVariables(template, initialVariables)
-      : initialVariables;
+    if (missingVariables.length > 0) {
+      const promptedVariables = await context.onPromptForMissingVariables(
+        template,
+        initialVariables,
+      );
+      return this.applyDefaultValues(template, { ...initialVariables, ...promptedVariables });
+    }
+    return this.applyDefaultValues(template, initialVariables);
+  }
+
+  private applyDefaultValues(
+    template: TemplateDefinition,
+    variables: Record<string, any>,
+  ): Record<string, any> {
+    const result = { ...variables };
+    for (const [key, value] of Object.entries(template.input_variables || {})) {
+      if (!(key in result) && 'default' in value) {
+        result[key] = value.default;
+      }
+    }
+    return result;
   }
 
   private findMissingVariables(
@@ -85,11 +98,13 @@ export class TemplateExecutor extends EventEmitter {
     variables: Record<string, any>,
   ): string[] {
     const requiredVariables = Object.keys(template.input_variables || {});
-    return requiredVariables.filter((key) => !(key in variables));
+    return requiredVariables.filter(
+      (key) => !(key in variables) && !('default' in (template.input_variables?.[key] || {})),
+    );
   }
 
   private async prepareContent(
-    template: TemplateDefinition,
+    template: TemplateDefinition & { resolved_content?: string },
     variables: Record<string, any>,
   ): Promise<string> {
     let content = template.resolved_content || template.content;
@@ -142,7 +157,6 @@ export class TemplateExecutor extends EventEmitter {
     const chunks: string[] = [];
     spinner?.start();
     onOutput?.(new StartOutputEvent());
-
     try {
       const stream = await provider.streamChatCompletion({ messages, options: providerOptions });
       for await (const chunk of stream) {
@@ -187,7 +201,6 @@ export class TemplateExecutor extends EventEmitter {
     response: string,
   ): Record<string, any> {
     if (!template.output_variables) return { qllm_response: response };
-
     const extractor = new OutputVariableExtractor(template);
     return { qllm_response: response, ...extractor.extractVariables(response) };
   }
