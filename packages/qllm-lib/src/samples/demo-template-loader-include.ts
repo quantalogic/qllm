@@ -63,14 +63,14 @@ content: >
     // Load and resolve the template from GitHub
     const githubLoader = new TemplateLoader();
     const githubResolvedTemplate: TemplateDefinitionWithResolvedContent = await githubLoader.load(
-      'https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/prompts/create_story.yaml',
+      'https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/create_story.yaml',
     );
 
     console.log('GitHub Resolved Template:');
     console.dir(githubResolvedTemplate, { depth: 2 });
 
     // Verify that the story.md is included in the GitHub template
-    if (githubResolvedTemplate.content.includes('This is the story formatted using Markdown')) {
+    if (githubResolvedTemplate.resolved_content?.includes('using Markdown')) {
       console.log('The story.md file was successfully included in the GitHub template!');
     } else {
       console.log('The story.md file was not included correctly in the GitHub template.');
