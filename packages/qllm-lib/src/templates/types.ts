@@ -7,101 +7,6 @@ import { TemplateDefinition } from './template-schema';
 export * from './template-schema';
 
 // ==============================
-// Enum for Output Event Types
-// ==============================
-export enum OutputEventType {
-  START = 'start',
-  CHUNK = 'chunk',
-  COMPLETE = 'complete',
-  ERROR = 'error',
-  STOP = 'stop',
-}
-
-// ==============================
-// Base Output Event Class
-// ==============================
-export class BaseOutputEvent {
-  constructor(public type: OutputEventType) {}
-}
-
-// ==============================
-// Specific Output Event Classes
-// ==============================
-export class StartOutputEvent extends BaseOutputEvent {
-  constructor() {
-    super(OutputEventType.START);
-  }
-}
-
-export class ChunkOutputEvent extends BaseOutputEvent {
-  constructor(public chunk: string) {
-    super(OutputEventType.CHUNK);
-  }
-}
-
-export class CompleteOutputEvent extends BaseOutputEvent {
-  constructor(public response: string) {
-    super(OutputEventType.COMPLETE);
-  }
-}
-
-export class ErrorOutputEvent extends BaseOutputEvent {
-  constructor(
-    public error: Error,
-    public message: string,
-  ) {
-    super(OutputEventType.ERROR);
-  }
-}
-
-export class StopOutputEvent extends BaseOutputEvent {
-  constructor() {
-    super(OutputEventType.STOP);
-  }
-}
-
-// ==============================
-// Output Event Type Union
-// ==============================
-export type OutputEvent =
-  | StartOutputEvent
-  | ChunkOutputEvent
-  | CompleteOutputEvent
-  | ErrorOutputEvent
-  | StopOutputEvent;
-
-// ==============================
-// Utility Types
-// ==============================
-export interface Spinner {
-  stop(): void;
-  start(): void;
-  fail(message: string): void;
-  succeed(message: string): void;
-  isActive(): boolean;
-  isSpinning(): boolean;
-}
-
-// ==============================
-// Template Types
-// ==============================
-export type VariableType = 'string' | 'number' | 'boolean' | 'array';
-export type OutputVariableType = 'string' | 'integer' | 'float' | 'boolean' | 'array' | 'object';
-
-export interface TemplateVariable {
-  type: VariableType;
-  description: string;
-  default?: any;
-  inferred?: boolean;
-}
-
-export interface OutputVariable {
-  type: OutputVariableType;
-  description?: string;
-  default?: any;
-}
-
-// ==============================
 // Execution Context Interface
 // ==============================
 export interface ExecutionContext {
@@ -110,8 +15,6 @@ export interface ExecutionContext {
   providerOptions: LLMOptions;
   provider: any;
   stream?: boolean;
-  spinner?: Spinner;
-  onOutput?: (event: OutputEvent) => void;
   onPromptForMissingVariables?: (
     template: TemplateDefinition,
     initialVariables: Record<string, any>,

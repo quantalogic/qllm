@@ -1,27 +1,51 @@
 import { EventEmitter } from 'events';
-import { ExecutionContext, TemplateDefinition, OutputEvent } from './types';
+import { ExecutionContext, TemplateDefinition } from './types';
 import { OutputVariableExtractor } from './output-variable-extractor';
 import { logger } from '../utils';
 import { ErrorManager } from '../utils/error';
 import { TemplateValidator } from './template-validator';
-import {
-  ChunkOutputEvent,
-  CompleteOutputEvent,
-  ErrorOutputEvent,
-  StartOutputEvent,
-  StopOutputEvent,
-} from './types';
 import { ChatMessage, LLMProvider } from '../types';
+
+interface TemplateExecutorEvents {
+  executionStart: { template: TemplateDefinition; variables: Record<string, any> };
+  variablesResolved: Record<string, any>;
+  contentPrepared: string;
+  requestSent: { messages: ChatMessage[]; providerOptions: any };
+  responseReceived: string;
+  streamStart: void;
+  streamChunk: string;
+  streamComplete: string;
+  streamError: Error;
+  outputVariablesProcessed: Record<string, any>;
+  executionComplete: { response: string; outputVariables: Record<string, any> };
+  executionError: Error;
+}
 
 export class TemplateExecutor extends EventEmitter {
   constructor() {
     super();
   }
 
+  on<K extends keyof TemplateExecutorEvents>(
+    eventName: K,
+    listener: (arg: TemplateExecutorEvents[K]) => void,
+  ): this {
+    return super.on(eventName, listener);
+  }
+
+  emit<K extends keyof TemplateExecutorEvents>(
+    eventName: K,
+    arg: TemplateExecutorEvents[K],
+  ): boolean {
+    return super.emit(eventName, arg);
+  }
+
   async execute(
     context: ExecutionContext,
   ): Promise<{ response: string; outputVariables: Record<string, any> }> {
-    const { template, variables, providerOptions, provider, stream, spinner, onOutput } = context;
+    const { template, variables, providerOptions, provider, stream } = context;
+    this.emit('executionStart', { template, variables });
+
     try {
       this.logDebugInfo(template, variables);
       const resolvedVariables = await this.resolveAndValidateVariables(
@@ -29,20 +53,30 @@ export class TemplateExecutor extends EventEmitter {
         template,
         variables,
       );
+      this.emit('variablesResolved', resolvedVariables);
+
       const content = await this.prepareContent(template, resolvedVariables);
+      this.emit('contentPrepared', content);
+
       const messages = this.createChatMessages(content);
       logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
+      this.emit('requestSent', { messages, providerOptions });
+
       const response = await this.generateResponse(
         provider,
         messages,
         providerOptions,
         stream || false,
-        onOutput,
-        spinner,
       );
+      this.emit('responseReceived', response);
+
       const outputVariables = this.processOutputVariables(template, response);
+      this.emit('outputVariablesProcessed', outputVariables);
+
+      this.emit('executionComplete', { response, outputVariables });
       return { response, outputVariables };
     } catch (error) {
+      this.emit('executionError', error instanceof Error ? error : new Error(String(error)));
       this.handleExecutionError(error);
     }
   }
@@ -127,23 +161,19 @@ export class TemplateExecutor extends EventEmitter {
     messages: ChatMessage[],
     providerOptions: any,
     stream: boolean,
-    onOutput?: (event: OutputEvent) => void,
-    spinner?: any,
   ): Promise<string> {
     return stream
-      ? this.handleStreamingResponse(provider, messages, providerOptions, onOutput, spinner)
-      : this.handleNonStreamingResponse(provider, messages, providerOptions, onOutput);
+      ? this.handleStreamingResponse(provider, messages, providerOptions)
+      : this.handleNonStreamingResponse(provider, messages, providerOptions);
   }
 
   private async handleNonStreamingResponse(
     provider: LLMProvider,
     messages: ChatMessage[],
     providerOptions: any,
-    onOutput?: (event: OutputEvent) => void,
   ): Promise<string> {
     const response = await provider.generateChatCompletion({ messages, options: providerOptions });
     const textResponse = response.text || '';
-    onOutput?.(new CompleteOutputEvent(textResponse));
     return textResponse;
   }
 
@@ -151,49 +181,30 @@ export class TemplateExecutor extends EventEmitter {
     provider: any,
     messages: ChatMessage[],
     providerOptions: any,
-    onOutput?: (event: OutputEvent) => void,
-    spinner?: any,
   ): Promise<string> {
     const chunks: string[] = [];
-    spinner?.start();
-    onOutput?.(new StartOutputEvent());
+    this.emit('streamStart', undefined);
+
     try {
       const stream = await provider.streamChatCompletion({ messages, options: providerOptions });
       for await (const chunk of stream) {
         if (chunk.text) {
-          onOutput?.(new ChunkOutputEvent(chunk.text));
+          this.emit('streamChunk', chunk.text);
           chunks.push(chunk.text);
         }
       }
       const fullResponse = chunks.join('');
-      onOutput?.(new CompleteOutputEvent(fullResponse));
-      spinner?.succeed('Response generated');
+      this.emit('streamComplete', fullResponse);
       return fullResponse;
     } catch (error) {
-      this.handleStreamingError(error, onOutput, spinner);
+      if (error instanceof Error) {
+        this.emit('streamError', error);
+      } else {
+        this.emit('streamError', new Error(String(error)));
+      }
       throw error;
     } finally {
-      this.finalizeStreaming(onOutput, spinner);
     }
-  }
-
-  private handleStreamingError(
-    error: any,
-    onOutput?: (event: OutputEvent) => void,
-    spinner?: any,
-  ): void {
-    spinner?.fail('Error during streaming');
-    onOutput?.(
-      new ErrorOutputEvent(
-        error instanceof Error ? error : new Error(String(error)),
-        'Error during streaming',
-      ),
-    );
-  }
-
-  private finalizeStreaming(onOutput?: (event: OutputEvent) => void, spinner?: any): void {
-    spinner?.stop();
-    onOutput?.(new StopOutputEvent());
   }
 
   private processOutputVariables(
