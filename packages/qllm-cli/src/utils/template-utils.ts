@@ -1,5 +1,4 @@
 import { Template, TemplateManager } from "qllm-lib";
-import axios from "axios";
 
 export async function loadTemplate(source: string, type: "file" | "url" | "inline"): Promise<Template> {
   switch (type) {
