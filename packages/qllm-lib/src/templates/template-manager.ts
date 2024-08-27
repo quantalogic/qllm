@@ -2,10 +2,10 @@
 
 import fs from 'fs/promises';
 import path from 'path';
-import { Template } from './template';
 import { logger } from '../utils/logger';
 import { ErrorManager } from '../utils/error';
-import { TemplateManagerError } from './types';
+import { TemplateDefinition, TemplateDefinitionBuilder, TemplateManagerError } from './types';
+import { TemplateLoader } from './template-loader';
 
 export interface TemplateManagerConfig {
   promptDirectory: string;
@@ -27,21 +27,21 @@ export class TemplateManager {
     return this.getYamlFilesInDirectory();
   }
 
-  async getTemplate(name: string): Promise<Template | null> {
+  async getTemplate(name: string): Promise<TemplateDefinition | null> {
     const filePath = this.getFilePath(name);
     try {
-      const content = await this.readFile(filePath);
-      return Template.fromYaml(content);
+      return await TemplateLoader.load(filePath);
     } catch (error) {
       this.handleTemplateReadError(error, name);
       return null;
     }
   }
 
-  async saveTemplate(template: Template): Promise<void> {
+  async saveTemplate(template: TemplateDefinition): Promise<void> {
+    const templateBuilder = TemplateDefinitionBuilder.fromTemplate(template);
     const filePath = this.getFilePath(template.name);
     try {
-      const content = template.toYaml();
+      const content = templateBuilder.toYAML();
       await fs.writeFile(filePath, content, 'utf-8');
       logger.info(`Saved template ${template.name} to ${filePath}`);
     } catch (error) {
@@ -59,15 +59,16 @@ export class TemplateManager {
     }
   }
 
-  async updateTemplate(name: string, updatedTemplate: Partial<Template>): Promise<void> {
+  async updateTemplate(name: string, updatedTemplate: Partial<TemplateDefinition>): Promise<void> {
     const existingTemplate = await this.getTemplate(name);
     if (!existingTemplate) {
       ErrorManager.throw(TemplateManagerError, `Template ${name} not found`);
     }
-    const mergedTemplate = new Template({
-      ...existingTemplate.toObject(),
+    const mergedTemplate: TemplateDefinition = {
+      ...existingTemplate,
       ...updatedTemplate,
-    });
+    };
+
     await this.saveTemplate(mergedTemplate);
   }
 
@@ -92,7 +93,9 @@ export class TemplateManager {
     }
   }
 
-  async resolveFileInclusions(template: Template): Promise<void> {
+  async resolveFileInclusions(
+    template: TemplateDefinition & { resolved_content: string },
+  ): Promise<void> {
     const resolvedContent = await this.resolveFileInclusionsInContent(template.content);
     template.resolved_content = resolvedContent;
   }
@@ -162,7 +165,7 @@ export class TemplateManager {
 
   private async resolveFileInclusionsInContent(
     content: string,
-    visitedFiles: Set<string> = new Set()
+    visitedFiles: Set<string> = new Set(),
   ): Promise<string> {
     const fileInclusionRegex = /{{file:\s*([^}]+)\s*}}/g;
     let resolvedContent = content;
@@ -170,7 +173,12 @@ export class TemplateManager {
 
     while ((match = fileInclusionRegex.exec(content)) !== null) {
       const [fullMatch, filePath] = match;
-      resolvedContent = await this.resolveFileInclusion(resolvedContent, fullMatch, filePath, visitedFiles);
+      resolvedContent = await this.resolveFileInclusion(
+        resolvedContent,
+        fullMatch,
+        filePath,
+        visitedFiles,
+      );
     }
 
     return resolvedContent;
@@ -180,7 +188,7 @@ export class TemplateManager {
     content: string,
     fullMatch: string,
     filePath: string,
-    visitedFiles: Set<string>
+    visitedFiles: Set<string>,
   ): Promise<string> {
     const fullPath = path.resolve(this.templateDir, filePath.trim());
     if (visitedFiles.has(fullPath)) {
@@ -190,7 +198,10 @@ export class TemplateManager {
     try {
       const fileContent = await this.readFile(fullPath);
       visitedFiles.add(fullPath);
-      const resolvedFileContent = await this.resolveFileInclusionsInContent(fileContent, visitedFiles);
+      const resolvedFileContent = await this.resolveFileInclusionsInContent(
+        fileContent,
+        visitedFiles,
+      );
       visitedFiles.delete(fullPath);
       return content.replace(fullMatch, resolvedFileContent);
     } catch (error) {

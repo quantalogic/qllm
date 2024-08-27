@@ -23,6 +23,16 @@ export class TemplateLoader {
     }
   }
 
+  static async load(inputFilePath: string): Promise<TemplateDefinition> {
+    const loader = new TemplateLoader();
+    return loader.load(inputFilePath);
+  }
+
+  static async loadAsBuilder(inputFilePath: string): Promise<TemplateDefinitionBuilder> {
+    const loader = new TemplateLoader();
+    return loader.loadAsBuilder(inputFilePath);
+  }
+
   async load(inputFilePath: string): Promise<TemplateDefinition> {
     const content = await this.getContent(inputFilePath);
     return this.getBuilder(content).build();

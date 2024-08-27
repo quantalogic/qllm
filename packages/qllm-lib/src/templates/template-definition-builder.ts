@@ -19,6 +19,10 @@ export class TemplateDefinitionBuilder {
     this.definition = definition;
   }
 
+  static fromTemplate(template: TemplateDefinition): TemplateDefinitionBuilder {
+    return new TemplateDefinitionBuilder(template);
+  }
+
   static create(
     name: string,
     version: string,

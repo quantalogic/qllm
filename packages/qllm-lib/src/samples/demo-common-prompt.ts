@@ -1,8 +1,6 @@
-import path from 'path';
 import { getLLMProvider } from '../providers';
 import { LLMProvider } from '../types';
-import { Template } from '../templates/template';
-import { TemplateExecutor } from '../templates';
+import { TemplateExecutor, TemplateLoader } from '../templates';
 import readline from 'readline';
 
 export const runLLMTests = async (filePath: string) => {
@@ -73,7 +71,7 @@ async function testCompletion(
   provider: LLMProvider,
   options: { model: string; maxTokens: number },
 ) {
-  const template = await Template.fromPath(filePath);
+  const template = await TemplateLoader.load(filePath);
 
   const templateExecutor = new TemplateExecutor();
 
@@ -90,7 +88,6 @@ async function testCompletion(
   });
 
   templateExecutor.on('requestSent', (request: any) => {});
-
 
   const { response, outputVariables } = await templateExecutor.execute({
     template: template,
