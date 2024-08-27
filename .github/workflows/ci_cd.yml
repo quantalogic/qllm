@@ -1,12 +1,24 @@
-name: CI/CD
+name: CI/CD On Demand
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run tests against'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+      debug_enabled:
+        description: 'Run the build with debug logging'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
-  build_test_publish:
+  build_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,26 +32,32 @@ jobs:
         run: npm run build
       - name: Test
         run: npm test
-      - name: Check if release version
-        id: check_version
-        run: node scripts/check_version.js
+        env:
+          TEST_ENVIRONMENT: ${{ github.event.inputs.environment }}
+      - name: Debug info
+        if: ${{ github.event.inputs.debug_enabled }}
+        run: |
+          echo "Debug mode enabled"
+          npm run debug
+
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: '18'
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
-#      - name: Publish to npm
-#        if: steps.check_version.outputs.is_release == 'true'
-#        uses: actions/setup-node@v3
-#        with:
-#          node-version: '18'
-#          registry-url: 'https://registry.npmjs.org'
-#      - run: npm publish
-#        env:
-#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  deploy:
+    needs: [build_test, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to ${{ github.event.inputs.environment }}
+        run: |
+          echo "Deploying to ${{ github.event.inputs.environment }}"
+          # Add your deployment steps here
