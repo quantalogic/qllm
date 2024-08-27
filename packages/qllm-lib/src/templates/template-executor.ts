@@ -13,21 +13,19 @@ import {
 } from './types';
 import { ChatMessage, LLMProvider } from '../types';
 
-
-
 export class TemplateExecutor extends EventEmitter {
   constructor() {
     super();
   }
 
-  async execute(context: ExecutionContext): Promise<{
-    response: string;
-    outputVariables: Record<string, any>;
-  }> {
+  async execute(
+    context: ExecutionContext,
+  ): Promise<{ response: string; outputVariables: Record<string, any> }> {
     const { template, variables, providerOptions, provider, stream, spinner, onOutput } = context;
 
     try {
       this.logDebugInfo(template, variables);
+
       const resolvedVariables = await this.resolveAndValidateVariables(
         context,
         template,
@@ -37,16 +35,17 @@ export class TemplateExecutor extends EventEmitter {
       const messages = this.createChatMessages(content);
 
       logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
+
       const response = await this.generateResponse(
         provider,
         messages,
         providerOptions,
-        !!stream,
+        stream || false,
         onOutput,
         spinner,
       );
-
       const outputVariables = this.processOutputVariables(template, response);
+
       return { response, outputVariables };
     } catch (error) {
       this.handleExecutionError(error);
@@ -73,11 +72,9 @@ export class TemplateExecutor extends EventEmitter {
     template: TemplateDefinition,
     initialVariables: Record<string, any>,
   ): Promise<Record<string, any>> {
-    console.log('resolveVariables');
     if (!context.onPromptForMissingVariables) return initialVariables;
 
     const missingVariables = this.findMissingVariables(template, initialVariables);
-    console.log('missingVariables', missingVariables);
     return missingVariables.length > 0
       ? await context.onPromptForMissingVariables(template, initialVariables)
       : initialVariables;
@@ -154,7 +151,6 @@ export class TemplateExecutor extends EventEmitter {
           chunks.push(chunk.text);
         }
       }
-
       const fullResponse = chunks.join('');
       onOutput?.(new CompleteOutputEvent(fullResponse));
       spinner?.succeed('Response generated');
@@ -193,10 +189,7 @@ export class TemplateExecutor extends EventEmitter {
     if (!template.output_variables) return { qllm_response: response };
 
     const extractor = new OutputVariableExtractor(template);
-    return {
-      qllm_response: response,
-      ...extractor.extractVariables(response),
-    };
+    return { qllm_response: response, ...extractor.extractVariables(response) };
   }
 
   private handleExecutionError(error: any): never {

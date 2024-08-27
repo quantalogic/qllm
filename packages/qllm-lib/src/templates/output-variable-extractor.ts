@@ -9,9 +9,9 @@ export class OutputVariableExtractor {
     const outputVariables = this.template.output_variables || {};
 
     for (const [key, variable] of Object.entries(outputVariables)) {
-      //logger.debug(`Extracting output variable: ${key}`);
+      // logger.debug(`Extracting output variable: ${key}`);
       const value = this.extractVariable(key, variable, output);
-      //logger.debug(`Extracted value for ${key}: ${value}`);
+      // logger.debug(`Extracted value for ${key}: ${value}`);
       result[key] = this.validateAndTransform(key, variable, value);
     }
 
@@ -48,7 +48,7 @@ export class OutputVariableExtractor {
       default:
         ErrorManager.throwError(
           'OutputValidationError',
-          `Invalid type for output variable ${key}: ${variable.type}`,
+          `Invalid type for output variable ${key}: ${variable.type}`
         );
     }
   }
@@ -56,10 +56,7 @@ export class OutputVariableExtractor {
   private parseInteger(key: string, value: string): number {
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) {
-      ErrorManager.throwError(
-        'OutputValidationError',
-        `Invalid integer value for ${key}: ${value}`,
-      );
+      ErrorManager.throwError('OutputValidationError', `Invalid integer value for ${key}: ${value}`);
     }
     return parsed;
   }

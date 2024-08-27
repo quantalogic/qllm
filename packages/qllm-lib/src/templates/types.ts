@@ -1,10 +1,9 @@
 // packages/qllm-lib/src/templates/types.ts
 
 import { LLMOptions, ChatMessage } from "../types";
+import * as z from 'zod';
 
 // Enum for output event types
-// types.ts
-
 export enum OutputEventType {
   START = 'start',
   CHUNK = 'chunk',
@@ -47,7 +46,12 @@ export class StopOutputEvent extends BaseOutputEvent {
   }
 }
 
-export type OutputEvent = StartOutputEvent | ChunkOutputEvent | CompleteOutputEvent | ErrorOutputEvent | StopOutputEvent;
+export type OutputEvent =
+  | StartOutputEvent
+  | ChunkOutputEvent
+  | CompleteOutputEvent
+  | ErrorOutputEvent
+  | StopOutputEvent;
 
 // Utility Types
 export interface Spinner {
@@ -57,10 +61,6 @@ export interface Spinner {
   succeed(message: string): void;
   isActive(): boolean;
   isSpinning(): boolean;
-}
-
-export interface OutputStream {
-  write(chunk: string): void;
 }
 
 // Template Types
@@ -80,27 +80,49 @@ export interface OutputVariable {
   default?: any;
 }
 
-export interface TemplateParameters {
-  max_tokens?: number;
-  temperature?: number;
-  top_p?: number;
-  top_k?: number;
-}
+// Zod schema for TemplateVariable
+export const templateVariableSchema = z.object({
+  type: z.enum(['string', 'number', 'boolean', 'array']),
+  description: z.string(),
+  default: z.any().optional(),
+  inferred: z.boolean().optional(),
+});
 
-export interface TemplateDefinition {
-  name: string;
-  version: string;
-  description: string;
-  author: string;
-  provider: string;
-  model: string;
-  input_variables: Record<string, TemplateVariable>;
-  output_variables?: Record<string, OutputVariable>;
-  content: string;
-  parameters?: TemplateParameters;
-  resolved_content?: string;
-}
+// Zod schema for OutputVariable
+export const outputVariableSchema = z.object({
+  type: z.enum(['string', 'integer', 'float', 'boolean', 'array', 'object']),
+  description: z.string().optional(),
+  default: z.any().optional(),
+});
 
+// Zod schema for TemplateParameters
+export const templateParametersSchema = z.object({
+  max_tokens: z.number().optional(),
+  temperature: z.number().optional(),
+  top_p: z.number().optional(),
+  top_k: z.number().optional(),
+});
+
+// Zod schema for TemplateDefinition
+export const templateDefinitionSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  description: z.string(),
+  author: z.string(),
+  provider: z.string(),
+  model: z.string(),
+  input_variables: z.record(z.string(), templateVariableSchema),
+  output_variables: z.record(z.string(), outputVariableSchema).optional(),
+  content: z.string(),
+  parameters: templateParametersSchema.optional(),
+  resolved_content: z.string().optional(),
+});
+
+// Type inference from Zod schemas
+export type TemplateDefinition = z.infer<typeof templateDefinitionSchema>;
+export type TemplateParameters = z.infer<typeof templateParametersSchema>;
+
+// Execution Context interface
 export interface ExecutionContext {
   template: TemplateDefinition;
   variables: Record<string, any>;

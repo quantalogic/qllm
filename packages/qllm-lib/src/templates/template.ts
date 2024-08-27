@@ -1,11 +1,10 @@
-// src/templates/template.ts
-
 import fs from 'fs/promises';
 import yaml from 'js-yaml';
+import axios from 'axios';
 import { TemplateDefinition, TemplateVariable, OutputVariable } from './types';
 import { ErrorManager } from '../utils/error';
 import { InputValidationError } from './types';
-import axios from 'axios';
+import { templateDefinitionSchema } from './validators';
 
 export class Template implements TemplateDefinition {
   name!: string;
@@ -26,7 +25,8 @@ export class Template implements TemplateDefinition {
   resolved_content?: string;
 
   constructor(definition: TemplateDefinition) {
-    Object.assign(this, definition);
+    const validatedDefinition = templateDefinitionSchema.parse(definition);
+    Object.assign(this, validatedDefinition);
     this.extractVariablesFromContent();
   }
 
@@ -68,7 +68,6 @@ export class Template implements TemplateDefinition {
   parseVariables(args: string[]): Record<string, any> {
     const variables: Record<string, any> = {};
     const variablePattern = /^-v:(\w+)$/;
-
     for (let i = 0; i < args.length; i++) {
       const match = args[i].match(variablePattern);
       if (match) {
@@ -80,7 +79,6 @@ export class Template implements TemplateDefinition {
         }
       }
     }
-
     return variables;
   }
 
@@ -99,7 +97,7 @@ export class Template implements TemplateDefinition {
         default:
           ErrorManager.throw(
             InputValidationError,
-            `Unknown variable type '${variableType}' for variable '${key}'`,
+            `Unknown variable type '${variableType}' for variable '${key}'`
           );
       }
     }
@@ -111,7 +109,7 @@ export class Template implements TemplateDefinition {
     if (isNaN(numberValue)) {
       ErrorManager.throw(
         InputValidationError,
-        `Failed to cast '${value}' to number for variable '${key}'`,
+        `Failed to cast '${value}' to number for variable '${key}'`
       );
     }
     return numberValue;
@@ -122,7 +120,7 @@ export class Template implements TemplateDefinition {
     if (lowerValue !== 'true' && lowerValue !== 'false') {
       ErrorManager.throw(
         InputValidationError,
-        `Failed to cast '${value}' to boolean for variable '${key}'. Use 'true' or 'false'`,
+        `Failed to cast '${value}' to boolean for variable '${key}'. Use 'true' or 'false'`
       );
     }
     return lowerValue === 'true';
@@ -141,42 +139,31 @@ export class Template implements TemplateDefinition {
       ...this,
     };
   }
+
   private extractVariablesFromContent(
     options: {
       allowDotNotation?: boolean;
       allowBracketNotation?: boolean;
       allowFunctionCalls?: boolean;
-    } = {},
+    } = {}
   ): void {
-    const {
-      allowDotNotation = true,
-      allowBracketNotation = false,
-      allowFunctionCalls = false,
-    } = options;
-
-    // Build the regex pattern based on options
+    const { allowDotNotation = true, allowBracketNotation = false, allowFunctionCalls = false } = options;
     const variableNamePattern = '[a-zA-Z_$][\\w$]*';
     const dotNotationPattern = allowDotNotation ? `(?:\\.${variableNamePattern})*` : '';
-    const bracketNotationPattern = allowBracketNotation
-      ? '(?:\\[(?:[^\\[\\]]*|\\[[^\\[\\]]*\\])*\\])*'
-      : '';
+    const bracketNotationPattern = allowBracketNotation ? '(?:\\[(?:[^\\[\\]]*|\\[[^\\[\\]]*\\])*\\])*' : '';
     const functionCallPattern = allowFunctionCalls ? '(?:\\([^()]*\\))?' : '';
-
     const variablePattern = new RegExp(
       `{{\\s*(${variableNamePattern}${dotNotationPattern}${bracketNotationPattern}${functionCallPattern})\\s*}}`,
-      'g',
+      'g'
     );
-
     const uniqueVariables = new Set<string>();
     let match;
-
     try {
       while ((match = variablePattern.exec(this.content)) !== null) {
         const variableExpression = match[1].trim();
         const rootVariable = variableExpression.split(/[.[(]/)[0];
         uniqueVariables.add(rootVariable);
       }
-
       uniqueVariables.forEach((variable) => {
         if (!this.input_variables[variable]) {
           this.input_variables[variable] = {
@@ -188,7 +175,6 @@ export class Template implements TemplateDefinition {
       });
     } catch (error) {
       console.error('Error extracting variables:', error);
-      // Optionally, you could throw the error or handle it in a way that fits your application's needs
     }
   }
 }
