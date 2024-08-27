@@ -6,7 +6,6 @@ import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
 import { Table } from "console-table-printer";
 import prompts from "prompts";
-import gradient from 'gradient-string';
 
 type ColorName = keyof typeof kleur;
 
@@ -75,7 +74,7 @@ class DisplayManager {
   }
 
   title(text: string): void {
-    console.log(gradient.pastel.multiline(text));
+    console.log(kleur.bold().underline().yellow(text));
   }
 
   codeBlock(code: string, language?: string): void {
@@ -328,7 +327,10 @@ export class IOManager {
     });
     this.newLine();
     this.displayInfo(
-      this.display.colorize("Use '/set <option> <value>' to change a setting", "dim")
+      this.display.colorize(
+        "Use '/set <option> <value>' to change a setting",
+        "dim"
+      )
     );
     this.displayInfo(
       this.display.colorize("Example: set provider openai", "dim")
