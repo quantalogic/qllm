@@ -12,6 +12,12 @@ export const templateVariableSchema = z
       .boolean()
       .optional()
       .describe('Indicates whether the variable is inferred from context.'),
+    customValidator: z
+      .function()
+      .args(z.any())
+      .returns(z.boolean())
+      .optional()
+      .describe('A custom validation function for the variable.'),
   })
   .describe('Schema for defining template variables.');
 
@@ -67,7 +73,7 @@ export const templateDefinitionSchema = z
       .describe('Parameters for controlling the generation process.'),
 
     prompt_type: z
-      .enum(['text_generation', 'question_answering', 'summarization', 'translation'])
+      .string()
       .describe(
         'The type of prompt, such as text generation, question answering, summarization, or translation.',
       )

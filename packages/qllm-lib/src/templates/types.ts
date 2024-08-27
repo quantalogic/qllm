@@ -5,6 +5,7 @@ import * as z from 'zod';
 import { TemplateDefinition } from './template-schema';
 
 export * from './template-schema';
+export * from './template-definition-builder';
 
 // ==============================
 // Execution Context Interface

@@ -5,13 +5,14 @@ import {
   RunCommandOptions,
   RunCommandOptionsSchema,
 } from "../types/run-command-options";
-import { TemplateExecutor, getLLMProvider } from "qllm-lib";
-import { loadTemplate, parseVariables } from "../utils/template-utils";
+import { TemplateExecutor, getLLMProvider, TemplateLoader } from "qllm-lib";
 import { promptForVariables } from "../utils/variable-utils";
 import { validateOptions } from "../utils/validate-options";
 import { IOManager } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
+import { processAndExit } from "../utils/common";
+import { parseVariables } from "../utils/template-utils";
 
 const runAction = async (
   templateSource: string,
@@ -40,10 +41,11 @@ const runAction = async (
 
     try {
       spinner.update({ text: "Loading template..." });
-      const template = await loadTemplate(
-        templateSource,
-        validOptions.type || "file"
-      );
+
+      const templateLoader = new TemplateLoader();
+
+      const template = await templateLoader.load(templateSource);
+
       spinner.update({ text: "" });
       spinner.stop();
 
@@ -148,7 +150,7 @@ export const runCommand = new Command("run")
   )
   .option("-s, --stream", "Stream the response")
   .option("-o, --output <output>", "Output file for the response")
-  .action(runAction);
+  .action(processAndExit(runAction));
 
 async function saveResponseToFile(
   response: string,
