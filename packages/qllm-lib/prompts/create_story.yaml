@@ -6,23 +6,23 @@ input_variables:
   subject:
     type: string
     description: The subject of the story
-    default: "Emmanuel Macron dissout l'assemblée"
+    place_holder: "Emmanuel Macron dissout l'assemblée"
   genre:
     type: string
     description: The genre of the story
-    default: "Humour et satire"
+    place_holder: "Humour et satire"
   role:
     type: string
     description: The role of the user
-    default: "Gaspar PROUST"
+    place_holder: "Gaspar PROUST"
   lang:
     type: string
     description: The language of the story
-    default: "Français"
+    place_holder:: "Français"
   max_length:
     type: number
     description: The maximum length of the story
-    default: 100
+    default: 1000
 output_variables:
   story:
     type: string
