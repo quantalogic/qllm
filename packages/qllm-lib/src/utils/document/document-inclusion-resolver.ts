@@ -8,7 +8,7 @@ type LoadedPaths = Set<string>;
 export async function loadContent(
   inputPath: string,
   basePath: string,
-  loadedPaths: LoadedPaths = new Set()
+  loadedPaths: LoadedPaths = new Set(),
 ): Promise<{ content: string; mimeType: string }> {
   const fullPath = resolveFullPath(inputPath, basePath);
   if (loadedPaths.has(fullPath)) {
@@ -27,7 +27,7 @@ export async function loadContent(
 export async function resolveIncludedContent(
   content: string,
   basePath: string,
-  loadedPaths: LoadedPaths = new Set()
+  loadedPaths: LoadedPaths = new Set(),
 ): Promise<string> {
   const includeRegex = /(?<!\\){{include:([^}]+)}}/g;
   let resolvedContent = content;
@@ -37,10 +37,16 @@ export async function resolveIncludedContent(
     try {
       const fullPath = resolveFullPath(includePath, basePath);
       const { content: includedContent } = await loadContent(fullPath, basePath, loadedPaths);
-      const recursivelyResolvedContent = await resolveIncludedContent(includedContent, fullPath, loadedPaths);
+      const recursivelyResolvedContent = await resolveIncludedContent(
+        includedContent,
+        fullPath,
+        loadedPaths,
+      );
       resolvedContent = resolvedContent.replace(fullMatch, recursivelyResolvedContent);
     } catch (error) {
-      console.warn(`Failed to resolve included content: ${error instanceof Error ? error.message : String(error)}`);
+      console.warn(
+        `Failed to resolve included content: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

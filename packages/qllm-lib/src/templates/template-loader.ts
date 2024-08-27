@@ -1,7 +1,7 @@
 // template-loader.ts
 import { TemplateDefinitionWithResolvedContent } from './template-schema';
 import { TemplateDefinitionBuilder } from './template-definition-builder';
-import { loadContent, resolveIncludedContent } from '../utils/document/content-loader';
+import { loadContent, resolveIncludedContent } from '../utils/document/document-inclusion-resolver';
 
 export class TemplateLoader {
   static async load(inputFilePath: string): Promise<TemplateDefinitionWithResolvedContent> {
