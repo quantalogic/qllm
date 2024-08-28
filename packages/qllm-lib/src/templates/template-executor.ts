@@ -87,8 +87,7 @@ export class TemplateExecutor extends EventEmitter {
       if (findIncludeStatements(content).length > 0) {
         const currentPath = process.cwd();
         const contentWithMissingInclude = await resolveIncludedContent(content, currentPath);
-        console.debug('Resolved content with missing includes:');
-        console.debug(contentWithMissingInclude);
+        resolvedContent = contentWithMissingInclude;
       }
 
       this.emit('contentPrepared', resolvedContent);

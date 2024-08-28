@@ -8,7 +8,7 @@ import { CliConfigManager } from "./utils/cli-config-manager";
 import { configureCommand } from "./commands/configure-command";
 import { runCommand } from "./commands/run-command";
 
-const VERSION = "1.8.11";
+const VERSION = "1.8.12";
 
 export async function main() {
   try {
