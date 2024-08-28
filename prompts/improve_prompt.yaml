@@ -2,9 +2,7 @@ name: improve_prompt
 version: '1.0'
 description: Improve a prompt
 author: Raphaël MANSUY
-max_tokens: 2048
-#provider: ollama
-#model: mistral
+max_tokens: 4096
 input_variables:
   prompt:
     type: string
@@ -15,4 +13,4 @@ output_variables:
     type: string
     description: The improved prompt
 content: >
-  {{file:./improve_prompt.md}}
+  {{include:common/improve_prompt.md}}

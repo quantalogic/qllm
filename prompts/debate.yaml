@@ -1,0 +1,101 @@
+name: debate_topic
+version: "2.0"
+description: Facilitate a comprehensive debate to explore diverse perspectives on a given topic
+author: Raphaël MANSUY (improved by Claude)
+max_tokens: 40000
+input_variables:
+  topic:
+    type: string
+    description: The topic to explore through debate
+    place_holder: "The impact of artificial intelligence on job markets"
+  number_of_experts:
+    type: number
+    description: The number of experts or participants in the debate
+    place_holder: 6
+  debate_format:
+    type: string
+    description: The format for the debate (e.g., panel discussion, structured argument, Q&A)
+    place_holder: "panel discussion"
+  number_of_turns:
+    type: number
+    description: The number of turns in the debate
+    place_holder: 6
+output_variables:
+  result:
+    type: string
+    description: A comprehensive summary of the debate, including key points, areas of agreement and disagreement, and potential future implications
+content: >
+  Welcome to the debate on the topic of {{topic}}. 
+
+  This debate aims to explore diverse perspectives and insights on this subject, fostering a deeper understanding through collaborative discussion.
+
+  ## Debate Overview:
+  - Topic: {{topic}}
+  - Number of Participants: {{number_of_experts}}
+  - Format: {{debate_format}}
+  - Number of Turns: {{number_of_turns}}
+
+  ## Instructions:
+
+  1. **Introduction**: 
+     - Present the topic and its relevance to current issues or future scenarios.
+     - Provide context and background information to set the stage for the debate.
+
+  2. **Participant Selection**:
+     - Define a list of {{number_of_experts}} experts or participants who will contribute to the debate.
+     - Ensure each participant represents a distinct viewpoint, expertise, or stakeholder perspective.
+     - Briefly introduce each participant, highlighting their relevant background and potential stance on the topic.
+
+  3. **Debate Structure**:
+     - Implement the chosen debate format: {{debate_format}}.
+     - Organize the debate into {{number_of_turns}} turns, allowing for in-depth exploration and interaction.
+
+  4. **Debate Execution**:
+     - For each turn:
+       a. Each participant presents their perspective, supported by evidence, examples, or case studies.
+       b. Encourage participants to address counterarguments and build upon previous points.
+       c. Facilitate interaction between participants through questions, challenges, or rebuttals.
+     - Ensure a balanced discussion where all viewpoints are respectfully considered.
+
+  5. **Conclusion**:
+     - Summarize the key points discussed, highlighting areas of consensus and disagreement.
+     - Identify potential solutions, compromises, or areas for further research.
+     - Reflect on the implications of the debate for the topic at hand and related fields.
+
+  ## Output Format:
+
+  <debates>
+    <debate>
+      <introduction>
+        [Provide a comprehensive introduction to the topic, its relevance, and the debate structure]
+      </introduction>
+      <participants>
+        [List and briefly introduce each participant]
+      </participants>
+      <turn number="1">
+        <participant>
+          <name>[Participant Name]</name>
+          <background>[Brief background relevant to the topic]</background>
+          <discussion>
+            [Participant's argument, including evidence and examples]
+          </discussion>
+        </participant>
+        [Repeat for each participant]
+      </turn>
+      [Repeat for each turn]
+      <conclusion>
+        [Summarize key points, areas of agreement and disagreement]
+      </conclusion>
+    </debate>
+    <result>
+      [Provide a comprehensive analysis of the debate (minimum 500 words), including:
+       - Summary of main arguments and counterarguments
+       - Areas of consensus and persistent disagreements
+       - Potential solutions or compromises suggested
+       - Implications for the field or topic
+       - Suggestions for further research or discussion
+      ]
+    </result>
+  </debates>
+
+  Note: Ensure that the debate remains respectful, evidence-based, and focused on constructive dialogue throughout all turns.
