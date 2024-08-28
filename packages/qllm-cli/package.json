@@ -79,7 +79,7 @@
     "table": "^6.8.2",
     "uuid": "^10.0.0",
     "zod": "^3.23.8",
-    "qllm-lib": "file:../qllm-lib"
+    "qllm-lib": "^1.8.10"
   },
   "overrides": {
     "glob": "^9.0.0",
