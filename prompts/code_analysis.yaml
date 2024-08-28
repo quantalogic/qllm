@@ -18,10 +18,13 @@ output_variables:
 content: >
   ## The code is available at: 
 
-  {{include: {{file_url}} }}
+  <code_to_improve>
+    {{include: {{file_url}} }}
+  </code_to_improve>
 
   ## Step to follow to analyze the code:
 
+  0. If no code in <code_to_improve> tag, you MUST STOP and give the content of <code_to_improve> tag. With an error message.
   1. Determine the programming language used in the code, framework or libraries used. Format as a list.
   2. Identify the main components or modules in the code. Describe their functionality and purpose. Describe in a table.
   3. Identifiy point of improvement in the code. Describe in a table.
