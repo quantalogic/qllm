@@ -10,7 +10,7 @@
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
     "format": "npm run format --workspaces",
-    "install:local": "npm install -g ./packages/qllm-cli",
+    "install:local": "npm uninstall -g qllm && npm install -g ./packages/qllm-cli",
     "preinstall:local": "npm run build"
   }
 }
