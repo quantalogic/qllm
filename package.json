@@ -1,16 +1,41 @@
 {
   "name": "qllm-monorepo",
   "version": "1.8.8",
-  "private": false,
-  "workspaces": [
-    "packages/*"
-  ],
+  "private": true,
   "scripts": {
-    "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces",
-    "format": "npm run format --workspaces",
-    "install:local": "npm uninstall -g qllm && npm install -g ./packages/qllm-cli",
-    "preinstall:local": "npm run build"
-  }
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r run lint",
+    "format": "pnpm -r run format",
+    "clean": "pnpm -r run clean",
+    "install:local": "pnpm uninstall -g qllm && pnpm install -g ./packages/qllm-cli",
+    "preinstall:local": "pnpm run build",
+    "version": "changeset version",
+    "publish-packages": "changeset publish",
+    "prepublish-packages": "pnpm run build && pnpm run test"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.7",
+    "eslint": "^9.9.1",
+    "prettier": "^3.3.3",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=16.5.0",
+    "pnpm": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quantalogic/qllm.git"
+  },
+  "author": {
+    "name": "QuantaLogic",
+    "url": "https://quantalogic.app"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/quantalogic/qllm/issues"
+  },
+  "homepage": "https://github.com/quantalogic/qllm#readme"
 }
