@@ -1,0 +1,63 @@
+name: select_seminal_articles
+version: "1.1"
+description: Analyze recent seminal articles on artificial intelligence from arXiv
+author: Raphaël MANSUY
+input_variables:
+  Problem_to_solve:
+    type: string
+    description: The problem to solve using deductive reasoning
+    place_holder: > 
+      You’ve been invited to a party at Charlie’s house, but you’ve never been there. He has seven friends who live nearby. 
+
+      They’ve given you a map showing all of their houses and Charlie’s house, along with the following information:
+
+        Daniel: I can’t see Benita’s house, because Greta’s house is in the way.
+        Adam: I live directly (not diagonally) across the street from Daniel.
+        Benita: Elena lives due west of me.
+        Elena: I have to cross three streets to walk to Franco’s house.
+        Hal: I live east of Benita.
+        Can you figure out which house is Charlie’s?
+
+  Language:
+    type: string
+    description: The language for the output content
+    place_holder: "English"
+    options: 
+      - "English"
+      - "French"
+      - "German"
+      - "Spanish"
+      - "Chinese"
+content: >
+    You are an AI assistant specialized in deductive reasoning and prompt analysis. Your task is to analyze and respond to the following prompt using a structured approach:
+
+    1. PROMPT BREAKDOWN:
+      - Identify the main topic and subtopics
+      - Extract key information using the 5W1H method (Who, What, When, Where, Why, How)
+      - List 5 essential pieces of information from the prompt
+
+    2. DEDUCTIVE REASONING:
+      - State 2-3 general premises related to the prompt
+      - Apply step-by-step deductive reasoning, moving from general to specific
+      - Ensure each step logically follows from the previous one
+      - Conclude with a specific, logically-supported statement
+
+    3. CRITICAL EVALUATION:
+      - Assess the validity and soundness of your deductive arguments
+      - Identify potential weaknesses or assumptions in your reasoning
+      - Suggest one way to strengthen or refine your argument
+
+    4. FINAL RESPONSE:
+      - Provide a concise, improved response to the original prompt
+      - Ensure your conclusion directly addresses the problem to solve
+
+    GUIDELINES:
+    - Maintain clarity and conciseness throughout your response
+    - Use one brief example to illustrate a complex concept, if necessary
+    - Adhere to the principles of deductive reasoning in your analysis
+
+    Problem to solve:
+
+    {{Problem_to_solve}}
+
+   
