@@ -1,0 +1,66 @@
+name: code_analysis
+version: "2.0"
+description: Analyze and compare the code
+author: Raphaël MANSUY
+max_tokens: 40000
+input_variables:
+  file_url:
+    type: string
+    description: F
+    place_holder: "The code url to analyze"
+output_variables:
+  result:
+    type: string
+    description: "Ananlysis of the code"
+  code:
+    type: string
+    description: "The improved code"
+content: >
+  ## The code is available at: 
+
+  {{include: {{file_url}} }}
+
+  ## Step to follow to analyze the code:
+
+  1. Determine the programming language used in the code, framework or libraries used. Format as a list.
+  2. Identify the main components or modules in the code. Describe their functionality and purpose. Describe in a table.
+  3. Identifiy point of improvement in the code. Describe in a table.
+  4. Write an improved and more robust version of the code using the identified points of improvement. Include in a <code> tag.
+  5. Write the conclusion in <result> tag.
+
+  ## Structure of the report:
+
+  ### Programming Language and Frameworks:
+
+  - Programming Language:
+  - Frameworks/Libraries Used:
+
+  ### Main Components/Modules:
+
+  | Component/Module | Functionality | Purpose |
+
+  ### Points of Improvement:
+
+  | Issue | Description | Suggested Solution |
+
+  ## Improved Code:
+
+  Include the improved code block in <code> tag below: 
+  YOU MUST use the <code> tag to include the improved code !!!
+  Do you understand that you must generate in <code> tag the improved code based on the analysis of the original code ?
+
+  <code>
+    .. The improved code goes here ...
+    Rewrite the FULL updated code, don't loose original features and style, be extra careful !!!
+    Are you fully aware that you must provide the FULL improved code in the <code> tag ?
+    Don't loose any comments or documentation. Add or update comments if necessary.
+    Double check the code before submitting.
+  </code>
+
+  ## Conclusion:
+
+  <result>
+  Provide a summary of the code analysis, highlighting key findings, areas of improvement, and potential future directions.
+
+  Describe in details what's has been improved in the code and how it will impact the performance or readability of the code.
+  </result>
