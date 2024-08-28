@@ -1,0 +1,65 @@
+name: select_seminal_articles
+version: "1.1"
+description: Analyze recent seminal articles on artificial intelligence from arXiv
+author: Raphaël MANSUY
+input_variables:
+  Number_of_articles:
+    type: number
+    description: The number of articles to analyze (1-50)
+    place_holder: 10
+  Language:
+    type: string
+    description: The language for the output content
+    place_holder: "English"
+    options: 
+      - "English"
+      - "French"
+      - "German"
+      - "Spanish"
+      - "Chinese"
+output_variables:
+  analysis_table:
+    type: string
+    description: A markdown table with the analysis of selected articles
+
+content: >
+  ## Task:
+  
+  Analyze the most recent and impactful artificial intelligence articles from the arXiv search results provided below. Select {{Number_of_articles}} articles that demonstrate clear breakthroughs or significant advancements in AI methodologies or applications.
+
+  ## Source data:
+  <arxiv_results>
+  {{include: https://arxiv.org/search/cs?query=artificial+intelligence&searchtype=all&abstracts=show&order=-announced_date_first&size=25}}
+  </arxiv_results>
+
+  ## Instructions:
+  1. Select {{Number_of_articles}} articles from the arXiv search results in the <arxiv_results> tag above.
+  2. Choose only articles that represent major advancements or novel approaches in AI.
+  3. If {{Number_of_articles}} suitable articles cannot be found, select as many as possible and note the actual number.
+  4. Analyze each selected article for its innovations, potential impact, and practical applications.
+
+  ## Output format:
+  You Must Present your analysis in a markdown table with the following columns inside an xml tags <analysis_table> like the example below:
+  
+  <analysis_table>
+  | Article Title | arXiv ID | Brief Description | Impact Analysis |
+
+  - Article Title: The full title of the research paper
+  - arXiv ID: The article's unique identifier and link
+  - Brief Description: A concise summary (50-75 words) of the core innovations and findings
+  - Impact Analysis: A critical evaluation (75-100 words) of the article's significance, including:
+    * Potential to disrupt current technologies
+    * Influence on future research directions
+    * Practical value for AI system design and implementation
+    * Relevance to scalable architectures and SaaS businesses
+  </analysis_table>
+
+  ## Additional guidelines:
+  - Focus on articles with clear practical applications or potential for industry impact
+  - Highlight aspects relevant to data engineering and AI system scalability
+  - Consider the article's potential to inspire thought leadership in AI
+
+  ## Language:
+  Provide all output content in {{Language}}.
+
+  Note: If unable to find {{Number_of_articles}} suitable articles, explain why and provide analysis for those available.

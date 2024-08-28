@@ -2,7 +2,12 @@ import { ErrorManager } from '../utils/error';
 import { TemplateDefinition, OutputVariable } from './types';
 
 export class OutputVariableExtractor {
-  constructor(private template: TemplateDefinition) {}
+  static extractVariables(template: TemplateDefinition, output: string): Record<string, any> {
+    const extractor = new OutputVariableExtractor(template);
+    return extractor.extractVariables(output);
+  }
+
+  private constructor(private template: TemplateDefinition) {}
 
   extractVariables(output: string): Record<string, any> {
     const result: Record<string, any> = {};

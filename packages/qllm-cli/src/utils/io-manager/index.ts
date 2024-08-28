@@ -6,7 +6,6 @@ import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
 import { Table } from "console-table-printer";
 import prompts from "prompts";
-import { write } from "fs";
 
 const stdout = {
   log: (...args: any[]) => {
@@ -401,3 +400,5 @@ export class IOManager {
 
 // Create a singleton instance for easy access
 export const ioManager = new IOManager();
+
+export { Spinner };

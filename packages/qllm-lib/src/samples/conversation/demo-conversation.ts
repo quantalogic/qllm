@@ -1,6 +1,6 @@
-import { createConversationManager } from "../conversation";
-import { ChatMessage, ChatMessageContent, LLMProvider } from "../types";
-import { createLLMProvider } from "..";
+import { createConversationManager } from "../../conversation";
+import { ChatMessage, ChatMessageContent, LLMProvider } from "../../types";
+import { createLLMProvider } from "../..";
 
 async function main() {
   // Initialize the ConversationManager
@@ -27,8 +27,11 @@ async function main() {
     await conversationManager.addMessage(conversation.id, {
       role: 'user',
       content: { type: 'text', text: userMessage },
-      providerId: "openai"
-    });
+      providerId: "openai",
+        options: {
+          model: "gpt-4o-mini"
+        }
+      });
 
     // Get the conversation history
     const history = await conversationManager.getHistory(conversation.id);
@@ -39,38 +42,34 @@ async function main() {
       content: msg.content
     }));
 
-    console.log("User:", userMessage);
-    console.log("AI:", "");
-
-    // Generate AI response using streaming
-    let fullResponse = "";
-    for await (const chunk of openaiProvider.streamChatCompletion({
+    // Generate AI response
+    const aiResponse = await openaiProvider.generateChatCompletion({
       messages,
       options: {
-        model: "gpt-4",
+        model: "gpt-4o-mini",
         maxTokens: 150
       }
-    })) {
-      if (chunk.text) {
-        process.stdout.write(chunk.text);
-        fullResponse += chunk.text;
-      }
-    }
-    console.log("\n---");
+    });
 
     // Add AI response to the conversation
     await conversationManager.addMessage(conversation.id, {
       role: 'assistant',
-      content: { type: 'text', text: fullResponse || "Sorry, I couldn't generate a response." },
-      providerId: "openai"
+      content: { type: 'text', text: aiResponse.text || "Sorry, I couldn't generate a response." },
+      providerId: "openai",
+      options: {
+        model: "gpt-4o-mini"
+      }
     });
+
+    console.log("User:", userMessage);
+    console.log("AI:", aiResponse.text);
+    console.log("---");
   }
 
   // Simulate a conversation
   await chatTurn("What are some recent advancements in AI?");
   await chatTurn("How might these advancements impact the job market?");
   await chatTurn("What ethical considerations should we keep in mind with AI development?");
-  await chatTurn("What are my first question about ?");
 
   // Print the final conversation history
   const finalHistory = await conversationManager.getHistory(conversation.id);

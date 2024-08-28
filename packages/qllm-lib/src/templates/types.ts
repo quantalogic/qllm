@@ -1,7 +1,6 @@
 // packages/qllm-lib/src/templates/types.ts
 
-import { LLMOptions } from '../types';
-import * as z from 'zod';
+import { LLMOptions, LLMProvider } from '../types';
 import { TemplateDefinition } from './template-schema';
 
 export * from './template-schema';
@@ -12,9 +11,9 @@ export * from './template-definition-builder';
 // ==============================
 export interface ExecutionContext {
   template: TemplateDefinition;
-  variables: Record<string, any>;
-  providerOptions: LLMOptions;
-  provider: any;
+  variables?: Record<string, any>;
+  providerOptions?: Partial<LLMOptions>;
+  provider?: LLMProvider;
   stream?: boolean;
   onPromptForMissingVariables?: (
     template: TemplateDefinition,

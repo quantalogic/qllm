@@ -1,7 +1,7 @@
 import {
   TemplateDefinitionBuilder,
   generatePromptFromTemplate,
-} from '../templates/template-definition-builder';
+} from '../../templates/template-definition-builder';
 
 // 1. Simple Example: Basic Greeting Template
 const simpleGreeting = TemplateDefinitionBuilder.quickSetup('Simple Greeting', 'Hello, {{name}}!')
@@ -13,13 +13,13 @@ console.log('Simple Greeting Template:');
 console.log(JSON.stringify(simpleGreeting, null, 2));
 
 // 2. Intermediate Example: Weather Report Template
-const weatherReport = TemplateDefinitionBuilder.create(
-  'Weather Report',
-  '1.0.0',
-  'Generate a weather report based on given conditions',
-  'AI Assistant',
-  'The weather in {{location}} is {{temperature}}°C and {{condition}}.',
-)
+const weatherReport = TemplateDefinitionBuilder.create({
+  name: 'Weather Report',
+  version: '1.0.0',
+  description: 'Generate a weather report based on given conditions',
+  author: 'AI Assistant',
+  content: 'The weather in {{location}} is {{temperature}}°C and {{condition}}.',
+})
   .withInputVariable('location', 'string', 'The location for the weather report')
   .withInputVariable('temperature', 'number', 'The temperature in Celsius')
   .withInputVariable('condition', 'string', 'The weather condition (e.g., sunny, rainy)')
@@ -34,12 +34,12 @@ console.log('\nWeather Report Template:');
 console.log(JSON.stringify(weatherReport, null, 2));
 
 // 3. Advanced Example: Recipe Generator with Conditional Logic
-const recipeGenerator = TemplateDefinitionBuilder.create(
-  'Recipe Generator',
-  '2.0.0',
-  'Generate a recipe based on ingredients and dietary restrictions',
-  'Chef AI',
-  `Create a recipe using the following ingredients: {{ingredients}}.
+const recipeGenerator = TemplateDefinitionBuilder.create({
+  name: 'Recipe Generator', // {{name}}
+  version: '2.0.0', // {{version}}
+  description: 'Generate a recipe based on ingredients and dietary restrictions', // {{description}}
+  author: 'Chef AI', // {{author}}
+  content: `Create a recipe using the following ingredients: {{ingredients}}.
    {{#if vegetarian}}The recipe should be vegetarian.{{/if}}
    {{#if vegan}}The recipe should be vegan.{{/if}}
    
@@ -48,8 +48,8 @@ const recipeGenerator = TemplateDefinitionBuilder.create(
    Name: 
    Ingredients:
    Instructions:
-   </recipe>`,
-)
+   </recipe>`, // {{content}}
+})
   .withInputVariable('ingredients', 'string', 'Comma-separated list of ingredients')
   .withInputVariable('vegetarian', 'boolean', 'Whether the recipe should be vegetarian', {
     default: false,
@@ -72,12 +72,12 @@ console.log('\nRecipe Generator Template:');
 console.log(JSON.stringify(recipeGenerator, null, 2));
 
 // 4. Complex Example: Multi-Language Code Generator
-const codeGenerator = TemplateDefinitionBuilder.create(
-  'Multi-Language Code Generator',
-  '3.0.0',
-  'Generate code snippets in multiple programming languages',
-  'CodeMaster AI',
-  `Generate a {{language}} function that {{task_description}}.
+const codeGenerator = TemplateDefinitionBuilder.create({
+  name: 'Multi-Language Code Generator', // {{name}}
+  version: '3.0.0', // {{version}}
+  description: 'Generate code snippets in multiple programming languages', // {{description}}
+  author: 'CodeMaster', // {{author}}
+  content: `Generate a {{language}} function that {{task_description}}.
    
    Requirements:
    {{requirements}}
@@ -88,24 +88,24 @@ const codeGenerator = TemplateDefinitionBuilder.create(
    Generated Code:
    <code>
    // Code goes here
-   </code>`,
-)
+   </code>`, // {{content}}
+})
   .withInputVariable('language', 'string', 'The programming language to generate code in')
   .withInputVariable('task_description', 'string', 'Description of the coding task')
   .withInputVariable('requirements', 'string', 'Specific requirements for the code')
   .withInputVariable('include_comments', 'boolean', 'Whether to include comments in the code', {
-    default: true,
+    place_holder: 'true',
   })
   .withInputVariable(
     'optimize_for_performance',
     'boolean',
     'Whether to optimize the code for performance',
-    { default: false },
+    { place_holder: false },
   )
   .withOutputVariable('code', 'string', { description: 'The generated code snippet' })
   .withTags('programming', 'code generation', 'multi-language')
   .withCategories('Software Development', 'AI-Assisted Coding')
-  .withModel('gpt-4')
+  .withModel('gpt-4o-mini')
   .withParameters({ max_tokens: 500, temperature: 0.7, top_p: 0.95 })
   .withPromptType('code_generation')
   .withTaskDescription(
@@ -124,35 +124,35 @@ console.log('\nMulti-Language Code Generator Template:');
 console.log(JSON.stringify(codeGenerator, null, 2));
 
 // 5. Advanced Complex Example: Interactive Story Generator with Branching Paths
-const interactiveStoryGenerator = TemplateDefinitionBuilder.create(
-  'Interactive Story Generator',
-  '4.0.0',
-  'Generate interactive stories with branching paths',
-  'StoryTeller AI',
-  `Create an interactive story segment based on the following:
+const interactiveStoryGenerator = TemplateDefinitionBuilder.create({
+  name: 'Interactive Story Generator',
+  version: '4.0.0',
+  description: 'Generate interactive stories with branching paths',
+  author: 'StoryTeller AI',
+  content: `Create an interactive story segment based on the following:
    
-   Current scene: {{current_scene}}
-   Player choice: {{player_choice}}
-   Story theme: {{theme}}
-   Character names: {{character_names}}
-   
-   {{#if include_dialogue}}Include character dialogue.{{/if}}
-   {{#if add_plot_twist}}Add an unexpected plot twist.{{/if}}
-   
-   Generated Story Segment:
-   <story>
-   [Scene description]
-   
-   [Character actions and dialogue]
-   
-   [Consequences of player's choice]
-   
-   [New choices for the player]
-   1. [Choice 1]
-   2. [Choice 2]
-   3. [Choice 3]
-   </story>`,
-)
+  Current scene: {{current_scene}}
+  Player choice: {{player_choice}}
+  Story theme: {{theme}}
+  Character names: {{character_names}}
+  
+  {{#if include_dialogue}}Include character dialogue.{{/if}}
+  {{#if add_plot_twist}}Add an unexpected plot twist.{{/if}}
+  
+  Generated Story Segment:
+  <story>
+  [Scene description]
+  
+  [Character actions and dialogue]
+  
+  [Consequences of player's choice]
+  
+  [New choices for the player]
+  1. [Choice 1]
+  2. [Choice 2]
+  3. [Choice 3]
+  </story>`,
+})
   .withInputVariable('current_scene', 'string', 'Description of the current scene in the story')
   .withInputVariable(
     'player_choice',
@@ -225,13 +225,13 @@ console.log(storyPrompt);
 
 // Validating a template
 // Validating a template
-const invalidTemplateBuilder = TemplateDefinitionBuilder.create(
-  'Invalid Template',
-  '1.0.0',
-  'This template is intentionally invalid',
-  'Tester',
-  '{{invalid_variable}}',
-)
+const invalidTemplateBuilder = TemplateDefinitionBuilder.create({
+  name: 'Invalid Template',
+  version: '1.0.0',
+  description: 'This template is intentionally invalid',
+  content: '{{invalid_variable}}',
+  author: 'Tester',
+})
   .withInputVariable('valid_variable', 'string', 'A valid variable')
   .withCustomInputValidator('non_existent_variable', () => false);
 

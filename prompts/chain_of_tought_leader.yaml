@@ -10,7 +10,7 @@ input_variables:
   Language:
     type: string
     description: The Language in which the content should be written
-    place_holder:: "English"
+    place_holder: "English"
 content: >
     ## Chain of Thought Leaders Prompting - Exploring the Top Insights on {{Topic}}
 

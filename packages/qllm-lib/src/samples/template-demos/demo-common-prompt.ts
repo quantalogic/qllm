@@ -1,6 +1,6 @@
-import { getLLMProvider } from '../providers';
-import { LLMProvider } from '../types';
-import { TemplateExecutor, TemplateLoader } from '../templates';
+import { getLLMProvider } from '../../providers';
+import { LLMProvider } from '../../types';
+import { TemplateExecutor, TemplateLoader } from '../../templates';
 import readline from 'readline';
 
 export const runLLMTests = async (filePath: string) => {
