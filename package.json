@@ -1,6 +1,6 @@
 {
   "name": "qllm-monorepo",
-  "version": "1.8.8",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "build": "pnpm -r run build",
@@ -18,7 +18,7 @@
     "@changesets/cli": "^2.27.7",
     "eslint": "^9.9.1",
     "prettier": "^3.3.3",
-    "rimraf": "^5.0.0",
+    "rimraf": "^6.0.1",
     "typescript": "^5.5.4"
   },
   "engines": {
