@@ -19,11 +19,11 @@
   ],
   "scripts": {
     "build": "tsc",
-    "clean": "rm -rf dist && rm -rf tsconfig.tsbuildinfo",
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "test": "jest",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm run build"
   },
   "repository": {
     "type": "git",
@@ -76,5 +76,8 @@
     "@npmcli/move-file": "npm:@npmcli/fs@latest",
     "are-we-there-yet": "latest",
     "gauge": "latest"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

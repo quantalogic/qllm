@@ -7,8 +7,13 @@ import { chatCommand } from "./commands/chat-command";
 import { CliConfigManager } from "./utils/cli-config-manager";
 import { configureCommand } from "./commands/configure-command";
 import { runCommand } from "./commands/run-command";
+import { readFileSync } from "fs";
+import { join } from "path";
 
-const VERSION = "1.8.12";
+// Read version from package.json
+const packageJson = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8'));
+
+const VERSION = packageJson.version;
 
 export async function main() {
   try {
