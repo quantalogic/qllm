@@ -1,0 +1,48 @@
+name: select_seminal_articles
+version: "1.0"
+description: Analyze seminal articles on a specific topic from recent literature
+author: Raphaël MANSUY
+input_variables:
+  Language:
+    type: string
+    description: The Language in which the content should be written
+    place_holder: "English"
+content: >
+
+  First make a table with the article in the html_document tag below.
+
+  
+  - DONT'T INVENT !! If you cannot find 10 articles that meet the criteria, please let me know.
+  
+  ## The articles to analyze
+
+  <html_document>
+  {{include: https://arxiv.org/search/cs?query=artificial+intelligence&searchtype=all&abstracts=show&order=-announced_date_first&size=25 }}
+  </html_document>
+
+  ## Instructions
+
+
+
+  Select theses articles from abstract from the attached document only in <html_document> tag that is a search result from arXiv.
+
+  DON'T SELECT OTHER ARTICLES.
+
+  The chosen articles should demonstrate a clear breakthrough in AI methodologies or applications.
+
+  ## Format
+
+  Please compile your findings in a structured markdown table for easy sharing on professional networks. The table should include the following columns:
+
+  - 'Article Title': The name of the research paper.
+  - 'arXiv ID' (or DOI if applicable): The unique identifier for accessing the article. The link.
+  - 'Brief Description': A concise summary that encapsulates the core innovations and findings of the research, tailored to highlight aspects relevant to data engineering and AI system design.
+  - 'Impact Analysis': A critical evaluation of the article's significance, discussing its potential to disrupt current technologies, influence future research directions, or provide practical value to SaaS businesses and scalable system architectures.
+
+  ## Recommendations
+
+  Your analysis should not only reflect the academic merit of the articles but also their practical applicability, scalability, and potential to inspire thought leadership content.
+
+  ## Language for output
+
+  You must write the content in {{Language}}.

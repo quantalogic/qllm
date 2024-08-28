@@ -13,6 +13,7 @@ import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 import { processAndExit } from "../utils/common";
 import { parseVariables } from "../utils/template-utils";
+import { writeToFile } from "../utils/write-file";
 
 const runAction = async (
   templateSource: string,
@@ -63,8 +64,11 @@ const runAction = async (
       });
 
       executor.on("requestSent", (request: any) => {
+        const length = JSON.stringify(request).length;
         spinner.start();
-        spinner.update({ text: "Request sent, waiting from reply..." });
+        spinner.update({
+          text: `Request sent, waiting from reply... ${length} bytes sent.`,
+        });
       });
 
       executor.on("streamStart", () => {
@@ -155,7 +159,7 @@ async function saveResponseToFile(
   outputPath: string
 ): Promise<void> {
   try {
-    //await output.writeToFile(outputPath, response);
+    await writeToFile(outputPath, response);
   } catch (error) {
     throw new Error(`Failed to save response to file: ${error}`);
   }

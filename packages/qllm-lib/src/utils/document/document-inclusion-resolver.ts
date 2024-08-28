@@ -3,8 +3,6 @@ import * as path from 'path';
 import { URL } from 'url';
 import { DocumentLoader } from './document-loader';
 
-//const includeRegex = /(?<!\\){{include:([^}]+)}}/g;
-
 const includeRegex = /(?<!\\){{\s*include:\s*([^}\s]+)\s*}}/g;
 
 type LoadedPaths = Set<string>;
@@ -37,18 +35,20 @@ export async function resolveIncludedContent(
   content: string,
   basePath: string,
   loadedPaths: LoadedPaths = new Set(),
-  contentTransormBeforeInclude?: (contentLoaded: string, path: string) => string | Promise<string>, // a function to transform the content before resolving includes
+  contentTransformBeforeInclude?: (contentLoaded: string, path: string) => string | Promise<string>,
 ): Promise<string> {
-  content = contentTransormBeforeInclude
-    ? await contentTransormBeforeInclude(content, basePath)
+  content = contentTransformBeforeInclude
+    ? await contentTransformBeforeInclude(content, basePath)
     : content;
 
   let resolvedContent = content;
 
-  for (const match of content.matchAll(includeRegex)) {
+  const matches = Array.from(content.matchAll(includeRegex));
+  for (const match of matches) {
     const [fullMatch, includePath] = match;
     try {
-      const fullPath = resolveFullPath(includePath, basePath);
+      const trimmedIncludePath = includePath.trim(); // Trim spaces around the filename
+      const fullPath = resolveFullPath(trimmedIncludePath, basePath);
       const { content: includedContent } = await loadContent(fullPath, basePath, loadedPaths);
       const recursivelyResolvedContent = await resolveIncludedContent(
         includedContent,

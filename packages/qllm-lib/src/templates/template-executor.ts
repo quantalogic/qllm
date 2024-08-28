@@ -51,8 +51,8 @@ export class TemplateExecutor extends EventEmitter {
     variables = {},
     stream = false,
     providerOptions = {},
+    onPromptForMissingVariables,
   }: ExecutionContext): Promise<{ response: string; outputVariables: Record<string, any> }> {
-    //   const { template, variables, providerOptions, provider, stream } = context;
     this.emit('executionStart', { template, variables });
 
     const executionProvider =
@@ -62,7 +62,14 @@ export class TemplateExecutor extends EventEmitter {
       this.handleExecutionError('LLMProvider not provided');
     }
 
-    const context = { template, variables, providerOptions, stream, provider: executionProvider };
+    const context = {
+      template,
+      variables,
+      providerOptions,
+      stream,
+      provider: executionProvider,
+      onPromptForMissingVariables,
+    };
 
     try {
       this.logDebugInfo(template, variables);
@@ -80,13 +87,13 @@ export class TemplateExecutor extends EventEmitter {
       if (findIncludeStatements(content).length > 0) {
         const currentPath = process.cwd();
         const contentWithMissingInclude = await resolveIncludedContent(content, currentPath);
-        resolvedContent = contentWithMissingInclude;
+        console.debug('Resolved content with missing includes:');
+        console.debug(contentWithMissingInclude);
       }
 
       this.emit('contentPrepared', resolvedContent);
 
       const messages = this.createChatMessages(resolvedContent);
-      logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
       this.emit('requestSent', { messages, providerOptions });
 
       const response = await this.generateResponse(
@@ -130,6 +137,7 @@ export class TemplateExecutor extends EventEmitter {
   ): Promise<Record<string, any>> {
     if (!context.onPromptForMissingVariables)
       return this.applyDefaultValues(template, initialVariables);
+
     const missingVariables = this.findMissingVariables(template, initialVariables);
     if (missingVariables.length > 0) {
       const promptedVariables = await context.onPromptForMissingVariables(
@@ -169,14 +177,6 @@ export class TemplateExecutor extends EventEmitter {
     variables: Record<string, any>,
   ): Promise<string> {
     let content = template.resolved_content || template.content;
-    content = await this.subsituteVariables(content, variables);
-    return content;
-  }
-
-  private async subsituteVariables(
-    content: string,
-    variables: Record<string, any>,
-  ): Promise<string> {
     for (const [key, value] of Object.entries(variables)) {
       content = content.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), this.formatValue(value));
     }
