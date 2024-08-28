@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { TemplateDefinitionWithResolvedContent, TemplateLoader } from '../templates';
+import { TemplateDefinitionWithResolvedContent, TemplateLoader } from '../../templates';
 
 async function demoTemplateLoader(): Promise<void> {
   // Create temporary files for inclusion
@@ -70,7 +70,7 @@ content: >
     console.dir(githubResolvedTemplate, { depth: 2 });
 
     // Verify that the story.md is included in the GitHub template
-    if (githubResolvedTemplate.resolved_content?.includes('using Markdown')) {
+    if (githubResolvedTemplate.content?.includes('using Markdown')) {
       console.log('The story.md file was successfully included in the GitHub template!');
     } else {
       console.log('The story.md file was not included correctly in the GitHub template.');

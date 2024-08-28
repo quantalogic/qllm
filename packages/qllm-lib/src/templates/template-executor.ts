@@ -5,6 +5,11 @@ import { logger } from '../utils';
 import { ErrorManager } from '../utils/error';
 import { TemplateValidator } from './template-validator';
 import { ChatMessage, LLMProvider } from '../types';
+import { createLLMProvider } from '..';
+import {
+  findIncludeStatements,
+  resolveIncludedContent,
+} from '../utils/document/document-inclusion-resolver';
 
 interface TemplateExecutorEvents {
   executionStart: { template: TemplateDefinition; variables: Record<string, any> };
@@ -40,11 +45,24 @@ export class TemplateExecutor extends EventEmitter {
     return super.emit(eventName, arg);
   }
 
-  async execute(
-    context: ExecutionContext,
-  ): Promise<{ response: string; outputVariables: Record<string, any> }> {
-    const { template, variables, providerOptions, provider, stream } = context;
+  async execute({
+    template,
+    provider,
+    variables = {},
+    stream = false,
+    providerOptions = {},
+  }: ExecutionContext): Promise<{ response: string; outputVariables: Record<string, any> }> {
+    //   const { template, variables, providerOptions, provider, stream } = context;
     this.emit('executionStart', { template, variables });
+
+    const executionProvider =
+      provider || (providerOptions.model && createLLMProvider({ name: providerOptions.model }));
+
+    if (!executionProvider) {
+      this.handleExecutionError('LLMProvider not provided');
+    }
+
+    const context = { template, variables, providerOptions, stream, provider: executionProvider };
 
     try {
       this.logDebugInfo(template, variables);
@@ -56,14 +74,23 @@ export class TemplateExecutor extends EventEmitter {
       this.emit('variablesResolved', resolvedVariables);
 
       const content = await this.prepareContent(template, resolvedVariables);
-      this.emit('contentPrepared', content);
 
-      const messages = this.createChatMessages(content);
+      let resolvedContent = content;
+
+      if (findIncludeStatements(content).length > 0) {
+        const currentPath = process.cwd();
+        const contentWithMissingInclude = await resolveIncludedContent(content, currentPath);
+        resolvedContent = contentWithMissingInclude;
+      }
+
+      this.emit('contentPrepared', resolvedContent);
+
+      const messages = this.createChatMessages(resolvedContent);
       logger.debug(`Sending request to provider with options: ${JSON.stringify(providerOptions)}`);
       this.emit('requestSent', { messages, providerOptions });
 
       const response = await this.generateResponse(
-        provider,
+        provider!,
         messages,
         providerOptions,
         stream || false,
@@ -142,6 +169,14 @@ export class TemplateExecutor extends EventEmitter {
     variables: Record<string, any>,
   ): Promise<string> {
     let content = template.resolved_content || template.content;
+    content = await this.subsituteVariables(content, variables);
+    return content;
+  }
+
+  private async subsituteVariables(
+    content: string,
+    variables: Record<string, any>,
+  ): Promise<string> {
     for (const [key, value] of Object.entries(variables)) {
       content = content.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), this.formatValue(value));
     }
@@ -212,8 +247,8 @@ export class TemplateExecutor extends EventEmitter {
     response: string,
   ): Record<string, any> {
     if (!template.output_variables) return { qllm_response: response };
-    const extractor = new OutputVariableExtractor(template);
-    return { qllm_response: response, ...extractor.extractVariables(response) };
+    const extractedVariables = OutputVariableExtractor.extractVariables(template, response);
+    return { qllm_response: response, ...extractedVariables };
   }
 
   private handleExecutionError(error: any): never {

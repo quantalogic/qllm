@@ -366,7 +366,7 @@ async function executeTemplate() {
     },
     provider: provider,
     providerOptions: {
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       maxTokens: 300,
     },
     stream: true,
@@ -402,19 +402,7 @@ output_variables:
 
 Inferred variables are automatically determined by the system based on the content of the template. For example, if your template content includes `{{variable_name}}`, the system will infer that `variable_name` is an input variable, even if it's not explicitly defined in the `input_variables` section.
 
-### Conditional Logic
 
-You can use conditional statements in your templates to create more dynamic prompts:
-
-```yaml
-content: >
-  {{#if advanced_mode}}
-  Please provide a detailed analysis of the following topic:
-  {{else}}
-  Please give a brief overview of the following topic:
-  {{/if}}
-  {{topic}}
-```
 
 ## 4. Template Include
 

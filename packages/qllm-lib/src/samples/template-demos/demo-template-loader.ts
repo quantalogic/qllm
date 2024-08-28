@@ -1,6 +1,6 @@
 import * as path from 'path';
-import { TemplateLoader } from '../templates/template-loader';
-import { TemplateDefinition } from '../templates';
+import { TemplateLoader } from '../../templates/template-loader';
+import { TemplateDefinition } from '../../templates';
 
 async function loadChainOfThoughtLeaderTemplate(): Promise<TemplateDefinition> {
   try {

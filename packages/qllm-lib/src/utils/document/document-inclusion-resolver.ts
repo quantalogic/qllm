@@ -3,6 +3,10 @@ import * as path from 'path';
 import { URL } from 'url';
 import { DocumentLoader } from './document-loader';
 
+//const includeRegex = /(?<!\\){{include:([^}]+)}}/g;
+
+const includeRegex = /(?<!\\){{\s*include:\s*([^}\s]+)\s*}}/g;
+
 type LoadedPaths = Set<string>;
 
 export async function loadContent(
@@ -24,12 +28,21 @@ export async function loadContent(
   return result;
 }
 
+export function findIncludeStatements(content: string): Array<string> {
+  const includeStatements = content.match(includeRegex) || [];
+  return includeStatements;
+}
+
 export async function resolveIncludedContent(
   content: string,
   basePath: string,
   loadedPaths: LoadedPaths = new Set(),
+  contentTransormBeforeInclude?: (contentLoaded: string, path: string) => string | Promise<string>, // a function to transform the content before resolving includes
 ): Promise<string> {
-  const includeRegex = /(?<!\\){{include:([^}]+)}}/g;
+  content = contentTransormBeforeInclude
+    ? await contentTransormBeforeInclude(content, basePath)
+    : content;
+
   let resolvedContent = content;
 
   for (const match of content.matchAll(includeRegex)) {

@@ -12,6 +12,9 @@ import {
   TemplateDefinitionWithResolvedContent,
 } from './template-schema';
 
+const DEFAULT_MODEL = 'gpt-4o-mini';
+const DEFAULT_PROVIDER = 'openai';
+
 export class TemplateDefinitionBuilder {
   private definition: Partial<TemplateDefinitionWithResolvedContent>;
 
@@ -22,22 +25,27 @@ export class TemplateDefinitionBuilder {
   static fromTemplate(template: TemplateDefinition): TemplateDefinitionBuilder {
     return new TemplateDefinitionBuilder(template);
   }
-
-  static create(
-    name: string,
-    version: string,
-    description: string,
-    author: string,
-    content: string,
-  ): TemplateDefinitionBuilder {
+  static create({
+    name,
+    version,
+    description,
+    author,
+    content,
+  }: {
+    name: string;
+    version: string;
+    description: string;
+    author: string;
+    content: string;
+  }): TemplateDefinitionBuilder {
     return new TemplateDefinitionBuilder({
       name,
       version,
       description,
       author,
       content,
-      provider: 'OpenAI',
-      model: 'gpt-3.5-turbo',
+      provider: DEFAULT_PROVIDER,
+      model: DEFAULT_MODEL,
       prompt_type: 'text_generation',
       parameters: {
         max_tokens: 100,
@@ -47,13 +55,18 @@ export class TemplateDefinitionBuilder {
   }
 
   static quickSetup(name: string, content: string): TemplateDefinitionBuilder {
-    return TemplateDefinitionBuilder.create(
-      name,
-      '1.0.0',
-      `Template for ${name}`,
-      'AI Assistant',
-      content,
-    );
+    return TemplateDefinitionBuilder.create({
+      name: name,
+      version: '1.0.0',
+      description: `Template for ${name}`,
+      author: 'AI Assistant',
+      content: content,
+    });
+  }
+
+  withPrompt(prompt: string): this {
+    this.definition.content = prompt;
+    return this;
   }
 
   setResolvedContent(content: string): this {

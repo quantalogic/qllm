@@ -1,8 +1,7 @@
 import { z } from 'zod';
-import { getEmbeddingProvider, getLLMProvider } from '../providers';
-import { EmbeddingProvider, LLMProvider } from '../types';
-import { createFunctionToolFromZod } from '../utils';
-import { Embeddings } from 'openai/resources';
+import { getEmbeddingProvider, getLLMProvider } from '../../providers';
+import { EmbeddingProvider, LLMProvider } from '../../types';
+import { createFunctionToolFromZod } from '../../utils';
 
 // LLM Tests
 
