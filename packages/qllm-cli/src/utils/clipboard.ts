@@ -5,7 +5,7 @@ import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
-class Clipboard {
+export class Clipboard {
   private static readonly base64Regex = /^data:image\/(png|jpeg|jpg|gif|webp);base64,/;
 
   private static isBase64Image(str: string): boolean {
@@ -167,4 +167,3 @@ class Clipboard {
   }
 }
 
-export = Clipboard;

@@ -1,5 +1,5 @@
 // Core types
-export * from './types';
+export type * from './types';
 
 // Providers
 export * from './providers';
@@ -14,7 +14,7 @@ export * from './conversation';
 export * from './templates';
 
 // Main classes and interfaces
-import { LLMProvider, EmbeddingProvider } from './types';
+import type { LLMProvider, EmbeddingProvider } from './types';
 import { OpenAIProvider } from './providers/openai';
 import { AnthropicProvider } from './providers/anthropic';
 import { OllamaProvider } from './providers/ollama';
@@ -69,10 +69,13 @@ export function createEmbeddingProvider({
   }
 }
 
-// Export main classes
-export {
+// Export main classes and types
+export type {
   LLMProvider,
   EmbeddingProvider,
+};
+
+export {
   OpenAIProvider,
   AnthropicProvider,
   OllamaProvider,

@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { Anthropic } from '@anthropic-ai/sdk';
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import {
   BaseLLMProvider,
@@ -16,11 +16,9 @@ import {
 import { formatMessages } from './message-util';
 import { listModels as listBedrockModels } from '../../utils/cloud/aws/bedrock';
 import { region, getAwsCredential } from './aws-credentials';
+import { DEFAULT_MAX_TOKENS, DEFAULT_MODEL } from './constants';
 
-const DEFAULT_MODEL = 'claude-3-opus-20240229';
-const DEFAULT_MAX_TOKENS = 1024 * 256;
-export const DEFAULT_AWS_BEDROCK_REGION = 'us-west-2';
-export const DEFAULT_AWS_BEDROCK_PROFILE = 'bedrock';
+
 
 export class AnthropicProvider extends BaseLLMProvider {
   private client: Anthropic | AnthropicBedrock;
@@ -29,7 +27,6 @@ export class AnthropicProvider extends BaseLLMProvider {
 
   constructor({ apiKey, client }: { apiKey?: string; client?: AnthropicBedrock } = {}) {
     super();
-
     if (!client) {
       const key = apiKey ?? process.env.ANTHROPIC_API_KEY;
       if (!key) {
@@ -95,7 +92,6 @@ export class AnthropicProvider extends BaseLLMProvider {
       const { messages, options, tools } = params;
       const formattedMessages = await formatMessages(messages);
       const formattedTools = this.formatTools(tools);
-
       const request: Anthropic.Messages.MessageCreateParamsNonStreaming = {
         system: options.systemMessage as string | undefined,
         model: options.model || this.defaultOptions.model,
@@ -111,10 +107,8 @@ export class AnthropicProvider extends BaseLLMProvider {
           : undefined,
         tools: formattedTools,
       };
-
       console.log('AnthropicProvider.generateChatCompletion request:');
       console.dir(request, { depth: null });
-
       const response = await this.client.messages.create(request);
 
       const getTextFromContentBlock = (
@@ -150,7 +144,6 @@ export class AnthropicProvider extends BaseLLMProvider {
           const text = getTextFromContentBlock(block);
           return text !== null && text !== undefined;
         });
-
         return contentBlock ? getTextFromContentBlock(contentBlock) : null;
       };
 
@@ -168,7 +161,6 @@ export class AnthropicProvider extends BaseLLMProvider {
       };
 
       const toolCalls = getToolsUseFromContentBlocks(response.content);
-
       return {
         model: response.model,
         text: getFirstTextFromContentBlocks(response.content),
@@ -193,7 +185,6 @@ export class AnthropicProvider extends BaseLLMProvider {
       const { messages, options, tools } = params;
       const formattedMessages = await formatMessages(messages);
       const formattedTools = this.formatTools(tools);
-
       const request: Anthropic.Messages.MessageCreateParamsNonStreaming = {
         system: options.systemMessage as string | undefined,
         model: options.model || this.defaultOptions.model,
@@ -209,7 +200,6 @@ export class AnthropicProvider extends BaseLLMProvider {
           : undefined,
         tools: formattedTools,
       };
-
       const stream = await this.client.messages.create({ ...request, stream: true });
 
       const getTextDelta = (content: Anthropic.Messages.RawMessageStreamEvent): string | null => {
