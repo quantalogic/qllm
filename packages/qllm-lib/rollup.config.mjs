@@ -46,7 +46,7 @@ export default {
     'axios',
     'js-yaml',
     'mime-types',
-    'ollama',
+//    'ollama',
     'sqlite',
     'uuid',
     'zod',
