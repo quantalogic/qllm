@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -10,15 +10,22 @@
     "typescript",
     "aws-sdk"
   ],
-  "type": "commonjs",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build:ts": "tsc",
+    "build:rollup": "rollup -c",
+    "build": "pnpm run build:ts && pnpm run build:rollup",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
