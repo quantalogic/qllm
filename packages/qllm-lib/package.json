@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -12,25 +12,20 @@
   ],
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
-  "types": "dist/types/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    }
-  },
+  "types": "dist/tsc/index.d.ts",
   "files": [
     "dist"
   ],
-  "scripts": {
-    "build:ts": "tsc",
+"scripts": {
+    "build:tsc": "tsc",
     "build:rollup": "rollup -c",
-    "build": "pnpm run build:ts && pnpm run build:rollup",
-    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "build": "npm run build:tsc && npm run build:rollup",
+    "build:prod": "NODE_ENV=production npm run build",
+    "clean": "rimraf dist",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "test": "jest",
-    "prepublishOnly": "pnpm run build"
+    "prepublishOnly": "npm run clean && npm run build:prod"
   },
   "repository": {
     "type": "git",
@@ -47,6 +42,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@npmcli/fs": "^3.1.1",
+    "@rollup/plugin-terser": "0.4.4",
     "@types/jest": "^29.5.12",
     "@types/js-yaml": "^4.0.9",
     "@types/mime-types": "^2.1.4",

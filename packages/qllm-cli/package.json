@@ -1,6 +1,6 @@
 {
   "name": "qllm",
-  "version": "2.1.15",
+  "version": "2.1.16",
   "description": "QLLM CLI: A versatile CLI tool for interacting with multiple AI/LLM providers. Features include chat sessions, one-time queries, image handling, and conversation management. Streamlines AI development with easy provider/model switching and configuration.",
   "keywords": [
     "ai",

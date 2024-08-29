@@ -1,26 +1,29 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import analyze from 'rollup-plugin-analyzer';
 import gzip from 'rollup-plugin-gzip';
 
-const isProduction = true || process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production';
 
 export default {
-  input: 'dist/esm/index.js', // Change this to point to the compiled TypeScript output
+  input: 'dist/tsc/index.js',
   output: [
     {
       dir: 'dist/esm',
       format: 'esm',
       sourcemap: true,
-      exports: 'named',
+      preserveModules: true,
+      preserveModulesRoot: 'dist/tsc',
     },
     {
       dir: 'dist/cjs',
       format: 'cjs',
       sourcemap: true,
-      //exports: 'named'
+      preserveModules: true,
+      preserveModulesRoot: 'dist/tsc',
+      exports: 'auto',
     },
   ],
   plugins: [
