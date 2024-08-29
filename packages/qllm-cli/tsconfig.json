@@ -2,10 +2,11 @@
   "compilerOptions": {
     "types": ["node"],
     "moduleResolution": "node",
+    
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "esnext",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
@@ -15,6 +16,7 @@
     "sourceMap": true,
     "rootDir": "src",
     "rootDirs": ["types"],
+    "composite": true,
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

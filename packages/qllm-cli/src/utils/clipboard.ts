@@ -167,4 +167,4 @@ class Clipboard {
   }
 }
 
-export = Clipboard;
+export default Clipboard;
