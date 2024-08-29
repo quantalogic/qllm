@@ -37,7 +37,7 @@ export default {
     isProduction && gzip(),
   ],
   external: [
-    'openai',
+/*    'openai',
     'groq-sdk',
     '@anthropic-ai/sdk',
     '@anthropic-ai/bedrock-sdk',
@@ -46,9 +46,9 @@ export default {
     'axios',
     'js-yaml',
     'mime-types',
-//    'ollama',
+    'ollama',
     'sqlite',
     'uuid',
-    'zod',
+    'zod',*/
   ],
 };

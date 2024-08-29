@@ -46,7 +46,7 @@ export class InvalidRequestError extends LLMProviderError {}
 export abstract class BaseLLMProvider implements LLMProvider {
   public supportsEmbedding = false;
   public supportsImageAnalysis = false;
-  public version = '1.0.0'; // Default version
+  public version = '3.0.0'; // Default version
   public abstract name: string;
 
   abstract listModels(): Promise<Model[]>;
