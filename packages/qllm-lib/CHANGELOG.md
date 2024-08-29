@@ -1,5 +1,11 @@
 # qllm-lib
 
+## 3.0.1
+
+### Patch Changes
+
+- 5c4379f: Minor fix
+
 ## 3.0.0
 
 ### Major Changes
