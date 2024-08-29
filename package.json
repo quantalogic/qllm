@@ -11,8 +11,8 @@
     "install:local": "pnpm uninstall -g qllm && pnpm install -g ./packages/qllm-cli",
     "preinstall:local": "pnpm run build",
     "version": "changeset version",
-    "publish-packages": "changeset publish",
-    "prepublish-packages": "pnpm run build && pnpm run test"
+    "publish-packages": "pnpm -r publish --access public",
+    "prepublish-packages": "pnpm run build"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.7",
