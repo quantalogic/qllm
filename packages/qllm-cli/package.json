@@ -1,6 +1,6 @@
 {
   "name": "qllm",
-  "version": "2.1.8",
+  "version": "2.1.10",
   "description": "QLLM CLI: A versatile CLI tool for interacting with multiple AI/LLM providers. Features include chat sessions, one-time queries, image handling, and conversation management. Streamlines AI development with easy provider/model switching and configuration.",
   "keywords": [
     "ai",
@@ -10,8 +10,8 @@
     "typescript",
     "aws-sdk"
   ],
-  "type": "commonjs",
-  "main": "dist/index.js",
+  "type": "module",
+  "main": "dist/index.mjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -19,7 +19,7 @@
     "package.json"
   ],
   "bin": {
-    "qllm": "./dist/index.js"
+    "qllm": "./dist/index.mjs"
   },
   "scripts": {
     "build": "rollup -c",

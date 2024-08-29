@@ -13,6 +13,7 @@ export default {
   output: {
     dir: 'dist',
     format: 'esm',
+    entryFileNames: '[name].mjs',
     sourcemap: true
   },
   plugins: [
