@@ -1,6 +1,6 @@
 {
   "name": "qllm",
-  "version": "2.1.13",
+  "version": "2.1.15",
   "description": "QLLM CLI: A versatile CLI tool for interacting with multiple AI/LLM providers. Features include chat sessions, one-time queries, image handling, and conversation management. Streamlines AI development with easy provider/model switching and configuration.",
   "keywords": [
     "ai",
@@ -22,8 +22,7 @@
   },
   "scripts": {
     "build:ts": "tsc",
-    "build:rollup": "rollup -c",
-    "build": "pnpm run build:ts && pnpm run build:rollup",
+    "build": "pnpm run build:ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
