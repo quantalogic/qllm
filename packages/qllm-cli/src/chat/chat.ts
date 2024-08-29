@@ -75,7 +75,11 @@ export class Chat {
         await this.sendUserMessage(input, this.imageManager.getImages());
       }
     } catch (error) {
-      console.error("Error getting user input:", error);
+      if(error instanceof Error) {
+      ioManager.displayError(`Error getting user input:  $error.message`);
+      } else {
+        ioManager.displayError(`Error getting user input:  ${String(error)}`);
+      }
     } finally {
       // Continue prompting the user
       this.promptUser();

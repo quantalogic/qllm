@@ -1,6 +1,5 @@
 // packages/qllm-cli/src/utils/io-manager/io-manager.ts
 
-import readline from "readline";
 import kleur from "kleur";
 import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
@@ -13,8 +12,8 @@ const stdout = {
   },
   write: (text: string) => {
     process.stdout.write(text);
-  }
-}
+  },
+};
 
 const stderr = {
   log: (...args: any[]) => {
@@ -26,7 +25,7 @@ const stderr = {
   error: (...args: any[]) => {
     console.error(...args);
   },
-}
+};
 
 type ColorName = keyof typeof kleur;
 
@@ -115,15 +114,6 @@ class DisplayManager {
 }
 
 class InputManager {
-  private rl: readline.Interface;
-
-  constructor() {
-    this.rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-  }
-
   async getUserInput(prompt: string): Promise<string> {
     const response = await prompts({
       type: "text",
@@ -141,10 +131,6 @@ class InputManager {
       initial: false,
     });
     return response.confirmed;
-  }
-
-  close(): void {
-    this.rl.close();
   }
 }
 
@@ -272,10 +258,6 @@ export class IOManager {
     process.stdout.write(text);
   }
 
-  close(): void {
-    this.input.close();
-  }
-
   // Specialized display methods
   displayUserMessage(message: string): void {
     this.displayInfo(this.display.colorize(`You: ${message}`, "green"));
@@ -351,7 +333,7 @@ export class IOManager {
     this.newLine();
     this.displayInfo(
       this.display.colorize(
-        "Use '/set <option> <value>' to change a setting",
+        "Use '/set <setting> <value>' to change a setting",
         "dim"
       )
     );
@@ -400,5 +382,4 @@ export class IOManager {
 
 // Create a singleton instance for easy access
 export const ioManager = new IOManager();
-
 export { Spinner };

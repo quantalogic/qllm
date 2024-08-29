@@ -61,7 +61,6 @@ export class CommandProcessor {
     { ioManager }: CommandContext
   ): Promise<void> {
     ioManager.displaySystemMessage("Stopping chat session...");
-    ioManager.close();
     process.exit(0);
   }
 
