@@ -1,6 +1,11 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
+import { terser } from 'rollup-plugin-terser';
+import analyze from 'rollup-plugin-analyzer';
+import gzip from 'rollup-plugin-gzip';
+
+const isProduction = true || process.env.NODE_ENV === 'production';
 
 export default {
   input: 'dist/esm/index.js', // Change this to point to the compiled TypeScript output
@@ -9,21 +14,24 @@ export default {
       dir: 'dist/esm',
       format: 'esm',
       sourcemap: true,
-      exports: 'named'
+      exports: 'named',
     },
     {
       dir: 'dist/cjs',
       format: 'cjs',
       sourcemap: true,
       //exports: 'named'
-    }
+    },
   ],
   plugins: [
     resolve({
-      preferBuiltins: true
+      preferBuiltins: true,
     }),
     commonjs(),
-    json()
+    json(),
+    isProduction && terser(),
+    analyze({ summaryOnly: true }),
+    isProduction && gzip(),
   ],
   external: [
     'openai',
@@ -38,6 +46,6 @@ export default {
     'ollama',
     'sqlite',
     'uuid',
-    'zod'
-  ]
+    'zod',
+  ],
 };
