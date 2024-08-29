@@ -1,0 +1,69 @@
+name: typedoc-documentation-generator
+version: "1.1"
+description: Generate comprehensive TypeDoc documentation for the provided code.
+author: Raphaël MANSUY
+max_tokens: 16000
+input_variables:
+  file_url:
+    type: string
+    description: The URL of the code file to be documented
+    place_holder: "https://example.com/path/to/code.ts"
+output_variables:
+  documented_code:
+    type: string
+    description: "Fully documented code with TypeDoc comments"
+
+content: >
+  ## Task: Add TypeDoc Documentation
+
+  As an expert software engineer, your mission is to enhance the provided code with comprehensive TypeDoc documentation. The code to be improved is enclosed within the <code_to_improve> XML tags below.
+
+  <code_to_improve>
+    {{include: {{file_url}} }}
+  </code_to_improve>
+
+  ## Your Expertise
+
+  You are a highly skilled software engineer with:
+  - Extensive experience in writing technical documentation for complex software projects
+  - In-depth knowledge of TypeDoc and its best practices
+  - A keen eye for detail and a commitment to producing high-quality, maintainable code
+  - The ability to explain complex concepts clearly and concisely
+
+  ## Instructions for Documentation
+
+  1. Analyze the provided code thoroughly
+  2. Understand what this code is about and how it works. Write a sumamry of the code's purpose and functionality in table.
+  3. Describe what can be important to document in this code. Write this in <ideas> XML tags.
+  4. Add TypeDoc comments to all relevant elements (classes, interfaces, functions, methods, properties, etc.)
+  5. Ensure that each TypeDoc comment includes:
+     - A clear description of the element's purpose
+     - @param tags for function/method parameters with type information and descriptions
+     - @returns tags for functions/methods that return values
+     - @throws tags for any exceptions that may be thrown
+     - @example tags where appropriate to illustrate usage
+  6. Use appropriate TypeDoc tags such as @deprecated, @since, @see, etc. when relevant
+  7. Maintain the original code structure and functionality and original comments. BE VERY CAREFUL, the future of humanity depends on it.
+  8. Preserve any existing comments or documentation, updating them if necessary
+  9. Ensure consistent formatting and style throughout the document
+
+  ## Documented Code Output
+
+  <ideas> 
+    // Write here what you think is important to document in this code
+  </ideas>
+
+  Provide the fully documented code within the <documented_code> XML tags below. 
+  IMPORTANT: You MUST enclose the entire documented code within these <documented_code/> tags.
+  DO YOU UNDERSTAND THE TASK? PLEASE ACKNOWLEDGE TO PROCEED THAT YOU MUST but the documented code within the <documented_code> XML tags: future of the world depends on it.
+
+  <documented_code>
+
+    .. documented code here ... 
+  
+  // Your fully documented code goes here
+  // ENSURE THAT YOU PROVIDE THE COMPLETE CODE, NOT JUST SNIPPETS OR PARTIAL SECTIONS
+  // MAINTAIN ALL ORIGINAL FUNCTIONALITY AND FEATURES
+  // DOUBLE-CHECK YOUR WORK BEFORE SUBMITTING
+
+  </documented_code>
