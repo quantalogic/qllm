@@ -25,7 +25,8 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write .",
     "test": "jest",
-    "prepublishOnly": "npm run clean && npm run build:prod"
+    "prepublishOnly": "npm run clean && npm run build:prod",
+    "docs": "typedoc --options typedoc.json"
   },
   "repository": {
     "type": "git",

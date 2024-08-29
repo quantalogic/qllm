@@ -1,0 +1,12 @@
+{
+"entryPoints": ["src/index.ts"],
+  "out": "docs/api/qllm-lib",
+  "name": "QLLM Library API Documentation",
+  "theme": "default",
+  "plugin": ["typedoc-plugin-markdown"],
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "readme": "API_DOCUMENTATION.md"
+}
