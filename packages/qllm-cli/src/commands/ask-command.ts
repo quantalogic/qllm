@@ -8,7 +8,7 @@ import {
   AskCommandOptionsPartialSchema,
   PartialAskCommandOptions,
 } from "../types/ask-command-options";
-import Clipboard from "../utils/clipboard";
+import { Clipboard }  from "../utils/clipboard";
 import { ScreenshotCapture } from "../utils/screenshot";
 import {
   readImageFileAndConvertToBase64,

@@ -15,7 +15,7 @@ export default {
       dir: 'dist/cjs',
       format: 'cjs',
       sourcemap: true,
-      exports: 'named'
+      //exports: 'named'
     }
   ],
   plugins: [
