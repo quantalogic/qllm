@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { TemplateDefinitionWithResolvedContent, TemplateLoader } from '../../templates';
+import { TemplateDefinitionWithResolvedContent, TemplateLoader } from 'qllm-lib';
 
 async function demoTemplateLoader(): Promise<void> {
   // Create temporary files for inclusion

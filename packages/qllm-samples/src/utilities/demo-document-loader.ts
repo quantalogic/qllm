@@ -1,4 +1,4 @@
-import { DocumentLoader, DocumentLoaderOptions, LoadResult } from '../../utils/document/document-loader';
+import { DocumentLoader, DocumentLoaderOptions, LoadResult } from 'qllm-lib/src/utils/document/document-loader';
 
 const testDocumentLoader = async () => {
   const testUrl =

@@ -1,4 +1,4 @@
-import { TemplateDefinitionBuilder } from '../../templates';
+import { TemplateDefinitionBuilder } from 'qllm-lib';
 
 async function main() : Promise<void> {
 

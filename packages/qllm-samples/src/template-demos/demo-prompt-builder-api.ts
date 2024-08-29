@@ -1,7 +1,7 @@
 import {
   TemplateDefinitionBuilder,
   generatePromptFromTemplate,
-} from '../../templates/template-definition-builder';
+} from 'qllm-lib';
 
 // 1. Simple Example: Basic Greeting Template
 const simpleGreeting = TemplateDefinitionBuilder.quickSetup('Simple Greeting', 'Hello, {{name}}!')

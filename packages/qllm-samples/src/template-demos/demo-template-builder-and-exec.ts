@@ -1,5 +1,5 @@
-import { createLLMProvider } from '../..';
-import { TemplateDefinition, TemplateDefinitionBuilder, TemplateExecutor } from '../../templates';
+import { createLLMProvider } from 'qllm-lib';
+import { TemplateDefinition, TemplateDefinitionBuilder, TemplateExecutor } from 'qllm-lib';
 
 async function main(): Promise<void> {
   const codeGenerator = TemplateDefinitionBuilder.create({

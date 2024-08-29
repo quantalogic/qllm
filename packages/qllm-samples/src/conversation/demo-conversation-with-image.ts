@@ -1,6 +1,6 @@
-import { createConversationManager } from '../../conversation';
-import { ChatMessage, ChatMessageContent, LLMProvider } from '../../types';
-import { createLLMProvider } from '../..';
+import { createConversationManager } from 'qllm-lib';
+import { ChatMessage, ChatMessageContent, LLMProvider } from 'qllm-lib';
+import { createLLMProvider } from 'qllm-lib';
 
 async function main() {
   // Initialize the ConversationManager

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { getEmbeddingProvider, getLLMProvider } from '../../providers';
-import { EmbeddingProvider, LLMProvider } from '../../types';
-import { createFunctionToolFromZod } from '../../utils';
+import { getEmbeddingProvider, getLLMProvider } from 'qllm-lib';
+import { EmbeddingProvider, LLMProvider } from 'qllm-lib';
+import { createFunctionToolFromZod } from 'qllm-lib';
 
 // LLM Tests
 

@@ -1,6 +1,6 @@
-import { getLLMProvider } from '../../providers';
-import { LLMProvider } from '../../types';
-import { TemplateExecutor, TemplateLoader } from '../../templates';
+import { getLLMProvider } from 'qllm-lib';
+import { LLMProvider } from 'qllm-lib';
+import { TemplateExecutor, TemplateLoader } from 'qllm-lib';
 import readline from 'readline';
 
 export const runLLMTests = async (filePath: string) => {

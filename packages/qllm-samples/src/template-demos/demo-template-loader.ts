@@ -1,6 +1,6 @@
 import * as path from 'path';
-import { TemplateLoader } from '../../templates/template-loader';
-import { TemplateDefinition } from '../../templates';
+import { TemplateLoader } from 'qllm-lib';
+import { TemplateDefinition } from 'qllm-lib';
 
 async function loadChainOfThoughtLeaderTemplate(): Promise<TemplateDefinition> {
   try {
