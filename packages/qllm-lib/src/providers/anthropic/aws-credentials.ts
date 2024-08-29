@@ -1,4 +1,4 @@
-import AnthropicBedrock from '@anthropic-ai/bedrock-sdk';
+import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { getCredentials } from '../../utils/cloud/aws/credential';
 import { DEFAULT_AWS_BEDROCK_REGION, DEFAULT_AWS_BEDROCK_PROFILE } from './constants';
 
