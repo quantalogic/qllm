@@ -26,7 +26,7 @@ const BaseAskCommandOptionsSchema = z.object({
   useClipboard: z.boolean().optional(),
 
   /** Display number for screenshot capture */
-  screenshot: z.number().int().positive().optional(),
+  screenshot: z.number().int().optional(),
 });
 
 export const AskCommandOptionsPartialSchema = BaseAskCommandOptionsSchema.extend({
