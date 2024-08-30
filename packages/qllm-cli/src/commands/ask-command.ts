@@ -21,7 +21,7 @@ import { IOManager } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 
-// New function to read from stdin
+// Updated function to read from stdin
 async function readStdin(): Promise<string> {
   return new Promise((resolve) => {
     let data = '';
@@ -34,6 +34,10 @@ async function readStdin(): Promise<string> {
     process.stdin.on('end', () => {
       resolve(data.trim());
     });
+    // Add this line to handle cases where stdin is not being piped
+    if (process.stdin.isTTY) {
+      process.stdin.emit('end');
+    }
   });
 }
 
@@ -41,6 +45,17 @@ const askCommandAction = async (
   question: string,
   options: AskCommandOptions
 ) => {
+  // Read from stdin if available
+  const stdinInput = await readStdin();
+  if (stdinInput) {
+    question = stdinInput + (question ? `\n${question}` : '');
+  }
+
+  if (!question) {
+    ioManager.displayError("No question provided.");
+    process.exit(1);
+  }
+
   let validOptions: PartialAskCommandOptions = options;
   try {
     validOptions = await validateOptions(
@@ -54,17 +69,6 @@ const askCommandAction = async (
         `An error occurred while validating the options: ${error.message}`
       );
     }
-    process.exit(1);
-  }
-
-  // Read from stdin if available
-  const stdinInput = await readStdin();
-  if (stdinInput) {
-    question = stdinInput + (question ? `\n${question}` : '');
-  }
-
-  if (!question) {
-    ioManager.displayError("No question provided.");
     process.exit(1);
   }
 
@@ -134,7 +138,7 @@ const askCommandAction = async (
 
 export const askCommand = new Command("ask")
   .description("Ask a question to an LLM provider")
-  .argument("[question]", "The question to ask")
+  .argument("[question]", "The question to ask (optional if using stdin)")
   .option("-p, --provider <provider>", "LLM provider to use", "openai")
   .option("-m, --model <model>", "Specific model to use")
   .option(
