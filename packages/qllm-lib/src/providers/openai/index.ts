@@ -22,6 +22,7 @@ import {
   ChatCompletionTool,
 } from 'openai/resources/chat/completions';
 import { createBase64Url, imageToBase64 } from '../../utils/images/image-to-base64';
+import { L } from 'ollama/dist/shared/ollama.1164e541';
 
 const DEFAULT_MAX_TOKENS = 1024 * 4;
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -36,18 +37,36 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
   public readonly version = '1.0.0';
   public readonly name = 'OpenAI';
 
-  constructor(key?: string) {
+  constructor(key?: string, baseUrl?: string) {
     const apiKey = key ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error('OpenAI API key not found in environment variables');
     }
-    this.client = new OpenAI({ apiKey });
+    this.client = new OpenAI({ apiKey, baseURL: baseUrl });
   }
 
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
     maxTokens: DEFAULT_MAX_TOKENS,
   };
+
+  private getFilteredOptions(options: LLMOptions): LLMOptions {
+    const optionsToInclude = {
+      temperature: options.temperature,
+      top_p: options.topProbability,
+      seed: options.seed,
+      frequency_penalty: options.frequencyPenalty,
+      presence_penalty: options.presencePenalty,
+      stop: options.stop,
+      logprobs: options.logprobs,
+      logit_bias: options.logitBias,
+      top_logprobs: options.topLogprobs,
+    };
+
+    return Object.fromEntries(
+      Object.entries(optionsToInclude).filter(([_, value]) => value !== undefined),
+    ) as unknown as LLMOptions;
+  }
 
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
@@ -57,24 +76,17 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       const formattedTools = tools ? this.formatTools(tools) : undefined;
 
       const model = options.model || DEFAULT_MODEL;
+      const filteredOptions = this.getFilteredOptions(options);
 
       const response = await this.client.chat.completions.create({
-        model: model,
         messages: formattedMessages,
         tools: formattedTools,
         parallel_tool_calls: parallelToolCalls,
         response_format: responseFormat,
         tool_choice: toolChoice,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
-        temperature: options.temperature,
-        top_p: options.topProbability,
-        seed: options.seed,
-        frequency_penalty: options.frequencyPenalty,
-        presence_penalty: options.presencePenalty,
-        stop: options.stop,
-        logprobs: options.logprobs,
-        logit_bias: options.logitBias,
-        top_logprobs: options.topLogprobs,
+        ...filteredOptions,
+        model: model,
       });
 
       const firstResponse = response.choices[0];
@@ -106,28 +118,17 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       const formattedTools = tools ? this.formatTools(tools) : undefined;
 
       const model = options.model || DEFAULT_MODEL;
+      const filteredOptions = this.getFilteredOptions(options);
 
       const stream = await this.client.chat.completions.create({
-        model: model,
         messages: formattedMessages,
         tools: formattedTools,
-        tool_choice: toolChoice,
         parallel_tool_calls: parallelToolCalls,
         response_format: responseFormat,
+        tool_choice: toolChoice,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
-        temperature: options.temperature,
-        top_p: options.topProbability,
-        seed: options.seed,
-        frequency_penalty: options.frequencyPenalty,
-        presence_penalty: options.presencePenalty,
-        stop: options.stop,
-        logprobs: options.logprobs,
-        logit_bias: options.logitBias,
-        top_logprobs: options.topLogprobs,
-        n: 1,
-        stream_options: {
-          include_usage: true,
-        },
+        ...filteredOptions,
+        model: model,
         stream: true,
       });
 
@@ -193,7 +194,9 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       : messages;
   }
 
-  private async formatMessages(messages: ChatMessageWithSystem[]): Promise<ChatCompletionMessageParam[]> {
+  private async formatMessages(
+    messages: ChatMessageWithSystem[],
+  ): Promise<ChatCompletionMessageParam[]> {
     const formattedMessages: ChatCompletionMessageParam[] = [];
 
     for (const message of messages) {
