@@ -73,8 +73,8 @@ export class CommandProcessor {
       ioManager.displayError("Please provide a model name.");
       return;
     }
-    if (modelName.includes("/")) {
-      const [providerName, model] = modelName.split("/");
+    if (modelName.includes("@")) {
+      const [providerName, model] = modelName.split("@");
       await configManager.setProvider(providerName);
       configManager.setModel(model);
     } else {
