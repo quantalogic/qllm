@@ -165,8 +165,19 @@ async function prepareImageInputs({
       const screenshotCapture = new ScreenshotCapture();
       await screenshotCapture.initialize();
       const screenshotBase64 =
-        await screenshotCapture.captureAndGetBase64(screenshot);
-      images.push(screenshotBase64);
+        await screenshotCapture.captureAndGetBase64({
+          interactive: false,
+          fullScreen: true,
+          windowName: undefined,
+          displayNumber: screenshot
+        })
+      if (!screenshotBase64) {
+        ioManager.displayError(
+          `No screenshot captured from display ${screenshot}`);
+      } 
+      else {
+        images.push(screenshotBase64);
+      }
       ioManager.displaySuccess(
         `Screenshot captured successfully from display ${screenshot}`
       );
