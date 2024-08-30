@@ -180,6 +180,37 @@ The `ask` command supports various options:
 - `--screenshot <number>`: Capture and include a screenshot
 - `--system-message <message>`: Prepend a system message to the conversation
 
+#### Using with Piped Input
+
+```bash
+echo "Explain quantum computing" | qllm ask
+```
+
+or
+
+```bash
+cat article.txt | qllm ask "Summarize this text"
+```
+
+#### Image Analysis
+
+```bash
+qllm ask "Describe this image" -i path/to/image.jpg
+```
+
+#### Streaming Responses
+
+```bash
+qllm ask "Write a short story about AI" -s
+```
+
+#### Saving Output to File
+
+```bash
+qllm ask "Explain the theory of relativity" -o relativity_explanation.txt
+
+
+
 ### Interactive Chat
 
 Start an interactive chat session:

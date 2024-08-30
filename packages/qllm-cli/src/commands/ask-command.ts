@@ -8,7 +8,7 @@ import {
   AskCommandOptionsPartialSchema,
   PartialAskCommandOptions,
 } from "../types/ask-command-options";
-import { Clipboard }  from "../utils/clipboard";
+import { Clipboard } from "../utils/clipboard";
 import { ScreenshotCapture } from "../utils/screenshot";
 import {
   readImageFileAndConvertToBase64,
@@ -21,14 +21,28 @@ import { IOManager } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 
+// New function to read from stdin
+async function readStdin(): Promise<string> {
+  return new Promise((resolve) => {
+    let data = '';
+    process.stdin.on('readable', () => {
+      let chunk;
+      while (null !== (chunk = process.stdin.read())) {
+        data += chunk;
+      }
+    });
+    process.stdin.on('end', () => {
+      resolve(data.trim());
+    });
+  });
+}
+
 const askCommandAction = async (
   question: string,
   options: AskCommandOptions
 ) => {
   let validOptions: PartialAskCommandOptions = options;
-
   try {
-    // validate use zod schema
     validOptions = await validateOptions(
       AskCommandOptionsPartialSchema,
       options,
@@ -39,12 +53,22 @@ const askCommandAction = async (
       ioManager.displayError(
         `An error occurred while validating the options: ${error.message}`
       );
-      process.exit(1);
     }
+    process.exit(1);
+  }
+
+  // Read from stdin if available
+  const stdinInput = await readStdin();
+  if (stdinInput) {
+    question = stdinInput + (question ? `\n${question}` : '');
+  }
+
+  if (!question) {
+    ioManager.displayError("No question provided.");
+    process.exit(1);
   }
 
   const cliConfig = CliConfigManager.getInstance();
-
   const providerName =
     validOptions.provider ||
     cliConfig.get("defaultProvider") ||
@@ -66,7 +90,6 @@ const askCommandAction = async (
     });
 
     spinner.update({ text: "Sending request..." });
-
     const usedOptions: AskCommandOptions = {
       ...validOptions,
       image: imageInputs,
@@ -90,11 +113,11 @@ const askCommandAction = async (
     if (options.output) {
       await saveResponseToFile(response, options.output);
       ioManager.displaySuccess(`Response saved to ${options.output}`);
-    } 
+    }
+
     if(!usedOptions.stream) {
       ioManager.stdout.log(response);
     }
-    
   } catch (error) {
     spinner.error({
       text: ioManager.colorize(
@@ -106,23 +129,22 @@ const askCommandAction = async (
       error instanceof Error ? error.message : String(error)
     );
     process.exit(1);
-  } finally {
   }
 };
 
 export const askCommand = new Command("ask")
   .description("Ask a question to an LLM provider")
-  .argument("<question>", "The question to ask")
+  .argument("[question]", "The question to ask")
   .option("-p, --provider <provider>", "LLM provider to use", "openai")
   .option("-m, --model <model>", "Specific model to use")
   .option(
-    "-t, --max-tokens <number>",
+    "-t, --max-tokens <tokens>",
     "Maximum number of tokens to generate",
     (value) => parseInt(value, 10),
     1024
   )
   .option(
-    "--temperature <number>",
+    "--temperature <temp>",
     "Temperature for response generation",
     (value) => parseFloat(value),
     0.7
@@ -170,17 +192,16 @@ async function prepareImageInputs({
           fullScreen: true,
           windowName: undefined,
           displayNumber: screenshot
-        })
+        });
       if (!screenshotBase64) {
         ioManager.displayError(
           `No screenshot captured from display ${screenshot}`);
-      } 
-      else {
+      } else {
         images.push(screenshotBase64);
+        ioManager.displaySuccess(
+          `Screenshot captured successfully from display ${screenshot}`
+        );
       }
-      ioManager.displaySuccess(
-        `Screenshot captured successfully from display ${screenshot}`
-      );
     } catch (error) {
       ioManager.displayError(
         `Failed to capture screenshot from display ${screenshot}: ${error}`
@@ -269,14 +290,12 @@ function createMessageContent(
   images: string[]
 ): ChatMessage["content"] {
   const content: ChatMessage["content"] = [{ type: "text", text: question }];
-
   for (const image of images) {
     content.push({
       type: "image_url",
       url: image, // Url can be a local file path, URL, or base64 string
     });
   }
-
   return content;
 }
 
@@ -286,12 +305,8 @@ async function streamResponse(
   params: any
 ): Promise<string> {
   const chunks: string[] = [];
-
   let chunkNumber = 0;
-
   spinner.update({ text: "Waiting response..." });
-
-
   try {
     const stream = await provider.streamChatCompletion(params);
     for await (const chunk of stream) {
@@ -300,7 +315,6 @@ async function streamResponse(
         spinner.stop();
         spinner.clear(); // Clear the spinner from the console
       }
-
       if (chunk.text) {
         ioManager.stdout.write(chunk.text);
         chunks.push(chunk.text);
