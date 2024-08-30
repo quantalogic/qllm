@@ -1,0 +1,23 @@
+name: maket_research
+version: '1.0'
+description: Market research for a company
+author: Raphaël MANSUY
+#provider: ollama
+#model: mistral
+input_variables:
+  subject:
+    type: string
+    description: The subject of the story
+    place_holder: "Novagen Conseil"
+content: >
+  
+  Create a market research report for the company {{subject}}. The report should include the following sections:
+
+  - **Introduction**: Briefly introduce the company and its main products/services.
+  - **Market Analysis**: Analyze the current market trends, competitors, and potential opportunities for growth.
+  - **Customer Analysis**: Identify the target customer segments and their needs/preferences.
+  - **SWOT Analysis**: Conduct a SWOT analysis to assess the company's strengths, weaknesses, opportunities, and threats.
+  - **Recommendations**: Provide strategic recommendations based on the analysis to help the company achieve its business objectives.
+  - **Conclusion**: Summarize the key findings and insights from the market research report.
+
+ 

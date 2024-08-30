@@ -6,6 +6,7 @@ import { OpenAIProvider } from './openai';
 import { GroqProvider } from './qroq';
 import { PerplexityProvider } from './perplexity';
 import { MistralProvider } from './mistral';
+import { OpenRouterProvider } from './openrouter';
 
 export const getListProviderNames = (): string[] => {
   const listProviders = [
@@ -16,6 +17,7 @@ export const getListProviderNames = (): string[] => {
     'aws-anthropic',
     'perplexity',
     'mistral',
+    'openrouter',
   ].sort();
   return listProviders;
 };
@@ -37,6 +39,8 @@ export async function getLLMProvider(providerName: string): Promise<LLMProvider>
       return new PerplexityProvider();
     case 'mistral':
       return new MistralProvider();
+    case 'openrouter':
+      return new OpenRouterProvider();
     default:
       throw new Error(`Provider "${providerName}" not found.`);
   }
