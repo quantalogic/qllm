@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "3.0.9",
+  "version": "3.0.10",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -16,7 +16,7 @@
   "files": [
     "dist"
   ],
-"scripts": {
+  "scripts": {
     "build:tsc": "tsc",
     "build:rollup": "rollup -c",
     "build": "npm run build:tsc && npm run build:rollup",
@@ -43,6 +43,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@npmcli/fs": "^3.1.1",
+    "@rollup/plugin-node-resolve": "15.2.3",
     "@rollup/plugin-terser": "0.4.4",
     "@types/jest": "^29.5.12",
     "@types/js-yaml": "^4.0.9",
