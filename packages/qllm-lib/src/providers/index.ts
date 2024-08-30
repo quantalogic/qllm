@@ -5,9 +5,19 @@ import { OllamaProvider } from './ollama';
 import { OpenAIProvider } from './openai';
 import { GroqProvider } from './qroq';
 import { PerplexityProvider } from './perplexity';
+import { MistralProvider } from './mistral';
 
 export const getListProviderNames = (): string[] => {
-  return ['openai', 'ollama', 'groq', 'anthropic', 'aws-anthropic', 'perplexity'];
+  const listProviders = [
+    'openai',
+    'ollama',
+    'groq',
+    'anthropic',
+    'aws-anthropic',
+    'perplexity',
+    'mistral',
+  ].sort();
+  return listProviders;
 };
 
 // Provider factory
@@ -25,6 +35,8 @@ export async function getLLMProvider(providerName: string): Promise<LLMProvider>
       return await createAwsBedrockAnthropicProvider();
     case 'perplexity':
       return new PerplexityProvider();
+    case 'mistral':
+      return new MistralProvider();
     default:
       throw new Error(`Provider "${providerName}" not found.`);
   }
