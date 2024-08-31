@@ -167,20 +167,28 @@ export class TemplateManager {
     content: string,
     visitedFiles: Set<string> = new Set(),
   ): Promise<string> {
-    const fileInclusionRegex = /{{file:\s*([^}]+)\s*}}/g;
+    const fileInclusionRegex = /{{file:\s*([^}\s]+)\s*}}/g;
     let resolvedContent = content;
+    let lastIndex = 0;
     let match;
-
-    while ((match = fileInclusionRegex.exec(content)) !== null) {
+  
+    while ((match = fileInclusionRegex.exec(resolvedContent)) !== null) {
       const [fullMatch, filePath] = match;
-      resolvedContent = await this.resolveFileInclusion(
+      const beforeMatch = resolvedContent.slice(lastIndex, match.index);
+      const afterMatch = resolvedContent.slice(match.index + fullMatch.length);
+  
+      const resolvedInclude = await this.resolveFileInclusion(
         resolvedContent,
         fullMatch,
         filePath,
-        visitedFiles,
+        visitedFiles
       );
+  
+      resolvedContent = beforeMatch + resolvedInclude + afterMatch;
+      lastIndex = beforeMatch.length + resolvedInclude.length;
+      fileInclusionRegex.lastIndex = lastIndex;
     }
-
+  
     return resolvedContent;
   }
 
