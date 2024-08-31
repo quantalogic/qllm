@@ -41,26 +41,30 @@ content: >
 
     6. **SWOT Analysis**: Conduct a SWOT analysis, thoroughly evaluating the company's strengths, weaknesses, opportunities, and threats. 
 
-      Use mermaid syntax to create a SWOT diagram using a quadrantChart. For example:
+      Use mermaid syntax to create a SWOT diagram using a quadrantChart.
+
+      For example:
 
       ```mermaid
-      quadrantChart
-          title SWOT Analysis for AI Data Analytics Startup
-          x-axis Low Impact --> High Impact
-          y-axis Challenging --> Favorable
-          quadrant-1 Threats
-          quadrant-2 Weaknesses
-          quadrant-3 Opportunities
-          quadrant-4 Strengths
-          Innovative AI algorithms: [0.9, 0.8]
-          Experienced data science team: [0.8, 0.9]
-          Limited marketing budget: [0.6, 0.3]
-          Scalability challenges: [0.7, 0.4]
-          Growing demand for AI solutions: [0.8, 0.7]
-          Potential partnerships: [0.7, 0.6]
-          Intense competition: [0.8, 0.2]
-          Rapidly changing technology: [0.7, 0.3]
-  ```
+        quadrantChart
+            title SWOT Analysis for AI Data Analytics Startup
+            x-axis Low Impact --> High Impact
+            y-axis Challenging --> Favorable
+            quadrant-1 Threats
+            quadrant-2 Weaknesses
+            quadrant-3 Opportunities
+            quadrant-4 Strengths
+            "Innovative AI algorithms": [0.9, 0.8]
+            "Experienced data science team": [0.8, 0.9]
+            "Limited marketing budget": [0.6, 0.3]
+            "Scalability challenges": [0.7, 0.4]
+            "Growing demand for AI solutions": [0.8, 0.7]
+            "Potential partnerships": [0.7, 0.6]
+            "Intense competition": [0.8, 0.2]
+            "Rapidly changing technology": [0.7, 0.3]
+    ```
+
+   Explain the SWOT in a table.
 
     7. **Recommendations**: Based on your analysis, provide actionable strategic recommendations that the company could implement to meet its business objectives effectively.
 
