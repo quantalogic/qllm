@@ -1,3 +1,5 @@
+import { TemplateValidator } from '../../template-validator';
+import { TemplateVariable } from '../../types';
 import { extractVariablesFromContent } from '../extract-variable-from-content';
 
 describe('extractVariablesFromContent', () => {
@@ -127,16 +129,20 @@ describe('extractVariablesFromContent', () => {
     });
   });
 
-  /*it('should not modify existing input variables', () => {
+  it('should not modify existing input variables', () => {
     const content = '{{existingVar}} {{newVar}}';
-    const inputVariables = {
-      existingVar: {
-        type: 'number',
-        description: 'Existing variable',
-        inferred: false,
-      },
+    const templateVariable: TemplateVariable = {
+      type: 'number',
+      description: 'Existing variable',
+      inferred: false,
     };
-    const result = extractVariablesFromContent({ content, input_variables: inputVariables }, defaultOptions);
+    const inputVariables = {
+      existingVar: templateVariable,
+    };
+    const result = extractVariablesFromContent(
+      { content, input_variables: inputVariables },
+      defaultOptions,
+    );
     expect(result).toEqual({
       existingVar: {
         type: 'number',
@@ -149,5 +155,5 @@ describe('extractVariablesFromContent', () => {
         inferred: true,
       },
     });
-  });*/
+  });
 });
