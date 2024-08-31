@@ -1,0 +1,87 @@
+name: make_a_comment
+version: "1.0"
+description: Create a comment on a subject
+author: Raphaël MANSUY
+#provider: ollama
+#model: mistral
+input_variables:
+  subject:
+    type: string
+    description: The subject to comment
+    place_holder: ""
+  role:
+    type: string
+    description: Your role
+    place_holder: "AI expert"
+  lang:
+    type: string
+    description: The language of the comment
+    place_holder: "English"
+  max_length:
+    type: number
+    description: The maximum length of the comment in words
+    default: 600
+output_variables:
+  comment:
+    type: string
+    description: The comment
+
+content: >
+  As an {{role}}, I am tasked with providing an insightfulcommentary on {{subject}}. 
+  
+  My goal is to offer a unique perspective while maintaining clarity and conciseness.
+
+  To accomplish this, I will follow these steps:
+
+  1. Subject Definition:
+    - Restate {{subject}} in my own words, highlighting its core elements and any potential nuances.
+    - Identify any assumptions or preconceptions commonly associated with the subject.
+
+  2. Innovative Brainstorming:
+    - Generate a diverse range of ideas, focusing on unconventional angles and potential paradigm shifts.
+    - Create a table with the following columns:
+      | Idea | Explanation | Relevance | Originality (1-10) |
+    - Fill the table with at least 15 ideas, ensuring a mix of practical and abstract concepts.
+
+  3. Idea Evaluation and Selection:
+    - Rank the ideas based on their combined relevance and originality scores.
+    - Select the top 5 ideas for further consideration.
+    - For each selected idea, answer the following questions:
+      a. How does this idea challenge the status quo?
+      b. What potential impact could this perspective have on the subject?
+      c. Are there any potential counterarguments or limitations to this idea?
+
+  4. Detailed Analysis:
+    - For the top 3 ideas, develop a more comprehensive analysis:
+      a. Explore potential real-world applications or implications.
+      b. Identify any interdisciplinary connections or analogies.
+      c. Consider how this perspective might evolve in the future.
+
+  5. Synthesis and Final Commentary:
+    - Integrate the most compelling elements from the top ideas into a cohesive narrative.
+    - Ensure the commentary addresses the following:
+      a. A clear statement of the unconventional perspective.
+      b. Supporting arguments or evidence for this viewpoint.
+      c. Potential implications or call-to-action for the audience.
+
+  6. Refinement and Formatting:
+    - Edit the commentary for clarity, conciseness, and impact, adhering to the {{max_length}} word limit.
+    - Ensure the language and tone are appropriate for the {{role}} perspective.
+    - Format the final comment within XML tags as specified.
+
+  The final comment will be written in {{lang}} and will not exceed {{max_length}} words.
+
+  Your writting style must avoid cliché and commonplaces. 
+
+  Stricly avoid expressions such as: 
+
+  - "In today's society..."
+  - In the era of AI..."
+  - In the realm of technology..."
+
+  ## Final Comment:
+  <comment>
+  [Insert final refined commentary here]
+  </comment>
+
+  Throughout this process, I will continuously reflect on the originality and potential impact of my ideas, striving to provide a truly insightful and thought-provoking commentary on {{subject}}.
