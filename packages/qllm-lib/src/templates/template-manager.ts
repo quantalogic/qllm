@@ -93,13 +93,6 @@ export class TemplateManager {
     }
   }
 
-  async resolveFileInclusions(
-    template: TemplateDefinition & { resolved_content: string },
-  ): Promise<void> {
-    const resolvedContent = await this.resolveFileInclusionsInContent(template.content);
-    template.resolved_content = resolvedContent;
-  }
-
   // Private helper methods
 
   private async ensureTemplateDirectory(): Promise<void> {
@@ -160,60 +153,6 @@ export class TemplateManager {
     const stats = await fs.stat(dir);
     if (!stats.isDirectory()) {
       ErrorManager.throw(TemplateManagerError, 'Specified path is not a directory');
-    }
-  }
-
-  private async resolveFileInclusionsInContent(
-    content: string,
-    visitedFiles: Set<string> = new Set(),
-  ): Promise<string> {
-    const fileInclusionRegex = /{{file:\s*([^}\s]+)\s*}}/g;
-    let resolvedContent = content;
-    let lastIndex = 0;
-    let match;
-  
-    while ((match = fileInclusionRegex.exec(resolvedContent)) !== null) {
-      const [fullMatch, filePath] = match;
-      const beforeMatch = resolvedContent.slice(lastIndex, match.index);
-      const afterMatch = resolvedContent.slice(match.index + fullMatch.length);
-  
-      const resolvedInclude = await this.resolveFileInclusion(
-        resolvedContent,
-        fullMatch,
-        filePath,
-        visitedFiles
-      );
-  
-      resolvedContent = beforeMatch + resolvedInclude + afterMatch;
-      lastIndex = beforeMatch.length + resolvedInclude.length;
-      fileInclusionRegex.lastIndex = lastIndex;
-    }
-  
-    return resolvedContent;
-  }
-
-  private async resolveFileInclusion(
-    content: string,
-    fullMatch: string,
-    filePath: string,
-    visitedFiles: Set<string>,
-  ): Promise<string> {
-    const fullPath = path.resolve(this.templateDir, filePath.trim());
-    if (visitedFiles.has(fullPath)) {
-      ErrorManager.throw(TemplateManagerError, `Circular file inclusion detected: ${filePath}`);
-    }
-
-    try {
-      const fileContent = await this.readFile(fullPath);
-      visitedFiles.add(fullPath);
-      const resolvedFileContent = await this.resolveFileInclusionsInContent(
-        fileContent,
-        visitedFiles,
-      );
-      visitedFiles.delete(fullPath);
-      return content.replace(fullMatch, resolvedFileContent);
-    } catch (error) {
-      ErrorManager.throw(TemplateManagerError, `Failed to include file ${filePath}: ${error}`);
     }
   }
 }
