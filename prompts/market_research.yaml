@@ -43,7 +43,7 @@ content: >
 
       Use mermaid syntax to create a SWOT diagram using a quadrantChart. For example:
 
-      ```
+      ```mermaid
       quadrantChart
           title SWOT Analysis for AI Data Analytics Startup
           x-axis Low Impact --> High Impact
