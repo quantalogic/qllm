@@ -31,5 +31,5 @@ output_variables:
     description: The story
 
 content: >
-  {{include:common/story.md}}
+  {{include: common/story.md   }}
  
