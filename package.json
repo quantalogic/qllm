@@ -14,7 +14,8 @@
     "publish-packages": "pnpm -r publish --access public",
     "prepublish-packages": "pnpm run build",
     "docs": "pnpm -r run docs",
-    "changeset": "pnpm -w run changeset"
+    "changeset": "changeset"
+
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.7",
