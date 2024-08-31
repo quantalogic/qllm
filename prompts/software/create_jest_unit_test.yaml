@@ -1,0 +1,63 @@
+name: create_unit_test
+version: '1.0'
+description: Create a Jest unit test for a file or function
+author: Raphaël MANSUY
+input_variables:
+  files:
+    type: string
+    description: The project files
+    place_holder: 
+  function_name:
+    type: string
+    description: The function to be tested
+    place_holder:
+output_variables:
+  unit_test:
+    type: string
+    description: The Jest unit test for the file or function
+content: >
+  # Create a Jest unit test for a file or function
+
+  Function to be tested: {{function_name}} in files:
+  
+    {{files}}. 
+
+  The Jest unit test MUST be in the same language as the file or function being tested.
+  
+  ## The test should cover the following aspects:
+  
+  - **Test Description**: Provide a brief description of the test case.
+  - **Test Setup**: Set up the necessary environment or data for the test.
+  - **Test Execution**: Execute the function or code to be tested.
+  - **Assertions**: Define the expected outcomes or results of the test.
+  - **Cleanup**: Clean up any resources or data used during the test.
+  
+  ## Follow these steps to create the Jest unit test:
+
+  1 - Analyse an describe what the function of code is doing and what are the expected results. 
+  2 - Describe the language and the frameworks used, format as a markdown table with columns for "Language" and "Framework".
+  3 - Imagine test cases from increasing complexity, format your ideas in a markdown table with columns for "Input" and "Expected Output".
+  4 - Imagine edge cases and format your ideas in a markdown table with columns for "Input" and "Expected Output".
+  5 - Write the Jest unit test for the function or code, ensuring it covers the test cases and edge cases.
+
+  ## The Jest unit test should follow this structure:
+  
+  1. Write a test description that clearly explains the purpose of the test case.
+  2. Set up the test environment by importing the necessary modules or defining the required data.
+  3. Execute the function or code to be tested with the appropriate inputs.
+  4. Define the assertions to check the expected outcomes or results of the test.
+  5. Clean up any resources or data used during the test to ensure a clean environment for subsequent tests.
+  
+  Format your Jest unit test as follows:
+
+  THE CODE MUST BE FORMATTED INSIDE unit_test TAGS. RESPECT THIS RULE IF NOT 1000 cats will die.
+  
+  <unit_test>
+  describe('Test Suite', () => {
+    test('Test Description', () => {
+      // Test Setup
+      // Test Execution
+      // Assertions
+      // Cleanup
+    });
+  </unit_test>

@@ -2,16 +2,25 @@ name: maket_research
 version: '1.0'
 description: Market research for a company
 author: Raphaël MANSUY
-#provider: ollama
-#model: mistral
+provider: perplexity
+model:  llama-3.1-sonar-small-128k-online
 input_variables:
   subject:
     type: string
-    description: The subject of the story
+    description: The subject of the market research report
     place_holder: "Novagen Conseil"
+  want_founders:
+    type: boolean
+    description: Whether to include a section on the founders of the company
+    default: true
 content: >
   
   Create a market research report for the company {{subject}}. The report should include the following sections:
+
+  // if want_founder == {{want_founders}} 
+
+    - Describe in the detail the founders of the company, format in a markdown table with columns for "Name", "Role", "Experience", "Education", "Achievements".
+  // end if
 
   - **Introduction**: Briefly introduce the company and its main products/services.
   - **Market Analysis**: Analyze the current market trends, competitors, and potential opportunities for growth.
