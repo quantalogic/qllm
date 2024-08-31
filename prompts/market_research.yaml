@@ -41,7 +41,19 @@ content: >
 
     6. **SWOT Analysis**: Conduct a SWOT analysis, thoroughly evaluating the company's strengths, weaknesses, opportunities, and threats. 
 
-      Use mermaid syntax to create a SWOT diagram using a quadrantChart.
+      Present the SWOT analysis in a detailed table format with the following columns:
+      
+       - Category (Strength, Weakness, Opportunity, or Threat)
+       - Factor (e.g., "Innovative AI algorithms")
+       - Impact (Low, Medium, or High)
+       - Description (A brief explanation of the factor and its implications)
+       - Potential Action (A suggested strategy to leverage or mitigate the factor)
+
+       Provide a brief summary (3-4 sentences) of the key insights from the SWOT analysis, highlighting the most critical factors for the startup's success and areas that require immediate attention.
+
+       Please ensure that all elements are properly formatted and easy to read.
+   
+      Then Use mermaid syntax to create a SWOT diagram using a quadrantChart.
 
       For example:
 
