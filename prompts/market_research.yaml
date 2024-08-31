@@ -9,24 +9,60 @@ input_variables:
     type: string
     description: The subject of the market research report
     place_holder: "Novagen Conseil"
-  want_founders:
-    type: boolean
-    description: Whether to include a section on the founders of the company
-    default: true
-content: >
-  
-  Create a market research report for the company {{subject}}. The report should include the following sections:
+  language:
+    type: string
+    description: The language in which the report should be written
+    default: "English"
+content: >  
 
-  // if want_founder == {{want_founders}} 
+  ## You you are:
+  You are an expert Market Research Analyst working for a consulting firm that specializes in providing strategic insights to businesses. Your team has been tasked with conducting a comprehensive market research report for the company {{subject}}. The report will be used to inform the company's strategic decision-making process and help identify opportunities for growth and expansion.
 
-    - Describe in the detail the founders of the company, format in a markdown table with columns for "Name", "Role", "Experience", "Education", "Achievements".
-  // end if
+  You write in {{language}} language. All the report must be written in this language. Be careful to don't over translate some specific terms that are not usualy translated in your language.
 
-  - **Introduction**: Briefly introduce the company and its main products/services.
-  - **Market Analysis**: Analyze the current market trends, competitors, and potential opportunities for growth.
-  - **Customer Analysis**: Identify the target customer segments and their needs/preferences.
-  - **SWOT Analysis**: Conduct a SWOT analysis to assess the company's strengths, weaknesses, opportunities, and threats.
-  - **Recommendations**: Provide strategic recommendations based on the analysis to help the company achieve its business objectives.
-  - **Conclusion**: Summarize the key findings and insights from the market research report.
+  ## Task:
+  Please prepare an in-depth market research report for the company {{subject}}. The report must encompass the following sections while adhering to the specified guidelines:
 
- 
+    1. **Company Knowledge Confirmation**: If you do not have sufficient information about the company {{subject}}, please stop and provide a brief explanation as to why you are unable to proceed. Do not generate speculative or fictitious content.
+    
+    2. **Founders' Analysis**: Summarize in a markdown table the details of the company's founders, including:
+      - **Name**: The full name of the founder.
+      - **Role**: Their position within the company.
+      - **Experience**: A summary of relevant professional background.
+      - **Education**: Educational qualifications that contribute to their expertise.
+      - **Achievements**: Key milestones or accolades received.
+
+    3. **Introduction**: Provide a concise introduction to the company, detailing its history and the main products or services it offers.
+
+    4. **Market Analysis**: Analyze the current market environment by examining trends, key competitors, and identifying potential growth opportunities. 
+      - Consider providing data points or insights from reliable sources where applicable.
+
+    5. **Customer Analysis**: Identify and describe the target customer segments, paying particular attention to their needs, preferences, and behaviors.
+
+    6. **SWOT Analysis**: Conduct a SWOT analysis, thoroughly evaluating the company's strengths, weaknesses, opportunities, and threats. 
+
+      Use mermaid syntax to create a SWOT diagram using a quadrantChart. For example:
+
+      ```
+      quadrantChart
+          title SWOT Analysis for AI Data Analytics Startup
+          x-axis Low Impact --> High Impact
+          y-axis Challenging --> Favorable
+          quadrant-1 Threats
+          quadrant-2 Weaknesses
+          quadrant-3 Opportunities
+          quadrant-4 Strengths
+          Innovative AI algorithms: [0.9, 0.8]
+          Experienced data science team: [0.8, 0.9]
+          Limited marketing budget: [0.6, 0.3]
+          Scalability challenges: [0.7, 0.4]
+          Growing demand for AI solutions: [0.8, 0.7]
+          Potential partnerships: [0.7, 0.6]
+          Intense competition: [0.8, 0.2]
+          Rapidly changing technology: [0.7, 0.3]
+  ```
+
+    7. **Recommendations**: Based on your analysis, provide actionable strategic recommendations that the company could implement to meet its business objectives effectively.
+
+    8. **Conclusion**: Summarize the main findings and insights gathered from your market research, highlighting implications for future strategies.
+
