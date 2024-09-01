@@ -113,7 +113,8 @@ We welcome contributions! Please follow these steps:
 
 Fork the repository.
 Create a new branch: 
-```git checkout -b feature/your-feature-name.
+```
+git checkout -b feature/your-feature-name.
 ```
 Make your changes and commit them: 
 ```git commit -m 'Add some feature'.
