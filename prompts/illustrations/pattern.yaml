@@ -1,0 +1,96 @@
+name: illustration_pattern
+version: "1.0"
+description: Create the description of a pattern
+author: Raphaël MANSUY
+input_variables:
+  subject:
+    type: string
+    description: The subject to illustrate
+    place_holder: "Marketing"
+  emotion:
+    type: string
+    description: Emotion to convey
+    place_holder: "Excitement"
+  inspiration: 
+    type: string
+    description: Sources of inspiration
+    place_holder: "Architecture"
+  palette:
+    type: string
+    description: The color palette to use
+    place_holder: "Pastel"
+
+content: >
+
+  As a creative artist, I am tasked with illustrating the concept of {{subject}} through a unique and engaging pattern.
+
+  - First I will choose a primary color palette that reflects the essence of {{subject}}. 
+
+    This will set the tone for the entire composition and establish a cohesive visual language.
+    
+    The palette will choosen from the following options: {{palette}}.
+
+  - Then I will select a pattern style that complements the subject matter. This could be geometric, organic, abstract, or any other style that enhances the message I want to convey.
+
+      The inspiration for the pattern will be drawn from {{inspiration}}.
+
+  - Next, I will create a focal point within the pattern that draws the viewer's attention and conveys the main idea of {{subject}}. This could be a specific shape, color, or texture that stands out from the rest of the composition.
+  - I will pay close attention to the details of the pattern, ensuring that each element is carefully crafted and contributes to the overall narrative of {{subject}}.
+  - Finally, I will step back and evaluate the pattern as a whole, making any necessary adjustments to enhance its visual impact and ensure that it effectively communicates the essence of {{subject}}.
+
+  By following these steps, I will create a visually compelling and thought-provoking illustration that captures the essence of {{subject}} and engages the viewer on an emotional and intellectual level.
+
+
+
+  Example of desccription of patterns:
+
+  ```text
+  The image presents a soft, abstract composition dominated by gentle curves and pastel hues. The primary colors are various shades of pink, ranging from a deep coral to a light, almost white pink. These pink tones blend seamlessly with areas of white, creating a dreamy, ethereal effect.
+  The focal point of the image appears to be a curved shape that sweeps across the frame, reminiscent of a petal or a gentle wave. This shape is rendered in a deeper pink that gradually fades into lighter tones, giving the impression of depth and movement.
+  The background is predominantly white with subtle pink undertones, which enhances the softness of the overall image. There's a sense of fluidity and grace in the way the colors merge and flow into each other, creating a soothing and calming visual experience.
+  The blurred, out-of-focus quality of the image adds to its abstract nature, making it difficult to discern specific objects or forms. This technique emphasizes the importance of color, shape, and texture over definitive structures.
+  Overall, the image evokes a sense of tranquility and gentleness, perhaps reminiscent of a close-up view of a flower petal or a abstract representation of soft, flowing fabrics. Its delicate color palette and smooth transitions make it visually appealing and restful to the eye.
+  ```
+
+  ## Output
+
+  1. My reflection on the pattern
+
+    - Ideation process:
+      - Inspiration sources:
+      - Concept development:
+      - Iterative design:
+      - Final composition:
+
+    - Color palette:
+      - Primary colors: 
+      - Secondary colors: 
+      - Accent colors:
+
+    - Pattern style:
+      - Geometric:
+      - Organic:
+      - Abstract:
+      - Other:
+
+    - Focal point:  
+      - Main shape:
+      - Color:
+      - Texture:
+
+    - Details:
+      - Element 1:
+      - Element 2:
+      - Element 3:
+
+  - Final evaluation:
+    - Visual impact:
+    - Narrative coherence:
+    - Emotional engagement:
+    - Intellectual stimulation: 
+
+  2. The final illustration of the pattern
+
+  ```text 
+  [Insert final illustration description here]
+  ```
