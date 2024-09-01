@@ -1,0 +1,49 @@
+name: '📄 URL Document Summarizer'
+version: '1.0.0'
+description: '🚀 Summarize documents from a given URL'
+author: '🤖 SummarizerAI'
+content: |
+  ## Summarize the following document:
+
+  <document>
+  {{include: {{file_url}} }}
+  </document>
+  
+  Requirements:
+  - Provide a concise summary of the main points
+  - Highlight key insights or findings
+  - Keep the summary within {{max_words}} words
+  - Write the summary in <summary> tags
+  
+  ## Format the output as follows:
+
+  <relexions> Your reflections on the document </relexions>
+
+  <summary> The content of the summary </summary>
+
+  END.
+inputVariables:
+  - name: file_url
+    type: string
+    description: '🔗 The URL of the document to summarize'
+  - name: max_words
+    type: number
+    description: '📏 Maximum number of words for the summary'
+outputVariables:
+  - name: summary
+    type: string
+    description: '📝 The generated summary of the document'
+tags:
+  - '📚 document analysis'
+  - '🔍 summarization'
+  - '🌐 web content'
+categories:
+  - '📊 Information Processing'
+  - '🤖 AI-Assisted Analysis'
+model: 'gpt-4'
+parameters:
+  max_tokens: 500
+  temperature: 0.5
+  top_p: 0.9
+promptType: '🧠 text_summarization'
+taskDescription: '🎯 Generate concise summaries of documents from provided URLs'

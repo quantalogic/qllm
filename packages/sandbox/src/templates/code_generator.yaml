@@ -1,0 +1,56 @@
+name: '🌈 Multi-Language Code Generator'
+version: '3.0.0'
+description: '🚀 Generate code snippets in various programming languages'
+author: '🤖 CodeMaster AI'
+content: |
+  Generate a {{language}} code snippet that accomplishes the following task:
+  {{task_description}}    
+  Requirements:
+  {{requirements}}
+  Important: Wrap the generated code in an XML tag named <code></code>.
+  Generated Code:
+
+inputVariables:
+  - name: language
+    type: string
+    description: '🗣️ The programming language to generate code in'
+  - name: task_description
+    type: string
+    description: '📝 Description of the coding task'
+  - name: requirements
+    type: string
+    description: '📋 Specific requirements for the code'
+
+outputVariables:
+  - name: code
+    type: string
+    description: '💻 The generated code snippet'
+
+tags:
+  - '💡 programming'
+  - '🔧 code generation'
+  - '🌐 multi-language'
+
+categories:
+  - '🖥️ Software Development'
+  - '🤖 AI-Assisted Coding'
+
+model: 'gpt-4o-mini'
+
+parameters:
+  max_tokens: 1200
+  temperature: 0.7
+  top_p: 0.95
+
+promptType: '🧠 code_generation'
+
+taskDescription: '🎯 Generate code snippets in various programming languages based on user requirements'
+
+exampleOutputs: |
+  <code>
+  def fibonacci(n):
+      if n <= 1:
+          return n
+      else:
+          return fibonacci(n-1) + fibonacci(n-2)
+  </code>
