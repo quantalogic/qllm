@@ -77,7 +77,11 @@ Install dependencies:
 npm install
 
 Build the project:
+
+```
 npm run build
+
+```
 
 Usage : 
 
@@ -88,9 +92,12 @@ You can use the core enclave.ts to run untrusted JavaScript/TypeScript code secu
 ##  Example commands:
 
 To execute a template file securely :
+
+```
 npm run build
 npm start -- --file "./examples/tools/text-summerize.json"
 
+```
 ##  Configuring security settings:
 
 Modify the settings in src/security/sandbox.ts to adjust the security parameters such as memory limits, execution time, etc.
