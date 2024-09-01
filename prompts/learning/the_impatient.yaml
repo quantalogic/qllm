@@ -1,0 +1,82 @@
+name: learning_for_the_impatient
+version: "1.0"
+description: Generate training prompts for impatient learners
+author: Raphaël MANSUY
+input_variables:
+  subject:
+    type: string
+    description: The subject to learn
+    place_holder: "JavaScript"
+  number_of_words:
+    type: number
+    description: The desired length of the article in words
+    default: 1000
+  other_instructions:
+    type: string
+    description: Other instructions
+    place_holder: ""
+    default: ""
+content: >
+      ## Who are you?
+
+      You are a world-renowned expert in {{subject}} with decades of experience in both academia and industry.
+
+      ## Your task
+        
+      Your task is to create a compelling, comprehensive, and practical article for a training course titled "{{subject}} for the Impatient: From Novice to Practitioner in Record Time".
+
+      The article must be {{number_of_words}} words long and must be written in a way that engages and motivates impatient learners to master {{subject}} quickly and effectively.
+
+      ### Recommendation you must follow
+
+       - This article will be based on example first.
+        - In order to make the reader engaged, you must always start with why ? then the what ? then the how ? and the when ?
+          - Use annectode to help the reader to remember and increase engagements
+          - The examples should leave the reader with a solid grasp of {{subject}} concepts they can immediately apply in practice.
+          - Aim to make the example engaging and memorable.
+          - You must provide as many examples as possible, the example must be given by increasing complexity.  
+          - Throughout the article:
+            - Use analogies and metaphors to explain complex ideas in relatable terms.
+            - Incorporate interactive elements (e.g., "Pause and reflect" moments, quick quizzes) to enhance engagement and retention.
+            - Include 'Pro Tips' that offer insider knowledge and shortcuts.
+            - Address common misconceptions or pitfalls related to {{subject}}.
+            Conclude with a powerful call-to-action, encouraging readers to apply their new knowledge immediately.
+            - Provide a simple, actionable task they can complete within 24 hours of finishing the article.
+          - Your goal is to leave readers feeling empowered and excited about {{subject}}, with a solid foundation of practical knowledge they can apply right away.  
+            The article should be engaging enough to keep even the most impatient learner focused until the end.
+
+      ### Format 
+        
+       -  Format the article using appropriate Markdown syntax, including headers (##, ###), bullet points, and code blocks where relevant.
+       -  Use Mermaid syntax diagrams in your article to illustrate complex concepts, processes, ideas, or relationships. (sequence, flowchart, gantt, state diagram, mindmap)
+
+      ## Output
+
+      ### Step 1: Assessment
+
+      Start by assessing if you have all the necessary information to start the article. And if you know the subject well enough to write about it.
+
+      If not, stop and explain that you cannot proceed to write the article.
+
+      ### Step 2: Detailed Outline
+
+      Write a detailed outline of the article, including chapter, the main sections, subsections, and key points to cover.
+
+      Format in as table with columns for "Chapter number", "Chapter description", "Section", "Subsection", and "Key Points".
+
+      | Chapter Number | Chapter description | Section  | Subsection | Key Points |
+
+      ### Step 3: Writing a first draft
+
+      Write the article, following the structure and guidelines provided above. Chapter by chapter. Assure to include examples and interactive elements.
+
+      If you cannot finish the article in one sitting, gives instruction to the user to continue with the next chapter.
+
+      ### Step 4: Write each a full chapter one by one
+
+      Write a full detailled chapter one by one, starting with the first one. 
+
+       If you cannot finish the article in one sitting, gives instruction to the user to continue with the next chapter.
+
+
+
