@@ -64,7 +64,7 @@ secure-nodejs-code-enclave/
 │       └── package-manager.test.ts
 ├── tsconfig.json
 └── tree.txt
-
+```
 
 ##  Installation
 To set up the project locally, follow these steps:
@@ -81,22 +81,22 @@ npm run build
 
 Usage : 
 
-Running code securely:
+##  Running code securely:
 
 You can use the core enclave.ts to run untrusted JavaScript/TypeScript code securely by following the provided examples in the examples directory.
 
-Example commands:
+##  Example commands:
 
 To execute a template file securely :
 npm run build
 npm start -- --file "./examples/tools/text-summerize.json"
 
-Configuring security settings:
+##  Configuring security settings:
 
 Modify the settings in src/security/sandbox.ts to adjust the security parameters such as memory limits, execution time, etc.
 
 
-Contributing
+##  Contributing
 We welcome contributions! Please follow these steps:
 
 Fork the repository.
@@ -105,9 +105,9 @@ Make your changes and commit them: git commit -m 'Add some feature'.
 Push to the branch: git push origin feature/your-feature-name.
 Open a pull request.
 
-License
+##  License
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-Acknowledgments
+##  Acknowledgments
 Special thanks to the contributors who have helped build this project.
 
