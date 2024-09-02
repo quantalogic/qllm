@@ -11,7 +11,8 @@ export default function createStorageProvider(
   }: {
     dbPath?: string;
   },
-): StorageProvider | undefined { // Updated return type to include undefined
+): StorageProvider | undefined {
+  // Updated return type to include undefined
   switch (name.toLowerCase()) {
     case 'in-memory':
       return new InMemoryStorageProvider();

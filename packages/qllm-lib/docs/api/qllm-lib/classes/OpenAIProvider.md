@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / OpenAIProvider
 
@@ -46,7 +46,7 @@ It provides methods for generating messages, streaming messages, and generating 
 
 [packages/qllm-lib/src/providers/openai/index.ts:47](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/openai/index.ts#L47)
 
-***
+---
 
 ### name
 
@@ -60,7 +60,7 @@ It provides methods for generating messages, streaming messages, and generating 
 
 [packages/qllm-lib/src/providers/openai/index.ts:37](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/openai/index.ts#L37)
 
-***
+---
 
 ### version
 
@@ -96,7 +96,7 @@ It provides methods for generating messages, streaming messages, and generating 
 
 [packages/qllm-lib/src/providers/openai/index.ts:52](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/openai/index.ts#L52)
 
-***
+---
 
 ### generateEmbedding()
 
@@ -118,7 +118,7 @@ It provides methods for generating messages, streaming messages, and generating 
 
 [packages/qllm-lib/src/providers/openai/index.ts:150](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/openai/index.ts#L150)
 
-***
+---
 
 ### listModels()
 
@@ -136,7 +136,7 @@ It provides methods for generating messages, streaming messages, and generating 
 
 [packages/qllm-lib/src/providers/openai/index.ts:176](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/openai/index.ts#L176)
 
-***
+---
 
 ### streamChatCompletion()
 

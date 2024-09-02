@@ -1,12 +1,12 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / FunctionTool
 
 # Type Alias: FunctionTool
 
-> **FunctionTool**: `z.infer`\<*typeof* `FunctionToolSchema`\>
+> **FunctionTool**: `z.infer`\<_typeof_ `FunctionToolSchema`\>
 
 ## Defined in
 

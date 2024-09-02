@@ -1,12 +1,12 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / TemplateDefinitionWithResolvedContent
 
 # Type Alias: TemplateDefinitionWithResolvedContent
 
-> **TemplateDefinitionWithResolvedContent**: `z.infer`\<*typeof* [`templateDefinitionSchemaWithResolvedContent`](../variables/templateDefinitionSchemaWithResolvedContent.md)\>
+> **TemplateDefinitionWithResolvedContent**: `z.infer`\<_typeof_ [`templateDefinitionSchemaWithResolvedContent`](../variables/templateDefinitionSchemaWithResolvedContent.md)\>
 
 ## Defined in
 

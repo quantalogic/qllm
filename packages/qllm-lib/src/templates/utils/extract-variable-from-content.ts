@@ -1,4 +1,4 @@
-import { TemplateVariable } from "../types";
+import { TemplateVariable } from '../types';
 
 interface ExtractVariablesFromContentOptions {
   allowDotNotation?: boolean;
@@ -76,11 +76,7 @@ class Parser {
   }
 
   private parseVariableExtension(): string | null {
-    return (
-      this.parseDotNotation() ||
-      this.parseBracketNotation() ||
-      this.parseFunctionCall()
-    );
+    return this.parseDotNotation() || this.parseBracketNotation() || this.parseFunctionCall();
   }
 
   private parseIdentifier(): string | null {
@@ -142,12 +138,15 @@ class Parser {
 }
 
 export function extractVariablesFromContent(
-  { content, input_variables = {} }: { content: string; input_variables?: Record<string, TemplateVariable> },
+  {
+    content,
+    input_variables = {},
+  }: { content: string; input_variables?: Record<string, TemplateVariable> },
   options: ExtractVariablesFromContentOptions = {
     allowDotNotation: true,
     allowBracketNotation: false,
     allowFunctionCalls: false,
-  }
+  },
 ): Record<string, TemplateVariable> {
   const clonedInputVariables = { ...input_variables };
   const parser = new Parser(content, options);

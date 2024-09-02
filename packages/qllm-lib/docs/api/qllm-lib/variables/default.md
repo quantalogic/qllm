@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / default
 
@@ -12,7 +12,7 @@
 
 ### TemplateManager
 
-> **TemplateManager**: *typeof* [`TemplateManager`](../classes/TemplateManager.md)
+> **TemplateManager**: _typeof_ [`TemplateManager`](../classes/TemplateManager.md)
 
 ### createEmbeddingProvider()
 

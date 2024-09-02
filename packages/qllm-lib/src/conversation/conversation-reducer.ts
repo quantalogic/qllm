@@ -18,8 +18,14 @@ export type ConversationAction =
   | { type: 'CREATE_CONVERSATION'; payload: CreateConversationOptions }
   | { type: 'UPDATE_CONVERSATION'; payload: { id: ConversationId; updates: Partial<Conversation> } }
   | { type: 'DELETE_CONVERSATION'; payload: ConversationId }
-  | { type: 'ADD_MESSAGE'; payload: { id: ConversationId; message: Omit<ConversationMessage, 'id'> } }
-  | { type: 'SET_METADATA'; payload: { id: ConversationId; metadata: Partial<ConversationMetadata> } }
+  | {
+      type: 'ADD_MESSAGE';
+      payload: { id: ConversationId; message: Omit<ConversationMessage, 'id'> };
+    }
+  | {
+      type: 'SET_METADATA';
+      payload: { id: ConversationId; metadata: Partial<ConversationMetadata> };
+    }
   | { type: 'ADD_PROVIDER'; payload: { id: ConversationId; providerId: ProviderId } }
   | { type: 'REMOVE_PROVIDER'; payload: { id: ConversationId; providerId: ProviderId } }
   | { type: 'CLEAR_HISTORY'; payload: ConversationId }

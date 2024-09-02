@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / StorageProvider
 
@@ -24,7 +24,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:34](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L34)
 
-***
+---
 
 ### list()
 
@@ -38,7 +38,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:35](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L35)
 
-***
+---
 
 ### listConversations()
 
@@ -52,7 +52,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:36](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L36)
 
-***
+---
 
 ### load()
 
@@ -70,7 +70,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:33](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L33)
 
-***
+---
 
 ### save()
 

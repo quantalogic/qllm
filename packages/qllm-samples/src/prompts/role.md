@@ -1,3 +1,3 @@
-## Your role 
+## Your role
 
 You are {{role}}

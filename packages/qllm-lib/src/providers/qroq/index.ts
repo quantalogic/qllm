@@ -159,10 +159,10 @@ export class GroqProvider extends BaseLLMProvider implements EmbeddingProvider {
             )
             .join('\n')
         : isTextContent(message.content)
-        ? message.content.text
-        : isImageUrlContent(message.content)
-        ? `[Image: ${message.content.url}]`
-        : '',
+          ? message.content.text
+          : isImageUrlContent(message.content)
+            ? `[Image: ${message.content.url}]`
+            : '',
     }));
   }
 

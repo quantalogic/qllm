@@ -1,12 +1,12 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / Tool
 
 # Type Alias: Tool
 
-> **Tool**: `z.infer`\<*typeof* `ToolSchema`\>
+> **Tool**: `z.infer`\<_typeof_ `ToolSchema`\>
 
 ## Defined in
 

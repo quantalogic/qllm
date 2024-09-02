@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / TemplateExecutor
 
@@ -74,7 +74,7 @@ myEmitter.emit('event', 1, 2, 3, 4, 5);
 
 #### Type Parameters
 
-• **K** *extends* keyof `TemplateExecutorEvents`
+• **K** _extends_ keyof `TemplateExecutorEvents`
 
 #### Parameters
 
@@ -98,7 +98,7 @@ v0.1.26
 
 [packages/qllm-lib/src/templates/template-executor.ts:41](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-executor.ts#L41)
 
-***
+---
 
 ### execute()
 
@@ -124,7 +124,7 @@ v0.1.26
 
 [packages/qllm-lib/src/templates/template-executor.ts:48](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-executor.ts#L48)
 
-***
+---
 
 ### on()
 
@@ -159,7 +159,7 @@ myEE.emit('foo');
 
 #### Type Parameters
 
-• **K** *extends* keyof `TemplateExecutorEvents`
+• **K** _extends_ keyof `TemplateExecutorEvents`
 
 #### Parameters
 

@@ -20,7 +20,7 @@ import {
 export function createConversation(
   metadata: Partial<ConversationMetadata> = {},
   initialMessage?: string,
-  providerId?: ProviderId
+  providerId?: ProviderId,
 ): Conversation {
   const id = uuidv4();
   const now = new Date();
@@ -56,7 +56,7 @@ export function addMessageToConversation(
   conversation: Conversation,
   content: string,
   role: 'user' | 'assistant',
-  providerId?: ProviderId
+  providerId?: ProviderId,
 ): Conversation {
   const message: ConversationMessage = {
     id: uuidv4(),
@@ -84,7 +84,7 @@ export function addMessageToConversation(
  */
 export function updateConversationMetadata(
   conversation: Conversation,
-  metadata: Partial<ConversationMetadata>
+  metadata: Partial<ConversationMetadata>,
 ): Conversation {
   return {
     ...conversation,
@@ -104,7 +104,7 @@ export function updateConversationMetadata(
  */
 export function addProviderToConversation(
   conversation: Conversation,
-  providerId: ProviderId
+  providerId: ProviderId,
 ): Conversation {
   const updatedProviders = new Set(conversation.activeProviders);
   updatedProviders.add(providerId);
@@ -127,7 +127,7 @@ export function addProviderToConversation(
  */
 export function removeProviderFromConversation(
   conversation: Conversation,
-  providerId: ProviderId
+  providerId: ProviderId,
 ): Conversation {
   const updatedProviders = new Set(conversation.activeProviders);
   updatedProviders.delete(providerId);
@@ -147,9 +147,7 @@ export function removeProviderFromConversation(
  * @param message The ConversationMessage to convert
  * @returns A ChatMessage object
  */
-export function conversationMessageToChatMessage(
-  message: ConversationMessage
-): ChatMessage {
+export function conversationMessageToChatMessage(message: ConversationMessage): ChatMessage {
   return {
     role: message.role,
     content: message.content,
@@ -173,7 +171,7 @@ export function extractChatMessages(conversation: Conversation): ChatMessage[] {
  */
 export function findConversationById(
   conversations: Conversation[],
-  id: ConversationId
+  id: ConversationId,
 ): Conversation | undefined {
   return conversations.find((conv) => conv.id === id);
 }
@@ -183,12 +181,8 @@ export function findConversationById(
  * @param conversations An array of Conversation objects to sort
  * @returns A new sorted array of Conversation objects
  */
-export function sortConversationsByLastUpdate(
-  conversations: Conversation[]
-): Conversation[] {
+export function sortConversationsByLastUpdate(conversations: Conversation[]): Conversation[] {
   return [...conversations].sort(
-    (a, b) =>
-      new Date(b.metadata.updatedAt).getTime() -
-      new Date(a.metadata.updatedAt).getTime()
+    (a, b) => new Date(b.metadata.updatedAt).getTime() - new Date(a.metadata.updatedAt).getTime(),
   );
 }

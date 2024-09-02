@@ -10,15 +10,15 @@ input_variables:
   genre:
     type: string
     description: The specific genre or style of the story
-    place_holder: "Humour et satire politique"
+    place_holder: 'Humour et satire politique'
   role:
     type: string
     description: The persona or character perspective to write from
-    place_holder: "Gaspar PROUST"
+    place_holder: 'Gaspar PROUST'
   lang:
     type: string
     description: The language in which the story should be written
-    place_holder: "Français"
+    place_holder: 'Français'
   max_length:
     type: number
     description: The maximum word count for the story

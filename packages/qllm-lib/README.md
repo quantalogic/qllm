@@ -1,6 +1,7 @@
 # 🚀 qllm-lib
 
 ## 📚 Table of Contents
+
 - [Introduction](#-introduction)
 - [Installation](#-installation)
 - [Usage](#-usage)
@@ -227,7 +228,7 @@ async function chatTurn(userMessage: string) {
   });
 
   const history = await conversationManager.getHistory(conversation.id);
-  const messages = history.map(msg => ({ role: msg.role, content: msg.content }));
+  const messages = history.map((msg) => ({ role: msg.role, content: msg.content }));
 
   const result = await provider.generateChatCompletion({
     messages,
@@ -296,7 +297,7 @@ input_variables:
   genre:
     type: string
     description: The genre of the story
-    default: "Science Fiction"
+    default: 'Science Fiction'
   protagonist:
     type: string
     description: The main character of the story
@@ -348,7 +349,7 @@ input_variables:
   genre:
     type: string
     description: The genre of the story
-    default: "Science Fiction"
+    default: 'Science Fiction'
   protagonist:
     type: string
     description: The main character of the story
@@ -361,7 +362,7 @@ parameters:
   top_p: 0.9
   top_k: 50
   seed: 42
-  system_message: "You are a creative storyteller."
+  system_message: 'You are a creative storyteller.'
 content: >
   Write a {{genre}} story featuring a protagonist named {{protagonist}} set in {{setting}}. 
   The story should be approximately 200 words long.
@@ -391,8 +392,6 @@ output_variables:
 
 Inferred variables are automatically determined by the system based on the content of the template. For example, if your template content includes `{{variable_name}}`, the system will infer that `variable_name` is an input variable, even if it's not explicitly defined in the `input_variables` section.
 
-
-
 ## 4. Template Include
 
 Template inclusion allows you to modularize your prompts by including content from external files. This is particularly useful for managing complex prompts or reusing common sections across multiple templates.
@@ -408,6 +407,7 @@ To include a file in your template, use the following syntax:
 ### Example
 
 main_template.yaml:
+
 ```yaml
 name: comprehensive_analysis
 version: '1.0'
@@ -428,6 +428,7 @@ content: >
 ```
 
 analysis_intro.md:
+
 ```markdown
 # Comprehensive Analysis
 
@@ -435,6 +436,7 @@ This analysis will provide a detailed examination of the given topic, covering v
 ```
 
 analysis_steps.md:
+
 ```markdown
 ## Analysis Steps
 
@@ -446,6 +448,7 @@ analysis_steps.md:
 ```
 
 analysis_conclusion.md:
+
 ```markdown
 ## Conclusion
 
@@ -495,7 +498,6 @@ This project is licensed under the Apache License, Version 2.0. You may obtain a
 http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
 
 ## 👋 Why We Created QuantaLogic
 

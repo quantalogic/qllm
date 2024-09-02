@@ -18,7 +18,7 @@ export const createAwsBedrockAnthropicProvider = async () => {
     awsSessionToken: credentials.sessionToken,
     awsRegion: region(),
   });
-  
+
   // Import AnthropicProvider dynamically to avoid circular dependency
   const { AnthropicProvider } = await import('./index');
   return new AnthropicProvider({ client });

@@ -32,7 +32,11 @@ export interface LLMProvider extends AIProvider {
 
 // Error Handling Classes
 export class LLMProviderError extends Error {
-  constructor(message: string, public providerName: string, public errorCode?: string) {
+  constructor(
+    message: string,
+    public providerName: string,
+    public errorCode?: string,
+  ) {
     super(message);
     this.name = 'LLMProviderError';
   }
@@ -68,7 +72,10 @@ export abstract class BaseLLMProvider implements LLMProvider {
     }
   }
 
-  protected withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessageWithSystem[] {
+  protected withSystemMessage(
+    options: LLMOptions,
+    messages: ChatMessage[],
+  ): ChatMessageWithSystem[] {
     return options.systemMessage && options.systemMessage.length > 0
       ? [
           {

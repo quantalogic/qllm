@@ -18,8 +18,6 @@ import { listModels as listBedrockModels } from '../../utils/cloud/aws/bedrock';
 import { region, getAwsCredential } from './aws-credentials';
 import { DEFAULT_MAX_TOKENS, DEFAULT_MODEL } from './constants';
 
-
-
 export class AnthropicProvider extends BaseLLMProvider {
   private client: Anthropic | AnthropicBedrock;
   public readonly name = 'Anthropic';

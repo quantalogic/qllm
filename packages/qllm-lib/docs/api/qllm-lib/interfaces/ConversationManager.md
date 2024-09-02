@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / ConversationManager
 
@@ -36,7 +36,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:46](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L46)
 
-***
+---
 
 ### addProvider()
 
@@ -56,7 +56,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:52](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L52)
 
-***
+---
 
 ### clearConversation()
 
@@ -74,7 +74,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:58](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L58)
 
-***
+---
 
 ### clearHistory()
 
@@ -92,7 +92,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:54](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L54)
 
-***
+---
 
 ### createConversation()
 
@@ -110,7 +110,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:41](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L41)
 
-***
+---
 
 ### deleteAllConversations()
 
@@ -124,7 +124,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:63](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L63)
 
-***
+---
 
 ### deleteConversation()
 
@@ -142,7 +142,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:44](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L44)
 
-***
+---
 
 ### displayConversation()
 
@@ -160,7 +160,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:61](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L61)
 
-***
+---
 
 ### exportConversation()
 
@@ -178,7 +178,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:56](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L56)
 
-***
+---
 
 ### getConversation()
 
@@ -196,7 +196,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:42](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L42)
 
-***
+---
 
 ### getHistory()
 
@@ -214,7 +214,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:50](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L50)
 
-***
+---
 
 ### importConversation()
 
@@ -232,7 +232,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:57](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L57)
 
-***
+---
 
 ### listAllConversations()
 
@@ -246,7 +246,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:60](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L60)
 
-***
+---
 
 ### listConversations()
 
@@ -260,7 +260,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:45](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L45)
 
-***
+---
 
 ### removeProvider()
 
@@ -280,7 +280,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:53](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L53)
 
-***
+---
 
 ### searchConversations()
 
@@ -298,7 +298,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:55](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L55)
 
-***
+---
 
 ### selectConversation()
 
@@ -316,7 +316,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:62](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L62)
 
-***
+---
 
 ### setMetadata()
 
@@ -336,7 +336,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:51](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L51)
 
-***
+---
 
 ### startNewConversation()
 
@@ -354,7 +354,7 @@
 
 [packages/qllm-lib/src/types/conversations-types.ts:59](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/conversations-types.ts#L59)
 
-***
+---
 
 ### updateConversation()
 

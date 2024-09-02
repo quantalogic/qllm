@@ -22,12 +22,13 @@ Welcome to QLLM CLI, the ultimate command-line interface for seamless interactio
 In today's AI-driven landscape, QLLM CLI emerges as a game-changing solution for developers, researchers, and AI enthusiasts alike. Whether you're integrating AI into your workflow, exploring the frontiers of language models, or simply engaging in thought-provoking conversations with AI, QLLM CLI provides the robust toolkit you need.
 
 Key Highlights:
-- Multi-provider support (OpenAI, Anthropic, and more)
-- Rich, interactive chat experiences with advanced conversation management
-- Efficient one-time question answering for quick insights
-- Cutting-edge image input capabilities for visual analysis tasks
-- Fine-grained control over model parameters for tailored responses
-- Comprehensive configuration options for a personalized experience
+
+-   Multi-provider support (OpenAI, Anthropic, and more)
+-   Rich, interactive chat experiences with advanced conversation management
+-   Efficient one-time question answering for quick insights
+-   Cutting-edge image input capabilities for visual analysis tasks
+-   Fine-grained control over model parameters for tailored responses
+-   Comprehensive configuration options for a personalized experience
 
 Embrace the future of AI interaction with QLLM CLI – your gateway to boundless possibilities in the world of language models.
 
@@ -42,18 +43,20 @@ QLLM CLI boasts an impressive array of features designed to elevate your AI inte
 3. **❓ One-time Question Answering**: Quickly obtain answers to standalone queries without the need for a full chat session.
 
 4. **🖼️ Image Input Support**: Analyze images from multiple sources:
-   - Local files on your system
-   - URLs pointing to online images
-   - Images from your clipboard
-   - Screenshots captured directly through the CLI
+
+    - Local files on your system
+    - URLs pointing to online images
+    - Images from your clipboard
+    - Screenshots captured directly through the CLI
 
 5. **🎛️ Customizable Model Parameters**: Fine-tune AI behavior with adjustable settings:
-   - Temperature
-   - Max tokens
-   - Top P
-   - Frequency penalty
-   - Presence penalty
-   - Stop sequences
+
+    - Temperature
+    - Max tokens
+    - Top P
+    - Frequency penalty
+    - Presence penalty
+    - Stop sequences
 
 6. **🗂️ Conversation Management**: Efficiently save, list, load, and delete chat histories for easy reference and continuation of previous interactions.
 
@@ -108,18 +111,18 @@ qllm configure
 This guided process helps you set up API keys and default preferences across several sections:
 
 1. Provider Settings
-   - Default Provider
-   - Default Model
+    - Default Provider
+    - Default Model
 2. Model Parameters
-   - Temperature
-   - Max Tokens
-   - Top P
-   - Frequency Penalty
-   - Presence Penalty
+    - Temperature
+    - Max Tokens
+    - Top P
+    - Frequency Penalty
+    - Presence Penalty
 3. Other Settings
-   - Log Level
-   - Custom Prompt Directory
-   - Stop Sequence
+    - Log Level
+    - Custom Prompt Directory
+    - Stop Sequence
 
 ### Command-line Configuration
 
@@ -130,6 +133,7 @@ qllm configure --set <key> <value>
 ```
 
 Examples:
+
 ```bash
 qllm configure --set defaultProvider openai
 qllm configure --set apiKeys.openai your_api_key_here
@@ -169,16 +173,16 @@ qllm ask "Explain quantum computing" -p openai -m gpt-4
 
 The `ask` command supports various options:
 
-- `-p, --provider <provider>`: Specify the LLM provider (default: openai)
-- `-m, --model <model>`: Choose a specific model
-- `-t, --max-tokens <number>`: Set maximum tokens for the response
-- `--temperature <number>`: Adjust output randomness (0.0 to 1.0)
-- `-s, --stream`: Stream the response in real-time
-- `-o, --output <file>`: Save the response to a file
-- `-i, --image <path>`: Include image files or URLs (can be used multiple times)
-- `--use-clipboard`: Use an image from your clipboard
-- `--screenshot <number>`: Capture and include a screenshot
-- `--system-message <message>`: Prepend a system message to the conversation
+-   `-p, --provider <provider>`: Specify the LLM provider (default: openai)
+-   `-m, --model <model>`: Choose a specific model
+-   `-t, --max-tokens <number>`: Set maximum tokens for the response
+-   `--temperature <number>`: Adjust output randomness (0.0 to 1.0)
+-   `-s, --stream`: Stream the response in real-time
+-   `-o, --output <file>`: Save the response to a file
+-   `-i, --image <path>`: Include image files or URLs (can be used multiple times)
+-   `--use-clipboard`: Use an image from your clipboard
+-   `--screenshot <number>`: Capture and include a screenshot
+-   `--system-message <message>`: Prepend a system message to the conversation
 
 #### Using with Piped Input
 
@@ -206,7 +210,7 @@ qllm ask "Write a short story about AI" -s
 
 #### Saving Output to File
 
-```bash
+````bash
 qllm ask "Explain the theory of relativity" -o relativity_explanation.txt
 
 
@@ -217,25 +221,25 @@ Start an interactive chat session:
 
 ```bash
 qllm chat
-```
+````
 
 In chat mode, utilize various commands to manage your conversation:
 
-- `/help`: Display available commands
-- `/stop`: End the chat session
-- `/new`: Start a new conversation
-- `/save`: Save the current conversation
-- `/load`: Load a saved conversation
-- `/list`: Show all messages in the current conversation
-- `/clear`: Clear the current conversation
-- `/models`: List available models for the current provider
-- `/providers`: List available providers
-- `/options`: Display current chat options
-- `/set <option> <value>`: Set a chat option
-- `/image <path>`: Add an image to the conversation
-- `/clearimages`: Clear all images from the buffer
-- `/listimages`: List all images in the buffer
-- `/removeimage <path>`: Remove a specific image from the buffer
+-   `/help`: Display available commands
+-   `/stop`: End the chat session
+-   `/new`: Start a new conversation
+-   `/save`: Save the current conversation
+-   `/load`: Load a saved conversation
+-   `/list`: Show all messages in the current conversation
+-   `/clear`: Clear the current conversation
+-   `/models`: List available models for the current provider
+-   `/providers`: List available providers
+-   `/options`: Display current chat options
+-   `/set <option> <value>`: Set a chat option
+-   `/image <path>`: Add an image to the conversation
+-   `/clearimages`: Clear all images from the buffer
+-   `/listimages`: List all images in the buffer
+-   `/removeimage <path>`: Remove a specific image from the buffer
 
 The `chat` command also supports options similar to the `ask` command for setting the provider, model, and other parameters.
 
@@ -255,10 +259,10 @@ qllm list models openai
 
 The `list models` command offers several options:
 
-- `-f, --full`: Show full model details
-- `-s, --sort <field>`: Sort models by field (id, created)
-- `-r, --reverse`: Reverse sort order
-- `-c, --columns <columns>`: Select specific columns to display (comma-separated: id,description,created)
+-   `-f, --full`: Show full model details
+-   `-s, --sort <field>`: Sort models by field (id, created)
+-   `-r, --reverse`: Reverse sort order
+-   `-c, --columns <columns>`: Select specific columns to display (comma-separated: id,description,created)
 
 ### Configuration Management
 
@@ -331,11 +335,11 @@ This is particularly useful for long responses or when you want to process the o
 
 QLLM CLI provides robust conversation management features in chat mode:
 
-- Save conversations: `/save`
-- List saved conversations: `/conversations`
-- Load a saved conversation: `/load <conversation_id>`
-- Delete a conversation: `/delete <conversation_id>`
-- Clear the current conversation: `/clear`
+-   Save conversations: `/save`
+-   List saved conversations: `/conversations`
+-   Load a saved conversation: `/load <conversation_id>`
+-   Delete a conversation: `/delete <conversation_id>`
+-   Clear the current conversation: `/clear`
 
 These features allow you to maintain context across multiple chat sessions and organize your interactions with the AI.
 
@@ -343,11 +347,11 @@ These features allow you to maintain context across multiple chat sessions and o
 
 Quick reference of main QLLM CLI commands:
 
-- `qllm ask <question>`: Ask a one-time question
-- `qllm chat`: Start an interactive chat session
-- `qllm configure`: Configure QLLM CLI settings
-- `qllm list providers`: List all available providers
-- `qllm list models <provider>`: List models for a specific provider
+-   `qllm ask <question>`: Ask a one-time question
+-   `qllm chat`: Start an interactive chat session
+-   `qllm configure`: Configure QLLM CLI settings
+-   `qllm list providers`: List all available providers
+-   `qllm list models <provider>`: List models for a specific provider
 
 Each command supports various options. Use `qllm <command> --help` for detailed information on each command's options.
 
@@ -356,49 +360,58 @@ Each command supports various options. Use `qllm <command> --help` for detailed 
 Explore these example use cases for QLLM CLI:
 
 1. Creative Writing Assistance:
-   ```bash
-   qllm ask "Write a haiku about artificial intelligence"
-   ```
+
+    ```bash
+    qllm ask "Write a haiku about artificial intelligence"
+    ```
 
 2. Code Explanation:
-   ```bash
-   qllm ask "Explain this Python code: [paste your code here]"
-   ```
+
+    ```bash
+    qllm ask "Explain this Python code: [paste your code here]"
+    ```
 
 3. Image Analysis:
-   ```bash
-   qllm ask "Describe the contents of this image" -i vacation_photo.jpg
-   ```
+
+    ```bash
+    qllm ask "Describe the contents of this image" -i vacation_photo.jpg
+    ```
 
 4. Interactive Problem-Solving:
-   ```bash
-   qllm chat -p anthropic -m claude-2
-   ```
+
+    ```bash
+    qllm chat -p anthropic -m claude-2
+    ```
 
 5. Data Analysis:
-   ```bash
-   qllm ask "Analyze this CSV data: [paste CSV here]" --max-tokens 500
-   ```
+
+    ```bash
+    qllm ask "Analyze this CSV data: [paste CSV here]" --max-tokens 500
+    ```
 
 6. Language Translation:
-   ```bash
-   qllm ask "Translate 'Hello, world!' to French, Spanish, and Japanese"
-   ```
+
+    ```bash
+    qllm ask "Translate 'Hello, world!' to French, Spanish, and Japanese"
+    ```
 
 7. Document Summarization:
-   ```bash
-   qllm ask "Summarize this article: [paste article text]" -o summary.txt
-   ```
+
+    ```bash
+    qllm ask "Summarize this article: [paste article text]" -o summary.txt
+    ```
 
 8. Character Creation:
-   ```bash
-   qllm ask "Create a detailed character profile for a sci-fi novel"
-   ```
+
+    ```bash
+    qllm ask "Create a detailed character profile for a sci-fi novel"
+    ```
 
 9. Recipe Generation:
-   ```bash
-   qllm ask "Create a recipe using chicken, spinach, and feta cheese"
-   ```
+
+    ```bash
+    qllm ask "Create a recipe using chicken, spinach, and feta cheese"
+    ```
 
 10. Workout Planning:
     ```bash
@@ -410,17 +423,20 @@ Explore these example use cases for QLLM CLI:
 If you encounter issues while using QLLM CLI, try these troubleshooting steps:
 
 1. Verify your API keys are correctly configured:
-   ```bash
-   qllm configure --list
-   ```
-   Ensure that your API keys are set for the providers you're trying to use.
+
+    ```bash
+    qllm configure --list
+    ```
+
+    Ensure that your API keys are set for the providers you're trying to use.
 
 2. Check your internet connection. QLLM CLI requires an active internet connection to communicate with LLM providers.
 
 3. Update to the latest version of QLLM CLI:
-   ```bash
-   npm update -g qllm
-   ```
+
+    ```bash
+    npm update -g qllm
+    ```
 
 4. Ensure you're using a supported Node.js version (14 or higher).
 
@@ -442,19 +458,19 @@ We warmly welcome contributions to QLLM CLI! To contribute, please follow these 
 4. Make your changes, adhering to the existing code style and conventions.
 5. Write tests for your changes if applicable.
 6. Run the existing test suite to ensure your changes don't introduce regressions:
-   ```bash
-   npm test
-   ```
+    ```bash
+    npm test
+    ```
 7. Commit your changes with a clear and descriptive commit message.
 8. Push your changes to your fork on GitHub.
 9. Create a pull request from your fork to the main QLLM CLI repository.
 
 Please ensure your code adheres to our coding standards:
 
-- Use TypeScript for type safety.
-- Follow the existing code style (we use Prettier for formatting).
-- Write unit tests for new features.
-- Update documentation as necessary, including this README if you're adding or changing features.
+-   Use TypeScript for type safety.
+-   Follow the existing code style (we use Prettier for formatting).
+-   Write unit tests for new features.
+-   Update documentation as necessary, including this README if you're adding or changing features.
 
 We use GitHub Actions for CI/CD, so make sure your changes pass all automated checks.
 
@@ -470,10 +486,10 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 QLLM CLI stands on the shoulders of giants. We extend our heartfelt gratitude to the developers and maintainers of:
 
-- [Commander.js](https://github.com/tj/commander.js/): For robust command-line interfaces
-- [Prompts](https://github.com/terkelg/prompts): For interactive command-line user interfaces
-- [Kleur](https://github.com/lukeed/kleur): For adding vibrant colors to our CLI output
-- [Nanospinner](https://github.com/usmanyunusov/nanospinner): For elegant loading spinners
+-   [Commander.js](https://github.com/tj/commander.js/): For robust command-line interfaces
+-   [Prompts](https://github.com/terkelg/prompts): For interactive command-line user interfaces
+-   [Kleur](https://github.com/lukeed/kleur): For adding vibrant colors to our CLI output
+-   [Nanospinner](https://github.com/usmanyunusov/nanospinner): For elegant loading spinners
 
 ## Why We Created QuantaLogic
 
