@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm run -r build",
-    "test": "pnpm -r run test",
+    "test": "pnpm -r run test --passWithNoTests",
     "lint": "pnpm -r run lint",
     "format": "pnpm -r run format",
     "clean": "pnpm -r run clean",
