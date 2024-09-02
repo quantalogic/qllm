@@ -83,7 +83,11 @@
     "rimraf": "^5.0.0",
     "@npmcli/move-file": "npm:@npmcli/fs@latest",
     "are-we-there-yet": "latest",
-    "gauge": "latest"
+    "gauge": "latest",
+    "@aws-sdk/client-sts": "^3.637.0",
+    "@aws-sdk/credential-provider-node": "^3.637.0",
+    "@aws-sdk/credential-provider-ini": "^3.637.0",
+    "@aws-sdk/credential-provider-web-identity": "^3.637.0"
   },
   "publishConfig": {
     "access": "public"
