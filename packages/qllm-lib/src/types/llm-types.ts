@@ -1,5 +1,3 @@
-import { strict } from 'assert';
-import { Chat } from 'openai/resources';
 import { z } from 'zod';
 
 // -------------------- Chat Message Types --------------------
@@ -97,7 +95,7 @@ export interface GenerationOptions {
   // Adjust likelihood of specific tokens appearing in the output
   logitBias?: Record<string, number> | null;
   // Whether to return log probabilities of the output tokens
-  logprobs?: boolean | null;
+  logprobs?: number | null;
   // Sequences where the API will stop generating further tokens
   stop?: string | string[] | null;
   // Penalize new tokens based on their existing frequency in the text so far

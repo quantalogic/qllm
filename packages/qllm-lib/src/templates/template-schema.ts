@@ -37,57 +37,55 @@ export const outputVariableSchema = z
 export const templateDefinitionSchema = z
   .object({
     name: z.string().describe('The name of the template.'),
-    version: z.string().describe('The version of the template.'),
-    description: z.string().describe('A detailed description of the template.'),
-    author: z.string().describe('The author of the template.'),
-    provider: z.string().optional().describe('The provider of the template, if applicable.'),
+    version: z.string().describe('The version of the template, following semantic versioning.'),
+    description: z.string().describe('A detailed description of the template and its purpose.'),
+    author: z.string().describe('The name or identifier of the template author.'),
+    provider: z.string().optional().describe('The organization or platform providing the template.'),
     tags: z
       .array(z.string())
       .optional()
-      .describe('Tags associated with the template for categorization.'),
-    categories: z.array(z.string()).optional().describe('Categories that the template belongs to.'),
-    model: z.string().optional().describe('The model associated with the template, if applicable.'),
+      .describe('Keywords or labels for easy template discovery and categorization.'),
+    categories: z.array(z.string()).optional().describe('Broader categories the template falls under.'),
+    model: z.string().optional().describe('The specific AI model the template is designed for.'),
     input_variables: z
       .record(z.string(), templateVariableSchema)
       .optional()
-      .describe('Input variables for the template, defined by their names.'),
+      .describe('Definitions of input variables required by the template.'),
     output_variables: z
       .record(z.string(), outputVariableSchema)
       .optional()
-      .describe('Output variables for the template, defined by their names.'),
-    content: z.string().describe('The main content of the template.'),
+      .describe('Specifications for expected output variables from the template.'),
+    content: z.string().describe('The main prompt or instruction text of the template.'),
     parameters: z
       .object({
-        max_tokens: z.number().optional().describe('The maximum number of tokens to generate.'),
-        temperature: z
-          .number()
-          .optional()
-          .describe('Controls the randomness of the output; higher values mean more randomness.'),
-        top_p: z
-          .number()
-          .optional()
-          .describe('Nucleus sampling parameter; controls diversity via cumulative probability.'),
-        top_k: z.number().optional().describe('Limits the sampling to the top k tokens.'),
+        max_tokens: z.number().optional().describe('Maximum number of tokens in the generated output.'),
+        temperature: z.number().optional().describe('Controls randomness in output generation (0-1).'),
+        top_p: z.number().optional().describe('Nucleus sampling parameter for output diversity.'),
+        top_k: z.number().optional().describe('Limits vocabulary for each generation step.'),
+        seed: z.number().optional().describe('Random seed for reproducible outputs.'),
+        system_message: z.string().optional().describe('Initial context or instruction for the AI model.'),
+        frequency_penalty: z.number().optional().describe('Penalizes frequent token usage (-2.0 to 2.0).'),
+        presence_penalty: z.number().optional().describe('Encourages topic diversity (-2.0 to 2.0).'),
+        logit_bias: z.record(z.number()).optional().describe('Adjusts likelihood of specific tokens.'),
+        logprobs: z.number().optional().describe('Number of most likely tokens to return with probabilities.'),
+        stop_sequences: z.array(z.string()).optional().describe('Sequences that trigger output completion.'),
       })
       .optional()
-      .describe('Parameters for controlling the generation process.'),
-
+      .describe('Fine-tuning parameters for the AI model\'s behavior.'),
     prompt_type: z
       .string()
-      .describe(
-        'The type of prompt, such as text generation, question answering, summarization, or translation.',
-      )
+      .describe('Categorizes the template\'s primary function or output type.')
       .optional(),
     task_description: z
       .string()
-      .describe('A description of the task the prompt is designed for.')
+      .describe('Detailed explanation of the task the template is designed to accomplish.')
       .optional(),
     example_outputs: z
       .array(z.string())
       .optional()
-      .describe('Example outputs for the prompt, if available.'),
+      .describe('Sample outputs demonstrating expected results from the template.'),
   })
-  .describe('Schema for defining a template.');
+  .describe('Comprehensive schema for defining an AI prompt template.');
 
 export const templateDefinitionSchemaWithResolvedContent = templateDefinitionSchema.extend({
   resolved_content: z.string().optional().describe('The resolved content of the variable.'),

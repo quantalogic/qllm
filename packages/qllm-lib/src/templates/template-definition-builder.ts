@@ -209,7 +209,52 @@ export class TemplateDefinitionBuilder {
   }
 
   withParameters(parameters: TemplateDefinition['parameters']): this {
-    this.definition.parameters = { ...this.definition.parameters, ...parameters };
+    this.definition.parameters = {
+      ...this.definition.parameters,
+      ...parameters,
+    };
+    return this;
+  }
+
+  withSeed(seed: number): this {
+    if (!this.definition.parameters) this.definition.parameters = {};
+    this.definition.parameters.seed = seed;
+    return this;
+  }
+
+  withSystemMessage(systemMessage: string): this {
+    if (!this.definition.parameters) this.definition.parameters = {};
+    this.definition.parameters.system_message = systemMessage;
+    return this;
+  }
+
+  withFrequencyPenalty(frequencyPenalty: number): this {
+    if (!this.definition.parameters) this.definition.parameters = {};
+    this.definition.parameters.frequency_penalty = frequencyPenalty;
+    return this;
+  }
+
+  withPresencePenalty(presencePenalty: number): this {
+    if (!this.definition.parameters) this.definition.parameters = {};
+    this.definition.parameters.presence_penalty = presencePenalty;
+    return this;
+  }
+
+  withLogitBias(logitBias: Record<string, number>): this {
+    if (!this.definition.parameters) this.definition.parameters = {};
+    this.definition.parameters.logit_bias = logitBias;
+    return this;
+  }
+
+  withLogprobs(logprobs: number): this {
+    if (!this.definition.parameters) this.definition.parameters = {};
+    this.definition.parameters.logprobs = logprobs;
+    return this;
+  }
+
+  withStopSequences(...stopSequences: string[]): this {
+    if (!this.definition.parameters) this.definition.parameters = {};
+    this.definition.parameters.stop_sequences = stopSequences;
     return this;
   }
 

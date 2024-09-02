@@ -34,13 +34,6 @@ const runAction = async (
       ioManager
     );
 
-    const providerName =
-      validOptions.provider ||
-      cliConfig.get("defaultProvider") ||
-      DEFAULT_PROVIDER;
-    const modelName =
-      validOptions.model || cliConfig.get("defaultModel") || DEFAULT_MODEL;
-
     const spinner = ioManager.createSpinner("Processing template...");
     spinner.start();
 
@@ -48,6 +41,18 @@ const runAction = async (
       spinner.update({ text: "Loading template..." });
       const template = await TemplateLoader.load(templateSource);
       spinner.stop();
+
+      const providerName =
+        validOptions.provider ||
+        template.provider ||
+        cliConfig.get("defaultProvider") ||
+        DEFAULT_PROVIDER;
+
+      const modelName =
+        validOptions.model ||
+        template.model ||
+        cliConfig.get("defaultModel") ||
+        DEFAULT_MODEL;
 
       const variables = parseVariables(validOptions.variables);
       const executor = setupExecutor(ioManager, spinner);
@@ -58,8 +63,18 @@ const runAction = async (
         variables: { ...variables },
         providerOptions: {
           model: modelName,
-          maxTokens: validOptions.maxTokens,
-          temperature: validOptions.temperature,
+          maxTokens: template.parameters?.max_tokens || validOptions.maxTokens,
+          temperature:
+            template.parameters?.temperature || validOptions.temperature,
+          topKTokens: template.parameters?.top_k,
+          topProbability: template.parameters?.top_p,
+          seed: template.parameters?.seed,
+          systemMessage: template.parameters?.system_message,
+          frequencyPenalty: template.parameters?.frequency_penalty,
+          presencePenalty: template.parameters?.presence_penalty,
+          logitBias: template.parameters?.logit_bias,
+          logprobs: template.parameters?.logprobs,
+          stop: template.parameters?.stop_sequences,
         },
         provider,
         stream: validOptions.stream,

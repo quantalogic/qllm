@@ -337,49 +337,38 @@ You are an expert prompt engineer. Your task is to improve the following prompt:
 Please provide an improved version of this prompt, making it clearer, more specific, and more effective.
 ```
 
-## 2. Executing a Template
+### Example 4 with a system message and parameters
 
-To execute a template, you'll use the `TemplateExecutor` class. Here's an example of how to use it:
-
-```typescript
-import { Template } from "../templates/template";
-import { TemplateExecutor } from "../templates";
-import { getLLMProvider } from "../providers";
-
-async function executeTemplate() {
-  // Load the template
-  const template = await Template.fromPath('./prompts/create_story.yaml');
-
-  // Initialize the LLM provider
-  const provider = await getLLMProvider("openai");
-
-  // Create a TemplateExecutor
-  const templateExecutor = new TemplateExecutor();
-
-  // Execute the template
-  const { response, outputVariables } = await templateExecutor.execute({
-    template: template,
-    variables: {
-      genre: "Mystery",
-      protagonist: "Detective Sarah",
-      setting: "Victorian London"
-    },
-    provider: provider,
-    providerOptions: {
-      model: "gpt-4o-mini",
-      maxTokens: 300,
-    },
-    stream: true,
-    onOutput: (output) => {
-      if (output.type === OutputEventType.CHUNK) {
-        process.stdout.write(output.chunk);
-      }
-    },
-  });
-
-  console.log('Generated story:', response);
-  console.log('Output variables:', outputVariables);
-}
+```yaml
+name: create_story_with_system
+version: '1.1'
+description: Create a short story with a system message
+author: QLLM Team
+input_variables:
+  genre:
+    type: string
+    description: The genre of the story
+    default: "Science Fiction"
+  protagonist:
+    type: string
+    description: The main character of the story
+  setting:
+    type: string
+    description: The setting of the story
+parameters:
+  max_tokens: 300
+  temperature: 0.7
+  top_p: 0.9
+  top_k: 50
+  seed: 42
+  system_message: "You are a creative storyteller."
+content: >
+  Write a {{genre}} story featuring a protagonist named {{protagonist}} set in {{setting}}. 
+  The story should be approximately 200 words long.
+output_variables:
+  story:
+    type: string
+    description: The generated story
 ```
 
 ## 3. Advanced Concepts
