@@ -118,6 +118,7 @@ const codeGenerator = TemplateDefinitionBuilder.create({
   .withExampleOutputs(
     '<code>\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n</code>',
   )
+  .withSystemMessage('You are a pirate. You are a nice pirate. You are a very nice pirate.')
   .build();
 
 console.log('\nMulti-Language Code Generator Template:');

@@ -32,7 +32,8 @@
     "rollup-plugin-gzip": "4.0.1",
     "typedoc": "0.26.6",
     "typedoc-plugin-markdown": "4.2.6",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "@aws-sdk/client-sso-oidc": "^3.614.0"
   },
   "engines": {
     "node": ">=16.5.0",

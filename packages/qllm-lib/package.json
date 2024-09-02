@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "3.2.1",
+  "version": "3.4.0",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -63,6 +63,8 @@
     "@anthropic-ai/bedrock-sdk": "^0.10.2",
     "@anthropic-ai/sdk": "^0.27.0",
     "@aws-sdk/client-bedrock": "^3.637.0",
+    "@aws-sdk/client-sso-oidc": "^3.614.0",
+    "@aws-sdk/client-sts": "3.637.0",
     "@aws-sdk/credential-providers": "^3.637.0",
     "@mistralai/mistralai": "1.0.4",
     "axios": "^1.7.5",

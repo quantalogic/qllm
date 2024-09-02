@@ -58,7 +58,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       stop: options.stop,
-      logprobs: options.logprobs,
+      // Remove logprobs from here
       logit_bias: options.logitBias,
       top_logprobs: options.topLogprobs,
     };
@@ -87,6 +87,8 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         ...filteredOptions,
         model: model,
+        // Add logprobs as a boolean
+        logprobs: options.logprobs !== undefined,
       });
 
       const firstResponse = response.choices[0];
@@ -130,6 +132,8 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         ...filteredOptions,
         model: model,
         stream: true,
+        // Add logprobs as a boolean
+        logprobs: options.logprobs !== undefined,
       });
 
       for await (const chunk of stream) {
