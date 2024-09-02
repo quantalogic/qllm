@@ -1,5 +1,16 @@
 # qllm-lib
 
+## 3.4.0
+
+### Minor Changes
+
+- 4e20449: fix regex issues
+
+### Patch Changes
+
+- 6611cb9: - Add system message and LLM parameters support in template
+  - Update run command to use the parameters in the template
+
 ## 3.0.1
 
 ### Patch Changes
