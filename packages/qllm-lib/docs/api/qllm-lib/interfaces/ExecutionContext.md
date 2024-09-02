@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / ExecutionContext
 
@@ -24,33 +24,33 @@
 
 • **template.description**: `string` = `...`
 
-• **template.example\_outputs?**: `string`[] = `...`
+• **template.example_outputs?**: `string`[] = `...`
 
-• **template.input\_variables?**: `Record`\<`string`, `object`\> = `...`
+• **template.input_variables?**: `Record`\<`string`, `object`\> = `...`
 
 • **template.model?**: `string` = `...`
 
 • **template.name**: `string` = `...`
 
-• **template.output\_variables?**: `Record`\<`string`, `object`\> = `...`
+• **template.output_variables?**: `Record`\<`string`, `object`\> = `...`
 
 • **template.parameters?** = `...`
 
-• **template.parameters.max\_tokens?**: `number` = `...`
+• **template.parameters.max_tokens?**: `number` = `...`
 
 • **template.parameters.temperature?**: `number` = `...`
 
-• **template.parameters.top\_k?**: `number` = `...`
+• **template.parameters.top_k?**: `number` = `...`
 
-• **template.parameters.top\_p?**: `number` = `...`
+• **template.parameters.top_p?**: `number` = `...`
 
-• **template.prompt\_type?**: `string` = `...`
+• **template.prompt_type?**: `string` = `...`
 
 • **template.provider?**: `string` = `...`
 
 • **template.tags?**: `string`[] = `...`
 
-• **template.task\_description?**: `string` = `...`
+• **template.task_description?**: `string` = `...`
 
 • **template.version**: `string` = `...`
 
@@ -64,7 +64,7 @@
 
 [packages/qllm-lib/src/templates/types.ts:18](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/types.ts#L18)
 
-***
+---
 
 ### provider?
 
@@ -74,7 +74,7 @@
 
 [packages/qllm-lib/src/templates/types.ts:16](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/types.ts#L16)
 
-***
+---
 
 ### providerOptions?
 
@@ -84,7 +84,7 @@
 
 [packages/qllm-lib/src/templates/types.ts:15](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/types.ts#L15)
 
-***
+---
 
 ### stream?
 
@@ -94,7 +94,7 @@
 
 [packages/qllm-lib/src/templates/types.ts:17](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/types.ts#L17)
 
-***
+---
 
 ### template
 
@@ -116,13 +116,13 @@
 
 > **description**: `string`
 
-#### example\_outputs?
+#### example_outputs?
 
-> `optional` **example\_outputs**: `string`[]
+> `optional` **example_outputs**: `string`[]
 
-#### input\_variables?
+#### input_variables?
 
-> `optional` **input\_variables**: `Record`\<`string`, `object`\>
+> `optional` **input_variables**: `Record`\<`string`, `object`\>
 
 #### model?
 
@@ -132,33 +132,33 @@
 
 > **name**: `string`
 
-#### output\_variables?
+#### output_variables?
 
-> `optional` **output\_variables**: `Record`\<`string`, `object`\>
+> `optional` **output_variables**: `Record`\<`string`, `object`\>
 
 #### parameters?
 
 > `optional` **parameters**: `object`
 
-#### parameters.max\_tokens?
+#### parameters.max_tokens?
 
-> `optional` **max\_tokens**: `number`
+> `optional` **max_tokens**: `number`
 
 #### parameters.temperature?
 
 > `optional` **temperature**: `number`
 
-#### parameters.top\_k?
+#### parameters.top_k?
 
-> `optional` **top\_k**: `number`
+> `optional` **top_k**: `number`
 
-#### parameters.top\_p?
+#### parameters.top_p?
 
-> `optional` **top\_p**: `number`
+> `optional` **top_p**: `number`
 
-#### prompt\_type?
+#### prompt_type?
 
-> `optional` **prompt\_type**: `string`
+> `optional` **prompt_type**: `string`
 
 #### provider?
 
@@ -168,9 +168,9 @@
 
 > `optional` **tags**: `string`[]
 
-#### task\_description?
+#### task_description?
 
-> `optional` **task\_description**: `string`
+> `optional` **task_description**: `string`
 
 #### version
 
@@ -180,7 +180,7 @@
 
 [packages/qllm-lib/src/templates/types.ts:13](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/types.ts#L13)
 
-***
+---
 
 ### variables?
 

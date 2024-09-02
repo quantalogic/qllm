@@ -1,12 +1,12 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / TemplateVariable
 
 # Type Alias: TemplateVariable
 
-> **TemplateVariable**: `z.infer`\<*typeof* [`templateVariableSchema`](../variables/templateVariableSchema.md)\>
+> **TemplateVariable**: `z.infer`\<_typeof_ [`templateVariableSchema`](../variables/templateVariableSchema.md)\>
 
 ## Defined in
 

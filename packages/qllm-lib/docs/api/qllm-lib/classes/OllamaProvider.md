@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / OllamaProvider
 
@@ -43,7 +43,7 @@
 
 [packages/qllm-lib/src/providers/ollama/index.ts:60](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/ollama/index.ts#L60)
 
-***
+---
 
 ### name
 
@@ -57,7 +57,7 @@
 
 [packages/qllm-lib/src/providers/ollama/index.ts:41](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/ollama/index.ts#L41)
 
-***
+---
 
 ### version
 
@@ -93,7 +93,7 @@
 
 [packages/qllm-lib/src/providers/ollama/index.ts:79](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/ollama/index.ts#L79)
 
-***
+---
 
 ### generateEmbedding()
 
@@ -115,7 +115,7 @@
 
 [packages/qllm-lib/src/providers/ollama/index.ts:43](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/ollama/index.ts#L43)
 
-***
+---
 
 ### listModels()
 
@@ -133,7 +133,7 @@
 
 [packages/qllm-lib/src/providers/ollama/index.ts:64](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/ollama/index.ts#L64)
 
-***
+---
 
 ### streamChatCompletion()
 

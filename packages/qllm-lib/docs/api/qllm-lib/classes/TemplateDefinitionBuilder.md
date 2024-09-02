@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / TemplateDefinitionBuilder
 
@@ -32,13 +32,13 @@
 
 > **description**: `string`
 
-##### example\_outputs?
+##### example_outputs?
 
-> `optional` **example\_outputs**: `string`[]
+> `optional` **example_outputs**: `string`[]
 
-##### input\_variables?
+##### input_variables?
 
-> `optional` **input\_variables**: `Record`\<`string`, `object`\>
+> `optional` **input_variables**: `Record`\<`string`, `object`\>
 
 ##### model?
 
@@ -48,33 +48,33 @@
 
 > **name**: `string`
 
-##### output\_variables?
+##### output_variables?
 
-> `optional` **output\_variables**: `Record`\<`string`, `object`\>
+> `optional` **output_variables**: `Record`\<`string`, `object`\>
 
 ##### parameters?
 
 > `optional` **parameters**: `object`
 
-##### parameters.max\_tokens?
+##### parameters.max_tokens?
 
-> `optional` **max\_tokens**: `number`
+> `optional` **max_tokens**: `number`
 
 ##### parameters.temperature?
 
 > `optional` **temperature**: `number`
 
-##### parameters.top\_k?
+##### parameters.top_k?
 
-> `optional` **top\_k**: `number`
+> `optional` **top_k**: `number`
 
-##### parameters.top\_p?
+##### parameters.top_p?
 
-> `optional` **top\_p**: `number`
+> `optional` **top_p**: `number`
 
-##### prompt\_type?
+##### prompt_type?
 
-> `optional` **prompt\_type**: `string`
+> `optional` **prompt_type**: `string`
 
 ##### provider?
 
@@ -84,9 +84,9 @@
 
 > `optional` **tags**: `string`[]
 
-##### task\_description?
+##### task_description?
 
-> `optional` **task\_description**: `string`
+> `optional` **task_description**: `string`
 
 ##### version
 
@@ -96,7 +96,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:351](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L351)
 
-***
+---
 
 ### clone()
 
@@ -110,7 +110,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:77](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L77)
 
-***
+---
 
 ### generatePrompt()
 
@@ -128,7 +128,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:319](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L319)
 
-***
+---
 
 ### merge()
 
@@ -146,7 +146,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:276](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L276)
 
-***
+---
 
 ### setResolvedContent()
 
@@ -164,7 +164,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:72](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L72)
 
-***
+---
 
 ### toJSON()
 
@@ -178,7 +178,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:328](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L328)
 
-***
+---
 
 ### toYAML()
 
@@ -192,7 +192,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:332](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L332)
 
-***
+---
 
 ### validate()
 
@@ -206,7 +206,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:296](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L296)
 
-***
+---
 
 ### withCategories()
 
@@ -224,7 +224,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:119](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L119)
 
-***
+---
 
 ### withConditional()
 
@@ -246,7 +246,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:269](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L269)
 
-***
+---
 
 ### withCustomInputValidator()
 
@@ -266,7 +266,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:259](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L259)
 
-***
+---
 
 ### withExampleOutputs()
 
@@ -284,7 +284,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:241](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L241)
 
-***
+---
 
 ### withInputVariable()
 
@@ -306,7 +306,7 @@
 
 • **variable.inferred?**: `boolean` = `...`
 
-• **variable.place\_holder?**: `any` = `...`
+• **variable.place_holder?**: `any` = `...`
 
 • **variable.type**: `"string"` \| `"number"` \| `"boolean"` \| `"array"` = `...`
 
@@ -340,7 +340,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:145](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L145)
 
-***
+---
 
 ### withModel()
 
@@ -358,7 +358,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:134](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L134)
 
-***
+---
 
 ### withOutputVariable()
 
@@ -406,7 +406,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:180](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L180)
 
-***
+---
 
 ### withParameters()
 
@@ -424,7 +424,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:211](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L211)
 
-***
+---
 
 ### withPrompt()
 
@@ -442,7 +442,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:67](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L67)
 
-***
+---
 
 ### withPromptType()
 
@@ -460,7 +460,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:221](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L221)
 
-***
+---
 
 ### withProvider()
 
@@ -478,7 +478,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:96](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L96)
 
-***
+---
 
 ### withTags()
 
@@ -496,7 +496,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:106](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L106)
 
-***
+---
 
 ### withTaskDescription()
 
@@ -514,7 +514,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:231](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L231)
 
-***
+---
 
 ### withoutCategories()
 
@@ -532,7 +532,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:124](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L124)
 
-***
+---
 
 ### withoutExampleOutputs()
 
@@ -550,7 +550,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:249](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L249)
 
-***
+---
 
 ### withoutInputVariable()
 
@@ -568,7 +568,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:169](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L169)
 
-***
+---
 
 ### withoutModel()
 
@@ -582,7 +582,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:139](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L139)
 
-***
+---
 
 ### withoutOutputVariable()
 
@@ -600,7 +600,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:201](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L201)
 
-***
+---
 
 ### withoutParameters()
 
@@ -614,7 +614,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:216](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L216)
 
-***
+---
 
 ### withoutPromptType()
 
@@ -628,7 +628,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:226](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L226)
 
-***
+---
 
 ### withoutProvider()
 
@@ -642,7 +642,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:101](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L101)
 
-***
+---
 
 ### withoutTags()
 
@@ -660,7 +660,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:111](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L111)
 
-***
+---
 
 ### withoutTaskDescription()
 
@@ -674,7 +674,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:236](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L236)
 
-***
+---
 
 ### create()
 
@@ -702,7 +702,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:28](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L28)
 
-***
+---
 
 ### fromJSON()
 
@@ -720,7 +720,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:341](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L341)
 
-***
+---
 
 ### fromTemplate()
 
@@ -738,33 +738,33 @@
 
 • **template.description**: `string` = `...`
 
-• **template.example\_outputs?**: `string`[] = `...`
+• **template.example_outputs?**: `string`[] = `...`
 
-• **template.input\_variables?**: `Record`\<`string`, `object`\> = `...`
+• **template.input_variables?**: `Record`\<`string`, `object`\> = `...`
 
 • **template.model?**: `string` = `...`
 
 • **template.name**: `string` = `...`
 
-• **template.output\_variables?**: `Record`\<`string`, `object`\> = `...`
+• **template.output_variables?**: `Record`\<`string`, `object`\> = `...`
 
 • **template.parameters?** = `...`
 
-• **template.parameters.max\_tokens?**: `number` = `...`
+• **template.parameters.max_tokens?**: `number` = `...`
 
 • **template.parameters.temperature?**: `number` = `...`
 
-• **template.parameters.top\_k?**: `number` = `...`
+• **template.parameters.top_k?**: `number` = `...`
 
-• **template.parameters.top\_p?**: `number` = `...`
+• **template.parameters.top_p?**: `number` = `...`
 
-• **template.prompt\_type?**: `string` = `...`
+• **template.prompt_type?**: `string` = `...`
 
 • **template.provider?**: `string` = `...`
 
 • **template.tags?**: `string`[] = `...`
 
-• **template.task\_description?**: `string` = `...`
+• **template.task_description?**: `string` = `...`
 
 • **template.version**: `string` = `...`
 
@@ -776,7 +776,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:25](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L25)
 
-***
+---
 
 ### fromYAML()
 
@@ -794,7 +794,7 @@
 
 [packages/qllm-lib/src/templates/template-definition-builder.ts:346](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/templates/template-definition-builder.ts#L346)
 
-***
+---
 
 ### quickSetup()
 

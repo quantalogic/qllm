@@ -7,7 +7,6 @@ import gzip from 'rollup-plugin-gzip';
 
 const isProduction = false;
 
-
 export default {
   input: 'dist/tsc/index.js',
   output: [
@@ -38,7 +37,7 @@ export default {
     isProduction && gzip(),
   ],
   external: [
-/*    'openai',
+    /*    'openai',
     'groq-sdk',
     '@anthropic-ai/sdk',
     '@anthropic-ai/bedrock-sdk',

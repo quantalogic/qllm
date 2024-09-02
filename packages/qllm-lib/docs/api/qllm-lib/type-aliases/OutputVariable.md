@@ -1,12 +1,12 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / OutputVariable
 
 # Type Alias: OutputVariable
 
-> **OutputVariable**: `z.infer`\<*typeof* [`outputVariableSchema`](../variables/outputVariableSchema.md)\>
+> **OutputVariable**: `z.infer`\<_typeof_ [`outputVariableSchema`](../variables/outputVariableSchema.md)\>
 
 ## Defined in
 

@@ -34,7 +34,6 @@ export interface StorageProvider {
   delete(id: ConversationId): Promise<void>;
   list(): Promise<ConversationMetadata[]>;
   listConversations(): Promise<Conversation[]>; // Add this new method
-
 }
 
 export interface ConversationManager {
@@ -58,7 +57,7 @@ export interface ConversationManager {
   clearConversation(id: ConversationId): Promise<Conversation>;
   startNewConversation(options: CreateConversationOptions): Promise<Conversation>;
   listAllConversations(): Promise<Conversation[]>;
-  displayConversation(id: ConversationId): Promise<ConversationMessage[]>; 
+  displayConversation(id: ConversationId): Promise<ConversationMessage[]>;
   selectConversation(id: ConversationId): Promise<Conversation>;
   deleteAllConversations(): Promise<void>;
   storageProvider: StorageProvider;

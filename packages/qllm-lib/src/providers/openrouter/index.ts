@@ -45,7 +45,7 @@ export class OpenRouterProvider extends BaseLLMProvider implements LLMProvider {
         method,
         url: `${BASE_URL}${endpoint}`,
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         data,
@@ -57,16 +57,15 @@ export class OpenRouterProvider extends BaseLLMProvider implements LLMProvider {
   }
 
   async listModels(): Promise<Model[]> {
-
     const response = await this.makeRequest('/models', 'GET');
-  
+
     // Check if the response has a 'data' property that contains the array of models
     const models = response.data || response;
-  
+
     if (!Array.isArray(models)) {
       throw new Error('Unexpected response format from OpenRouter API');
     }
-  
+
     return models.map((model: any) => ({
       id: model.id,
       name: model.name,
@@ -74,7 +73,6 @@ export class OpenRouterProvider extends BaseLLMProvider implements LLMProvider {
       created: new Date(),
     }));
   }
-
 
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
@@ -134,7 +132,6 @@ export class OpenRouterProvider extends BaseLLMProvider implements LLMProvider {
     }
   }
 
-
   private getOptions(options: LLMOptions): LLMOptions {
     const optionsToInclude = {
       temperature: options.temperature,
@@ -146,7 +143,7 @@ export class OpenRouterProvider extends BaseLLMProvider implements LLMProvider {
     };
 
     return Object.fromEntries(
-      Object.entries(optionsToInclude).filter(([_, v]) => v != null)
+      Object.entries(optionsToInclude).filter(([_, v]) => v != null),
     ) as unknown as LLMOptions;
   }
 
@@ -157,7 +154,10 @@ export class OpenRouterProvider extends BaseLLMProvider implements LLMProvider {
       } else if (error.response?.status === 429) {
         throw new RateLimitError('Rate limit exceeded for OpenRouter', 'OpenRouter');
       } else if (error.response?.status === 400) {
-        throw new InvalidRequestError(`OpenRouter request failed: ${error.response.data.error}`, 'OpenRouter');
+        throw new InvalidRequestError(
+          `OpenRouter request failed: ${error.response.data.error}`,
+          'OpenRouter',
+        );
       }
     }
     throw new InvalidRequestError(`Unexpected error: ${error}`, 'OpenRouter');

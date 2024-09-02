@@ -40,12 +40,18 @@ export const templateDefinitionSchema = z
     version: z.string().describe('The version of the template, following semantic versioning.'),
     description: z.string().describe('A detailed description of the template and its purpose.'),
     author: z.string().describe('The name or identifier of the template author.'),
-    provider: z.string().optional().describe('The organization or platform providing the template.'),
+    provider: z
+      .string()
+      .optional()
+      .describe('The organization or platform providing the template.'),
     tags: z
       .array(z.string())
       .optional()
       .describe('Keywords or labels for easy template discovery and categorization.'),
-    categories: z.array(z.string()).optional().describe('Broader categories the template falls under.'),
+    categories: z
+      .array(z.string())
+      .optional()
+      .describe('Broader categories the template falls under.'),
     model: z.string().optional().describe('The specific AI model the template is designed for.'),
     input_variables: z
       .record(z.string(), templateVariableSchema)
@@ -58,23 +64,47 @@ export const templateDefinitionSchema = z
     content: z.string().describe('The main prompt or instruction text of the template.'),
     parameters: z
       .object({
-        max_tokens: z.number().optional().describe('Maximum number of tokens in the generated output.'),
-        temperature: z.number().optional().describe('Controls randomness in output generation (0-1).'),
+        max_tokens: z
+          .number()
+          .optional()
+          .describe('Maximum number of tokens in the generated output.'),
+        temperature: z
+          .number()
+          .optional()
+          .describe('Controls randomness in output generation (0-1).'),
         top_p: z.number().optional().describe('Nucleus sampling parameter for output diversity.'),
         top_k: z.number().optional().describe('Limits vocabulary for each generation step.'),
         seed: z.number().optional().describe('Random seed for reproducible outputs.'),
-        system_message: z.string().optional().describe('Initial context or instruction for the AI model.'),
-        frequency_penalty: z.number().optional().describe('Penalizes frequent token usage (-2.0 to 2.0).'),
-        presence_penalty: z.number().optional().describe('Encourages topic diversity (-2.0 to 2.0).'),
-        logit_bias: z.record(z.number()).optional().describe('Adjusts likelihood of specific tokens.'),
-        logprobs: z.number().optional().describe('Number of most likely tokens to return with probabilities.'),
-        stop_sequences: z.array(z.string()).optional().describe('Sequences that trigger output completion.'),
+        system_message: z
+          .string()
+          .optional()
+          .describe('Initial context or instruction for the AI model.'),
+        frequency_penalty: z
+          .number()
+          .optional()
+          .describe('Penalizes frequent token usage (-2.0 to 2.0).'),
+        presence_penalty: z
+          .number()
+          .optional()
+          .describe('Encourages topic diversity (-2.0 to 2.0).'),
+        logit_bias: z
+          .record(z.number())
+          .optional()
+          .describe('Adjusts likelihood of specific tokens.'),
+        logprobs: z
+          .number()
+          .optional()
+          .describe('Number of most likely tokens to return with probabilities.'),
+        stop_sequences: z
+          .array(z.string())
+          .optional()
+          .describe('Sequences that trigger output completion.'),
       })
       .optional()
-      .describe('Fine-tuning parameters for the AI model\'s behavior.'),
+      .describe("Fine-tuning parameters for the AI model's behavior."),
     prompt_type: z
       .string()
-      .describe('Categorizes the template\'s primary function or output type.')
+      .describe("Categorizes the template's primary function or output type.")
       .optional(),
     task_description: z
       .string()

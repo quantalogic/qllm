@@ -53,7 +53,7 @@ export class OutputVariableExtractor {
       default:
         ErrorManager.throwError(
           'OutputValidationError',
-          `Invalid type for output variable ${key}: ${variable.type}`
+          `Invalid type for output variable ${key}: ${variable.type}`,
         );
     }
   }
@@ -61,7 +61,10 @@ export class OutputVariableExtractor {
   private parseInteger(key: string, value: string): number {
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) {
-      ErrorManager.throwError('OutputValidationError', `Invalid integer value for ${key}: ${value}`);
+      ErrorManager.throwError(
+        'OutputValidationError',
+        `Invalid integer value for ${key}: ${value}`,
+      );
     }
     return parsed;
   }

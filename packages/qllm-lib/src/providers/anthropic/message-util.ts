@@ -44,7 +44,11 @@ export async function formatContent(
       type: 'image',
       source: {
         type: 'base64',
-        media_type: base64Content.mimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+        media_type: base64Content.mimeType as
+          | 'image/jpeg'
+          | 'image/png'
+          | 'image/gif'
+          | 'image/webp',
         data: base64Content.base64,
       },
     };

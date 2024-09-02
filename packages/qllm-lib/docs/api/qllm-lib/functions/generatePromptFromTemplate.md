@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / generatePromptFromTemplate
 
@@ -20,33 +20,33 @@
 
 • **template.description**: `string` = `...`
 
-• **template.example\_outputs?**: `string`[] = `...`
+• **template.example_outputs?**: `string`[] = `...`
 
-• **template.input\_variables?**: `Record`\<`string`, `object`\> = `...`
+• **template.input_variables?**: `Record`\<`string`, `object`\> = `...`
 
 • **template.model?**: `string` = `...`
 
 • **template.name**: `string` = `...`
 
-• **template.output\_variables?**: `Record`\<`string`, `object`\> = `...`
+• **template.output_variables?**: `Record`\<`string`, `object`\> = `...`
 
 • **template.parameters?** = `...`
 
-• **template.parameters.max\_tokens?**: `number` = `...`
+• **template.parameters.max_tokens?**: `number` = `...`
 
 • **template.parameters.temperature?**: `number` = `...`
 
-• **template.parameters.top\_k?**: `number` = `...`
+• **template.parameters.top_k?**: `number` = `...`
 
-• **template.parameters.top\_p?**: `number` = `...`
+• **template.parameters.top_p?**: `number` = `...`
 
-• **template.prompt\_type?**: `string` = `...`
+• **template.prompt_type?**: `string` = `...`
 
 • **template.provider?**: `string` = `...`
 
 • **template.tags?**: `string`[] = `...`
 
-• **template.task\_description?**: `string` = `...`
+• **template.task_description?**: `string` = `...`
 
 • **template.version**: `string` = `...`
 

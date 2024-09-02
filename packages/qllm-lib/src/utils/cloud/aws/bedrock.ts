@@ -9,22 +9,23 @@ interface Model {
 
 export async function listModels(
   credentials: AwsCredentialIdentity,
-  region: string = 'us-east-1'
+  region: string = 'us-east-1',
 ): Promise<Model[]> {
-  const client = new BedrockClient({ 
+  const client = new BedrockClient({
     credentials,
-    region
+    region,
   });
 
   try {
     const command = new ListFoundationModelsCommand({});
     const response = await client.send(command);
 
-    const models: Model[] = response.modelSummaries?.map(summary => ({
-      id: summary.modelId || '',
-      name: summary.modelName || '',
-      description: `${summary.modelName || ''} - Input: ${summary.inputModalities?.join(', ') || 'N/A'}, Output: ${summary.outputModalities?.join(', ') || 'N/A'}`,
-    })) || [];
+    const models: Model[] =
+      response.modelSummaries?.map((summary) => ({
+        id: summary.modelId || '',
+        name: summary.modelName || '',
+        description: `${summary.modelName || ''} - Input: ${summary.inputModalities?.join(', ') || 'N/A'}, Output: ${summary.outputModalities?.join(', ') || 'N/A'}`,
+      })) || [];
 
     return models;
   } catch (error) {

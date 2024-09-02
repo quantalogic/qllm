@@ -1,6 +1,6 @@
 **QLLM Library API Documentation v3.0.6** • [**Docs**](globals.md)
 
-***
+---
 
 # QLLM Library API Documentation
 

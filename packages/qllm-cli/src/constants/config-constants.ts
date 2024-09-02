@@ -1,6 +1,6 @@
 export const CONFIG_OPTIONS = [
-    'defaultProvider',
-    'defaultModel',
-    'logLevel',
-    'customPromptDirectory',
-  ];
+    "defaultProvider",
+    "defaultModel",
+    "logLevel",
+    "customPromptDirectory",
+];

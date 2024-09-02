@@ -1,16 +1,16 @@
 name: chain_of_tought_leader
-version: '1.0'
+version: "1.0"
 description: Explore the top insights on a specific topic by thought leaders
 author: Raphaël MANSUY
 input_variables:
-  Topic:
-    type: string
-    description: The topic to explore from thought leaders
-    place_holder: "SEO Strategies"
-  Language:
-    type: string
-    description: The language of the story
-    place_holder: "English"
+    Topic:
+        type: string
+        description: The topic to explore from thought leaders
+        place_holder: "SEO Strategies"
+    Language:
+        type: string
+        description: The language of the story
+        place_holder: "English"
 content: >
     ## Chain of Thought Leaders Prompting - Exploring the Top Insights on {{Topic}}
 
@@ -35,4 +35,3 @@ content: >
     Lastly, refine the narrative to ensure that all essential insights and perspectives on {{Topic}} are accurately represented. The final summary should be a succinct yet thorough exploration of the topic, providing valuable knowledge and insights for readers.
 
     YOU MUST WRITE IN {{Language}}.
-    

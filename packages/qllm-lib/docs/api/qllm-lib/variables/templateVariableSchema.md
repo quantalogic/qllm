@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / templateVariableSchema
 
@@ -26,9 +26,9 @@
 
 > **inferred**: `ZodOptional`\<`ZodBoolean`\>
 
-### place\_holder
+### place_holder
 
-> **place\_holder**: `ZodOptional`\<`ZodAny`\>
+> **place_holder**: `ZodOptional`\<`ZodAny`\>
 
 ### type
 

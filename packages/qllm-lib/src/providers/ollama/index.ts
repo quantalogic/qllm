@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import path  from 'path';
+import path from 'path';
 import axios from 'axios';
 import {
   ChatCompletionParams,
@@ -183,14 +183,17 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
-  protected withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessageWithSystem[] {
+  protected withSystemMessage(
+    options: LLMOptions,
+    messages: ChatMessage[],
+  ): ChatMessageWithSystem[] {
     if (options.systemMessage && options.systemMessage.length > 0) {
       const systemMessage: SystemMessage = {
         role: 'system',
         content: {
           text: options.systemMessage,
           type: 'text',
-        }
+        },
       };
       return [systemMessage, ...messages];
     }
@@ -246,7 +249,7 @@ function mapOllamaToolCallToToolCall(
           name: toolCall.function.name,
           arguments: JSON.stringify(toolCall.function.arguments),
         },
-      } as ToolCall),
+      }) as ToolCall,
   );
 }
 

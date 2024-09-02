@@ -57,10 +57,10 @@ const template = TemplateDefinitionBuilder.create(
   'Template Name',
   '1.0.0',
   'Template Description',
-  'Author Name'
+  'Author Name',
 )
-.withPrompt('Your prompt text here')
-.build();
+  .withPrompt('Your prompt text here')
+  .build();
 ```
 
 ### 3.2 Adding input variables
@@ -108,9 +108,10 @@ const codeGenerator = TemplateDefinitionBuilder.create(
   'Multi-Language Code Generator',
   '3.0.0',
   'Generate code snippets in various programming languages',
-  'CodeMaster AI'
+  'CodeMaster AI',
 )
-.withPrompt(`
+  .withPrompt(
+    `
 Generate a {{language}} code snippet that accomplishes the following task:
 {{task_description}}
 
@@ -120,18 +121,22 @@ Requirements:
 Important: Wrap the generated code in an XML tag named <code></code>.
 
 Generated Code:
-`)
-.withInputVariable('language', 'string', 'The programming language to generate code in')
-.withInputVariable('task_description', 'string', 'Description of the coding task')
-.withInputVariable('requirements', 'string', 'Specific requirements for the code')
-.withOutputVariable('code', 'string', { description: 'The generated code snippet' })
-.withTags('programming', 'code generation', 'multi-language')
-.withCategories('Software Development', 'AI-Assisted Coding')
-.withModel('gpt-4')
-.withParameters({ max_tokens: 500, temperature: 0.7, top_p: 0.95 })
-.withPromptType('code_generation')
-.withTaskDescription('Generate code snippets in various programming languages based on user requirements')
-.withExampleOutputs(`
+`,
+  )
+  .withInputVariable('language', 'string', 'The programming language to generate code in')
+  .withInputVariable('task_description', 'string', 'Description of the coding task')
+  .withInputVariable('requirements', 'string', 'Specific requirements for the code')
+  .withOutputVariable('code', 'string', { description: 'The generated code snippet' })
+  .withTags('programming', 'code generation', 'multi-language')
+  .withCategories('Software Development', 'AI-Assisted Coding')
+  .withModel('gpt-4')
+  .withParameters({ max_tokens: 500, temperature: 0.7, top_p: 0.95 })
+  .withPromptType('code_generation')
+  .withTaskDescription(
+    'Generate code snippets in various programming languages based on user requirements',
+  )
+  .withExampleOutputs(
+    `
 <code>
 def fibonacci(n):
     if n <= 1:
@@ -139,8 +144,9 @@ def fibonacci(n):
     else:
         return fibonacci(n-1) + fibonacci(n-2)
 </code>
-`)
-.build();
+`,
+  )
+  .build();
 ```
 
 ### 4.2 Interactive Story Generator
@@ -150,9 +156,10 @@ const interactiveStoryGenerator = TemplateDefinitionBuilder.create(
   'Interactive Story Generator',
   '4.0.0',
   'Generate interactive stories with branching paths',
-  'StoryTeller AI'
+  'StoryTeller AI',
 )
-.withPrompt(`
+  .withPrompt(
+    `
 Create an interactive story segment based on the following:
 
 Current scene: {{current_scene}}
@@ -166,18 +173,21 @@ Wrap the generated story segment in <story_segment></story_segment> XML tags.
 Provide two possible next choices for the player, each wrapped in <choice></choice> XML tags.
 
 Generated Story Segment and Choices:
-`)
-.withInputVariable('current_scene', 'string', 'Description of the current scene')
-.withInputVariable('player_choice', 'string', 'The choice made by the player')
-.withInputVariable('theme', 'string', 'The overall theme of the story')
-.withInputVariable('character_names', 'array', 'List of character names in the story')
-.withOutputVariable('story_segment', 'string', { description: 'The generated story segment' })
-.withOutputVariable('next_choices', 'array', { description: 'Array of possible next choices for the player' })
-.withTags('interactive', 'storytelling', 'branching-narrative')
-.withCategories('Entertainment', 'AI-Assisted Writing')
-.withModel('gpt-4')
-.withParameters({ max_tokens: 1000, temperature: 0.8, top_p: 0.9 })
-.build();
+`,
+  )
+  .withInputVariable('current_scene', 'string', 'Description of the current scene')
+  .withInputVariable('player_choice', 'string', 'The choice made by the player')
+  .withInputVariable('theme', 'string', 'The overall theme of the story')
+  .withInputVariable('character_names', 'array', 'List of character names in the story')
+  .withOutputVariable('story_segment', 'string', { description: 'The generated story segment' })
+  .withOutputVariable('next_choices', 'array', {
+    description: 'Array of possible next choices for the player',
+  })
+  .withTags('interactive', 'storytelling', 'branching-narrative')
+  .withCategories('Entertainment', 'AI-Assisted Writing')
+  .withModel('gpt-4')
+  .withParameters({ max_tokens: 1000, temperature: 0.8, top_p: 0.9 })
+  .build();
 ```
 
 ## 5. Executing Templates
@@ -200,7 +210,7 @@ async function executeTemplate(template, variables) {
 executeTemplate(codeGenerator, {
   language: 'python',
   task_description: 'Create a function that calculates the nth Fibonacci number',
-  requirements: 'Use recursion and include error handling for negative inputs'
+  requirements: 'Use recursion and include error handling for negative inputs',
 });
 ```
 

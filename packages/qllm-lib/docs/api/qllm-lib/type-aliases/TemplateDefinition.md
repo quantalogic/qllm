@@ -1,12 +1,12 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / TemplateDefinition
 
 # Type Alias: TemplateDefinition
 
-> **TemplateDefinition**: `z.infer`\<*typeof* [`templateDefinitionSchema`](../variables/templateDefinitionSchema.md)\>
+> **TemplateDefinition**: `z.infer`\<_typeof_ [`templateDefinitionSchema`](../variables/templateDefinitionSchema.md)\>
 
 ## Defined in
 

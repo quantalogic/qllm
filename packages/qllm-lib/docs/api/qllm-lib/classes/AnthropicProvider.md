@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / AnthropicProvider
 
@@ -50,7 +50,7 @@
 
 [packages/qllm-lib/src/providers/anthropic/index.ts:41](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/anthropic/index.ts#L41)
 
-***
+---
 
 ### name
 
@@ -64,7 +64,7 @@
 
 [packages/qllm-lib/src/providers/anthropic/index.ts:25](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/anthropic/index.ts#L25)
 
-***
+---
 
 ### supportsEmbedding
 
@@ -78,7 +78,7 @@
 
 [packages/qllm-lib/src/types/llm-provider.ts:47](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/llm-provider.ts#L47)
 
-***
+---
 
 ### supportsImageAnalysis
 
@@ -92,7 +92,7 @@
 
 [packages/qllm-lib/src/types/llm-provider.ts:48](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/llm-provider.ts#L48)
 
-***
+---
 
 ### version
 
@@ -128,7 +128,7 @@
 
 [packages/qllm-lib/src/providers/anthropic/index.ts:90](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/anthropic/index.ts#L90)
 
-***
+---
 
 ### generateEmbedding()
 
@@ -146,7 +146,7 @@
 
 [packages/qllm-lib/src/providers/anthropic/index.ts:235](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/anthropic/index.ts#L235)
 
-***
+---
 
 ### listModels()
 
@@ -164,7 +164,7 @@
 
 [packages/qllm-lib/src/providers/anthropic/index.ts:46](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/anthropic/index.ts#L46)
 
-***
+---
 
 ### streamChatCompletion()
 

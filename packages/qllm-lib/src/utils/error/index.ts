@@ -29,7 +29,7 @@ export class ErrorManager {
     // Throw the created error
     throw error;
   }
-  
+
   /*
    * Logs a warning message without throwing an error.
    * @param warningType The type of warning

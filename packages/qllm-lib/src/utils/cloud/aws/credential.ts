@@ -15,9 +15,7 @@ const EXPIRATION_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
  * @returns {Promise<AwsCredentialIdentity>} - A promise that resolves to the temporary AWS credentials.
  * @throws Will throw an error if there is an issue retrieving the credentials.
  */
-export async function getCredentials(
-  awsRegion: string,
-): Promise<AwsCredentialIdentity> {
+export async function getCredentials(awsRegion: string): Promise<AwsCredentialIdentity> {
   if (cachedCredentials && isCredentialValid(cachedCredentials)) {
     return cachedCredentials;
   }

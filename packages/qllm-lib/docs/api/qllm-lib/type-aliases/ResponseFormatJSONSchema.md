@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / ResponseFormatJSONSchema
 
@@ -10,23 +10,23 @@
 
 ## Type declaration
 
-### json\_schema
+### json_schema
 
-> **json\_schema**: `object`
+> **json_schema**: `object`
 
-### json\_schema.description?
+### json_schema.description?
 
 > `optional` **description**: `string`
 
-### json\_schema.name
+### json_schema.name
 
 > **name**: `string`
 
-### json\_schema.schema
+### json_schema.schema
 
 > **schema**: `Record`\<`string`, `unknown`\>
 
-### json\_schema.strict?
+### json_schema.strict?
 
 > `optional` **strict**: `boolean`
 

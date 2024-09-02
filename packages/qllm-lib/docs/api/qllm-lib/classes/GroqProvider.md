@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / GroqProvider
 
@@ -50,7 +50,7 @@
 
 [packages/qllm-lib/src/providers/qroq/index.ts:40](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/qroq/index.ts#L40)
 
-***
+---
 
 ### name
 
@@ -68,7 +68,7 @@
 
 [packages/qllm-lib/src/providers/qroq/index.ts:28](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/qroq/index.ts#L28)
 
-***
+---
 
 ### supportsEmbedding
 
@@ -82,7 +82,7 @@
 
 [packages/qllm-lib/src/types/llm-provider.ts:47](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/llm-provider.ts#L47)
 
-***
+---
 
 ### supportsImageAnalysis
 
@@ -96,7 +96,7 @@
 
 [packages/qllm-lib/src/types/llm-provider.ts:48](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/types/llm-provider.ts#L48)
 
-***
+---
 
 ### version
 
@@ -136,7 +136,7 @@
 
 [packages/qllm-lib/src/providers/qroq/index.ts:59](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/qroq/index.ts#L59)
 
-***
+---
 
 ### generateEmbedding()
 
@@ -158,7 +158,7 @@
 
 [packages/qllm-lib/src/providers/qroq/index.ts:126](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/qroq/index.ts#L126)
 
-***
+---
 
 ### listModels()
 
@@ -180,7 +180,7 @@
 
 [packages/qllm-lib/src/providers/qroq/index.ts:45](https://github.com/quantalogic/qllm/blob/b15a3aa4af263bce36ea091a0f29bf1255b95497/packages/qllm-lib/src/providers/qroq/index.ts#L45)
 
-***
+---
 
 ### streamChatCompletion()
 

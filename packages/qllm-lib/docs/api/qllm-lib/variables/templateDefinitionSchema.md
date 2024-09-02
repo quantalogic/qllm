@@ -1,6 +1,6 @@
 [**QLLM Library API Documentation v3.0.6**](../README.md) • **Docs**
 
-***
+---
 
 [QLLM Library API Documentation v3.0.6](../globals.md) / templateDefinitionSchema
 
@@ -26,13 +26,13 @@
 
 > **description**: `ZodString`
 
-### example\_outputs
+### example_outputs
 
-> **example\_outputs**: `ZodOptional`\<`ZodArray`\<`ZodString`, `"many"`\>\>
+> **example_outputs**: `ZodOptional`\<`ZodArray`\<`ZodString`, `"many"`\>\>
 
-### input\_variables
+### input_variables
 
-> **input\_variables**: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodObject`\<`object`, `"strip"`, `ZodTypeAny`, `object`, `object`\>\>\>
+> **input_variables**: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodObject`\<`object`, `"strip"`, `ZodTypeAny`, `object`, `object`\>\>\>
 
 ### model
 
@@ -42,17 +42,17 @@
 
 > **name**: `ZodString`
 
-### output\_variables
+### output_variables
 
-> **output\_variables**: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodObject`\<`object`, `"strip"`, `ZodTypeAny`, `object`, `object`\>\>\>
+> **output_variables**: `ZodOptional`\<`ZodRecord`\<`ZodString`, `ZodObject`\<`object`, `"strip"`, `ZodTypeAny`, `object`, `object`\>\>\>
 
 ### parameters
 
 > **parameters**: `ZodOptional`\<`ZodObject`\<`object`, `"strip"`, `ZodTypeAny`, `object`, `object`\>\>
 
-### prompt\_type
+### prompt_type
 
-> **prompt\_type**: `ZodOptional`\<`ZodString`\>
+> **prompt_type**: `ZodOptional`\<`ZodString`\>
 
 ### provider
 
@@ -62,9 +62,9 @@
 
 > **tags**: `ZodOptional`\<`ZodArray`\<`ZodString`, `"many"`\>\>
 
-### task\_description
+### task_description
 
-> **task\_description**: `ZodOptional`\<`ZodString`\>
+> **task_description**: `ZodOptional`\<`ZodString`\>
 
 ### version
 

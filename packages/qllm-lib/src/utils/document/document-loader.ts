@@ -57,7 +57,7 @@ export class DocumentLoader extends EventEmitter {
       proxy: '',
       decompress: true,
       useCache: false,
-      ...options
+      ...options,
     };
   }
 
@@ -85,7 +85,7 @@ export class DocumentLoader extends EventEmitter {
     const expandedPath = this.expandTilde(filePath);
     const absolutePath = path.resolve(expandedPath);
     const mimeType = mime.lookup(absolutePath) || 'application/octet-stream';
-    
+
     if (this.options.useCache) {
       const cachedPath = this.getCachePath(absolutePath);
       if (await this.isCacheValid(absolutePath, cachedPath)) {
@@ -118,12 +118,12 @@ export class DocumentLoader extends EventEmitter {
     }
 
     const content = Buffer.concat(chunks);
-    
+
     if (this.options.useCache) {
       const cachedPath = this.getCachePath(absolutePath);
       await this.cacheContent(cachedPath, content);
     }
-    
+
     return { content, mimeType };
   }
 
@@ -150,10 +150,12 @@ export class DocumentLoader extends EventEmitter {
             }
           },
           cancelToken: this.cancelTokenSource.token,
-          proxy: this.options.proxy ? {
-            host: this.options.proxy.split(':')[0],
-            port: parseInt(this.options.proxy.split(':')[1], 10)
-          } : undefined,
+          proxy: this.options.proxy
+            ? {
+                host: this.options.proxy.split(':')[0],
+                port: parseInt(this.options.proxy.split(':')[1], 10),
+              }
+            : undefined,
         };
 
         const response = await axios.get(url, axiosConfig);
@@ -162,14 +164,14 @@ export class DocumentLoader extends EventEmitter {
         if (this.options.decompress && response.headers['content-encoding'] === 'gzip') {
           content = await gunzip(content);
         }
-        
+
         const mimeType = response.headers['content-type'] || 'application/octet-stream';
-        
+
         if (this.options.useCache) {
           const cachedPath = this.getCachePath(url);
           await this.cacheContent(cachedPath, content);
         }
-        
+
         return { content, mimeType };
       } catch (error) {
         if (axios.isCancel(error)) {
@@ -179,7 +181,7 @@ export class DocumentLoader extends EventEmitter {
           throw error;
         }
         this.emit('retry', attempt, this.options.maxRetries);
-        await new Promise(resolve => setTimeout(resolve, this.options.retryDelay));
+        await new Promise((resolve) => setTimeout(resolve, this.options.retryDelay));
       }
     }
     throw new Error('Max retries reached');
@@ -192,10 +194,7 @@ export class DocumentLoader extends EventEmitter {
 
   private async isCacheValid(original: string, cached: string): Promise<boolean> {
     try {
-      const [originalStat, cachedStat] = await Promise.all([
-        fs.stat(original),
-        fs.stat(cached)
-      ]);
+      const [originalStat, cachedStat] = await Promise.all([fs.stat(original), fs.stat(cached)]);
       return cachedStat.mtime > originalStat.mtime;
     } catch {
       return false;
@@ -240,30 +239,42 @@ export class DocumentLoader extends EventEmitter {
     }
   }
 
-  public static async quickLoadString(input: string, options?: DocumentLoaderOptions): Promise<LoadResult<string>> {
+  public static async quickLoadString(
+    input: string,
+    options?: DocumentLoaderOptions,
+  ): Promise<LoadResult<string>> {
     const loader = new DocumentLoader(input, options);
     return loader.loadAsString();
   }
 
-  public static async quickLoadBuffer(input: string, options?: DocumentLoaderOptions): Promise<LoadResult<Buffer>> {
+  public static async quickLoadBuffer(
+    input: string,
+    options?: DocumentLoaderOptions,
+  ): Promise<LoadResult<Buffer>> {
     const loader = new DocumentLoader(input, options);
     return loader.loadAsBuffer();
   }
 
-  public static async loadMultipleAsString(inputs: string[], options?: DocumentLoaderOptions): Promise<LoadResult<string>[]> {
-    const loaders = inputs.map(input => new DocumentLoader(input, options));
-    return Promise.all(loaders.map(loader => loader.loadAsString()));
+  public static async loadMultipleAsString(
+    inputs: string[],
+    options?: DocumentLoaderOptions,
+  ): Promise<LoadResult<string>[]> {
+    const loaders = inputs.map((input) => new DocumentLoader(input, options));
+    return Promise.all(loaders.map((loader) => loader.loadAsString()));
   }
 
-  public static async loadMultipleAsBuffer(inputs: string[], options?: DocumentLoaderOptions): Promise<LoadResult<Buffer>[]> {
-    const loaders = inputs.map(input => new DocumentLoader(input, options));
-    return Promise.all(loaders.map(loader => loader.loadAsBuffer()));
+  public static async loadMultipleAsBuffer(
+    inputs: string[],
+    options?: DocumentLoaderOptions,
+  ): Promise<LoadResult<Buffer>[]> {
+    const loaders = inputs.map((input) => new DocumentLoader(input, options));
+    return Promise.all(loaders.map((loader) => loader.loadAsBuffer()));
   }
 
   // Type-safe event emitter methods
   public on<K extends keyof DocumentLoaderEvents>(
     event: K,
-    listener: DocumentLoaderEvents[K]
+    listener: DocumentLoaderEvents[K],
   ): this {
     return super.on(event, listener);
   }

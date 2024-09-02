@@ -70,10 +70,7 @@ export function createEmbeddingProvider({
 }
 
 // Export main classes and types
-export type {
-  LLMProvider,
-  EmbeddingProvider,
-};
+export type { LLMProvider, EmbeddingProvider };
 
 export {
   OpenAIProvider,
