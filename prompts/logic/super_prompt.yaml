@@ -35,6 +35,8 @@ content: >
 
     {{problem_to_solve}}
 
+    YOU MUST STRICLY FOLLOWS THE RULES in <rules/> and anwser with <answer_operator/>.
+
     ## Output:
 
     <rules>
