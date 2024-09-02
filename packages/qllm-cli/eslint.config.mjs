@@ -19,6 +19,7 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+      'no-undef': 'warn',
       'no-empty': 'warn',
       'no-prototype-builtins': 'warn',
       '@typescript-eslint/no-explicit-any': 'warn', // Changed from 'error' to 'warn'
