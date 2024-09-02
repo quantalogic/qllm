@@ -26,6 +26,7 @@ export default tseslint.config(
       'no-case-declarations': 'warn', // Changed from 'error' to 'warn',
       'require-yield': 'warn', // Changed from 'error' to 'warn',
       'no-useless-catch': 'warn', // Changed from 'error' to 'warn',
+      'no-throw-literal': 'warn', // Example rule to treat literal throws as warnings
     },
   },
 );
