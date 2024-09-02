@@ -1,0 +1,1 @@
+__lastExpression = 2 + 2;
