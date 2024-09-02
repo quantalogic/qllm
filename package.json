@@ -15,9 +15,9 @@
     "prepublish-packages": "pnpm run build",
     "docs": "pnpm -r run docs",
     "changeset": "changeset"
-
   },
   "devDependencies": {
+    "@aws-sdk/client-sso-oidc": "^3.614.0",
     "@changesets/cli": "^2.27.7",
     "@rollup/plugin-commonjs": "26.0.1",
     "@rollup/plugin-json": "6.1.0",
@@ -32,8 +32,7 @@
     "rollup-plugin-gzip": "4.0.1",
     "typedoc": "0.26.6",
     "typedoc-plugin-markdown": "4.2.6",
-    "typescript": "^5.5.4",
-    "@aws-sdk/client-sso-oidc": "^3.614.0"
+    "typescript": "^5.5.4"
   },
   "engines": {
     "node": ">=16.5.0",
@@ -51,5 +50,8 @@
   "bugs": {
     "url": "https://github.com/quantalogic/qllm/issues"
   },
-  "homepage": "https://github.com/quantalogic/qllm#readme"
+  "homepage": "https://github.com/quantalogic/qllm#readme",
+  "dependencies": {
+    "@aws-sdk/client-sts": "^3.621.0"
+  }
 }
