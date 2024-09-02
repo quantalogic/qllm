@@ -5,7 +5,6 @@ import json from '@rollup/plugin-json';
 //import analyze from 'rollup-plugin-analyzer';
 //import gzip from 'rollup-plugin-gzip';
 
-const isProduction = false || process.env.NODE_ENV === 'production';
 
 export default {
   input: 'dist/qllm.js', // Change this to point to the compiled TypeScript output

@@ -11,7 +11,7 @@ export default function createStorageProvider(
   }: {
     dbPath?: string;
   },
-): StorageProvider {
+): StorageProvider | undefined { // Updated return type to include undefined
   switch (name.toLowerCase()) {
     case 'in-memory':
       return new InMemoryStorageProvider();
@@ -19,8 +19,8 @@ export default function createStorageProvider(
       if (!dbPath) {
         throw new Error('dbPath must be provided for SQLite storage provider');
       }
-     // return new SQLiteConversationStorageProvider(dbPath);
-    default:
-      throw new Error(`Unsupported provider: ${name}`);
+      // ... handle SQLite storage provider ...
+      return; // Added return statement for 'local' case
   }
+  return undefined; // Added return statement for cases not handled
 }

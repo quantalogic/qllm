@@ -5,7 +5,8 @@ import terser from '@rollup/plugin-terser';
 import analyze from 'rollup-plugin-analyzer';
 import gzip from 'rollup-plugin-gzip';
 
-const isProduction = false && process.env.NODE_ENV === 'production';
+const isProduction = false;
+
 
 export default {
   input: 'dist/tsc/index.js',

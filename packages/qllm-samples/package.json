@@ -24,7 +24,7 @@
     "build:ts": "tsc",
     "build": "pnpm run build:ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "format": "prettier --write .",
     "test": "jest",
     "prepublishOnly": "pnpm run build"

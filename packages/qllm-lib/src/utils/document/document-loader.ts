@@ -9,6 +9,7 @@ import zlib from 'zlib';
 import { promisify } from 'util';
 import mime from 'mime-types';
 import { URL } from 'url';
+import { createHash } from 'crypto'; // New import statement
 
 const gunzip = promisify(zlib.gunzip);
 
@@ -185,7 +186,7 @@ export class DocumentLoader extends EventEmitter {
   }
 
   private getCachePath(key: string): string {
-    const hash = require('crypto').createHash('md5').update(key).digest('hex');
+    const hash = createHash('md5').update(key).digest('hex'); // Updated to use import
     return path.join(this.options.cacheDir, hash);
   }
 

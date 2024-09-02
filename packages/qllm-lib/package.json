@@ -22,7 +22,7 @@
     "build": "npm run build:tsc && npm run build:rollup",
     "build:prod": "NODE_ENV=production npm run build",
     "clean": "rimraf dist",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "format": "prettier --write .",
     "test": "jest",
     "prepublishOnly": "npm run clean && npm run build:prod",
