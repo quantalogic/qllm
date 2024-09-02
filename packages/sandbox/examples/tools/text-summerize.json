@@ -1,0 +1,7 @@
+{
+  "tool": "text-summerizer",
+  "params": {
+    "file_url": "https://www.quantalogic.app/blogs/introduction",
+    "max_words": 150
+  }
+}

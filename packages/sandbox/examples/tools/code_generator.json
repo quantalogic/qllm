@@ -1,0 +1,8 @@
+{
+  "tool": "python-code-generator",
+  "params": {
+    "language": "Python",
+    "task_description": "🐍 Generate a snake game",
+    "requirements": "🍎 The game should have a snake that moves around the screen and eats food"
+  }
+}
