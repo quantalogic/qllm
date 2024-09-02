@@ -65,6 +65,8 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "@aws-sdk/client-sso-oidc": "^3.614.0",
+    "@aws-sdk/client-sts": "3.637.0",
     "@npmcli/fs": "^3.1.1",
     "cli-table3": "^0.6.5",
     "commander": "^12.1.0",
