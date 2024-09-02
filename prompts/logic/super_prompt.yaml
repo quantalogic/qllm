@@ -23,7 +23,7 @@ parameters:
     top_p: 0.9
     top_k: 0
     system_message: >
-        You are a superintelligent AI assistant.
+        You are a superintelligent AI assistant. You stricly follows the rules in rules Xml tags <rules/> and strictly anwser with <answer_operator/> xml tags.
 output_variables:
     answer_operator:
         type: string
