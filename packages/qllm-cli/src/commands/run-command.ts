@@ -155,10 +155,15 @@ const handleExtractedOutput = async (
     const extractedVariables = validOptions
         .extract!.split(",")
         .map((v) => v.trim());
-    const extractedData: Record<string, any> = {};
+    const extractedData: Record<string, unknown> = {}; // Changed 'any' to 'unknown'
 
     for (const variable of extractedVariables) {
-        if (result.outputVariables.hasOwnProperty(variable)) {
+        if (
+            Object.prototype.hasOwnProperty.call(
+                result.outputVariables,
+                variable,
+            )
+        ) {
             extractedData[variable] = result.outputVariables[variable];
         } else {
             ioManager.displayWarning(
@@ -172,7 +177,7 @@ const handleExtractedOutput = async (
             Object.keys(extractedData).length === 1
                 ? Object.values(extractedData)[0]
                 : JSON.stringify(extractedData, null, 2);
-        await writeToFile(validOptions.output, contentToWrite);
+        await writeToFile(validOptions.output, String(contentToWrite)); // Ensure contentToWrite is a string
         ioManager.displaySuccess(
             `Extracted data saved to ${validOptions.output}`,
         );
@@ -182,7 +187,7 @@ const handleExtractedOutput = async (
 };
 
 const handleFullOutput = async (
-    result: any,
+    result: { response: string; outputVariables: Record<string, unknown> },
     validOptions: RunCommandOptions,
     ioManager: IOManager,
 ) => {
