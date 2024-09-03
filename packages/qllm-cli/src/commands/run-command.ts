@@ -15,6 +15,8 @@ import { processAndExit } from "../utils/common";
 import { parseVariables } from "../utils/template-utils";
 import { writeToFile } from "../utils/write-file";
 
+declare var process: NodeJS.Process; //eslint-disable-line
+
 const runAction = async (
     templateSource: string,
     options: Partial<RunCommandOptions>,
@@ -106,12 +108,12 @@ const setupExecutor = (ioManager: IOManager, spinner: Spinner) => {
     const executor = new TemplateExecutor();
 
     executor.on("streamChunk", (chunk: string) => process.stdout.write(chunk));
-    executor.on("streamComplete", (response: string) => {});
-    executor.on("streamError", (error: any) => {
+    executor.on("streamComplete", (_response: string) => {});
+    executor.on("streamError", (error: unknown) => {
         spinner.stop();
         ioManager.displayError(`Error during completion: ${error}`);
     });
-    executor.on("requestSent", (request: any) => {
+    executor.on("requestSent", (request: unknown) => {
         const length = JSON.stringify(request).length;
         spinner.start();
         spinner.update({
@@ -122,7 +124,7 @@ const setupExecutor = (ioManager: IOManager, spinner: Spinner) => {
         spinner.update({ text: "" });
         spinner.stop();
     });
-    executor.on("executionError", (error: any) => {
+    executor.on("executionError", (error: unknown) => {
         spinner.stop();
         ioManager.displayError(`Error executing template: ${error}`);
     });
@@ -136,7 +138,7 @@ const setupExecutor = (ioManager: IOManager, spinner: Spinner) => {
 };
 
 const handleOutput = async (
-    result: any,
+    result: unknown,
     validOptions: RunCommandOptions,
     ioManager: IOManager,
 ) => {
@@ -148,18 +150,21 @@ const handleOutput = async (
 };
 
 const handleExtractedOutput = async (
-    result: any,
+    result: unknown,    
     validOptions: RunCommandOptions,
     ioManager: IOManager,
 ) => {
     const extractedVariables = validOptions
         .extract!.split(",")
         .map((v) => v.trim());
-    const extractedData: Record<string, any> = {};
+    const extractedData: Record<string, any> = {}; //eslint-disable-line
+
+    // Cast result to a known type
+    const outputResult = result as { outputVariables: Record<string, any> }; //eslint-disable-line
 
     for (const variable of extractedVariables) {
-        if (result.outputVariables.hasOwnProperty(variable)) {
-            extractedData[variable] = result.outputVariables[variable];
+        if (outputResult.outputVariables.hasOwnProperty(variable)) { //eslint-disable-line
+            extractedData[variable] = outputResult.outputVariables[variable];
         } else {
             ioManager.displayWarning(
                 `Variable "${variable}" not found in the output.`,
@@ -182,7 +187,7 @@ const handleExtractedOutput = async (
 };
 
 const handleFullOutput = async (
-    result: any,
+    result: any, //eslint-disable-line
     validOptions: RunCommandOptions,
     ioManager: IOManager,
 ) => {
@@ -200,20 +205,20 @@ const handleFullOutput = async (
 };
 
 const displayExtractedVariables = (
-    variables: Record<string, any>,
+    variables: Record<string, unknown>,
     ioManager: IOManager,
 ) => {
     ioManager.displayInfo("Output Variables:");
     for (const [key, value] of Object.entries(variables)) {
         ioManager.displayInfo(`${ioManager.colorize(key, "green")}:`);
-        ioManager.displayInfo(`${ioManager.colorize(value, "yellow")}`);
+        ioManager.displayInfo(`${ioManager.colorize(value as string, "yellow")}`);
         ioManager.displayInfo("-------------------------");
     }
 };
 
 export const runCommand = new Command("run")
     .description("Execute a template")
-    .argument("<template>", "Template name, file path, or URL")
+    .argument("[template]", "Template name, file path, or URL")
     .option(
         "-t, --type <type>",
         "Template source type (file, url, inline)",
@@ -244,3 +249,6 @@ export const runCommand = new Command("run")
                 runAction(templateSource, options),
         ),
     );
+
+// Export runAction for use in the main file
+export { runAction };
