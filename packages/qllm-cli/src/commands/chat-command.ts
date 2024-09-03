@@ -14,6 +14,8 @@ import { IOManager } from "../utils/io-manager";
 import { validateOptions } from "../utils/validate-options";
 import { DEFAULT_MODEL, DEFAULT_PROVIDER } from "../constants";
 
+declare var process: NodeJS.Process; //eslint-disable-line
+
 const chatAction = async (options: ChatCommandOptions) => {
     try {
         await chatConfig.initialize();

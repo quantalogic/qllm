@@ -230,12 +230,12 @@ export const runCommand = new Command("run")
     .option(
         "--max-tokens <maxTokens>",
         "Maximum number of tokens to generate",
-        parseInt,
+        parseInt, // Ensure this is correctly parsing the input as an integer
     )
     .option(
         "--temperature <temperature>",
         "Temperature for response generation",
-        parseFloat,
+        parseFloat, // Ensure this is correctly parsing the input as a float
     )
     .option("-s, --stream", "Stream the response")
     .option("-o, --output <output>", "Output file for the response")

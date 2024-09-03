@@ -3,8 +3,11 @@
 import { Command } from "commander";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { IOManager } from "../utils/io-manager";
-import { validateSingleOption } from "../utils/input-validator";
 import { Config } from "../types/config-types";
+import { ConfigSchema } from "../types/config-types"; // {{ edit_1 }}
+import { z } from "zod";
+import { CONFIG_OPTIONS } from "../types/config-types";
+import { utils } from "../chat/utils";
 
 const configManager = CliConfigManager.getInstance();
 const ioManager = new IOManager();
@@ -69,13 +72,23 @@ function maskApiKey(apiKey: string): string {
 
 async function setConfig(key: string, value: string): Promise<void> {
     try {
-        configManager.set(key as keyof Config, value);
+        const configOption = CONFIG_OPTIONS.find(option => option.name === key);
+        if (!configOption) {
+            throw new Error(`Invalid configuration key: ${key}`);
+        }
+
+        const schema = ConfigSchema.shape[key as keyof Config];
+        const validatedValue = schema.parse(value);
+
+        configManager.set(key as keyof Config, validatedValue);
         await configManager.save();
         ioManager.displaySuccess(`Configuration updated: ${key} = ${value}`);
     } catch (error) {
-        ioManager.displayError(
-            `Failed to set configuration: ${(error as Error).message}`,
-        );
+        if (error instanceof z.ZodError) {
+            ioManager.displayError(`Validation error: ${error.errors[0].message}`);
+        } else {
+            ioManager.displayError(`Failed to set configuration: ${(error as Error).message}`);
+        }
     }
 }
 
@@ -119,29 +132,34 @@ async function interactiveConfig(): Promise<void> {
         ioManager.displayGroupHeader(group.name);
 
         for (const key of group.options) {
+            const configOption = CONFIG_OPTIONS.find(option => option.name === key);
+            if (!configOption) continue;
+
             const value = config[key as keyof Config];
-            const currentValue =
-                value !== undefined
-                    ? ioManager.colorize(JSON.stringify(value), "yellow")
-                    : ioManager.colorize("Not set", "dim");
+            const currentValue = value !== undefined
+                ? ioManager.colorize(JSON.stringify(value), "yellow")
+                : ioManager.colorize("Not set", "dim");
 
             const newValue = await ioManager.getUserInput(
-                `${ioManager.colorize(key, "cyan")} (current: ${currentValue}): `,
+                `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}): `
             );
 
             if (newValue.trim() !== "") {
-                try {
-                    const validatedValue = validateSingleOption(
-                        key as keyof Config,
-                        newValue,
-                    );
-                    configManager.set(key as keyof Config, validatedValue);
-                    ioManager.displaySuccess(`${key} updated successfully`);
-                } catch (error) {
-                    ioManager.displayError(
-                        `Invalid input: ${(error as Error).message}`,
-                    );
-                }
+                await utils.retryOperation(async () => {
+                    try {
+                        const schema = ConfigSchema.shape[key as keyof Config];
+                        const validatedValue = schema.parse(
+                            configOption.type === "number" ? parseFloat(newValue) : newValue
+                        );
+                        configManager.set(key as keyof Config, validatedValue);
+                        ioManager.displaySuccess(`${key} updated successfully`);
+                    } catch (error) {
+                        if (error instanceof z.ZodError) {
+                            throw new Error(`Invalid input: ${error.errors[0].message}`);
+                        }
+                        throw error;
+                    }
+                }, 3, 0);
             }
         }
         ioManager.newLine(); // Add a newline after each group

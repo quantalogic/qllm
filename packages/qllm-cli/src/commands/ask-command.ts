@@ -21,6 +21,8 @@ import { IOManager } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
 
+declare var process: NodeJS.Process; //eslint-disable-line
+
 // Updated function to read from stdin
 async function readStdin(): Promise<string> {
     return new Promise((resolve) => {
