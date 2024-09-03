@@ -60,7 +60,7 @@ content: >
     - Reformulate all rules and constraints coherently.
     - Utilize predicate logic to define these rules.
     - Identify any implicit rules or constraints not explicitly stated.
-    - Use predicate logic if you find convenient to express the problem
+    - Use predicate logic to express the problem
 
     ***Step 1: Verify Your Reformulation*** 
 
@@ -107,6 +107,7 @@ content: >
     - Implement the logical steps defined previously and draw inferences.
     - Ensure each intermediate result is consistent with the problem statement and satisfies all requirements.
     - Repeat this step until a solution is reached.
+    - Infer using predicate logic reduction, and rewritting rules (Knuth Bendix)
 
     ---
 
