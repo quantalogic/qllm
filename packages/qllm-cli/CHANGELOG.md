@@ -1,5 +1,11 @@
 # qllm
 
+## 2.6.0
+
+### Minor Changes
+
+- c95ac72: add run template command, and improve configuration process
+
 ## 2.5.1
 
 ### Patch Changes
