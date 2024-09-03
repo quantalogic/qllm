@@ -60,11 +60,13 @@ content: >
     - Reformulate all rules and constraints coherently.
     - Utilize predicate logic to define these rules.
     - Identify any implicit rules or constraints not explicitly stated.
+    - Use predicate logic if you find convenient to express the problem
 
     ***Step 1: Verify Your Reformulation*** 
 
     - Review each element of the problem to ensure consistency with your reformulation.
     - Revise as necessary until a clear and consistent reformulation is achieved.
+    - Verify predicate logic rules
 
     **Step 2: Identify Key Components** 
 
