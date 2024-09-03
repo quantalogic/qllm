@@ -157,21 +157,21 @@ QLLM CLI stores its configuration in a JSON file located at `~/.qllmrc`. While m
 
 QLLM CLI offers a variety of commands for interacting with LLMs. Here's an overview of the primary usage patterns:
 
-### Asking Questions
+### Running Templates
 
-For one-time queries, use the `ask` command:
-
-```bash
-qllm ask "What is the capital of France?"
-```
-
-Specify a provider and model:
+QLLM CLI allows you to run templates directly. This is now the default behavior when no specific command is provided:
 
 ```bash
-qllm ask "Explain quantum computing" -p openai -m gpt-4
+qllm <template_url>
 ```
 
-The `ask` command supports various options:
+For example:
+
+```bash
+qllm https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/chain_of_thought_leader.yaml
+```
+
+The `run` command supports various options:
 
 -   `-p, --provider <provider>`: Specify the LLM provider (default: openai)
 -   `-m, --model <model>`: Choose a specific model
@@ -212,8 +212,7 @@ qllm ask "Write a short story about AI" -s
 
 ````bash
 qllm ask "Explain the theory of relativity" -o relativity_explanation.txt
-
-
+```
 
 ### Interactive Chat
 

@@ -6,10 +6,16 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
     {
         ignores: ["**/node_modules/**", "**/dist/**"],
+        "settings": {
+            "env": {
+                "node": true,
+            },
+        },
     },
     eslint.configs.recommended,
     ...tseslint.configs.recommended,
     {
+   
         rules: {
             "@typescript-eslint/no-unused-vars": [
                 "warn",
@@ -28,5 +34,6 @@ export default tseslint.config(
             "no-useless-catch": "warn", // Changed from 'error' to 'warn',
             "no-throw-literal": "warn", // Example rule to treat literal throws as warnings
         },
+
     },
 );

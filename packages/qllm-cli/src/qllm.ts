@@ -6,16 +6,24 @@ import { listCommand } from "./commands/list-command";
 import { chatCommand } from "./commands/chat-command";
 import { CliConfigManager } from "./utils/cli-config-manager";
 import { configureCommand } from "./commands/configure-command";
-import { runCommand } from "./commands/run-command";
+import { runCommand, runAction } from "./commands/run-command";
 import { readFileSync } from "fs";
-import { join } from "path";
+import { IOManager } from "./utils/io-manager";
+import path from 'path';
+
+declare var __dirname: string; //eslint-disable-line
+declare var process: NodeJS.Process; //eslint-disable-line
+
 
 // Read version from package.json
 const packageJson = JSON.parse(
-    readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
+    readFileSync(path.resolve(__dirname, "..", "package.json"), "utf-8"),
 );
 
+
 const VERSION = packageJson.version;
+
+const ioManager = new IOManager();
 
 export async function main() {
     try {
@@ -36,27 +44,35 @@ export async function main() {
         await configManager.ensureConfigFileExists();
         await configManager.load();
 
-        // Add the ask command
+        // Add the run command as a named command
+        program.addCommand(runCommand);
+        
+        // Set the run command as the default command
+        program
+            .argument("[template]", "Template name, file path, or URL")
+            .option("-t, --type <type>", "Template source type (file, url, inline)", "file")
+            .option("-v, --variables <variables>", "Template variables in JSON format")
+            .option("-p, --provider <provider>", "LLM provider to use")
+            .option("-m, --model <model>", "Specific model to use")
+            .option("--max-tokens <maxTokens>", "Maximum number of tokens to generate", parseInt)
+            .option("--temperature <temperature>", "Temperature for response generation", parseFloat)
+            .option("-s, --stream", "Stream the response")
+            .option("-o, --output <output>", "Output file for the response")
+            .option("-e, --extract <variables>", "Variables to extract from the response, comma-separated")
+            .action(async (template, options, command) => {
+                if (!template) {
+                    command.help();
+                } else {
+                    await runAction(template, options);
+                }
+            });
+
+        // Add other commands
         program.addCommand(askCommand);
-
-        // Add the list command
         program.addCommand(listCommand);
-
-        // Add chat command
         program.addCommand(chatCommand);
-
-        // Add the configure command
         program.addCommand(configureCommand);
 
-        // Add to program commands
-        program.addCommand(runCommand);
-
-        // Add other commands here as needed
-        // For example:
-        // program.addCommand(generateEmbeddingCommand);
-
-        // Set up the exit handler
-        // Set up the exit handler
         // Set up the exit handler
         process.on("exit", (code) => {
             process.exit(code);
@@ -64,25 +80,26 @@ export async function main() {
 
         await program.parseAsync(process.argv);
     } catch (error) {
-        console.error("An error occurred:", error);
+        ioManager.displayError(
+            `An error occurred: ${(error as Error).message}`,
+        );
         process.exit(1);
     } finally {
         try {
+            // Any cleanup code if needed
         } catch (error) {
-            console.error(
-                "An error occurred while saving the configuration:",
-                error,
+            ioManager.displayError(
+                `An error occurred while saving the configuration: ${(error as Error).message}`,
             );
         }
     }
 }
 
-// Run the CLI
-if (require.main === module) {
-    main().catch((error) => {
-        console.error("Unhandled error:", error);
-        process.exit(1);
-    });
-}
+main()
+.catch((error) => {
+    ioManager.displayError(`Unhandled error: ${error}`);
+    process.exit(1);
+}); 
+
 
 export default main;
