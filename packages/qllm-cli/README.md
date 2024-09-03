@@ -210,7 +210,7 @@ qllm ask "Write a short story about AI" -s
 
 #### Saving Output to File
 
-````bash
+```bash
 qllm ask "Explain the theory of relativity" -o relativity_explanation.txt
 ```
 
