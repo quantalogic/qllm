@@ -10,6 +10,8 @@ import {
 } from "qllm-lib";
 import { processAndExit } from "../utils/common";
 
+declare var process: NodeJS.Process; //eslint-disable-line
+
 export const listCommand = new Command("list")
     .description("List providers and models")
     .addCommand(

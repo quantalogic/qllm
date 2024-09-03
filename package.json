@@ -14,7 +14,9 @@
     "publish-packages": "pnpm -r publish --access public",
     "prepublish-packages": "pnpm run build",
     "docs": "pnpm -r run docs",
-    "changeset": "changeset"
+    "changeset": "changeset",
+    "tag": "git tag v$(node -p 'require(\"./package.json\").version') && git push origin v$(node -p 'require(\"./package.json\").version')",
+    "publish-and-tag": "pnpm publish && git tag v$(node -p 'require(\"./package.json\").version') && git push origin v$(node -p 'require(\"./package.json\").version')"
   },
   "devDependencies": {
     "@aws-sdk/client-sso-oidc": "^3.614.0",
