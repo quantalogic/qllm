@@ -483,7 +483,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 
 ## 12. Acknowledgements
 
-QLLM CLI stands on the shoulders of giants. We extend our heartfelt gratitude to the developers and maintainers of:
+We extend our heartfelt gratitude to the developers and maintainers of:
 
 -   [Commander.js](https://github.com/tj/commander.js/): For robust command-line interfaces
 -   [Prompts](https://github.com/terkelg/prompts): For interactive command-line user interfaces
