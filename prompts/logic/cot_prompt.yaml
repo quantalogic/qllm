@@ -1,0 +1,132 @@
+name: cot_prompt
+version: "1.1"
+description: Solve complex problems using Chain of Thought (CoT) reasoning
+author: Raphaël MANSUY
+provider: aws-anthropic
+model: anthropic.claude-3-5-sonnet-20240620-v1:0
+input_variables:
+    problem_to_solve:
+        type: string
+        description: The problem to solve
+        place_holder: >
+            Each of five neighborhood dogs (Saber, Ginger, Nutmeg, Pepper, and Bear) is enjoying one of the following activities: 
+            getting its ears scratched, playing catch, taking a nap, burying a chew toy, and going for a walk.
+            Pepper is either playing catch or burying a chew toy.
+            Neither Ginger, Saber, nor Bear is on a walk.
+            One of the dogs named after a spice is getting its ears scratched.
+            A dog not named for a spice is playing catch.
+            Bear is getting some exercise.
+            Can you determine what each dog is doing?
+parameters:
+    max_tokens: 12000
+    temperature: 0.2
+    top_p: 0.9
+    top_k: 0
+    system_message: >
+        You are a superintelligent AI assistant. You strictly follow the rules in the <rules/> XML tags.
+content: >
+    ## Problem to Solve
+
+    {{problem_to_solve}}
+
+    ### The CoT Prompting Approach
+
+    This prompt leverages Chain of Thought (CoT) reasoning to systematically tackle complex problems. 
+
+    In formal terms, given an input $$ x $$ and a target $$ y $$, a LLM $$ p $$ with CoT prompting can be expressed as:
+
+    $$ y \sim \sum_{z \sim p(z|C_x)} p(y|C_x, z) \cdot p(z|C_x), $$
+
+    where $$ C_x = c^{(cot)}(x) $$.
+
+    - **$$ C_x $$**: Prompted input.
+    - **$$ c^{(cot)}(\cdot) $$**: Template with CoT prompting instructions, e.g., ‘let’s think step by step’.
+    - **$$ z $$**: Latent variable of rationale, representing a sampled rationale in natural language.
+
+    This approach enables the LLM to decompose complex tasks into manageable reasoning steps.
+
+    ### Let's Solve the Problem Step by Step
+
+    **Question:** 
+
+    <question>{{problem_to_solve}}</question>
+
+    ---
+
+    **Step 0: Define the Problem** 
+
+    Reformulate the problem statement in your own words to ensure clarity. 
+
+    - Reformulate all rules and constraints coherently.
+    - Utilize predicate logic to define these rules.
+    - Identify any implicit rules or constraints not explicitly stated.
+
+    ***Step 1: Verify Your Reformulation*** 
+
+    - Review each element of the problem to ensure consistency with your reformulation.
+    - Revise as necessary until a clear and consistent reformulation is achieved.
+
+    **Step 2: Identify Key Components** 
+
+    - List at least 10 key components essential to addressing the problem.
+    - Use clear bullet points to outline these components.
+
+    <key_components> 
+    - List essential elements relevant to the problem.
+    - *Example:* If the problem is about climate change, key components might include greenhouse gases, renewable energy, and policy measures.
+    </key_components>
+
+    ---
+
+    **Step 3: Break Down the Problem** 
+
+    - Define at least 15 logical steps necessary to solve the problem using predicate logic.
+    - Each step should clearly articulate the reasoning process.
+
+    <logical_steps> 
+    - <step number="1"> 
+        **Define** the first logical step. 
+        ***Example:*** "Identify the primary cause of the issue."
+     </step>
+    - <step number="2"> 
+        **Identify** the next action or consideration. 
+        ***Example:*** "Analyze the impact of the cause."
+    </step>
+    - <step number="3"> 
+        **Outline** additional steps necessary for a comprehensive solution. 
+        ***Example:*** "Propose mitigation strategies based on the analysis."
+    </step>
+    </logical_steps>
+
+    ---
+
+    **Step 4: Execute Logical Steps** 
+
+    - Implement the logical steps defined previously and draw inferences.
+    - Ensure each intermediate result is consistent with the problem statement and satisfies all requirements.
+    - Repeat this step until a solution is reached.
+
+    ---
+
+    **Step 5: Synthesize Insights** 
+
+    - Integrate insights from each step to formulate the final answer.
+    - Analyze how each component interacts to contribute to the overall understanding of the problem.
+
+    **Answer:**
+
+    <final_answer> 
+    - Present a clear, actionable, and definitive response based on synthesized insights.
+    </final_answer>  
+
+    ---
+
+    ### Additional Instructions for Agentic Behavior
+
+    - **Take Initiative:** Propose additional questions or considerations that may arise.
+    - **Be Decisive:** Provide actionable recommendations or next steps.
+    - **Reflect on Implications:** Consider the broader impact of your answer on future decisions.
+    - **Encourage Creativity:** Explore alternative solutions or approaches.
+    - **Feedback Loop:** After providing an answer, reflect on your reasoning process for potential improvements.
+
+    ### END
