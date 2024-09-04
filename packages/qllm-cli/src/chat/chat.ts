@@ -40,8 +40,8 @@ export class Chat {
     async initialize(): Promise<void> {
         try {
             await this.config.initialize();
-            this.configManager.setProvider(this.providerName);
-            this.configManager.setModel(this.modelName);
+            await this.configManager.setProvider(this.providerName);
+            await this.configManager.setModel(this.modelName);
             ioManager.displaySuccess(
                 `Chat initialized with ${this.providerName} provider and ${this.modelName} model.`,
             );
@@ -67,6 +67,7 @@ export class Chat {
 
     private async promptUser(): Promise<void> {
         try {
+
             const input = await this.ioManager.getUserInput("You: ");
 
             // Check if input is undefined (e.g., due to Ctrl+C)

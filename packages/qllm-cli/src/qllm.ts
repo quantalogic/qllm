@@ -26,7 +26,6 @@ const ioManager = new IOManager();
 
 export async function main() {
     try {
-
         const configManager = CliConfigManager.getInstance();
 
         await configManager.ensureConfigFileExists();
@@ -55,8 +54,6 @@ export async function main() {
                 "Temperature for response generation",
                 parseFloat,
             );
-
-
 
         // Set the run command as the default command
         program
@@ -122,16 +119,35 @@ export async function main() {
             .command("ask")
             .description("Ask a question to an LLM")
             .argument("<question>", "The question to ask")
-            .option("-c, --context <context>", "Additional context for the question")
-            .option("-i, --image <path>", "Path to image file, or URL (can be used multiple times)", (value, previous) => previous.concat([value]), [] as string[])
+            .option(
+                "-c, --context <context>",
+                "Additional context for the question",
+            )
+            .option(
+                "-i, --image <path>",
+                "Path to image file, or URL (can be used multiple times)",
+                (value, previous) => previous.concat([value]),
+                [] as string[],
+            )
             .option("--use-clipboard", "Use image from clipboard", false)
-            .option("--screenshot <display>", "Capture screenshot from specified display number", (value) => parseInt(value, 10))
+            .option(
+                "--screenshot <display>",
+                "Capture screenshot from specified display number",
+                (value) => parseInt(value, 10),
+            )
             .option("-s, --stream", "Stream the response", false)
             .option("-o, --output <file>", "Output file for the response")
-            .option("--system-message <message>", "System message to prepend to the conversation")
+            .option(
+                "--system-message <message>",
+                "System message to prepend to the conversation",
+            )
             .action((question, options) => {
                 const globalOptions = program.opts();
-                const mergedOptions = { ...globalOptions, ...options, question };
+                const mergedOptions = {
+                    ...globalOptions,
+                    ...options,
+                    question,
+                };
                 askCommandAction(question, mergedOptions);
             });
 

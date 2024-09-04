@@ -1,5 +1,12 @@
 # qllm-samples
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies
+  - qllm-lib@3.5.0
+
 ## 1.0.2
 
 ### Patch Changes
