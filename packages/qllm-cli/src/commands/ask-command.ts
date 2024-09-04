@@ -76,9 +76,7 @@ const askCommandAction = async (
 
     const cliConfig = CliConfigManager.getInstance();
     const providerName =
-        validOptions.provider ||
-        cliConfig.get("provider") ||
-        DEFAULT_PROVIDER;
+        validOptions.provider || cliConfig.get("provider") || DEFAULT_PROVIDER;
     const modelName =
         validOptions.model || cliConfig.get("model") || DEFAULT_MODEL;
 

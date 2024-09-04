@@ -131,12 +131,12 @@ Usage: `qllm configure [options]`
 Configure QLLM CLI settings.
 
 Options:
-  -l, --list             List all configuration settings
-  -s, --set <key=value>  Set a configuration value
-  -g, --get <key>        Get a configuration value
-  -h, --help             Display help for command
+-l, --list List all configuration settings
+-s, --set <key=value> Set a configuration value
+-g, --get <key> Get a configuration value
+-h, --help Display help for command
 
-This command allows you to manage configuration settings for the QLLM CLI. 
+This command allows you to manage configuration settings for the QLLM CLI.
 
 Examples:
 
@@ -226,7 +226,7 @@ Start an interactive chat session:
 
 ```bash
 qllm chat
-````
+```
 
 In chat mode, utilize various commands to manage your conversation:
 

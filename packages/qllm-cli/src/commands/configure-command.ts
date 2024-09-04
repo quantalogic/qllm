@@ -22,8 +22,8 @@ export const configureCommand = new Command("configure")
                 listConfig();
             } else if (options.set) {
                 if (options.set) {
-                    const [key, value] = options.set.split('='); // Split the input on '='
-                await setConfig(key, value);
+                    const [key, value] = options.set.split("="); // Split the input on '='
+                    await setConfig(key, value);
                 }
             } else if (options.get) {
                 getConfig(options.get);
