@@ -34,6 +34,14 @@ const helpGroups = [
                 command: "/deleteall",
                 description: "Delete all past conversations",
             },
+            {
+                command: "/run <template>",
+                description: "Run a predefined prompt template <template> can be an URL or a local file",
+            },
+            {
+                command: "/save <file>",
+                description: "Write the current conversation to a file <file> can be a local file"
+            }
         ],
     },
     {
@@ -126,7 +134,21 @@ function showCommandHelp(
         ioManager.displayInfo(
             `  ${ioManager.colorize(commandHelp.command, "cyan")}`,
         );
-        // Add more detailed usage information here if available
+        
+        // Add more detailed usage information for specific commands
+        if (command === "run") {
+            ioManager.newLine();
+            ioManager.displayInfo("The run command allows you to execute predefined chat templates.");
+            ioManager.displayInfo("Templates are predefined conversation starters or workflows.");
+            ioManager.displayInfo("Example:");
+            ioManager.displayInfo("  /run code-review");
+            ioManager.newLine();
+            ioManager.displayInfo("Available templates:");
+            ioManager.displayInfo("  - code-review: Start a code review session");
+            ioManager.displayInfo("  - brainstorm: Begin a brainstorming session");
+            ioManager.displayInfo("  - debug: Initiate a debugging session");
+            // Add more templates as they become available
+        }
     } else {
         ioManager.displayError(`No help available for command: ${command}`);
     }

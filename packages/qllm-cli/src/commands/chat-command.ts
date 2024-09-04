@@ -91,7 +91,11 @@ export const chatAction = async (options: ChatCommandOptions) => {
         await chat.start();
     } catch (error) {
         ioManager.displayError("An error occurred while starting the chat:");
-        console.error(error);
+        if (error instanceof Error) {
+            ioManager.displayError(error.message);
+        } else {
+            ioManager.displayError("An unknown error occurred");
+        }
     }
 };
 

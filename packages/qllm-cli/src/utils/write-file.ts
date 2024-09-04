@@ -8,6 +8,7 @@ export async function writeToFile(
         encoding?: BufferEncoding;
         mode?: number;
         flag?: string;
+        append?: boolean;
     } = {},
 ): Promise<void> {
     if (typeof filePath !== "string" || filePath.trim().length === 0) {
@@ -18,7 +19,8 @@ export async function writeToFile(
         throw new Error("Content must be a string");
     }
 
-    const { encoding = "utf8", mode = 0o666, flag = "w" } = options;
+    const { encoding = "utf8", mode = 0o666, append = false } = options;
+    const flag = append ? "a" : "w";
 
     let fileHandle: fs.FileHandle | null = null;
     try {
@@ -27,13 +29,23 @@ export async function writeToFile(
 
         fileHandle = await fs.open(filePath, flag, mode);
         await fileHandle.writeFile(content, { encoding });
-    } catch (error) {
-        throw error;
     } finally {
         if (fileHandle) {
             try {
                 await fileHandle.close();
-            } catch (closeError) {}
+            } catch (closeError) {
+                // Handle close error if needed
+            }
         }
+    }
+}
+
+
+export async function fileExists(filePath: string): Promise<boolean> {
+    try {
+        await fs.access(filePath);
+        return true; // File exists
+    } catch {
+        return false; // File does not exist
     }
 }
