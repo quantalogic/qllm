@@ -9,6 +9,8 @@ import { ConfigManager } from "./config-manager";
 import { ioManager } from "../utils/io-manager";
 import ImageManager from "./image-manager";
 
+declare var process: NodeJS.Process; //eslint-disable-line
+
 export class Chat {
     private conversationManager: ConversationManager;
     private conversationId: string | null = null;
@@ -70,6 +72,10 @@ export class Chat {
             // Check if input is undefined (e.g., due to Ctrl+C)
             if (input === undefined) {
                 process.exit(0);
+            }
+
+            if (input.trim() === "") {
+                return;
             }
 
             if (input.startsWith("/")) {
