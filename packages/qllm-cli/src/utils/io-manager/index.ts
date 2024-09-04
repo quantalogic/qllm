@@ -5,6 +5,7 @@ import { getBorderCharacters, table } from "table";
 import { createSpinner } from "nanospinner";
 import { Table } from "console-table-printer";
 import prompts from "prompts";
+import { writeToFile } from "../write-file";
 
 const stdout = {
     log: (...args: any[]) => {
@@ -387,6 +388,16 @@ export class IOManager {
             );
             return undefined;
         }
+    }
+
+    async promptYesNo(message: string): Promise<boolean> {
+        const response = await prompts({
+            type: 'confirm',
+            name: 'value',
+            message: message,
+            initial: true, // Default to 'yes'
+        });
+        return response.value; // Returns true for 'yes', false for 'no'
     }
 }
 

@@ -1,5 +1,5 @@
 // packages/qllm-cli/src/chat/command-processor.ts
-import { ConversationManager } from "qllm-lib";
+import { ConversationManager, TextContent } from "qllm-lib";
 import { ChatConfig } from "./chat-config";
 import { ConfigManager } from "./config-manager";
 import { IOManager } from "../utils/io-manager";
@@ -11,6 +11,7 @@ import { displayConversation } from "./commands/display-conversation";
 import { listModels } from "./commands/list-models";
 import { listProviders } from "./commands/list-providers";
 import { runActionCommand } from "../commands/run-command";
+import { fileExists, writeToFile } from "../utils/write-file";
 
 declare var process: NodeJS.Process; // eslint-disable-line no-var
 
@@ -49,6 +50,7 @@ export class CommandProcessor {
         delete: this.deleteConversation,
         deleteall: this.deleteAllConversations,
         run: this.runTemplate,
+        save: this.saveResponse,
     };
 
     async processCommand(
@@ -321,5 +323,80 @@ export class CommandProcessor {
     ): Promise<void> {
         await conversationManager.deleteAllConversations();
         ioManager.displaySuccess("All conversations deleted.");
+    }
+
+    private async saveResponse(
+        args: string[],
+        { conversationManager, ioManager, conversationId }: CommandContext,
+    ): Promise<void> {
+        if (!conversationId) {
+            ioManager.displayError("No active conversation.");
+            return;
+        }
+
+        const filePath = args[0];
+        if (!filePath) {
+            ioManager.displayError("Please provide a file path.");
+            return;
+        }
+
+        const conversation =
+            await conversationManager.getConversation(conversationId);
+        if (
+            !conversation ||
+            !conversation.messages ||
+            conversation.messages.length === 0
+        ) {
+            ioManager.displayError("No messages found in the conversation.");
+            return;
+        }
+
+        // Prepare the full conversation content
+        const conversationContent = conversation.messages
+            .map((msg) => {
+                const role = msg.role === "assistant" ? "Assistant" : "User";
+                const text = Array.isArray(msg.content)
+                    ? msg.content
+                          .filter(
+                              (c): c is TextContent =>
+                                  "type" in c && c.type === "text",
+                          )
+                          .map((c) => c.text)
+                          .join("\n")
+                    : "type" in msg.content && msg.content.type === "text"
+                      ? msg.content.text
+                      : "";
+
+                // Format each message with a timestamp and role
+                const timestamp = new Date(msg.timestamp).toLocaleString(); // Assuming msg has a timestamp property
+                return `[${timestamp}] ${role}: ${text}`;
+            })
+            .join("\n\n---\n\n"); // Delimiter between messages
+
+        const isFileExists = await fileExists(filePath);
+
+        if (isFileExists) {
+            const confirm = await ioManager.confirmAction(
+                `File ${filePath} already exists. Do you to continue and overwrite it?`,
+            );
+
+            if (!confirm) {
+                ioManager.displayWarning(`Operation cancelled by user.`);
+                return;
+            }
+        }
+
+        await writeToFile(filePath, conversationContent, {
+            flag: "w",
+        });
+
+        const startOfContent =
+            conversationContent.length > 20
+                ? conversationContent.substring(0, 20) + "..."
+                : conversationContent;
+
+        ioManager.displaySuccess(
+            `Full conversation ${startOfContent} saved to ${filePath}`,
+        );
     }
 }

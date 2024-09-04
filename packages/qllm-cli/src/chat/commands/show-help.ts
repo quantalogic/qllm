@@ -38,6 +38,10 @@ const helpGroups = [
                 command: "/run <template>",
                 description: "Run a predefined prompt template <template> can be an URL or a local file",
             },
+            {
+                command: "/save <file>",
+                description: "Write the current conversation to a file <file> can be a local file"
+            }
         ],
     },
     {
