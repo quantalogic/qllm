@@ -1,5 +1,4 @@
 // packages/qllm-cli/src/commands/configure-command.ts
-
 import { Command } from "commander";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { IOManager } from "../utils/io-manager";
@@ -12,24 +11,20 @@ import { getListProviderNames, getLLMProvider } from "qllm-lib";
 
 const configManager = CliConfigManager.getInstance();
 const ioManager = new IOManager();
-
 export const configureCommand = new Command("configure")
     .description("Configure QLLM CLI settings")
     .option("-l, --list", "List all configuration settings")
-    .option("-s, --set <key> <value>", "Set a configuration value")
+    .option("-s, --set <key=value>", "Set a configuration value")
     .option("-g, --get <key>", "Get a configuration value")
     .action(async (options) => {
         try {
             if (options.list) {
                 listConfig();
             } else if (options.set) {
-                const [key, value] = options.set; // Destructure key and value from options.set
-                if (!value) {
-                    throw new Error(
-                        "Value must be provided for the --set option.",
-                    );
-                }
+                if (options.set) {
+                    const [key, value] = options.set.split('='); // Split the input on '='
                 await setConfig(key, value);
+                }
             } else if (options.get) {
                 getConfig(options.get);
             } else {
@@ -106,6 +101,7 @@ async function setConfig(key: string, value: string): Promise<void> {
 
     // Save the updated configuration
     try {
+        console.log(`Setting ${key} to ${value}`);
         configManager.set(key as keyof Config, value); // Ensure the key-value pair is set correctly
         await configManager.save();
         ioManager.displaySuccess(

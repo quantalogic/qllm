@@ -126,17 +126,23 @@ This guided process helps you set up API keys and default preferences across sev
 
 ### Command-line Configuration
 
-Set individual configuration options using command-line arguments:
+Usage: `qllm configure [options]`
 
-```bash
-qllm configure --set <key> <value>
-```
+Configure QLLM CLI settings.
+
+Options:
+  -l, --list             List all configuration settings
+  -s, --set <key=value>  Set a configuration value
+  -g, --get <key>        Get a configuration value
+  -h, --help             Display help for command
+
+This command allows you to manage configuration settings for the QLLM CLI. 
 
 Examples:
 
 ```bash
-qllm configure --set defaultProvider openai
-qllm configure --set apiKeys.openai your_api_key_here
+qllm configure --set provider=openai
+qllm configure --set model=gpt-4
 ```
 
 ### Viewing Current Configuration
