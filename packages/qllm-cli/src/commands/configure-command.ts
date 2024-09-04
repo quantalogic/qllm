@@ -8,6 +8,7 @@ import { ConfigSchema } from "../types/config-types"; // {{ edit_1 }}
 import { z } from "zod";
 import { CONFIG_OPTIONS } from "../types/config-types";
 import { utils } from "../chat/utils";
+import { getListProviderNames, getLLMProvider } from "qllm-lib";
 
 const configManager = CliConfigManager.getInstance();
 const ioManager = new IOManager();
@@ -72,6 +73,12 @@ function maskApiKey(apiKey: string): string {
 
 async function setConfig(key: string, value: string): Promise<void> {
     try {
+        const validProviders = getListProviderNames();
+
+        if (key === "defaultProvider" && !validProviders.includes(value)) {
+            throw new Error(`Invalid provider: ${value}. Valid providers are: ${validProviders.join(", ")}`);
+        }
+
         const configOption = CONFIG_OPTIONS.find(option => option.name === key);
         if (!configOption) {
             throw new Error(`Invalid configuration key: ${key}`);
@@ -103,6 +110,8 @@ function getConfig(key: string): void {
 
 async function interactiveConfig(): Promise<void> {
     const config = configManager.configCopy();
+    const validProviders = getListProviderNames(); // Fetch valid providers
+
     const configGroups = [
         {
             name: "Provider Settings",
@@ -140,11 +149,47 @@ async function interactiveConfig(): Promise<void> {
                 ? ioManager.colorize(JSON.stringify(value), "yellow")
                 : ioManager.colorize("Not set", "dim");
 
-            const newValue = await ioManager.getUserInput(
-                `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}): `
-            );
+            let newValue: string | undefined;
 
-            if (newValue.trim() !== "") {
+            if (key === "defaultProvider") {
+                newValue = await ioManager.getUserInput(
+                    `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}).\nAvailable providers:\n${validProviders.map(provider => `  - ${provider}`).join("\n")}\nPlease select a provider: `
+                );
+
+                // Validate the input against the list of valid providers
+                if (!validProviders.includes(newValue.trim())) {
+                    ioManager.displayError(`Invalid provider. Please choose from: ${validProviders.join(", ")}`);
+                    continue; // Skip to the next option
+                }
+
+                // Fetch models for the selected provider
+                const provider = await getLLMProvider(newValue.trim());
+                const models = await provider.listModels();
+                const modelIds = models.map((model: { id: string }) => model.id); // Explicitly type the model parameter
+
+                // Update the current value to reflect the new provider
+                config.defaultProvider = newValue.trim();
+
+                // Prompt for the default model with improved display
+                const modelInput = await ioManager.getUserInput(
+                    `${ioManager.colorize("defaultModel", "cyan")} (Available models):\n${modelIds.map(modelId => `  - ${modelId}`).join("\n")}\nPlease select a model: `
+                );
+
+                // Validate the input against the list of models
+                if (!modelIds.includes(modelInput.trim())) {
+                    ioManager.displayError(`Invalid model. Please choose from: ${modelIds.join(", ")}`);
+                    continue; // Skip to the next option
+                }
+
+                // Set the validated model
+                config.defaultModel = modelInput.trim();
+            } else {
+                newValue = await ioManager.getUserInput(
+                    `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}): `
+                );
+            }
+
+            if (newValue && newValue.trim() !== "") {
                 await utils.retryOperation(async () => {
                     try {
                         const schema = ConfigSchema.shape[key as keyof Config];

@@ -1,4 +1,5 @@
 import { CommandContext } from "../command-processor";
+import { getListProviderNames } from "qllm-lib";
 
 export function displayCurrentOptions(
     args: string[],
@@ -16,6 +17,9 @@ export function displayCurrentOptions(
         { name: "Presence Penalty", value: config.getPresencePenalty() },
         { name: "Stop Sequence", value: config.getStopSequence()?.join(", ") },
     ];
+
+    const validProviders = getListProviderNames();
+    ioManager.displayInfo(`Valid providers: ${validProviders.join(", ")}`);
 
     ioManager.displayConfigOptions(options);
 
