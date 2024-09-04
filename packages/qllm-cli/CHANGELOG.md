@@ -1,5 +1,16 @@
 # qllm
 
+## 2.8.0
+
+### Minor Changes
+
+- Improve the chat
+
+### Patch Changes
+
+- Updated dependencies
+  - qllm-lib@3.5.0
+
 ## 2.7.2
 
 ### Patch Changes

@@ -392,8 +392,8 @@ export class IOManager {
 
     async promptYesNo(message: string): Promise<boolean> {
         const response = await prompts({
-            type: 'confirm',
-            name: 'value',
+            type: "confirm",
+            name: "value",
             message: message,
             initial: true, // Default to 'yes'
         });

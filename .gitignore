@@ -13,3 +13,4 @@ dist
 *.tsbuildinfo
 coverage
 .aider*
+.obsidian

@@ -1,5 +1,11 @@
 # qllm-lib
 
+## 3.5.0
+
+### Minor Changes
+
+- Improve the chat
+
 ## 3.4.1
 
 ### Patch Changes

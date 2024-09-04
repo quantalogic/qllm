@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "3.4.1",
+  "version": "3.5.0",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -62,10 +62,10 @@
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.10.2",
     "@anthropic-ai/sdk": "^0.27.0",
-    "@aws-sdk/client-bedrock": "^3.637.0",
-    "@aws-sdk/client-sso-oidc": "^3.637.0",
-    "@aws-sdk/client-sts": "^3.637.0",
-    "@aws-sdk/credential-providers": "^3.637.0",
+    "@aws-sdk/client-bedrock": "^3.645.0",
+    "@aws-sdk/client-sso-oidc": "^3.645.0",
+    "@aws-sdk/client-sts": "^3.645.0",
+    "@aws-sdk/credential-providers": "^3.645.0",
     "@mistralai/mistralai": "1.0.4",
     "axios": "^1.7.5",
     "groq-sdk": "^0.5.0",
@@ -84,10 +84,10 @@
     "@npmcli/move-file": "npm:@npmcli/fs@latest",
     "are-we-there-yet": "latest",
     "gauge": "latest",
-    "@aws-sdk/client-sts": "^3.637.0",
-    "@aws-sdk/credential-provider-node": "^3.637.0",
-    "@aws-sdk/credential-provider-ini": "^3.637.0",
-    "@aws-sdk/credential-provider-web-identity": "^3.637.0"
+    "@aws-sdk/client-sts": "^3.645.0",
+    "@aws-sdk/credential-provider-node": "^3.645.0",
+    "@aws-sdk/credential-provider-ini": "^3.645.0",
+    "@aws-sdk/credential-provider-web-identity": "^3.645.0"
   },
   "publishConfig": {
     "access": "public"
