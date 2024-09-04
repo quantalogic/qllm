@@ -16,7 +16,7 @@ import { DEFAULT_MODEL, DEFAULT_PROVIDER } from "../constants";
 
 declare var process: NodeJS.Process; //eslint-disable-line
 
-const chatAction = async (options: ChatCommandOptions) => {
+export const chatAction = async (options: ChatCommandOptions) => {
     try {
         await chatConfig.initialize();
 
@@ -95,39 +95,4 @@ const chatAction = async (options: ChatCommandOptions) => {
     }
 };
 
-export const chatCommand = new Command("chat")
-    .description("Start an interactive chat session with an LLM")
-    .option("-p, --provider <provider>", "LLM provider to use")
-    .option("-m, --model <model>", "Model to use")
-    .option(
-        "--max-tokens <number>",
-        "Maximum number of tokens to generate",
-        parseInt,
-    )
-    .option(
-        "--temperature <number>",
-        "Temperature for response generation",
-        parseFloat,
-    )
-    .option(
-        "--top-p <number>",
-        "Top P value for response generation",
-        parseFloat,
-    )
-    .option(
-        "--frequency-penalty <number>",
-        "Frequency penalty for response generation",
-        parseFloat,
-    )
-    .option(
-        "--presence-penalty <number>",
-        "Presence penalty for response generation",
-        parseFloat,
-    )
-    .option(
-        "--stop-sequence <sequence>",
-        "Stop sequence for response generation",
-        (value, previous) => previous.concat([value]),
-        [] as string[],
-    )
-    .action(chatAction);
+// Remove the chatCommand export, as it's now defined in the main file

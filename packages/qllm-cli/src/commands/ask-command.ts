@@ -1,6 +1,5 @@
 import fs from "fs/promises";
 import path from "path";
-import { Command } from "commander";
 import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
 import { createSpinner, Spinner } from "nanospinner";
 import {
@@ -15,7 +14,6 @@ import {
     isImageFile,
 } from "../utils/image-utils";
 import { ioManager } from "../utils/io-manager";
-import { processAndExit } from "../utils/common";
 import { validateOptions } from "../utils/validate-options";
 import { IOManager } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
@@ -43,7 +41,7 @@ async function readStdin(): Promise<string> {
     });
 }
 
-const askCommandAction = async (
+export const askCommandAction = async (
     question: string,
     options: AskCommandOptions,
 ) => {
@@ -125,6 +123,7 @@ const askCommandAction = async (
         if (!usedOptions.stream) {
             ioManager.stdout.log(response);
         }
+        process.exit(0);
     } catch (error) {
         spinner.error({
             text: ioManager.colorize(
@@ -139,42 +138,7 @@ const askCommandAction = async (
     }
 };
 
-export const askCommand = new Command("ask")
-    .description("Ask a question to an LLM provider")
-    .argument("[question]", "The question to ask (optional if using stdin)")
-    .option("-p, --provider <provider>", "LLM provider to use", "openai")
-    .option("-m, --model <model>", "Specific model to use")
-    .option(
-        "-t, --max-tokens <tokens>",
-        "Maximum number of tokens to generate",
-        (value) => parseInt(value, 10),
-        1024,
-    )
-    .option(
-        "--temperature <temp>",
-        "Temperature for response generation",
-        (value) => parseFloat(value),
-        0.7,
-    )
-    .option("-s, --stream", "Stream the response", false)
-    .option("-o, --output <file>", "Output file for the response")
-    .option(
-        "--system-message <message>",
-        "System message to prepend to the conversation",
-    )
-    .option(
-        "-i, --image <path>",
-        "Path to image file, or URL (can be used multiple times)",
-        (value, previous) => previous.concat([value]),
-        [] as string[],
-    )
-    .option("--use-clipboard", "Use image from clipboard", false)
-    .option(
-        "--screenshot <display>",
-        "Capture screenshot from specified display number",
-        (value) => parseInt(value, 10),
-    )
-    .action(processAndExit(askCommandAction));
+// Remove the askCommand definition as it's now in the main file
 
 interface ImageInputOptions {
     image: string[];
@@ -319,27 +283,24 @@ async function streamResponse(
     const chunks: string[] = [];
     let chunkNumber = 0;
     spinner.update({ text: "Waiting response..." });
-    try {
-        const stream = await provider.streamChatCompletion(params);
-        for await (const chunk of stream) {
-            if (chunkNumber === 0) {
-                spinner.update({ text: "" });
-                spinner.stop();
-                spinner.clear(); // Clear the spinner from the console
-            }
-            if (chunk.text) {
-                ioManager.stdout.write(chunk.text);
-                chunks.push(chunk.text);
-            }
-            chunkNumber++;
+
+    const stream = await provider.streamChatCompletion(params);
+    for await (const chunk of stream) {
+        if (chunkNumber === 0) {
+            spinner.update({ text: "" });
+            spinner.stop();
+            spinner.clear();
         }
-        spinner.start();
-        spinner.update({ text: "Response completed ..." });
-        spinner.stop();
-        return chunks.join("");
-    } catch (error) {
-        throw error;
+        if (chunk.text) {
+            ioManager.stdout.write(chunk.text);
+            chunks.push(chunk.text);
+        }
+        chunkNumber++;
     }
+    spinner.start();
+    spinner.update({ text: "Response completed ..." });
+    spinner.stop();
+    return chunks.join("");
 }
 
 async function saveResponseToFile(
