@@ -174,7 +174,7 @@ qllm <template_url>
 For example:
 
 ```bash
-qllm https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/chain_of_thought_leader.yaml
+qllm https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/chain_of_tought_leader.yaml
 ```
 
 The `run` command supports various options:
