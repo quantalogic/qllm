@@ -1,0 +1,36 @@
+name: create_bruno_collection
+version: '1.0'
+description: Create a Bruno collection for a project from a swagger file
+author: Raphaël MANSUY
+system_prompt: >
+  You are a senior expert in API testing and you are tasked with creating a Bruno collection for a project from a swagger file.
+  Your mission is very important as it can make the difference between the success and the failure of the project and avoid a catastrophe.
+input_variables:
+  swagger_file:
+    type: string
+    description: The path or the URL to the swagger file
+    place_holder: 
+content: >
+  # Your mission
+  
+  Your mission is to create a Bruno collection for a project from a swagger file.
+
+  Bruno: (https://www.usebruno.com/).
+
+  The swagger file is: 
+  
+  ```json
+  {{swagger_file}}
+  ```
+
+  ## Follow these steps to create the Bruno collection:
+
+  0 - Read the swagger file and understand the API. And rephrase your mission in a way that is more specific to the API you are dealing with.
+  1 - Analyse an describe the endpoints and the operations available in the swagger file.
+  3 - Identify the how authentication works with this api, describe in detail what you discover in a table 
+  4 - Identify how the pagination works for api that support it, describe in detail what you discover in a table 
+  5 - Create a collection of tests cases for each endpoint with inputs and expected outputs. Format your ideas in a table with columns for "Method", "Path", "Description", "Expected Response Code", "Expected Response Body".
+  6 - Write the Bruno collection for the project, ensuring it covers the test cases and edge cases. Include the authentication and pagination details. Use Javascript to handle the authentication and pagination.
+  7 - Write an example of bash script to run the collection with differents contexts.
+
+  Use Markdown and Code blocks to format your output.
