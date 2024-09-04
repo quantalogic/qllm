@@ -257,7 +257,6 @@ async function interactiveConfig(): Promise<void> {
         ioManager.displaySuccess(
             "Configuration updated and saved successfully",
         );
-        getConfig("all"); // {{ edit_2 }} Display all configurations after saving
     } catch (error) {
         ioManager.displayError(
             `Failed to save configuration: ${(error as Error).message}`,
