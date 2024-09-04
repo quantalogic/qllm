@@ -75,7 +75,7 @@ async function setConfig(key: string, value: string): Promise<void> {
     try {
         const validProviders = getListProviderNames();
 
-        if (key === "defaultProvider" && !validProviders.includes(value)) {
+        if (key === "provider" && !validProviders.includes(value)) {
             throw new Error(`Invalid provider: ${value}. Valid providers are: ${validProviders.join(", ")}`);
         }
 
@@ -109,7 +109,7 @@ function getConfig(key: string): void {
 }
 
 async function interactiveConfig(): Promise<void> {
-    const config = configManager.configCopy();
+    const config = configManager.configCopy(); // Ensure this is a fresh copy
     const validProviders = getListProviderNames(); // Fetch valid providers
 
     const configGroups = [
@@ -151,7 +151,7 @@ async function interactiveConfig(): Promise<void> {
 
             let newValue: string | undefined;
 
-            if (key === "defaultProvider") {
+            if (key === "provider") {
                 newValue = await ioManager.getUserInput(
                     `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}).\nAvailable providers:\n${validProviders.map(provider => `  - ${provider}`).join("\n")}\nPlease select a provider: `
                 );
@@ -182,7 +182,7 @@ async function interactiveConfig(): Promise<void> {
                 }
 
                 // Set the validated model
-                config.model = modelInput.trim();
+                config.model = modelInput.trim(); // Ensure this line is executed after setting the provider
             } else {
                 newValue = await ioManager.getUserInput(
                     `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}): `
@@ -206,12 +206,15 @@ async function interactiveConfig(): Promise<void> {
                     }
                 }, 3, 0);
             }
+
+            // Update the configManager with the new values
+            configManager.set(key as keyof Config, config[key as keyof Config]); // Ensure the manager is updated
         }
         ioManager.newLine(); // Add a newline after each group
     }
 
     try {
-        await configManager.save();
+        await configManager.save(); // Ensure the save method is called
         ioManager.displaySuccess(
             "Configuration updated and saved successfully",
         );
