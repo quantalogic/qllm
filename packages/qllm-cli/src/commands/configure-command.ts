@@ -115,7 +115,7 @@ async function interactiveConfig(): Promise<void> {
     const configGroups = [
         {
             name: "Provider Settings",
-            options: ["defaultProvider", "defaultModel"],
+            options: ["provider", "model"],
         },
         {
             name: "Model Parameters",
@@ -168,11 +168,11 @@ async function interactiveConfig(): Promise<void> {
                 const modelIds = models.map((model: { id: string }) => model.id); // Explicitly type the model parameter
 
                 // Update the current value to reflect the new provider
-                config.defaultProvider = newValue.trim();
+                config.provider = newValue.trim();
 
                 // Prompt for the default model with improved display
                 const modelInput = await ioManager.getUserInput(
-                    `${ioManager.colorize("defaultModel", "cyan")} (Available models):\n${modelIds.map(modelId => `  - ${modelId}`).join("\n")}\nPlease select a model: `
+                    `${ioManager.colorize("model", "cyan")} (Available models):\n${modelIds.map(modelId => `  - ${modelId}`).join("\n")}\nPlease select a model: `
                 );
 
                 // Validate the input against the list of models
@@ -182,7 +182,7 @@ async function interactiveConfig(): Promise<void> {
                 }
 
                 // Set the validated model
-                config.defaultModel = modelInput.trim();
+                config.model = modelInput.trim();
             } else {
                 newValue = await ioManager.getUserInput(
                     `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}): `

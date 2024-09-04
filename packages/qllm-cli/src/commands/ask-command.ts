@@ -77,10 +77,10 @@ const askCommandAction = async (
     const cliConfig = CliConfigManager.getInstance();
     const providerName =
         validOptions.provider ||
-        cliConfig.get("defaultProvider") ||
+        cliConfig.get("provider") ||
         DEFAULT_PROVIDER;
     const modelName =
-        validOptions.model || cliConfig.get("defaultModel") || DEFAULT_MODEL;
+        validOptions.model || cliConfig.get("model") || DEFAULT_MODEL;
 
     const spinner = createSpinner("Processing...").start();
 

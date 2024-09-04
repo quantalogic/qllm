@@ -47,13 +47,13 @@ const runAction = async (
             const providerName =
                 validOptions.provider ||
                 template.provider ||
-                cliConfig.get("defaultProvider") ||
+                cliConfig.get("provider") ||
                 DEFAULT_PROVIDER;
 
             const modelName =
                 validOptions.model ||
                 template.model ||
-                cliConfig.get("defaultModel") ||
+                cliConfig.get("model") ||
                 DEFAULT_MODEL;
 
             const variables = parseVariables(validOptions.variables);

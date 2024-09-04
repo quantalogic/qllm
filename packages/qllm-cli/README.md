@@ -268,7 +268,7 @@ The `list models` command offers several options:
 Manage your settings at any time:
 
 ```bash
-qllm configure --set defaultModel gpt-4
+qllm configure --set model gpt-4
 qllm configure --get logLevel
 qllm configure --list
 ```

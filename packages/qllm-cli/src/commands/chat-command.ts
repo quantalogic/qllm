@@ -40,11 +40,11 @@ const chatAction = async (options: ChatCommandOptions) => {
 
         const providerName =
             validOptions.provider ||
-            CliConfigManager.getInstance().get("defaultProvider") ||
+            CliConfigManager.getInstance().get("provider") ||
             DEFAULT_MODEL;
         const modelName =
             validOptions.model ||
-            CliConfigManager.getInstance().get("defaultModel") ||
+            CliConfigManager.getInstance().get("model") ||
             DEFAULT_PROVIDER;
 
         const availableProviders = getListProviderNames();

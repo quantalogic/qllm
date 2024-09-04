@@ -3,8 +3,8 @@
 import { z } from "zod";
 
 export const ConfigSchema = z.object({
-    defaultProvider: z.string().optional(),
-    defaultModel: z.string().optional(),
+    provider: z.string().optional(),
+    model: z.string().optional(),
     logLevel: z.enum(["error", "warn", "info", "debug"]).default("info"),
     apiKeys: z.record(z.string()).optional(),
     customPromptDirectory: z.string().optional(),
@@ -27,12 +27,12 @@ export interface ConfigOption {
 
 export const CONFIG_OPTIONS: ConfigOption[] = [
     {
-        name: "defaultProvider",
+        name: "provider",
         type: "string",
         description: "Default LLM provider",
     },
     {
-        name: "defaultModel",
+        name: "model",
         type: "string",
         description: "Default model for the selected provider",
     },

@@ -5,8 +5,8 @@ import { Config } from "../types/config-types";
 import { CONFIG_OPTIONS } from "../constants/config-constants";
 
 const ConfigSchema = z.object({
-    defaultProvider: z.string().optional(),
-    defaultModel: z.string().optional(),
+    provider: z.string().optional(),
+    model: z.string().optional(),
     logLevel: z.enum(["error", "warn", "info", "debug"]).optional(),
     apiKeys: z.record(z.string()).optional(),
     customPromptDirectory: z.string().optional(),

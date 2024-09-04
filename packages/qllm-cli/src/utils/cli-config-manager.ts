@@ -1,15 +1,14 @@
 // packages/qllm-cli/src/utils/cli-config-manager.ts
 
 import fs from "fs/promises";
-import fsSync from "fs";
 import path from "path";
 import os from "os";
 import { z } from "zod";
 
 // Define the schema for the configuration
 const CliConfigSchema = z.object({
-    defaultProvider: z.string().optional(),
-    defaultModel: z.string().optional(),
+    provider: z.string().optional(),
+    model: z.string().optional(),
     logLevel: z.enum(["error", "warn", "info", "debug"]).default("info"),
     apiKeys: z.record(z.string()).optional(),
     customPromptDirectory: z.string().optional(),
@@ -101,8 +100,8 @@ export class CliConfigManager {
 
     public configCopy(): Config {
         return {
-            defaultProvider: this.config.defaultProvider,
-            defaultModel: this.config.defaultModel,
+            provider: this.config.provider,
+            model: this.config.model,
             logLevel: this.config.logLevel,
             apiKeys: this.config.apiKeys
                 ? { ...this.config.apiKeys }

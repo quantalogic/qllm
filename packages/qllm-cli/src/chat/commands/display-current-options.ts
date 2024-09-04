@@ -9,7 +9,7 @@ export function displayCurrentOptions(
 
     const options = [
         { name: "Provider", value: configManager.getProvider() },
-        { name: "Model", value: configManager.getModel() },
+        { name: "Model", value: config.getModel() }, // Use the stored model directly
         { name: "Temperature", value: config.getTemperature() },
         { name: "Max Tokens", value: config.getMaxTokens() },
         { name: "Top P", value: config.getTopP() },
