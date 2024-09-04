@@ -40,7 +40,6 @@ export async function writeToFile(
     }
 }
 
-
 export async function fileExists(filePath: string): Promise<boolean> {
     try {
         await fs.access(filePath);
