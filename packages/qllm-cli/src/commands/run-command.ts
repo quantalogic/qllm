@@ -11,13 +11,12 @@ import { validateOptions } from "../utils/validate-options";
 import { IOManager, Spinner } from "../utils/io-manager";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { DEFAULT_PROVIDER, DEFAULT_MODEL } from "../constants";
-import { processAndExit } from "../utils/common";
 import { parseVariables } from "../utils/template-utils";
 import { writeToFile } from "../utils/write-file";
 
 declare var process: NodeJS.Process; //eslint-disable-line
 
-const runAction = async (
+export const runActionCommand = async (
     templateSource: string,
     options: Partial<RunCommandOptions>,
 ) => {
@@ -218,40 +217,3 @@ const displayExtractedVariables = (
         ioManager.displayInfo("-------------------------");
     }
 };
-
-export const runCommand = new Command("run")
-    .description("Execute a template")
-    .argument("[template]", "Template name, file path, or URL")
-    .option(
-        "-t, --type <type>",
-        "Template source type (file, url, inline)",
-        "file",
-    )
-    .option("-v, --variables <variables>", "Template variables in JSON format")
-    .option("-p, --provider <provider>", "LLM provider to use")
-    .option("-m, --model <model>", "Specific model to use")
-    .option(
-        "--max-tokens <maxTokens>",
-        "Maximum number of tokens to generate",
-        parseInt, // Ensure this is correctly parsing the input as an integer
-    )
-    .option(
-        "--temperature <temperature>",
-        "Temperature for response generation",
-        parseFloat, // Ensure this is correctly parsing the input as a float
-    )
-    .option("-s, --stream", "Stream the response")
-    .option("-o, --output <output>", "Output file for the response")
-    .option(
-        "-e, --extract <variables>",
-        "Variables to extract from the response, comma-separated",
-    )
-    .action(
-        processAndExit(
-            (templateSource: string, options: Partial<RunCommandOptions>) =>
-                runAction(templateSource, options),
-        ),
-    );
-
-// Export runAction for use in the main file
-export { runAction };

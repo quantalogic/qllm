@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { askCommand } from "./commands/ask-command";
 import { listCommand } from "./commands/list-command";
-import { chatCommand } from "./commands/chat-command";
 import { CliConfigManager } from "./utils/cli-config-manager";
 import { configureCommand } from "./commands/configure-command";
-import { runCommand, runAction } from "./commands/run-command";
+import { runActionCommand } from "./commands/run-command";
 import { readFileSync } from "fs";
 import { IOManager } from "./utils/io-manager";
+import { askCommandAction } from "./commands/ask-command";
+import { chatAction } from "./commands/chat-command";
+
 import path from "path";
 
 declare var __dirname: string; //eslint-disable-line
@@ -25,6 +26,12 @@ const ioManager = new IOManager();
 
 export async function main() {
     try {
+
+        const configManager = CliConfigManager.getInstance();
+
+        await configManager.ensureConfigFileExists();
+        await configManager.load();
+
         const program = new Command();
 
         program
@@ -35,15 +42,21 @@ export async function main() {
             .option(
                 "--log-level <level>",
                 "Set log level (error, warn, info, debug)",
+            )
+            .option("-p, --provider <provider>", "LLM provider to use")
+            .option("-m, --model <model>", "Specific model to use")
+            .option(
+                "--max-tokens <maxTokens>",
+                "Maximum number of tokens to generate",
+                parseInt,
+            )
+            .option(
+                "--temperature <temperature>",
+                "Temperature for response generation",
+                parseFloat,
             );
 
-        const configManager = CliConfigManager.getInstance();
 
-        await configManager.ensureConfigFileExists();
-        await configManager.load();
-
-        // Add the run command as a named command
-        program.addCommand(runCommand);
 
         // Set the run command as the default command
         program
@@ -57,18 +70,6 @@ export async function main() {
                 "-v, --variables <variables>",
                 "Template variables in JSON format",
             )
-            .option("-p, --provider <provider>", "LLM provider to use")
-            .option("-m, --model <model>", "Specific model to use")
-            .option(
-                "--max-tokens <maxTokens>",
-                "Maximum number of tokens to generate",
-                parseInt,
-            )
-            .option(
-                "--temperature <temperature>",
-                "Temperature for response generation",
-                parseFloat,
-            )
             .option("-s, --stream", "Stream the response")
             .option("-o, --output <output>", "Output file for the response")
             .option(
@@ -79,14 +80,63 @@ export async function main() {
                 if (!template) {
                     command.help();
                 } else {
-                    await runAction(template, options);
+                    const globalOptions = program.opts();
+                    const mergedOptions = { ...globalOptions, ...options };
+                    await runActionCommand(template, mergedOptions);
                 }
             });
 
+        // Modify the chat command definition
+        program
+            .command("chat")
+            .description("Start an interactive chat session with an LLM")
+            .option(
+                "--top-p <number>",
+                "Top P value for response generation",
+                parseFloat,
+            )
+            .option(
+                "--frequency-penalty <number>",
+                "Frequency penalty for response generation",
+                parseFloat,
+            )
+            .option(
+                "--presence-penalty <number>",
+                "Presence penalty for response generation",
+                parseFloat,
+            )
+            .option(
+                "--stop-sequence <sequence>",
+                "Stop sequence for response generation",
+                (value, previous) => previous.concat([value]),
+                [] as string[],
+            )
+            .action((options) => {
+                const globalOptions = program.opts();
+                const mergedOptions = { ...globalOptions, ...options };
+                chatAction(mergedOptions);
+            });
+
+        // Modify the ask command definition
+        program
+            .command("ask")
+            .description("Ask a question to an LLM")
+            .argument("<question>", "The question to ask")
+            .option("-c, --context <context>", "Additional context for the question")
+            .option("-i, --image <path>", "Path to image file, or URL (can be used multiple times)", (value, previous) => previous.concat([value]), [] as string[])
+            .option("--use-clipboard", "Use image from clipboard", false)
+            .option("--screenshot <display>", "Capture screenshot from specified display number", (value) => parseInt(value, 10))
+            .option("-s, --stream", "Stream the response", false)
+            .option("-o, --output <file>", "Output file for the response")
+            .option("--system-message <message>", "System message to prepend to the conversation")
+            .action((question, options) => {
+                const globalOptions = program.opts();
+                const mergedOptions = { ...globalOptions, ...options, question };
+                askCommandAction(question, mergedOptions);
+            });
+
         // Add other commands
-        program.addCommand(askCommand);
         program.addCommand(listCommand);
-        program.addCommand(chatCommand);
         program.addCommand(configureCommand);
 
         // Set up the exit handler
