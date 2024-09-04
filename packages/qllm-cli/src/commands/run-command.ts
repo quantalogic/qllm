@@ -1,6 +1,5 @@
 // packages/qllm-cli/src/commands/run-command.ts
 
-import { Command } from "commander";
 import {
     RunCommandOptions,
     RunCommandOptionsSchema,
@@ -19,7 +18,7 @@ declare var process: NodeJS.Process; //eslint-disable-line
 export const runActionCommand = async (
     templateSource: string,
     options: Partial<RunCommandOptions>,
-) => {
+): Promise<{ question: string; response: string } | undefined> => {
     const ioManager = new IOManager();
     const cliConfig = CliConfigManager.getInstance();
 
@@ -59,6 +58,12 @@ export const runActionCommand = async (
             const executor = setupExecutor(ioManager, spinner);
             const provider = await getLLMProvider(providerName);
 
+            let question = "";
+
+            executor.on("contentPrepared", (content: string) => {
+                question = content;
+            });
+
             const result = await executor.execute({
                 template,
                 variables: { ...variables },
@@ -91,6 +96,11 @@ export const runActionCommand = async (
             });
 
             await handleOutput(result, validOptions, ioManager);
+
+            return {
+                question: question,
+                response: result.response,
+            };
         } catch (error) {
             spinner.error({
                 text: `Error executing template: ${(error as Error).message}`,

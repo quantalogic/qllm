@@ -10,6 +10,9 @@ import { displayCurrentOptions } from "./commands/display-current-options";
 import { displayConversation } from "./commands/display-conversation";
 import { listModels } from "./commands/list-models";
 import { listProviders } from "./commands/list-providers";
+import { runActionCommand } from "../commands/run-command";
+
+declare var process: NodeJS.Process; // eslint-disable-line no-var
 
 export interface CommandContext {
     config: ChatConfig;
@@ -45,6 +48,7 @@ export class CommandProcessor {
         select: this.selectConversation,
         delete: this.deleteConversation,
         deleteall: this.deleteAllConversations,
+        run: this.runTemplate,
     };
 
     async processCommand(
@@ -62,6 +66,58 @@ export class CommandProcessor {
     ): Promise<void> {
         ioManager.displaySystemMessage("Stopping chat session...");
         process.exit(0);
+    }
+
+    private async runTemplate(
+        args: string[],
+        {
+            conversationManager,
+            ioManager,
+            conversationId,
+            config,
+        }: CommandContext,
+    ): Promise<void> {
+        if (!conversationId) {
+            ioManager.displayError(
+                "No active conversation. Please start a chat first.",
+            );
+            return;
+        }
+
+        const templateUrl = args[0];
+        if (!templateUrl) {
+            ioManager.displayError(
+                "Please provide a template URL or local file path.",
+            );
+            return;
+        }
+        const result = await runActionCommand(templateUrl, {
+            model: config.get("model"),
+            provider: config.get("provider"),
+            maxTokens: config.get("maxTokens"),
+            temperature: config.get("temperature"),
+            stream: true,
+        });
+
+        if (result && conversationId) {
+            conversationManager.addMessage(conversationId, {
+                role: "user",
+                content: {
+                    type: "text",
+                    text: result.question,
+                },
+                providerId: "template",
+            });
+
+            conversationManager.addMessage(conversationId, {
+                role: "assistant",
+                content: {
+                    type: "text",
+                    text: result.response,
+                },
+                providerId: "template",
+            });
+        }
     }
 
     private async setModel(
