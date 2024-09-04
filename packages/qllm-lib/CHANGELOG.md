@@ -1,5 +1,11 @@
 # qllm-lib
 
+## 3.4.1
+
+### Patch Changes
+
+- 9b93450: Fix parameters parsing for commands
+
 ## 3.4.0
 
 ### Minor Changes

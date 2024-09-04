@@ -1,5 +1,13 @@
 # qllm
 
+## 2.7.1
+
+### Patch Changes
+
+- 9b93450: Fix parameters parsing for commands
+- Updated dependencies [9b93450]
+  - qllm-lib@3.4.1
+
 ## 2.7.0
 
 ### Minor Changes
