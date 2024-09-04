@@ -9,17 +9,15 @@ import { configureCommand } from "./commands/configure-command";
 import { runCommand, runAction } from "./commands/run-command";
 import { readFileSync } from "fs";
 import { IOManager } from "./utils/io-manager";
-import path from 'path';
+import path from "path";
 
 declare var __dirname: string; //eslint-disable-line
 declare var process: NodeJS.Process; //eslint-disable-line
-
 
 // Read version from package.json
 const packageJson = JSON.parse(
     readFileSync(path.resolve(__dirname, "..", "package.json"), "utf-8"),
 );
-
 
 const VERSION = packageJson.version;
 
@@ -46,19 +44,37 @@ export async function main() {
 
         // Add the run command as a named command
         program.addCommand(runCommand);
-        
+
         // Set the run command as the default command
         program
             .argument("[template]", "Template name, file path, or URL")
-            .option("-t, --type <type>", "Template source type (file, url, inline)", "file")
-            .option("-v, --variables <variables>", "Template variables in JSON format")
+            .option(
+                "-t, --type <type>",
+                "Template source type (file, url, inline)",
+                "file",
+            )
+            .option(
+                "-v, --variables <variables>",
+                "Template variables in JSON format",
+            )
             .option("-p, --provider <provider>", "LLM provider to use")
             .option("-m, --model <model>", "Specific model to use")
-            .option("--max-tokens <maxTokens>", "Maximum number of tokens to generate", parseInt)
-            .option("--temperature <temperature>", "Temperature for response generation", parseFloat)
+            .option(
+                "--max-tokens <maxTokens>",
+                "Maximum number of tokens to generate",
+                parseInt,
+            )
+            .option(
+                "--temperature <temperature>",
+                "Temperature for response generation",
+                parseFloat,
+            )
             .option("-s, --stream", "Stream the response")
             .option("-o, --output <output>", "Output file for the response")
-            .option("-e, --extract <variables>", "Variables to extract from the response, comma-separated")
+            .option(
+                "-e, --extract <variables>",
+                "Variables to extract from the response, comma-separated",
+            )
             .action(async (template, options, command) => {
                 if (!template) {
                     command.help();
@@ -95,11 +111,9 @@ export async function main() {
     }
 }
 
-main()
-.catch((error) => {
+main().catch((error) => {
     ioManager.displayError(`Unhandled error: ${error}`);
     process.exit(1);
-}); 
-
+});
 
 export default main;

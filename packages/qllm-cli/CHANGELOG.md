@@ -1,5 +1,11 @@
 # qllm
 
+## 2.7.0
+
+### Minor Changes
+
+- 572a7d0: Improve the configure command
+
 ## 2.6.0
 
 ### Minor Changes

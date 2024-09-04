@@ -48,10 +48,10 @@ export type PartialAskCommandOptions = z.infer<
 /** Configuration for the ask command */
 export interface AskConfig {
     /** Default provider to use */
-    defaultProvider: string;
+    provider: string;
 
     /** Default model to use */
-    defaultModel: string;
+    model: string;
 
     /** Default maximum tokens */
     defaultMaxTokens: number;

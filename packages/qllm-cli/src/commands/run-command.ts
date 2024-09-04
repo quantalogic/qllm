@@ -47,13 +47,13 @@ const runAction = async (
             const providerName =
                 validOptions.provider ||
                 template.provider ||
-                cliConfig.get("defaultProvider") ||
+                cliConfig.get("provider") ||
                 DEFAULT_PROVIDER;
 
             const modelName =
                 validOptions.model ||
                 template.model ||
-                cliConfig.get("defaultModel") ||
+                cliConfig.get("model") ||
                 DEFAULT_MODEL;
 
             const variables = parseVariables(validOptions.variables);
@@ -150,7 +150,7 @@ const handleOutput = async (
 };
 
 const handleExtractedOutput = async (
-    result: unknown,    
+    result: unknown,
     validOptions: RunCommandOptions,
     ioManager: IOManager,
 ) => {
@@ -163,7 +163,8 @@ const handleExtractedOutput = async (
     const outputResult = result as { outputVariables: Record<string, any> }; //eslint-disable-line
 
     for (const variable of extractedVariables) {
-        if (outputResult.outputVariables.hasOwnProperty(variable)) { //eslint-disable-line
+        if (outputResult.outputVariables.hasOwnProperty(variable)) {
+            //eslint-disable-line
             extractedData[variable] = outputResult.outputVariables[variable];
         } else {
             ioManager.displayWarning(
@@ -211,7 +212,9 @@ const displayExtractedVariables = (
     ioManager.displayInfo("Output Variables:");
     for (const [key, value] of Object.entries(variables)) {
         ioManager.displayInfo(`${ioManager.colorize(key, "green")}:`);
-        ioManager.displayInfo(`${ioManager.colorize(value as string, "yellow")}`);
+        ioManager.displayInfo(
+            `${ioManager.colorize(value as string, "yellow")}`,
+        );
         ioManager.displayInfo("-------------------------");
     }
 };

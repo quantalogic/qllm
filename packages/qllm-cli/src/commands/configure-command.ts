@@ -1,28 +1,30 @@
 // packages/qllm-cli/src/commands/configure-command.ts
-
 import { Command } from "commander";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { IOManager } from "../utils/io-manager";
-import { Config } from "../types/config-types";
-import { ConfigSchema } from "../types/config-types"; // {{ edit_1 }}
+import { Config } from "../types/configure-command-options";
+import { ConfigSchema } from "../types/configure-command-options"; // {{ edit_1 }}
 import { z } from "zod";
-import { CONFIG_OPTIONS } from "../types/config-types";
+import { CONFIG_OPTIONS } from "../types/configure-command-options";
 import { utils } from "../chat/utils";
+import { getListProviderNames, getLLMProvider } from "qllm-lib";
 
 const configManager = CliConfigManager.getInstance();
 const ioManager = new IOManager();
-
 export const configureCommand = new Command("configure")
     .description("Configure QLLM CLI settings")
     .option("-l, --list", "List all configuration settings")
-    .option("-s, --set <key> <value>", "Set a configuration value")
+    .option("-s, --set <key=value>", "Set a configuration value")
     .option("-g, --get <key>", "Get a configuration value")
     .action(async (options) => {
         try {
             if (options.list) {
                 listConfig();
             } else if (options.set) {
-                await setConfig(options.set, options.args[0]);
+                if (options.set) {
+                    const [key, value] = options.set.split("="); // Split the input on '='
+                    await setConfig(key, value);
+                }
             } else if (options.get) {
                 getConfig(options.get);
             } else {
@@ -71,42 +73,65 @@ function maskApiKey(apiKey: string): string {
 }
 
 async function setConfig(key: string, value: string): Promise<void> {
+    const config = configManager.configCopy(); // Ensure this is a fresh copy
+
+    // Declare variables outside the switch statement
+    let models: Array<{ id: string }>;
+    let modelIds: string[];
+
+    if (key === "model") {
+        // Ensure the provider is set before setting the model
+        if (!config.provider) {
+            throw new Error("Provider must be set before setting the model.");
+        }
+        const provider = await getLLMProvider(config.provider); // {{ edit_1 }}
+        models = await provider.listModels(); // {{ edit_2 }}
+        modelIds = models.map((model) => model.id);
+
+        if (!modelIds.includes(value)) {
+            throw new Error(
+                `Invalid model: ${value}. Available models for provider ${config.provider}: ${modelIds.join(", ")}`,
+            );
+        }
+        config.model = value;
+    }
+
+    // Update the configManager with the new values
+    configManager.set(key as keyof Config, config[key as keyof Config]);
+
+    // Save the updated configuration
     try {
-        const configOption = CONFIG_OPTIONS.find(option => option.name === key);
-        if (!configOption) {
-            throw new Error(`Invalid configuration key: ${key}`);
-        }
-
-        const schema = ConfigSchema.shape[key as keyof Config];
-        const validatedValue = schema.parse(value);
-
-        configManager.set(key as keyof Config, validatedValue);
+        console.log(`Setting ${key} to ${value}`);
+        configManager.set(key as keyof Config, value); // Ensure the key-value pair is set correctly
         await configManager.save();
-        ioManager.displaySuccess(`Configuration updated: ${key} = ${value}`);
+        ioManager.displaySuccess(
+            `Configuration updated and saved successfully`,
+        );
+        getConfig(key); // Display the updated config
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            ioManager.displayError(`Validation error: ${error.errors[0].message}`);
-        } else {
-            ioManager.displayError(`Failed to set configuration: ${(error as Error).message}`);
-        }
+        throw new Error(
+            `Failed to save configuration: ${(error as Error).message}`,
+        );
     }
 }
 
 function getConfig(key: string): void {
-    const value = configManager.get(key as keyof Config);
-    if (value !== undefined) {
-        ioManager.displayInfo(`${key}: ${JSON.stringify(value)}`);
+    const configValue = configManager.get(key as keyof Config); // Ensure this retrieves the correct value
+    if (configValue) {
+        ioManager.displayInfo(`Configuration for ${key}: ${configValue}`);
     } else {
-        ioManager.displayError(`Configuration key not found: ${key}`);
+        ioManager.displayError(`Configuration key not found: ${key}`); // Handle missing keys
     }
 }
 
 async function interactiveConfig(): Promise<void> {
-    const config = configManager.configCopy();
+    const config = configManager.configCopy(); // Ensure this is a fresh copy
+    const validProviders = getListProviderNames(); // Fetch valid providers
+
     const configGroups = [
         {
             name: "Provider Settings",
-            options: ["defaultProvider", "defaultModel"],
+            options: ["provider", "model"],
         },
         {
             name: "Model Parameters",
@@ -132,44 +157,107 @@ async function interactiveConfig(): Promise<void> {
         ioManager.displayGroupHeader(group.name);
 
         for (const key of group.options) {
-            const configOption = CONFIG_OPTIONS.find(option => option.name === key);
+            const configOption = CONFIG_OPTIONS.find(
+                (option) => option.name === key,
+            );
             if (!configOption) continue;
 
             const value = config[key as keyof Config];
-            const currentValue = value !== undefined
-                ? ioManager.colorize(JSON.stringify(value), "yellow")
-                : ioManager.colorize("Not set", "dim");
+            const currentValue =
+                value !== undefined
+                    ? ioManager.colorize(JSON.stringify(value), "yellow")
+                    : ioManager.colorize("Not set", "dim");
 
-            const newValue = await ioManager.getUserInput(
-                `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}): `
-            );
+            let newValue: string | undefined;
 
-            if (newValue.trim() !== "") {
-                await utils.retryOperation(async () => {
-                    try {
-                        const schema = ConfigSchema.shape[key as keyof Config];
-                        const validatedValue = schema.parse(
-                            configOption.type === "number" ? parseFloat(newValue) : newValue
-                        );
-                        configManager.set(key as keyof Config, validatedValue);
-                        ioManager.displaySuccess(`${key} updated successfully`);
-                    } catch (error) {
-                        if (error instanceof z.ZodError) {
-                            throw new Error(`Invalid input: ${error.errors[0].message}`);
-                        }
-                        throw error;
-                    }
-                }, 3, 0);
+            if (key === "provider") {
+                newValue = await ioManager.getUserInput(
+                    `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}).\nAvailable providers:\n${validProviders.map((provider) => `  - ${provider}`).join("\n")}\nPlease select a provider: `,
+                );
+
+                // Validate the input against the list of valid providers
+                if (!validProviders.includes(newValue.trim())) {
+                    ioManager.displayError(
+                        `Invalid provider. Please choose from: ${validProviders.join(", ")}`,
+                    );
+                    continue; // Skip to the next option
+                }
+
+                // Fetch models for the selected provider
+                const provider = await getLLMProvider(newValue.trim());
+                const models = await provider.listModels();
+                const modelIds = models.map(
+                    (model: { id: string }) => model.id,
+                ); // Explicitly type the model parameter
+
+                // Update the current value to reflect the new provider
+                config.provider = newValue.trim();
+
+                // Prompt for the default model with improved display
+                const modelInput = await ioManager.getUserInput(
+                    `${ioManager.colorize("model", "cyan")} (Available models):\n${modelIds.map((modelId) => `  - ${modelId}`).join("\n")}\nPlease select a model: `,
+                );
+
+                // Validate the input against the list of models
+                if (!modelIds.includes(modelInput.trim())) {
+                    ioManager.displayError(
+                        `Invalid model. Please choose from: ${modelIds.join(", ")}`,
+                    );
+                    continue; // Skip to the next option
+                }
+
+                // Set the validated model
+                config.model = modelInput.trim(); // Ensure this line is executed after setting the provider
+            } else {
+                newValue = await ioManager.getUserInput(
+                    `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}): `,
+                );
             }
+
+            if (newValue && newValue.trim() !== "") {
+                await utils.retryOperation(
+                    async () => {
+                        try {
+                            const schema =
+                                ConfigSchema.shape[key as keyof Config];
+                            const validatedValue = schema.parse(
+                                configOption.type === "number"
+                                    ? parseFloat(newValue)
+                                    : newValue,
+                            );
+                            configManager.set(
+                                key as keyof Config,
+                                validatedValue,
+                            );
+                            ioManager.displaySuccess(
+                                `${key} updated successfully`,
+                            );
+                        } catch (error) {
+                            if (error instanceof z.ZodError) {
+                                throw new Error(
+                                    `Invalid input: ${error.errors[0].message}`,
+                                );
+                            }
+                            throw error;
+                        }
+                    },
+                    3,
+                    0,
+                );
+            }
+
+            // Update the configManager with the new values
+            configManager.set(key as keyof Config, config[key as keyof Config]); // Ensure the manager is updated
         }
         ioManager.newLine(); // Add a newline after each group
     }
 
     try {
-        await configManager.save();
+        await configManager.save(); // Ensure the save method is called
         ioManager.displaySuccess(
             "Configuration updated and saved successfully",
         );
+        getConfig("all"); // {{ edit_2 }} Display all configurations after saving
     } catch (error) {
         ioManager.displayError(
             `Failed to save configuration: ${(error as Error).message}`,
