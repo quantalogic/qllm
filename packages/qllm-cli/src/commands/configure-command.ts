@@ -3,10 +3,10 @@
 import { Command } from "commander";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { IOManager } from "../utils/io-manager";
-import { Config } from "../types/config-types";
-import { ConfigSchema } from "../types/config-types"; // {{ edit_1 }}
+import { Config } from "../types/configure-command-options";
+import { ConfigSchema } from "../types/configure-command-options"; // {{ edit_1 }}
 import { z } from "zod";
-import { CONFIG_OPTIONS } from "../types/config-types";
+import { CONFIG_OPTIONS } from "../types/configure-command-options";
 import { utils } from "../chat/utils";
 import { getListProviderNames, getLLMProvider } from "qllm-lib";
 

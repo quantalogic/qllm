@@ -1,7 +1,7 @@
 // packages/qllm-cli/src/utils/input-validator.ts
 
 import { z } from "zod";
-import { Config } from "../types/config-types";
+import { Config } from "../types/configure-command-options";
 import { CONFIG_OPTIONS } from "../constants/config-constants";
 
 const ConfigSchema = z.object({
