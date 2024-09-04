@@ -27,6 +27,8 @@ content: >
 
       The article must be {{number_of_words}} words long and must be written in a way that engages and motivates impatient learners to master {{subject}} quickly and effectively.
 
+      Other instructions: {{other_instructions}}
+
       ### Recommendation you must follow
 
        - This article will be based on example first.
