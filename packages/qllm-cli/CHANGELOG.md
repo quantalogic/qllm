@@ -1,5 +1,11 @@
 # qllm
 
+## 2.7.2
+
+### Patch Changes
+
+- 72aa8c0: Add run command feature in chat
+
 ## 2.7.1
 
 ### Patch Changes
