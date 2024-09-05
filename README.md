@@ -376,6 +376,11 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
+## Project Growth
+
+## Project Growth
+[![Star History Chart](https://api.star-history.com/svg?repos=quantalogic/qllm&type=Date)](https://star-history.com/#quantalogic/qllm&Date)
+
 ## Acknowledgements
 
 We would like to extend our heartfelt thanks to the following individuals and organizations for their invaluable contributions to QLLM:
