@@ -1,5 +1,11 @@
 # qllm-lib
 
+## 3.6.0
+
+### Minor Changes
+
+- Improve configuration, and several fix
+
 ## 3.5.0
 
 ### Minor Changes
