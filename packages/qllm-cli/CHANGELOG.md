@@ -1,5 +1,11 @@
 # qllm
 
+## 2.9.1
+
+### Patch Changes
+
+- 63b73ea: Fix stdin
+
 ## 2.9.0
 
 ### Minor Changes
