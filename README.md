@@ -9,11 +9,14 @@
 ## Chapter 1: Introduction
 
 ### 1.1 Welcome to QLLM
-Welcome to QLLM, your ultimate command-line tool for interacting with Large Language Models (LLMs). Imagine having a powerful AI assistant at your fingertips, ready to help you tackle complex tasks, generate creative content, and analyze data—all from your terminal. This README will guide you through everything you need to know to harness the full potential of QLLM and become a master of AI-powered productivity.
+Welcome to QLLM, your ultimate command-line tool for interacting with Large Language Models (LLMs). 
+
+> Imagine having a powerful AI assistant at your fingertips, ready to help you tackle complex tasks, generate creative content, and analyze data—all from your terminal. 
+
+This README will guide you through everything you need to know to harness the full potential of QLLM and become a master of AI-powered productivity.
 
 ### 1.2 Show Your Support
 If you find QLLM helpful and enjoyable to use, please consider giving us a star ✨ on GitHub! Your support not only motivates us to keep improving the project but also helps others discover QLLM. Thank you for being a part of our community!
-# End Generation Here
 
 
 ## Chapter 2: Benefits of QLLM
@@ -214,11 +217,11 @@ The `run` command allows you to execute predefined templates, streamlining compl
 #### Using Predefined Templates
 To run a template:
 ```bash
-qllm run
+qllm <template-url or path>
 ```
 For example:
 ```bash
-qllm run https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/chain_of_thought_leader.yaml
+qllm  https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/chain_of_thought_leader.yaml
 ```
 
 #### Creating Custom Templates
@@ -370,3 +373,21 @@ This project is licensed under the Apache License, Version 2.0. You may obtain a
 http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+## Acknowledgements
+
+We would like to extend our heartfelt thanks to the following individuals and organizations for their invaluable contributions to QLLM:
+
+1. **OpenAI**: For their groundbreaking work on large language models and the API that powers QLLM.
+2. **Anthropic**: For their innovative approach to AI and the Claude models that enhance QLLM's capabilities.
+3. **AWS Bedrock**: For their support in providing access to advanced AI models through AWS.
+4. **Ollama**: For their cutting-edge LLM platform that powers QLLM'slocally.
+5. **Groq**: For their powerful and scalable LLM infrastructure.
+6. **Mistral**: For their innovative approach to AI and te represent France 🇫🇷.
+
+
+A special thanks to the entire QLLM community for their feedback and support. Your insights and contributions are invaluable to us.
+
+And of course for Quantalogic for funding the project.
+
+https://www.quantalogic.app 
