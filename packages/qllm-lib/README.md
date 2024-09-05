@@ -24,7 +24,8 @@ qllm-lib is a powerful TypeScript library that provides a unified interface for 
 
 To install qllm-lib, use npm:
 
-```bash
+- **Install qllm-lib:**
+```
 npm install qllm-lib
 ```
 
