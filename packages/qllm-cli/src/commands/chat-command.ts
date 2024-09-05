@@ -17,8 +17,7 @@ declare var process: NodeJS.Process; //eslint-disable-line
 
 export const chatAction = async (options: ChatCommandOptions) => {
     try {
-        
-        const cliConfig = CliConfigManager.getInstance(); 
+        const cliConfig = CliConfigManager.getInstance();
 
         await chatConfig.initialize();
 
@@ -46,9 +45,7 @@ export const chatAction = async (options: ChatCommandOptions) => {
             DEFAULT_PROVIDER;
 
         const modelName =
-            validOptions.model ||
-            cliConfig.get("model") ||
-            DEFAULT_PROVIDER;
+            validOptions.model || cliConfig.get("model") || DEFAULT_PROVIDER;
 
         const availableProviders = getListProviderNames();
         if (!availableProviders.includes(providerName)) {
@@ -74,7 +71,6 @@ export const chatAction = async (options: ChatCommandOptions) => {
         chatConfig.set("frequencyPenalty", cliConfig.get("frequencyPenalty"));
         chatConfig.set("presencePenalty", cliConfig.get("presencePenalty"));
         chatConfig.set("stopSequence", cliConfig.get("stopSequence"));
-
 
         if (validOptions.maxTokens)
             chatConfig.set("maxTokens", validOptions.maxTokens);

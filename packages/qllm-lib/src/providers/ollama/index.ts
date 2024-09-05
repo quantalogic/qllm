@@ -152,8 +152,8 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
         if (isTextContent(messageContent)) {
           content += messageContent.text + '\n';
         } else if (isImageUrlContent(messageContent)) {
-            const imageContent = await createOllamaImageContent(messageContent.url);
-            images.push(imageContent.url);
+          const imageContent = await createOllamaImageContent(messageContent.url);
+          images.push(imageContent.url);
         }
       }
 
@@ -194,12 +194,12 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
 }
 
 export const createOllamaImageContent = async (source: string): Promise<ImageUrlContent> => {
-    const content = await imageToBase64(source);
-    // Return the raw base64 string without the data URL prefix
-    return {
-      type: 'image_url',
-      url: content.base64,
-    };
+  const content = await imageToBase64(source);
+  // Return the raw base64 string without the data URL prefix
+  return {
+    type: 'image_url',
+    url: content.base64,
+  };
 };
 
 function formatTools(tools: Tool[] | undefined): OllamaTool[] | undefined {

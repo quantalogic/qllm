@@ -1,10 +1,8 @@
 # 🚀 qllm-lib
 
-
 ![npm version](https://img.shields.io/npm/v/qllm-lib)
 ![Stars](https://img.shields.io/github/stars/quantalogic/qllm)
 ![Forks](https://img.shields.io/github/forks/quantalogic/qllm)
-
 
 ## 📚 Table of Contents
 
@@ -31,6 +29,7 @@ qllm-lib is a powerful TypeScript library that provides a unified interface for 
 To install qllm-lib, use npm:
 
 - **Install qllm-lib:**
+
 ```
 npm install qllm-lib
 ```

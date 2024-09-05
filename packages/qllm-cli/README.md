@@ -5,6 +5,7 @@
 ![Forks](https://img.shields.io/github/forks/quantalogic/qllm)
 
 ## Table of Contents
+
 ...
 
 ## Table of Contents
@@ -89,7 +90,8 @@ QLLM CLI boasts an impressive array of features designed to elevate your AI inte
 
 To embark on your QLLM CLI journey, ensure you have Node.js (version 14 or higher) installed on your system. Then, execute the following command:
 
-- **Install QLLM CLI globally:**
+-   **Install QLLM CLI globally:**
+
 ```
 npm install -g qllm
 ```
@@ -373,46 +375,55 @@ Each command supports various options. Use `qllm <command> --help` for detailed 
 Explore these example use cases for QLLM CLI:
 
 1. **Creative Writing Assistance:**
+
     ```
     qllm ask "Write a haiku about artificial intelligence"
     ```
 
 2. **Code Explanation:**
+
     ```
     qllm ask "Explain this Python code: [paste your code here]"
     ```
 
 3. **Image Analysis:**
+
     ```
     qllm ask "Describe the contents of this image" -i vacation_photo.jpg
     ```
 
 4. **Interactive Problem-Solving:**
+
     ```
     qllm chat -p anthropic -m claude-2
     ```
 
 5. **Data Analysis:**
+
     ```
     qllm ask "Analyze this CSV data: [paste CSV here]" --max-tokens 500
     ```
 
 6. **Language Translation:**
+
     ```
     qllm ask "Translate 'Hello, world!' to French, Spanish, and Japanese"
     ```
 
 7. **Document Summarization:**
+
     ```
     qllm ask "Summarize this article: [paste article text]" -o summary.txt
     ```
 
 8. **Character Creation:**
+
     ```
     qllm ask "Create a detailed character profile for a sci-fi novel"
     ```
 
 9. **Recipe Generation:**
+
     ```
     qllm ask "Create a recipe using chicken, spinach, and feta cheese"
     ```
