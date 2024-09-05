@@ -7,7 +7,7 @@ export const RunCommandOptionsSchema = z.object({
     model: z.string().optional(),
     maxTokens: z.number().int().positive().optional(),
     temperature: z.number().min(0).max(1).optional(),
-    stream: z.boolean().optional(),
+    noStream: z.boolean().optional(),
     output: z.string().optional(),
     extract: z.string().optional(),
 });

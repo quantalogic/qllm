@@ -17,7 +17,7 @@ import {
 } from '../../types';
 import { ALL_PERPLEXITY_MODELS, DEFAULT_PERPLEXITY_MODEL } from './models';
 
-const DEFAULT_MAX_TOKENS = 1024 * 4;
+const DEFAULT_MAX_TOKENS = 1024 * 32;
 const DEFAULT_MODEL = 'mixtral-8x7b-instruct';
 const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
 
@@ -46,21 +46,24 @@ export class PerplexityProvider implements LLMProvider, EmbeddingProvider {
 
   private getOptions(options: LLMOptions): LLMOptions {
     // Remove undefined and null values
-    const optionsToInclude = {
+    const optionsToInclude: Partial<LLMOptions> = {
       temperature: options.temperature,
       model: options.model,
       maxTokens: options.maxTokens,
-      topP: options.topProbability,
-      topK: options.topKTokens,
-      presencePenalty:
-        options.presencePenalty != null ? Math.max(1, options.presencePenalty) : undefined,
-      frequencyPenalty:
-        options.frequencyPenalty != null ? Math.max(1, options.frequencyPenalty) : undefined,
+      // Explicitly unset logprobs and topLogprobs
+      logprobs: undefined,
+      topLogprobs: undefined,
     };
 
-    return Object.fromEntries(
-      Object.entries(optionsToInclude).filter(([_, v]) => v != null),
+    const filteredOptions = Object.fromEntries(
+      Object.entries(optionsToInclude)
+        .filter(([_, v]) => v != null)
+        .filter(([_, v]) => v !== undefined),
     ) as unknown as LLMOptions;
+
+    // console.log('filteredOptions 🔥 🍵: ', filteredOptions);
+
+    return filteredOptions;
   }
 
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
@@ -69,17 +72,22 @@ export class PerplexityProvider implements LLMProvider, EmbeddingProvider {
       const model = options.model || DEFAULT_MODEL;
       const filteredOptions = this.getOptions(options);
 
-      const response = await this.openAIProvider.generateChatCompletion({
+      const chatRequest: ChatCompletionParams = {
         messages: messages,
         options: {
-          ...filteredOptions,
+          ...filteredOptions, // Include filtered options
           model,
         },
         tools,
         toolChoice,
         parallelToolCalls,
         responseFormat,
-      });
+      };
+
+      // console.log('chatRequest 🔥: ', chatRequest);
+      // console.dir(chatRequest, { depth: null });
+
+      const response = await this.openAIProvider.generateChatCompletion(chatRequest);
 
       return {
         ...response,
@@ -98,17 +106,22 @@ export class PerplexityProvider implements LLMProvider, EmbeddingProvider {
       const model = options.model || DEFAULT_MODEL;
       const filteredOptions = this.getOptions(options);
 
-      const stream = this.openAIProvider.streamChatCompletion({
+      const chatRequest: ChatCompletionParams = {
         messages: messages,
         options: {
-          ...filteredOptions,
+          ...filteredOptions, // Include filtered options
           model,
         },
         tools,
         toolChoice,
         parallelToolCalls,
         responseFormat,
-      });
+      };
+
+      // console.log('chatRequest 🔥 🍵: ', chatRequest);
+      // console.dir(chatRequest, { depth: null });
+
+      const stream = this.openAIProvider.streamChatCompletion(chatRequest);
 
       for await (const chunk of stream) {
         yield {

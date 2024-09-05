@@ -10,7 +10,7 @@ const BaseAskCommandOptionsSchema = z.object({
     temperature: z.number().min(0).max(1).optional(),
 
     /** Whether to stream the response */
-    stream: z.boolean().optional(),
+    noStream: z.boolean().optional(),
 
     /** Output file for the response */
     output: z.string().optional(),

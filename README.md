@@ -1,59 +1,82 @@
-# 🚀 QLLM: Simplifying Language Model Interactions
+# QLLM: Simplifying Language Model Interactions
 
-Welcome to QLLM, a project designed to streamline your interactions with Large Language Models (LLMs). This monorepo contains two powerful packages:
 
-1. 📚 qllm-lib: A versatile TypeScript library for seamless LLM integration
-2. 🖥️ qllm-cli: A command-line interface for effortless LLM interactions
+![npm version](https://img.shields.io/npm/v/qllm)
+![Stars](https://img.shields.io/github/stars/quantalogic/qllm)
+![Forks](https://img.shields.io/github/forks/quantalogic/qllm)
 
-## 🌟 Why QLLM and QLLM-LIB?
 
-QLLM bridges the gap between cutting-edge language models and their practical implementation in business processes. Our goal is to make the power of generative AI accessible and actionable for businesses of all sizes.
+## Chapter 1: Introduction
 
-QLLM-LIB provides a user-friendly AI toolbox that empowers developers to harness the potential of various LLMs through a single, unified interface. By simplifying interactions with these AI models, we aim to boost productivity and drive innovation across industries.
+### 1.1 Welcome to QLLM
+Welcome to QLLM, your ultimate command-line tool for interacting with Large Language Models (LLMs). 
 
-## 📦 Packages
+> Imagine having a powerful AI assistant at your fingertips, ready to help you tackle complex tasks, generate creative content, and analyze data—all from your terminal. 
 
-### qllm-lib
+This README will guide you through everything you need to know to harness the full potential of QLLM and become a master of AI-powered productivity.
 
-qllm-lib is a TypeScript library that offers a unified interface for interacting with various LLM providers. It simplifies working with different AI models and provides features like templating, streaming, and conversation management.
+### 1.2 Show Your Support
+If you find QLLM helpful and enjoyable to use, please consider giving us a star ✨ on GitHub! Your support not only motivates us to keep improving the project but also helps others discover QLLM. Thank you for being a part of our community!
+
+
+## Chapter 2: Benefits of QLLM
+
+### 2.1 Why QLLM and QLLM-LIB?
+#### Key Benefits:
+1. **Unified Access**: QLLM brings together multiple LLM providers under one roof. No more context-switching between different tools and APIs.  
+2. **Command-Line Power**: As a developer, you live in the terminal. QLLM integrates seamlessly into your existing workflow.  
+3. **Flexibility and Customization**: Tailor AI interactions to your specific needs with extensive configuration options and support for custom templates.  
+4. **Time-Saving Features**: From quick queries to ongoing conversations, QLLM helps you get answers fast.  
+5. **Cross-Platform Compatibility**: Works consistently across Windows, macOS, and Linux.  
+
+### 2.2 Anecdote: A Productivity Boost
+Imagine you're a data analyst working on a tight deadline. You need to quickly analyze a large dataset and generate a report for your team. Instead of manually sifting through the data and writing the report, you turn to QLLM. With a few simple commands, you're able to:
+1. **Summarize the key insights** from the dataset.  
+2. **Generate visualizations** to highlight important trends.  
+3. **Draft a concise, well-written report**.  
+
+All of this without leaving your terminal. The time you save allows you to focus on higher-level analysis and deliver the report ahead of schedule. Your manager is impressed, and you've just demonstrated the power of QLLM to streamline your workflow.
+
+## Chapter 3: Packages
+
+```mermaid
+graph TD
+    A[qllm-cli] --> B[qllm-lib]
+```
+
+
+
+### 3.1 qllm-lib
+A versatile TypeScript library for seamless LLM integration. It simplifies working with different AI models and provides features like templating, streaming, and conversation management.
 
 #### Practical Example
-
 ```typescript
 import { createLLMProvider } from 'qllm-lib';
 
 async function generateProductDescription() {
-  const provider = createLLMProvider({ name: 'openai' });
-
-  const result = await provider.generateChatCompletion({
-    messages: [
-      { 
-        role: 'user', 
-        content: { 
-          type: 'text', 
-          text: 'Write a compelling product description for a new smartphone with a foldable screen, 5G capability, and 48-hour battery life.' 
-        } 
-      },
-    ],
-    options: { model: 'gpt-4', maxTokens: 200 },
-  });
-
-  console.log('Generated Product Description:', result.text);
+    const provider = createLLMProvider({ name: 'openai' });
+    const result = await provider.generateChatCompletion({
+        messages: [
+            {
+                role: 'user',
+                content: {
+                    type: 'text',
+                    text: 'Write a compelling product description for a new smartphone with a foldable screen, 5G capability, and 48-hour battery life.'
+                },
+            },
+        ],
+        options: { model: 'gpt-4', maxTokens: 200 },
+    });
+    console.log('Generated Product Description:', result.text);
 }
 
 generateProductDescription();
 ```
 
-This example demonstrates how to use qllm-lib to generate a product description, which could be useful for e-commerce platforms or marketing teams.
-
-For more detailed information and advanced usage, check out the [qllm-lib README](./packages/qllm-lib/README.md).
-
-### qllm-cli
-
-qllm-cli is a command-line interface that leverages qllm-lib to provide easy access to LLM capabilities directly from your terminal.
+### 3.2 qllm-cli
+A command-line interface that leverages qllm-lib to provide easy access to LLM capabilities directly from your terminal.
 
 #### Practical Example
-
 ```bash
 # Generate a product description
 qllm ask "Write a 50-word product description for a smart home security camera with night vision and two-way audio."
@@ -61,250 +84,310 @@ qllm ask "Write a 50-word product description for a smart home security camera w
 # Use a specific model for market analysis
 qllm ask --model gpt-4o-mini --provider openai "Analyze the potential market impact of electric vehicles in the next 5 years. Provide 3 key points."
 
-# Stream a response for real-time content generation
-qllm ask --stream --model gemma2:2b --provider ollama "Write a short blog post about the benefits of remote work."
+# Write a short blog post about the benefits of remote work
+qllm ask --model gemma2:2b --provider ollama "Write a short blog post about the benefits of remote work."
 
-# Describe a picture
-qllm ask --stream --model llava:latest --provider ollama "Describe the picture" -i "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Kowloon_Waterfront%2C_Hong_Kong%2C_2013-08-09%2C_DD_05.jpg/640px-Kowloon_Waterfront%2C_Hong_Kong%2C_2013-08-09%2C_DD_05.jpg"
+# Analyze CSV data from stdin
+cat sales_data.csv | qllm ask "Analyze this CSV data. Provide a summary of total sales, top-selling products, and any notable trends. Format your response as a bulleted list."
 
-# Chat
-qllm chat --provider ollama --model gemma2:2b
+## Example using question from stdin
+echo "What is the weather in Tokyo?" | qllm  --provider ollama --model gemma2:2b 
 ```
 
+## Chapter 4: Getting Started
 
-These examples show how qllm-cli can be used for various business tasks, from content creation to market analysis.
+### 4.1 System Requirements
+Before we dive into the exciting world of QLLM, let's make sure your system is ready:
+- Node.js (version 16.5 or higher)
+- npm (usually comes with Node.js)
+- A terminal or command prompt
+- An internet connection (QLLM needs to talk to the AI, after all!)
 
-For a complete list of commands and options, refer to the [qllm-cli README](./packages/qllm-cli/README.md).
-
-## 🚀 Getting Started
-
-### Installing qllm-lib
-
-To use qllm-lib in your project:
-
-```bash
-npm install qllm-lib
-```
-
-### Installing qllm-cli
-
-To use qllm-cli globally:
-
-```bash
-npm install -g qllm
-```
-
-## 🛠️ Development
-
-Certainly! I'll rewrite the full updated documentation, incorporating the improvements while maintaining the original features and style. Here's the enhanced version:
-
-
-### Quick Start
-
-For experienced users who want to get up and running quickly:
-
-```bash
-git clone https://github.com/quantalogic/qllm.git
-cd qllm
-pnpm install
-pnpm run build
-pnpm run test
-```
-
-### Project Structure
-
-This monorepo contains the following packages:
-
-- `qllm-core`: Core functionality of the QLLM library
-- `qllm-cli`: Command-line interface for QLLM
-- (Add other packages as applicable)
-
-Each package has its own `package.json`, source code, and tests.
-
-### How to Use
-
-This section provides comprehensive instructions on how to install, build, test, version, and publish the project.
-
-#### Installation
-
-To set up the project:
-
-1. Ensure you have Node.js (≥16.5.0) and pnpm (≥6.0.0) installed.
-2. Clone the repository:
+### 4.2 Step-by-Step Installation Guide
+1. Open your terminal or command prompt.
+2. Run the following command:
    ```bash
-   git clone https://github.com/quantalogic/qllm.git
-   cd qllm
+   npm install -g qllm
    ```
-3. Install dependencies:
+   This command tells npm to install QLLM globally on your system, making it available from any directory.
+3. Wait for the installation to complete. You might see a progress bar and some text scrolling by. Don't panic, that's normal!
+4. Once it's done, verify the installation by running:
    ```bash
-   pnpm install
+   qllm --version
    ```
+   You should see a version number (e.g., 1.8.0) displayed. If you do, congratulations! You've successfully installed QLLM.
 
-#### Building
+> 💡 Pro Tip: If you encounter any permission errors during installation, you might need to use `sudo` on Unix-based systems or run your command prompt as an administrator on Windows.
 
-To build all packages in the monorepo:
+### 4.3 Configuration
+Now that QLLM is installed, let's get it configured. Think of this as teaching QLLM your preferences and giving it the keys to the AI kingdom.
 
+#### Configuring Default Settings
+While you're in the configuration mode, you can also set up some default preferences:
+1. Choose your default provider and model.
+2. Set default values for parameters like temperature and max tokens.
+3. Configure other settings like log level and custom prompt directory.
+
+Here's an example of what this might look like:
 ```bash
-pnpm run build
+$ qllm configure
+? Default Provider: openai
+? Default Model: gpt-4o-mini
+? Temperature (0.0 to 1.0): 0.7
+? Max Tokens: 150
+? Log Level: info
 ```
 
-This command executes the build script for each package, compiling TypeScript and bundling with Rollup as configured.
+> 💡 Pro Tip: You can always change these settings later, either through the `qllm configure` command or directly in the configuration file located at `~/.qllmrc`.
+>
 
-#### Testing
+**Providers Supported**
 
-Run tests across all packages:
+- openai
+- anthropic
+- AWS Bedrock (Anthropic)
+- ollama
+- groq
+- mistral
+- claude
+- openrouter
 
+### 4.4 Your First QLLM Command
+Enough setup, let's see QLLM in action! We'll start with a simple query to test the waters.
+
+#### Running a Simple Query
+1. In your terminal, type:
+   ```bash
+   qllm ask "What is the meaning of life, the universe, and everything?"
+   ```
+2. Press Enter and watch the magic happen!
+
+#### Understanding the Output
+QLLM will display the response from the AI. It might look something like this:
+```plaintext
+Assistant: The phrase "the meaning of life, the universe, and everything" is a reference to Douglas Adams' science fiction series "The Hitchhiker's Guide to the Galaxy." In the story, a supercomputer named Deep Thought is asked to calculate the answer to the "Ultimate Question of Life, the Universe, and Everything." After 7.5 million years of computation, it provides the answer: 42...
+```
+
+> 🧠 **Pause and Reflect**: What do you think about this response? How does it compare to what you might have gotten from a simple web search?
+
+## Chapter 5: Core Commands
+
+### 5.1 The 'ask' Command
+The `ask` command is your go-to for quick, one-off questions. It's like having a knowledgeable assistant always ready to help.
+
+#### Syntax and Options
 ```bash
-pnpm run test
+qllm ask "Your question here"
 ```
+- `-p, --provider`: Specify the LLM provider (e.g., openai, anthropic)
+- `-m, --model`: Choose a specific model
+- `-t, --max-tokens`: Set maximum tokens for the response
+- `--temperature`: Adjust output randomness (0.0 to 1.0)
 
-This executes test suites in each package, ensuring code quality and functionality.
-
-#### Versioning and Changesets
-
-This project uses Semantic Versioning (SemVer) and Changesets for version management.
-
-##### Understanding Semantic Versioning
-
-SemVer uses a three-part version number: MAJOR.MINOR.PATCH
-
-- MAJOR: Incremented for incompatible API changes
-- MINOR: Incremented for backwards-compatible new features
-- PATCH: Incremented for backwards-compatible bug fixes
-
-##### Creating a Changeset
-
-1. Make code changes.
-2. Run:
+#### Use Cases and Examples
+1. Quick fact-checking:
    ```bash
-   pnpm changeset
+   qllm ask "What year was the first Moon landing?"
    ```
-3. Follow prompts to select modified packages and describe changes.
-
-   Example:
+2. Code explanation:
+   ```bash
+   qllm ask "Explain this Python code: print([x for x in range(10) if x % 2 == 0])"
    ```
-   $ pnpm changeset
-   🦋  Which packages would you like to include? · qllm-core, qllm-cli
-   🦋  Which packages should have a major bump? · No items were selected
-   🦋  Which packages should have a minor bump? · qllm-cli
-   🦋  Which packages should have a patch bump? · qllm-core
-   🦋  Please enter a summary for this change (this will be in the changelogs).
-   🦋  Summary · Added new CLI command and fixed core module bug
+3. Language translation:
+   ```bash
+   qllm ask "Translate 'Hello, world!' to French, Spanish, and Japanese"
    ```
 
-4. Commit the generated changeset file with your changes.
+### 5.2 The 'chat' Command
+While `ask` is perfect for quick queries, `chat` is where QLLM really shines. It allows you to have multi-turn conversations, maintaining context throughout.
 
-##### Updating Versions
-
-To apply changesets and update versions:
-
+#### Starting and Managing Conversations
+To start a chat session:
 ```bash
-pnpm run version
+qllm chat
+```
+Once in a chat session, you can use various commands:
+- `/help`: Display available commands
+- `/new`: Start a new conversation
+- `/save`: Save the current conversation
+
+### 5.3 The 'run' Command
+The `run` command allows you to execute predefined templates, streamlining complex or repetitive tasks.
+
+#### Using Predefined Templates
+To run a template:
+```bash
+qllm <template-url or path>
+```
+For example:
+```bash
+qllm  https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/chain_of_thought_leader.yaml
 ```
 
-This command:
-1. Analyzes changesets
-2. Updates `package.json` files
-3. Updates changelogs (CHANGELOG.md)
-4. Removes changeset files
-
-Example output:
+#### Creating Custom Templates
+You can create your own templates as YAML files. Here's a simple example:
+```yaml
+name: "Simple Greeting"
+description: "A template that generates a greeting"
+input_variables:
+  name:
+    type: "string"
+    description: "The name of the person to greet"
+prompt: "Generate a friendly greeting for {{name}}."
 ```
-Applying changesets
-qllm-core patch
-qllm-cli minor
-All changesets applied!
+Save this as `greeting.yaml` and run it with:
+```bash
+qllm run greeting.yaml
 ```
 
-##### Versioning in Monorepo
+> 🧠 **Pause and Reflect**: How could you use custom templates to streamline your workflow? Think about repetitive tasks in your daily work that could benefit from AI assistance.
 
-- Each package has its own version
-- Inter-package dependencies are automatically updated
-- Root `package.json` version represents the overall project version
+## Chapter 6: Practical Examples
 
-#### Publishing
+### 6.1 Code Analysis Workflow
+Imagine you're a developer facing code reviews. Let's set up a code review template to streamline this process.
 
-To publish packages:
+#### Setting up a Code Review Template
+Save this as `code_review.yaml`:
+```yaml
+name: "Code Review"
+description: "Analyzes code and provides improvement suggestions"
+input_variables:
+  code:
+    type: "string"
+    description: "The code to review"
+  language:
+    type: "string"
+    description: "The programming language"
+prompt: >
+  You are an experienced software developer. Review the following {{language}} code and provide suggestions for improvement: {{language}} {{code}}
+  Please consider:
+  1. Code efficiency
+  2. Readability
+  3. Best practices
+  4. Potential bugs
+```
 
-1. Ensure the project is built:
-   ```bash
-   pnpm run build
-   ```
-2. Run the publish command:
-   ```bash
-   pnpm run publish-packages
-   ```
+### 6.2 Content Creation Pipeline
+Let's look at how QLLM can assist in content creation, from ideation to drafting and editing.
 
-This publishes all packages to npm with public access.
+#### Ideation Phase
+Create a template for brainstorming ideas. Save this as `brainstorm_ideas.yaml`:
+```yaml
+name: "Content Brainstorming"
+description: "Generates content ideas based on a topic and target audience"
+input_variables:
+  topic:
+    type: "string"
+    description: "The main topic or theme"
+  audience:
+    type: "string"
+    description: "The target audience"
+  content_type:
+    type: "string"
+    description: "The type of content (e.g., blog post, video script, social media)"
+prompt: |
+  As a creative content strategist, generate 5 unique content ideas for {{content_type}} about {{topic}} targeted at {{audience}}. For each idea, provide:
+  1. A catchy title
+  2. A brief description (2-3 sentences)
+  3. Key points to cover
+  4. Potential challenges or considerations
+```
 
-### Additional Commands
+### 6.3 Data Analysis Assistant
+Imagine you have a CSV file with sales data. You can use QLLM to help interpret this data:
+```bash
+cat sales_data.csv | qllm ask "Analyze this CSV data. Provide a summary of total sales, top-selling products, and any notable trends. Format your response as a bulleted list."
+```
 
-- Linting: `pnpm run lint`
-- Formatting: `pnpm run format`
-- Cleaning build artifacts: `pnpm run clean`
-- Installing CLI locally:
-  ```bash
-  pnpm run install:local
-  ```
-  This builds the project and installs `qllm-cli` globally from `packages/qllm-cli`.
+### 6.4 Image Analysis and Description
+QLLM also supports image analysis, allowing you to describe and analyze images directly through the command line.
 
-### Best Practices
+#### Example of Image Analysis
+```bash
+qllm ask "What do you see in this image?" -i path/to/image.jpg
+```
+This command sends the specified image to the AI for analysis and generates a description based on its contents.
 
-- Create a changeset for each significant change
-- Use clear, concise descriptions in changesets
-- Run `pnpm run version` before publishing
-- Review changes in `package.json` and changelogs before committing
+### 6.5 Screenshots Feature
+You can capture and analyze screenshots directly from the CLI, making it easier to get insights from visual content.
 
-By following these practices, you ensure accurate version numbers and help users understand the impact of updates.
+#### Example of Using Screenshots
+```bash
+qllm ask "Analyze this screenshot" --screenshot 0
+```
+This command captures the current screen and sends it to the AI for analysis, providing insights based on what is displayed.
 
-### Troubleshooting
+## Chapter 7: Troubleshooting Common Issues
+Even the most powerful tools can sometimes hiccup. Here are some common issues you might encounter with QLLM and how to resolve them:
+1. **Rate Limiting**: Implement a retry mechanism with exponential backoff.
+2. **Unexpected Output Format**: Be more specific in your prompts.
 
-Common issues and their solutions:
+## Chapter 8: Best Practices
+To get the most out of QLLM, keep these best practices in mind:
+1. **Effective Prompt Engineering**: Be specific and clear in your prompts.
+2. **Managing Conversation Context**: Use `/new` to start fresh conversations when switching topics.
+3. **Leveraging Templates for Consistency**: Create templates for tasks you perform regularly.
 
-1. **Issue**: `pnpm install` fails
-   **Solution**: Ensure you're using pnpm 6.0.0 or higher. Try clearing the pnpm cache with `pnpm store prune`.
+## Chapter 9: Conclusion and Next Steps
+Congratulations! You've now mastered the essentials of QLLM and are well on your way to becoming a CLI AI wizard.
 
-2. **Issue**: Build fails with TypeScript errors
-   **Solution**: Check that you're using a compatible TypeScript version (5.5.4 or compatible). Run `pnpm update typescript` to update.
+### 9.1 Final Challenge
+Within the next 24 hours, use QLLM to solve a real problem you're facing in your work or personal projects. It could be analyzing some data, drafting a document, or even helping debug a tricky piece of code. Share your experience with a colleague or in the QLLM community.
 
-3. **Issue**: Changesets not working
-   **Solution**: Ensure @changesets/cli is installed correctly. Try reinstalling with `pnpm add -D @changesets/cli`.
+Thank you for joining me on this whirlwind tour of QLLM. Now go forth and command your AI assistant with confidence! 🚀
 
-### FAQ
+## Chapter 10: Additional Resources
+For detailed documentation on the packages used in QLLM, please refer to the following links:
 
-Q: Can I use npm or yarn instead of pnpm?
-A: While it's possible, we strongly recommend using pnpm for consistency and to avoid potential issues.
+## 10. Contributing
 
-Q: How do I contribute to a specific package?
-A: Navigate to the package directory in `packages/` and make your changes there. Ensure you create a changeset for your modifications.
+We warmly welcome contributions to QLLM CLI! This project is licensed under the Apache License, Version 2.0. To contribute, please follow these steps:
 
-### Contributing
+1. Fork the repository on GitHub.
+2. Clone your forked repository to your local machine.
+3. Create a new branch for your feature or bug fix.
+4. Make your changes, adhering to the existing code style and conventions.
+5. Write tests for your changes if applicable.
+6. Run the existing test suite to ensure your changes don't introduce regressions:
+    ```
+    pnpm test
+    ```
+7. Commit your changes with a clear and descriptive commit message.
+8. Push your changes to your fork on GitHub.
+9. Create a pull request from your fork to the main QLLM CLI repository.
 
-We welcome contributions! Please follow these steps:
+Please ensure your code adheres to our coding standards:
 
-1. Fork the repository
-2. Create a new branch for your feature
-3. Make your changes
-4. Create a changeset describing your changes
-5. Submit a pull request
+-   Use TypeScript for type safety.
+-   Follow the existing code style (we use Prettier for formatting).
+-   Write unit tests for new features.
+-   Update documentation as necessary, including this README if you're adding or changing features.
 
-For more details, see our [CONTRIBUTING.md](CONTRIBUTING.md) file.
+We use GitHub Actions for CI/CD, so make sure your changes pass all automated checks.
+
+### License
+
+This project is licensed under the Apache License, Version 2.0. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+## Acknowledgements
+
+We would like to extend our heartfelt thanks to the following individuals and organizations for their invaluable contributions to QLLM:
+
+1. **OpenAI**: For their groundbreaking work on large language models and the API that powers QLLM.
+2. **Anthropic**: For their innovative approach to AI and the Claude models that enhance QLLM's capabilities.
+3. **AWS Bedrock**: For their support in providing access to advanced AI models through AWS.
+4. **Ollama**: For their cutting-edge LLM platform that powers QLLM'slocally.
+5. **Groq**: For their powerful and scalable LLM infrastructure.
+6. **Mistral**: For their innovative approach to AI and te represent France 🇫🇷.
 
 
-Remember to check the `scripts` section in `package.json` for any additional or updated commands.
+A special thanks to the entire QLLM community for their feedback and support. Your insights and contributions are invaluable to us.
 
-## 🤝 Contributing
+And of course for Quantalogic for funding the project.
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for more details.
-
-## 📄 License
-
-This project is licensed under the Apache License, Version 2.0. See the [LICENSE](LICENSE) file for details.
-
-## 🌟 Final Thoughts
-
-QLLM and QLLM-LIB are designed to make working with Large Language Models more accessible and efficient. Whether you're a developer integrating AI capabilities into your applications or a data scientist streamlining your workflow, QLLM provides the tools you need to leverage the power of AI effectively.
-
-We invite you to explore the detailed documentation for each package and join us in improving how businesses interact with AI. Together, we can create practical solutions that drive real-world impact.
-
-Happy coding! 🚀
+https://www.quantalogic.app 

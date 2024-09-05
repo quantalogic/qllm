@@ -4,14 +4,15 @@ import fs from "fs/promises";
 import path from "path";
 import os from "os";
 import { z } from "zod";
+import { IOManager } from "./io-manager";
+
+declare var process: NodeJS.Process; // eslint-disable-line
 
 // Define the schema for the configuration
 const CliConfigSchema = z.object({
     provider: z.string().optional(),
     model: z.string().optional(),
     logLevel: z.enum(["error", "warn", "info", "debug"]).default("info"),
-    apiKeys: z.record(z.string()).optional(),
-    customPromptDirectory: z.string().optional(),
     temperature: z.number().min(0).max(1).optional(),
     maxTokens: z.number().positive().optional(),
     topP: z.number().min(0).max(1).optional(),
@@ -22,12 +23,15 @@ const CliConfigSchema = z.object({
 
 type Config = z.infer<typeof CliConfigSchema>;
 
+type PartialConfig = Partial<Config>;
+
 const CONFIG_FILE_NAME = ".qllmrc";
 
 export class CliConfigManager {
     private static instance: CliConfigManager;
     private config: Config = { logLevel: "info" };
     private configPath: string;
+    private ioManager: IOManager = new IOManager();
 
     private constructor() {
         this.configPath = path.join(os.homedir(), CONFIG_FILE_NAME);
@@ -57,7 +61,7 @@ export class CliConfigManager {
             this.config = CliConfigSchema.parse(parsedConfig);
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-                console.warn(`Error loading config: ${error}`);
+                this.ioManager.displayError(`Error loading config: ${error}`);
             }
             // If file doesn't exist or is invalid, we'll use default config
         }
@@ -70,7 +74,7 @@ export class CliConfigManager {
                 JSON.stringify(this.config, null, 2),
             );
         } catch (error) {
-            console.error(`Error saving config: ${error}`);
+            this.ioManager.displayError(`Error saving config: ${error}`);
         }
     }
 
@@ -78,19 +82,56 @@ export class CliConfigManager {
         return this.config[key];
     }
 
+    public getValue(key: string): Config[keyof Config] | undefined {
+        return this.config[key as keyof Config];
+    }
+
     public set<K extends keyof Config>(key: K, value: Config[K]): void {
         this.config[key] = value;
     }
 
-    public getApiKey(provider: string): string | undefined {
-        return this.config.apiKeys?.[provider];
+    public setValue(key: string, value: string | undefined): void {
+        switch (key) {
+            case "provider":
+                this.config.provider = value as Config["provider"];
+                break;
+            case "model":
+                this.config.model = value as Config["model"];
+                break;
+            case "logLevel":
+                this.config.logLevel = value as Config["logLevel"];
+                break;
+            case "temperature":
+                this.config.temperature = value ? parseFloat(value) : undefined;
+                break;
+            case "maxTokens":
+                this.config.maxTokens = value ? parseInt(value) : undefined;
+                break;
+            case "topP":
+                this.config.topP = value ? parseFloat(value) : undefined;
+                break;
+            case "frequencyPenalty":
+                this.config.frequencyPenalty = value
+                    ? parseFloat(value)
+                    : undefined;
+                break;
+            case "presencePenalty":
+                this.config.presencePenalty = value
+                    ? parseFloat(value)
+                    : undefined;
+                break;
+            case "stopSequence":
+                this.config.stopSequence = value
+                    ? value.split(",").map((s) => s.trim())
+                    : undefined;
+                break;
+            default:
+                this.ioManager.displayError(`Invalid key: ${key}`);
+        }
     }
 
-    public setApiKey(provider: string, apiKey: string): void {
-        if (!this.config.apiKeys) {
-            this.config.apiKeys = {};
-        }
-        this.config.apiKeys[provider] = apiKey;
+    public configCopy(): Config {
+        return { ...this.config }; // Return a shallow copy of the config
     }
 
     public async initialize(): Promise<void> {
@@ -98,34 +139,12 @@ export class CliConfigManager {
         // You can add any initialization logic here
     }
 
-    public configCopy(): Config {
-        return {
-            provider: this.config.provider,
-            model: this.config.model,
-            logLevel: this.config.logLevel,
-            apiKeys: this.config.apiKeys
-                ? { ...this.config.apiKeys }
-                : undefined,
-            customPromptDirectory: this.config.customPromptDirectory,
-            temperature: this.config.temperature,
-            maxTokens: this.config.maxTokens,
-            topP: this.config.topP,
-            frequencyPenalty: this.config.frequencyPenalty,
-            presencePenalty: this.config.presencePenalty,
-            stopSequence: this.config.stopSequence,
-        };
-    }
-
     public getAllSettings(): Config {
-        return this.configCopy();
+        return { ...this.config }; // Simplified copy logic
     }
 
-    public async setMultiple(settings: Partial<Config>): Promise<void> {
-        Object.entries(settings).forEach(([key, value]) => {
-            if (key in this.config) {
-                (this.config as any)[key] = value;
-            }
-        });
+    public async setMultiple(settings: PartialConfig): Promise<void> {
+        Object.assign(this.config, settings);
         await this.save();
     }
 

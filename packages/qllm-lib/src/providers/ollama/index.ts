@@ -1,6 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
-import axios from 'axios';
 import {
   ChatCompletionParams,
   ChatCompletionResponse,
@@ -28,7 +25,7 @@ import ollama, {
   ToolCall as OllamaToolCall,
   Options as OllamaOptions,
 } from 'ollama';
-import { createTextMessageContent, imageToBase64 } from '../../utils/images';
+import { imageToBase64 } from '../../utils/images';
 import { listModels } from './list-models';
 
 const DEFAULT_MODEL = 'llama3.1';
@@ -155,13 +152,8 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
         if (isTextContent(messageContent)) {
           content += messageContent.text + '\n';
         } else if (isImageUrlContent(messageContent)) {
-          try {
-            const imageContent = await createOllamaImageContent(messageContent.url);
-            images.push(imageContent.url);
-          } catch (error) {
-            console.error('Error processing image:', error);
-            throw error;
-          }
+          const imageContent = await createOllamaImageContent(messageContent.url);
+          images.push(imageContent.url);
         }
       }
 
@@ -202,19 +194,14 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
 }
 
 export const createOllamaImageContent = async (source: string): Promise<ImageUrlContent> => {
-  try {
-    const content = await imageToBase64(source);
-
-    // Return the raw base64 string without the data URL prefix
-    return {
-      type: 'image_url',
-      url: content.base64,
-    };
-  } catch (error) {
-    console.error(`Error processing image from: ${source}`, error);
-    throw error;
-  }
+  const content = await imageToBase64(source);
+  // Return the raw base64 string without the data URL prefix
+  return {
+    type: 'image_url',
+    url: content.base64,
+  };
 };
+
 function formatTools(tools: Tool[] | undefined): OllamaTool[] | undefined {
   if (!tools) {
     return undefined;

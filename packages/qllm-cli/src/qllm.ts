@@ -67,7 +67,7 @@ export async function main() {
                 "-v, --variables <variables>",
                 "Template variables in JSON format",
             )
-            .option("-s, --stream", "Stream the response")
+            .option("-ns, --no-stream", "Stream the response", true)
             .option("-o, --output <output>", "Output file for the response")
             .option(
                 "-e, --extract <variables>",
@@ -118,7 +118,7 @@ export async function main() {
         program
             .command("ask")
             .description("Ask a question to an LLM")
-            .argument("<question>", "The question to ask")
+            .argument("[question]", "The question to ask (optional if piped)")
             .option(
                 "-c, --context <context>",
                 "Additional context for the question",
@@ -135,10 +135,10 @@ export async function main() {
                 "Capture screenshot from specified display number",
                 (value) => parseInt(value, 10),
             )
-            .option("-s, --stream", "Stream the response", false)
+            .option("-ns, --no-stream", "Stream the response", true)
             .option("-o, --output <file>", "Output file for the response")
             .option(
-                "--system-message <message>",
+                "-s, --system-message <message>",
                 "System message to prepend to the conversation",
             )
             .action((question, options) => {
@@ -146,9 +146,8 @@ export async function main() {
                 const mergedOptions = {
                     ...globalOptions,
                     ...options,
-                    question,
                 };
-                askCommandAction(question, mergedOptions);
+                askCommandAction(question || "", mergedOptions);
             });
 
         // Add other commands

@@ -67,7 +67,6 @@ export class Chat {
 
     private async promptUser(): Promise<void> {
         try {
-
             const input = await this.ioManager.getUserInput("You: ");
 
             // Check if input is undefined (e.g., due to Ctrl+C)

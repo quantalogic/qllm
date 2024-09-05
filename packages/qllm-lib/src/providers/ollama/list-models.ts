@@ -32,7 +32,7 @@ export async function listModels(baseUrl: string = 'http://localhost:11434'): Pr
     const response = await axios.get<OllamaListResponse>(`${baseUrl}/api/tags`);
 
     if (!response.data || !response.data.models || !Array.isArray(response.data.models)) {
-      console.warn('Unexpected response format from Ollama API');
+      //console.warn('Unexpected response format from Ollama API');
       return [];
     }
 
@@ -42,8 +42,9 @@ export async function listModels(baseUrl: string = 'http://localhost:11434'): Pr
       description: formatModelDescription(model.details),
     }));
   } catch (error) {
-    console.error('Error fetching models from Ollama:', error);
-    throw new LLMProviderError('Failed to fetch models from Ollama', 'Ollama');
+    //console.error('Error fetching models from Ollama:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new LLMProviderError(`Failed to fetch models from Ollama ${errorMessage}`, 'Ollama');
   }
 }
 

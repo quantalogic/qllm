@@ -1,6 +1,5 @@
 // packages/qllm-cli/src/commands/chat-command.ts
 
-import { Command } from "commander";
 import { getListProviderNames, getLLMProvider } from "qllm-lib";
 import { Chat } from "../chat/chat";
 import { chatConfig } from "../chat/chat-config";
@@ -12,12 +11,14 @@ import {
 } from "../types/chat-command-options";
 import { IOManager } from "../utils/io-manager";
 import { validateOptions } from "../utils/validate-options";
-import { DEFAULT_MODEL, DEFAULT_PROVIDER } from "../constants";
+import { DEFAULT_PROVIDER } from "../constants";
 
 declare var process: NodeJS.Process; //eslint-disable-line
 
 export const chatAction = async (options: ChatCommandOptions) => {
     try {
+        const cliConfig = CliConfigManager.getInstance();
+
         await chatConfig.initialize();
 
         let validOptions = options;
@@ -40,12 +41,11 @@ export const chatAction = async (options: ChatCommandOptions) => {
 
         const providerName =
             validOptions.provider ||
-            CliConfigManager.getInstance().get("provider") ||
-            DEFAULT_MODEL;
-        const modelName =
-            validOptions.model ||
-            CliConfigManager.getInstance().get("model") ||
+            cliConfig.get("provider") ||
             DEFAULT_PROVIDER;
+
+        const modelName =
+            validOptions.model || cliConfig.get("model") || DEFAULT_PROVIDER;
 
         const availableProviders = getListProviderNames();
         if (!availableProviders.includes(providerName)) {
@@ -62,12 +62,27 @@ export const chatAction = async (options: ChatCommandOptions) => {
             );
         }
 
-        chatConfig.set("maxTokens", validOptions.maxTokens);
-        chatConfig.set("temperature", validOptions.temperature);
-        chatConfig.set("topP", validOptions.topP);
-        chatConfig.set("frequencyPenalty", validOptions.frequencyPenalty);
-        chatConfig.set("presencePenalty", validOptions.presencePenalty);
-        chatConfig.set("stopSequence", validOptions.stopSequence);
+        chatConfig.set("presencePenalty", cliConfig.get("presencePenalty"));
+        chatConfig.set("frequencyPenalty", cliConfig.get("frequencyPenalty"));
+        chatConfig.set("stopSequence", cliConfig.get("stopSequence"));
+        chatConfig.set("maxTokens", cliConfig.get("maxTokens"));
+        chatConfig.set("temperature", cliConfig.get("temperature"));
+        chatConfig.set("topP", cliConfig.get("topP"));
+        chatConfig.set("frequencyPenalty", cliConfig.get("frequencyPenalty"));
+        chatConfig.set("presencePenalty", cliConfig.get("presencePenalty"));
+        chatConfig.set("stopSequence", cliConfig.get("stopSequence"));
+
+        if (validOptions.maxTokens)
+            chatConfig.set("maxTokens", validOptions.maxTokens);
+        if (validOptions.temperature)
+            chatConfig.set("temperature", validOptions.temperature);
+        if (validOptions.topP) chatConfig.set("topP", validOptions.topP);
+        if (validOptions.frequencyPenalty)
+            chatConfig.set("frequencyPenalty", validOptions.frequencyPenalty);
+        if (validOptions.presencePenalty)
+            chatConfig.set("presencePenalty", validOptions.presencePenalty);
+        if (validOptions.stopSequence)
+            chatConfig.set("stopSequence", validOptions.stopSequence);
 
         const provider = await getLLMProvider(providerName);
         const models = await provider.listModels();

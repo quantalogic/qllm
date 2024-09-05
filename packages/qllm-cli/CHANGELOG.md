@@ -1,5 +1,16 @@
 # qllm
 
+## 2.9.0
+
+### Minor Changes
+
+- Improve configuration, and several fix
+
+### Patch Changes
+
+- Updated dependencies
+  - qllm-lib@3.6.0
+
 ## 2.8.0
 
 ### Minor Changes

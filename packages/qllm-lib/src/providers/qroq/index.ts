@@ -10,18 +10,17 @@ import {
   LLMProviderError,
   Model,
   Tool,
-  ChatMessage,
   EmbeddingProvider,
   EmbeddingRequestParams,
   EmbeddingResponse,
   isTextContent,
   isImageUrlContent,
-  ToolCall,
   ChatMessageWithSystem,
 } from '../../types';
 
 const DEFAULT_MODEL = 'mixtral-8x7b-32768';
 const DEFAULT_EMBEDDING_MODEL = 'text-embedding-ada-002';
+const DEFAULT_MAX_TOKENS = 1024 * 32;
 
 export class GroqProvider extends BaseLLMProvider implements EmbeddingProvider {
   private client: Groq;
@@ -39,7 +38,7 @@ export class GroqProvider extends BaseLLMProvider implements EmbeddingProvider {
 
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
-    maxTokens: 1024,
+    maxTokens: DEFAULT_MAX_TOKENS,
   };
 
   async listModels(): Promise<Model[]> {
