@@ -2,8 +2,8 @@
 
 Welcome to QLLM, a project designed to streamline your interactions with Large Language Models (LLMs). This monorepo contains two powerful packages:
 
-1. 📚 qllm-lib: A versatile TypeScript library for seamless LLM integration
-2. 🖥️ qllm-cli: A command-line interface for effortless LLM interactions
+1. 📚 **qllm-lib**: A versatile TypeScript library for seamless LLM integration.
+2. 🖥️ **qllm-cli**: A command-line interface for effortless LLM interactions.
 
 ## 🌟 Why QLLM and QLLM-LIB?
 

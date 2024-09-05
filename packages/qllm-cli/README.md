@@ -82,7 +82,7 @@ QLLM CLI boasts an impressive array of features designed to elevate your AI inte
 
 To embark on your QLLM CLI journey, ensure you have Node.js (version 14 or higher) installed on your system. Then, execute the following command:
 
-```bash
+```
 npm install -g qllm
 ```
 
@@ -90,7 +90,7 @@ This global installation makes the `qllm` command readily available in your term
 
 Verify the installation with:
 
-```bash
+```
 qllm --version
 ```
 
@@ -104,7 +104,7 @@ Before diving into the world of AI interactions, configure QLLM CLI with your AP
 
 Initiate the interactive configuration mode:
 
-```bash
+```
 qllm configure
 ```
 
@@ -140,7 +140,7 @@ This command allows you to manage configuration settings for the QLLM CLI.
 
 Examples:
 
-```bash
+```
 qllm configure --set provider=openai
 qllm configure --set model=gpt-4
 ```
@@ -149,7 +149,7 @@ qllm configure --set model=gpt-4
 
 Display your current settings at any time:
 
-```bash
+```
 qllm configure --list
 ```
 
@@ -167,13 +167,13 @@ QLLM CLI offers a variety of commands for interacting with LLMs. Here's an overv
 
 QLLM CLI allows you to run templates directly. This is now the default behavior when no specific command is provided:
 
-```bash
+```
 qllm <template_url>
 ```
 
 For example:
 
-```bash
+```
 qllm https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/chain_of_tought_leader.yaml
 ```
 
@@ -192,31 +192,31 @@ The `run` command supports various options:
 
 #### Using with Piped Input
 
-```bash
+```
 echo "Explain quantum computing" | qllm ask
 ```
 
 or
 
-```bash
+```
 cat article.txt | qllm ask "Summarize this text"
 ```
 
 #### Image Analysis
 
-```bash
+```
 qllm ask "Describe this image" -i path/to/image.jpg
 ```
 
 #### Streaming Responses
 
-```bash
+```
 qllm ask "Write a short story about AI" -s
 ```
 
 #### Saving Output to File
 
-```bash
+```
 qllm ask "Explain the theory of relativity" -o relativity_explanation.txt
 ```
 
@@ -224,7 +224,7 @@ qllm ask "Explain the theory of relativity" -o relativity_explanation.txt
 
 Start an interactive chat session:
 
-```bash
+```
 qllm chat
 ```
 
@@ -252,13 +252,13 @@ The `chat` command also supports options similar to the `ask` command for settin
 
 View available providers:
 
-```bash
+```
 qllm list providers
 ```
 
 List models for a specific provider:
 
-```bash
+```
 qllm list models openai
 ```
 
@@ -273,7 +273,7 @@ The `list models` command offers several options:
 
 Manage your settings at any time:
 
-```bash
+```
 qllm configure --set model gpt-4
 qllm configure --get logLevel
 qllm configure --list
@@ -287,7 +287,7 @@ QLLM CLI offers sophisticated features for power users:
 
 Include images in your queries for visual analysis:
 
-```bash
+```
 qllm ask "Describe this image" -i path/to/image.jpg
 ```
 
@@ -300,19 +300,19 @@ QLLM CLI supports multiple image input methods:
 
 Use an image from your clipboard:
 
-```bash
+```
 qllm ask "What's in this image?" --use-clipboard
 ```
 
 Capture and use a screenshot:
 
-```bash
+```
 qllm ask "Analyze this screenshot" --screenshot 0
 ```
 
 Combine multiple image inputs:
 
-```bash
+```
 qllm ask "Compare these images" -i image1.jpg -i image2.jpg --use-clipboard
 ```
 
@@ -320,7 +320,7 @@ qllm ask "Compare these images" -i image1.jpg -i image2.jpg --use-clipboard
 
 For long-form content, stream the output in real-time:
 
-```bash
+```
 qllm ask "Write a short story about AI" -s
 ```
 
@@ -330,7 +330,7 @@ This feature allows you to see the AI's response as it's generated, providing a 
 
 Save the LLM's response directly to a file:
 
-```bash
+```
 qllm ask "Explain the theory of relativity" -o relativity_explanation.txt
 ```
 
@@ -366,60 +366,60 @@ Explore these example use cases for QLLM CLI:
 
 1. Creative Writing Assistance:
 
-    ```bash
+    ```
     qllm ask "Write a haiku about artificial intelligence"
     ```
 
 2. Code Explanation:
 
-    ```bash
+    ```
     qllm ask "Explain this Python code: [paste your code here]"
     ```
 
 3. Image Analysis:
 
-    ```bash
+    ```
     qllm ask "Describe the contents of this image" -i vacation_photo.jpg
     ```
 
 4. Interactive Problem-Solving:
 
-    ```bash
+    ```
     qllm chat -p anthropic -m claude-2
     ```
 
 5. Data Analysis:
 
-    ```bash
+    ```
     qllm ask "Analyze this CSV data: [paste CSV here]" --max-tokens 500
     ```
 
 6. Language Translation:
 
-    ```bash
+    ```
     qllm ask "Translate 'Hello, world!' to French, Spanish, and Japanese"
     ```
 
 7. Document Summarization:
 
-    ```bash
+    ```
     qllm ask "Summarize this article: [paste article text]" -o summary.txt
     ```
 
 8. Character Creation:
 
-    ```bash
+    ```
     qllm ask "Create a detailed character profile for a sci-fi novel"
     ```
 
 9. Recipe Generation:
 
-    ```bash
+    ```
     qllm ask "Create a recipe using chicken, spinach, and feta cheese"
     ```
 
 10. Workout Planning:
-    ```bash
+    ```
     qllm ask "Design a 30-minute HIIT workout routine"
     ```
 
@@ -429,7 +429,7 @@ If you encounter issues while using QLLM CLI, try these troubleshooting steps:
 
 1. Verify your API keys are correctly configured:
 
-    ```bash
+    ```
     qllm configure --list
     ```
 
@@ -439,7 +439,7 @@ If you encounter issues while using QLLM CLI, try these troubleshooting steps:
 
 3. Update to the latest version of QLLM CLI:
 
-    ```bash
+    ```
     npm update -g qllm
     ```
 
@@ -463,7 +463,7 @@ We warmly welcome contributions to QLLM CLI! To contribute, please follow these 
 4. Make your changes, adhering to the existing code style and conventions.
 5. Write tests for your changes if applicable.
 6. Run the existing test suite to ensure your changes don't introduce regressions:
-    ```bash
+    ```
     npm test
     ```
 7. Commit your changes with a clear and descriptive commit message.
