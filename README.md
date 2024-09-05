@@ -228,12 +228,14 @@ qllm  https://raw.githubusercontent.com/quantalogic/qllm/main/prompts/chain_of_t
 You can create your own templates as YAML files. Here's a simple example:
 ```yaml
 name: "Simple Greeting"
+version: "1.0"
+author: "Raphaël MANSUY"
 description: "A template that generates a greeting"
 input_variables:
   name:
     type: "string"
     description: "The name of the person to greet"
-prompt: "Generate a friendly greeting for {{name}}."
+content: > "Generate a friendly greeting for {{name}}."
 ```
 Save this as `greeting.yaml` and run it with:
 ```bash
