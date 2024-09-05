@@ -74,11 +74,13 @@ export async function main() {
                 "Variables to extract from the response, comma-separated",
             )
             .action(async (template, options, command) => {
+                const globalOptions = program.opts();
+                const mergedOptions = { ...globalOptions, ...options };
+
                 if (!template) {
-                    command.help();
+                    // If no template is provided, treat it as an "ask" command
+                    await askCommandAction("", mergedOptions);
                 } else {
-                    const globalOptions = program.opts();
-                    const mergedOptions = { ...globalOptions, ...options };
                     await runActionCommand(template, mergedOptions);
                 }
             });
