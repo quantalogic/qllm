@@ -383,7 +383,7 @@ We would like to extend our heartfelt thanks to the following individuals and or
 1. **OpenAI**: For their groundbreaking work on large language models and the API that powers QLLM.
 2. **Anthropic**: For their innovative approach to AI and the Claude models that enhance QLLM's capabilities.
 3. **AWS Bedrock**: For their support in providing access to advanced AI models through AWS.
-4. **Ollama**: For their cutting-edge LLM platform that powers QLLM'slocally.
+4. **Ollama**: For their cutting-edge LLM platform that powers QLLM's locally.
 5. **Groq**: For their powerful and scalable LLM infrastructure.
 6. **Mistral**: For their innovative approach to AI and te represent France 🇫🇷.
 
