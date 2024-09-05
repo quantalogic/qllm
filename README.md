@@ -1,9 +1,20 @@
 # QLLM: Simplifying Language Model Interactions
 
+
+![npm version](https://img.shields.io/npm/v/qllm)
+![Stars](https://img.shields.io/github/stars/quantalogic/qllm)
+![Forks](https://img.shields.io/github/forks/quantalogic/qllm)
+
+
 ## Chapter 1: Introduction
 
 ### 1.1 Welcome to QLLM
 Welcome to QLLM, your ultimate command-line tool for interacting with Large Language Models (LLMs). Imagine having a powerful AI assistant at your fingertips, ready to help you tackle complex tasks, generate creative content, and analyze data—all from your terminal. This README will guide you through everything you need to know to harness the full potential of QLLM and become a master of AI-powered productivity.
+
+### 1.2 Show Your Support
+If you find QLLM helpful and enjoyable to use, please consider giving us a star ✨ on GitHub! Your support not only motivates us to keep improving the project but also helps others discover QLLM. Thank you for being a part of our community!
+# End Generation Here
+
 
 ## Chapter 2: Benefits of QLLM
 
@@ -24,6 +35,13 @@ Imagine you're a data analyst working on a tight deadline. You need to quickly a
 All of this without leaving your terminal. The time you save allows you to focus on higher-level analysis and deliver the report ahead of schedule. Your manager is impressed, and you've just demonstrated the power of QLLM to streamline your workflow.
 
 ## Chapter 3: Packages
+
+```mermaid
+graph TD
+    A[qllm-cli] --> B[qllm-lib]
+```
+
+
 
 ### 3.1 qllm-lib
 A versatile TypeScript library for seamless LLM integration. It simplifies working with different AI models and provides features like templating, streaming, and conversation management.
@@ -65,6 +83,12 @@ qllm ask --model gpt-4o-mini --provider openai "Analyze the potential market imp
 
 # Write a short blog post about the benefits of remote work
 qllm ask --model gemma2:2b --provider ollama "Write a short blog post about the benefits of remote work."
+
+# Analyze CSV data from stdin
+cat sales_data.csv | qllm ask "Analyze this CSV data. Provide a summary of total sales, top-selling products, and any notable trends. Format your response as a bulleted list."
+
+## Example using question from stdin
+echo "What is the weather in Tokyo?" | qllm  --provider ollama --model gemma2:2b 
 ```
 
 ## Chapter 4: Getting Started
@@ -112,6 +136,18 @@ $ qllm configure
 ```
 
 > 💡 Pro Tip: You can always change these settings later, either through the `qllm configure` command or directly in the configuration file located at `~/.qllmrc`.
+>
+
+**Providers Supported**
+
+- openai
+- anthropic
+- AWS Bedrock (Anthropic)
+- ollama
+- groq
+- mistral
+- claude
+- openrouter
 
 ### 4.4 Your First QLLM Command
 Enough setup, let's see QLLM in action! We'll start with a simple query to test the waters.
@@ -300,3 +336,37 @@ Thank you for joining me on this whirlwind tour of QLLM. Now go forth and comman
 
 ## Chapter 10: Additional Resources
 For detailed documentation on the packages used in QLLM, please refer to the following links:
+
+## 10. Contributing
+
+We warmly welcome contributions to QLLM CLI! This project is licensed under the Apache License, Version 2.0. To contribute, please follow these steps:
+
+1. Fork the repository on GitHub.
+2. Clone your forked repository to your local machine.
+3. Create a new branch for your feature or bug fix.
+4. Make your changes, adhering to the existing code style and conventions.
+5. Write tests for your changes if applicable.
+6. Run the existing test suite to ensure your changes don't introduce regressions:
+    ```
+    pnpm test
+    ```
+7. Commit your changes with a clear and descriptive commit message.
+8. Push your changes to your fork on GitHub.
+9. Create a pull request from your fork to the main QLLM CLI repository.
+
+Please ensure your code adheres to our coding standards:
+
+-   Use TypeScript for type safety.
+-   Follow the existing code style (we use Prettier for formatting).
+-   Write unit tests for new features.
+-   Update documentation as necessary, including this README if you're adding or changing features.
+
+We use GitHub Actions for CI/CD, so make sure your changes pass all automated checks.
+
+### License
+
+This project is licensed under the Apache License, Version 2.0. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

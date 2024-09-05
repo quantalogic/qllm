@@ -1,5 +1,12 @@
 # QLLM: Quantalogic Large Language Model CLI & AI Toolbox 🚀
 
+![npm version](https://img.shields.io/npm/v/qllm)
+![Stars](https://img.shields.io/github/stars/quantalogic/qllm)
+![Forks](https://img.shields.io/github/forks/quantalogic/qllm)
+
+## Table of Contents
+...
+
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
@@ -447,7 +454,7 @@ If problems persist, please open an issue on our GitHub repository with a detail
 
 ## 10. Contributing
 
-We warmly welcome contributions to QLLM CLI! To contribute, please follow these steps:
+We warmly welcome contributions to QLLM CLI! This project is licensed under the Apache License, Version 2.0. To contribute, please follow these steps:
 
 1. Fork the repository on GitHub.
 2. Clone your forked repository to your local machine.
@@ -471,7 +478,7 @@ Please ensure your code adheres to our coding standards:
 
 We use GitHub Actions for CI/CD, so make sure your changes pass all automated checks.
 
-## 11. License
+### License
 
 This project is licensed under the Apache License, Version 2.0. You may obtain a copy of the License at
 
