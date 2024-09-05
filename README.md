@@ -280,3 +280,7 @@ Within the next 24 hours, use QLLM to solve a real problem you're facing in your
 
 Thank you for joining me on this whirlwind tour of QLLM. Now go forth and command your AI assistant with confidence! 🚀
 
+## Chapter 10: Additional Resources
+For detailed documentation on the packages used in QLLM, please refer to the following links:
+- [qllm-lib README](packages/qllm-lib/README.md)
+- [qllm-cli README](packages/qllm-cli/README.md)
