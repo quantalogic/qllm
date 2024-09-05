@@ -261,6 +261,24 @@ Imagine you have a CSV file with sales data. You can use QLLM to help interpret 
 cat sales_data.csv | qllm ask "Analyze this CSV data. Provide a summary of total sales, top-selling products, and any notable trends. Format your response as a bulleted list."
 ```
 
+### 6.4 Image Analysis and Description
+QLLM also supports image analysis, allowing you to describe and analyze images directly through the command line.
+
+#### Example of Image Analysis
+```bash
+qllm ask "What do you see in this image?" -i path/to/image.jpg
+```
+This command sends the specified image to the AI for analysis and generates a description based on its contents.
+
+### 6.5 Screenshots Feature
+You can capture and analyze screenshots directly from the CLI, making it easier to get insights from visual content.
+
+#### Example of Using Screenshots
+```bash
+qllm ask "Analyze this screenshot" --screenshot 0
+```
+This command captures the current screen and sends it to the AI for analysis, providing insights based on what is displayed.
+
 ## Chapter 7: Troubleshooting Common Issues
 Even the most powerful tools can sometimes hiccup. Here are some common issues you might encounter with QLLM and how to resolve them:
 1. **Rate Limiting**: Implement a retry mechanism with exponential backoff.
@@ -282,5 +300,3 @@ Thank you for joining me on this whirlwind tour of QLLM. Now go forth and comman
 
 ## Chapter 10: Additional Resources
 For detailed documentation on the packages used in QLLM, please refer to the following links:
-- [qllm-lib README](packages/qllm-lib/README.md)
-- [qllm-cli README](packages/qllm-cli/README.md)
