@@ -4,6 +4,8 @@
 ![npm version](https://img.shields.io/npm/v/qllm)
 ![Stars](https://img.shields.io/github/stars/quantalogic/qllm)
 ![Forks](https://img.shields.io/github/forks/quantalogic/qllm)
+![Downloads](https://img.shields.io/npm/dw/qllm)
+
 
 
 ## Chapter 1: Introduction
