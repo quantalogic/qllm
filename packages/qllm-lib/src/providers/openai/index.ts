@@ -17,14 +17,15 @@ import {
   ChatMessageWithSystem,
 } from '../../types';
 import {
-  ChatCompletionMessageParam,
-  ChatCompletionContentPart,
-  ChatCompletionTool,
+  ChatCompletionMessageParam as ChatCompletionMessageParamOpenAI,
+  ChatCompletionContentPart as ChatCompletionContentPartOpenAI,
+  ChatCompletionTool as ChatCompletionToolOpenAI,
+  ChatCompletionCreateParamsStreaming as ChatCompletionCreateParamsStreamingOpenAI,
+  ChatCompletionCreateParamsNonStreaming as ChatCompletionCreateParamsNonStreamingOpenAI,
 } from 'openai/resources/chat/completions';
 import { createBase64Url, imageToBase64 } from '../../utils/images/image-to-base64';
-import { L } from 'ollama/dist/shared/ollama.1164e541';
 
-const DEFAULT_MAX_TOKENS = 1024 * 4;
+const DEFAULT_MAX_TOKENS = 1024 * 8;
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
 
@@ -59,13 +60,17 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       presence_penalty: options.presencePenalty,
       stop: options.stop,
       // Remove logprobs from here
-      logit_bias: options.logitBias,
-      top_logprobs: options.topLogprobs,
+      // logprobs: options.logitBias,
+      // top_logprobs: options.topLogprobs,
     };
 
-    return Object.fromEntries(
-      Object.entries(optionsToInclude).filter(([_, value]) => value !== undefined),
+    const filteredOptions = Object.fromEntries(
+      Object.entries(optionsToInclude)
+        .filter(([_, value]) => value !== undefined)
+        .filter(([_, value]) => value !== null),
     ) as unknown as LLMOptions;
+
+    return filteredOptions;
   }
 
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
@@ -78,7 +83,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       const model = options.model || DEFAULT_MODEL;
       const filteredOptions = this.getFilteredOptions(options);
 
-      const response = await this.client.chat.completions.create({
+      const chatRequest: ChatCompletionCreateParamsNonStreamingOpenAI = {
         messages: formattedMessages,
         tools: formattedTools,
         parallel_tool_calls: parallelToolCalls,
@@ -86,10 +91,12 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         tool_choice: toolChoice,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         ...filteredOptions,
+        // Ensure logprobs is a boolean
+        logprobs: typeof options.logprobs === 'boolean' ? options.logprobs : undefined,
         model: model,
-        // Add logprobs as a boolean
-        logprobs: options.logprobs !== undefined,
-      });
+      };
+
+      const response = await this.client.chat.completions.create(chatRequest);
 
       const firstResponse = response.choices[0];
       const usage = response.usage;
@@ -122,7 +129,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       const model = options.model || DEFAULT_MODEL;
       const filteredOptions = this.getFilteredOptions(options);
 
-      const stream = await this.client.chat.completions.create({
+      const chatRequest: ChatCompletionCreateParamsStreamingOpenAI = {
         messages: formattedMessages,
         tools: formattedTools,
         parallel_tool_calls: parallelToolCalls,
@@ -130,15 +137,16 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         tool_choice: toolChoice,
         max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
         ...filteredOptions,
+        // Ensure logprobs is a boolean
+        logprobs: typeof options.logprobs === 'boolean' ? options.logprobs : undefined,
         model: model,
         stream: true,
-        // Add logprobs as a boolean
-        logprobs: options.logprobs !== undefined,
-      });
+      };
+      const stream = await this.client.chat.completions.create(chatRequest);
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content;
-        const usage = chunk.usage;
+        const _usage = chunk.usage;
         const finishReason = chunk.choices[0]?.finish_reason;
         const result: ChatStreamCompletionResponse = {
           text: content || null,
@@ -200,17 +208,17 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
 
   private async formatMessages(
     messages: ChatMessageWithSystem[],
-  ): Promise<ChatCompletionMessageParam[]> {
-    const formattedMessages: ChatCompletionMessageParam[] = [];
+  ): Promise<ChatCompletionMessageParamOpenAI[]> {
+    const formattedMessages: ChatCompletionMessageParamOpenAI[] = [];
 
     for (const message of messages) {
-      const formattedMessage: ChatCompletionMessageParam = {
+      const formattedMessage: ChatCompletionMessageParamOpenAI = {
         role: message.role,
         content: '', // Initialize with an empty string
       };
 
       if (Array.isArray(message.content)) {
-        const contentParts: ChatCompletionContentPart[] = [];
+        const contentParts: ChatCompletionContentPartOpenAI[] = [];
         for (const content of message.content) {
           if (content.type === 'text') {
             contentParts.push({ type: 'text', text: content.text });
@@ -221,7 +229,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
               contentParts.push({
                 type: 'image_url',
                 image_url: { url: content.url }, // Keep the URL as is for remote
-              } as ChatCompletionContentPart); // Type assertion
+              } as ChatCompletionContentPartOpenAI); // Type assertion
             } else {
               // Convert local image file to base64
               const contentImage = await imageToBase64(content.url);
@@ -229,7 +237,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
               contentParts.push({
                 type: 'image_url',
                 image_url: { url: urlBase64Image }, // Use the base64 image
-              } as ChatCompletionContentPart); // Type assertion
+              } as ChatCompletionContentPartOpenAI); // Type assertion
             }
           }
         }
@@ -246,7 +254,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     return formattedMessages;
   }
 
-  private formatTools(tools?: Tool[]): ChatCompletionTool[] | undefined {
+  private formatTools(tools?: Tool[]): ChatCompletionToolOpenAI[] | undefined {
     if (!tools) return undefined;
     return tools.map((tool) => ({
       ...tool,

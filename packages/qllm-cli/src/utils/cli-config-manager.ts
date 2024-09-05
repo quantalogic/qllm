@@ -40,6 +40,7 @@ export class CliConfigManager {
         return CliConfigManager.instance;
     }
 
+
     public async ensureConfigFileExists(): Promise<void> {
         try {
             await fs.access(this.configPath);

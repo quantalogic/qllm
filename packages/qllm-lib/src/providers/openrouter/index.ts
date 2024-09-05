@@ -4,7 +4,6 @@ import {
   AuthenticationError,
   RateLimitError,
   InvalidRequestError,
-  ChatMessage,
   LLMOptions,
   Model,
   ChatCompletionResponse,
@@ -14,7 +13,7 @@ import {
 } from '../../types';
 import { OpenAIProvider } from '../openai';
 
-const DEFAULT_MAX_TOKENS = 1024 * 4;
+const DEFAULT_MAX_TOKENS = 1024 * 32;
 const BASE_URL = 'https://openrouter.ai/api/v1';
 const DEFAULT_MODEL = 'qwen/qwen-2-7b-instruct:free';
 

@@ -57,6 +57,11 @@ export const askCommandAction = async (
     }
 
     let validOptions: PartialAskCommandOptions = options;
+
+    validOptions = {
+        ...options,
+    };
+    
     try {
         validOptions = await validateOptions(
             AskCommandOptionsPartialSchema,
@@ -78,6 +83,9 @@ export const askCommandAction = async (
     const modelName =
         validOptions.model || cliConfig.get("model") || DEFAULT_MODEL;
 
+    const maxTokens = validOptions.maxTokens || cliConfig.get("maxTokens") || undefined;
+    const temperature = validOptions.temperature || cliConfig.get("temperature") || undefined;
+
     const spinner = createSpinner("Processing...").start();
 
     try {
@@ -97,6 +105,8 @@ export const askCommandAction = async (
             image: imageInputs,
             provider: providerName,
             model: modelName,
+            maxTokens: maxTokens,
+            temperature: temperature,
         };
 
         const response = await askQuestion(
@@ -106,7 +116,7 @@ export const askCommandAction = async (
             usedOptions,
         );
 
-        if (!usedOptions.stream) {
+        if (usedOptions.noStream) {
             spinner.success({
                 text: ioManager.colorize(
                     "response received successfully!",
@@ -120,7 +130,7 @@ export const askCommandAction = async (
             ioManager.displaySuccess(`Response saved to ${options.output}`);
         }
 
-        if (!usedOptions.stream) {
+        if (!usedOptions.noStream) {
             ioManager.stdout.log(response);
         }
         process.exit(0);
@@ -253,7 +263,7 @@ async function askQuestion(
         },
     };
 
-    if (options.stream) {
+    if (!options.noStream) {
         return streamResponse(spinner, provider, params);
     } else {
         const response = await provider.generateChatCompletion(params);

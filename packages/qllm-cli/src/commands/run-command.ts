@@ -54,6 +54,16 @@ export const runActionCommand = async (
                 cliConfig.get("model") ||
                 DEFAULT_MODEL;
 
+            const maxTokens =
+                validOptions.maxTokens ||
+                cliConfig.get("maxTokens") ||
+                undefined;
+
+            const temperature =
+                validOptions.temperature ||
+                cliConfig.get("temperature") ||
+                undefined;
+
             const variables = parseVariables(validOptions.variables);
             const executor = setupExecutor(ioManager, spinner);
             const provider = await getLLMProvider(providerName);
@@ -69,12 +79,8 @@ export const runActionCommand = async (
                 variables: { ...variables },
                 providerOptions: {
                     model: modelName,
-                    maxTokens:
-                        template.parameters?.max_tokens ||
-                        validOptions.maxTokens,
-                    temperature:
-                        template.parameters?.temperature ||
-                        validOptions.temperature,
+                    maxTokens: maxTokens,
+                    temperature: temperature,
                     topKTokens: template.parameters?.top_k,
                     topProbability: template.parameters?.top_p,
                     seed: template.parameters?.seed,
@@ -86,7 +92,7 @@ export const runActionCommand = async (
                     stop: template.parameters?.stop_sequences,
                 },
                 provider,
-                stream: validOptions.stream,
+                stream: !validOptions.noStream,
                 onPromptForMissingVariables: async (
                     template,
                     initialVariables,

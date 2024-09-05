@@ -9,6 +9,8 @@ import { CONFIG_OPTIONS } from "../types/configure-command-options";
 import { utils } from "../chat/utils";
 import { getListProviderNames, getLLMProvider } from "qllm-lib";
 
+declare var process: NodeJS.Process; //eslint-disable-line
+
 const configManager = CliConfigManager.getInstance();
 const ioManager = new IOManager();
 export const configureCommand = new Command("configure")
@@ -42,7 +44,13 @@ export const configureCommand = new Command("configure")
 
 function listConfig(): void {
     const config = configManager.getAllSettings();
+    const pathConfig = configManager.getConfigPath();
+
+    ioManager.displaySectionHeader("Path Configuration");
+    ioManager.displayInfo(`Path: ${pathConfig}`);
+
     ioManager.displaySectionHeader("Current Configuration");
+
     Object.entries(config).forEach(([key, value]) => {
         if (key === "apiKeys") {
             ioManager.displayInfo(`${key}:`);
@@ -101,7 +109,7 @@ async function setConfig(key: string, value: string): Promise<void> {
 
     // Save the updated configuration
     try {
-        console.log(`Setting ${key} to ${value}`);
+        ioManager.displayInfo(`Setting ${key} to ${value}`);
         configManager.set(key as keyof Config, value); // Ensure the key-value pair is set correctly
         await configManager.save();
         ioManager.displaySuccess(

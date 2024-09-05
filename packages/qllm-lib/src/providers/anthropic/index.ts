@@ -105,8 +105,9 @@ export class AnthropicProvider extends BaseLLMProvider {
           : undefined,
         tools: formattedTools,
       };
-      console.log('AnthropicProvider.generateChatCompletion request:');
-      console.dir(request, { depth: null });
+
+      // console.log('AnthropicProvider.generateChatCompletion request:');
+      // console.dir(request, { depth: null });
       const response = await this.client.messages.create(request);
 
       const getTextFromContentBlock = (
@@ -244,8 +245,8 @@ export class AnthropicProvider extends BaseLLMProvider {
   }
 
   private formatToolCalls(toolCalls?: any): ToolCall[] | undefined {
-    console.log('tool calls:');
-    console.dir(toolCalls, { depth: null });
+    //console.log('tool calls:');
+    //console.dir(toolCalls, { depth: null });
     if (!toolCalls) return undefined;
     return toolCalls.map((toolCall: any) => ({
       id: toolCall.id,

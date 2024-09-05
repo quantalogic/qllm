@@ -1,6 +1,5 @@
 // packages/qllm-cli/src/commands/chat-command.ts
 
-import { Command } from "commander";
 import { getListProviderNames, getLLMProvider } from "qllm-lib";
 import { Chat } from "../chat/chat";
 import { chatConfig } from "../chat/chat-config";
@@ -41,7 +40,8 @@ export const chatAction = async (options: ChatCommandOptions) => {
         const providerName =
             validOptions.provider ||
             CliConfigManager.getInstance().get("provider") ||
-            DEFAULT_MODEL;
+            DEFAULT_PROVIDER;
+            
         const modelName =
             validOptions.model ||
             CliConfigManager.getInstance().get("model") ||
@@ -62,12 +62,17 @@ export const chatAction = async (options: ChatCommandOptions) => {
             );
         }
 
-        chatConfig.set("maxTokens", validOptions.maxTokens);
-        chatConfig.set("temperature", validOptions.temperature);
-        chatConfig.set("topP", validOptions.topP);
-        chatConfig.set("frequencyPenalty", validOptions.frequencyPenalty);
-        chatConfig.set("presencePenalty", validOptions.presencePenalty);
-        chatConfig.set("stopSequence", validOptions.stopSequence);
+        if (validOptions.maxTokens)
+            chatConfig.set("maxTokens", validOptions.maxTokens);
+        if (validOptions.temperature)
+            chatConfig.set("temperature", validOptions.temperature);
+        if (validOptions.topP) chatConfig.set("topP", validOptions.topP);
+        if (validOptions.frequencyPenalty)
+            chatConfig.set("frequencyPenalty", validOptions.frequencyPenalty);
+        if (validOptions.presencePenalty)
+            chatConfig.set("presencePenalty", validOptions.presencePenalty);
+        if (validOptions.stopSequence)
+            chatConfig.set("stopSequence", validOptions.stopSequence);
 
         const provider = await getLLMProvider(providerName);
         const models = await provider.listModels();

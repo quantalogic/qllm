@@ -98,7 +98,7 @@ export class CommandProcessor {
             provider: config.get("provider"),
             maxTokens: config.get("maxTokens"),
             temperature: config.get("temperature"),
-            stream: true,
+            noStream: false,
         });
 
         if (result && conversationId) {
