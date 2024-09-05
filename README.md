@@ -5,7 +5,6 @@
 ![Stars](https://img.shields.io/github/stars/quantalogic/qllm)
 ![Forks](https://img.shields.io/github/forks/quantalogic/qllm)
 ![Downloads](https://img.shields.io/npm/dw/qllm)
-![Sponsors](https://img.shields.io/github/sponsors/quantalogic)
 
 
 
