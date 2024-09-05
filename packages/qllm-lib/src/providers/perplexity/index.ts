@@ -61,7 +61,7 @@ export class PerplexityProvider implements LLMProvider, EmbeddingProvider {
         .filter(([_, v]) => v !== undefined),
     ) as unknown as LLMOptions;
 
-    console.log('filteredOptions 🔥 🍵: ', filteredOptions);    
+    // console.log('filteredOptions 🔥 🍵: ', filteredOptions);
 
     return filteredOptions;
   }
@@ -84,8 +84,8 @@ export class PerplexityProvider implements LLMProvider, EmbeddingProvider {
         responseFormat,
       };
 
-      console.log('chatRequest 🔥: ', chatRequest);
-      console.dir(chatRequest, { depth: null });
+      // console.log('chatRequest 🔥: ', chatRequest);
+      // console.dir(chatRequest, { depth: null });
 
       const response = await this.openAIProvider.generateChatCompletion(chatRequest);
 
@@ -118,8 +118,8 @@ export class PerplexityProvider implements LLMProvider, EmbeddingProvider {
         responseFormat,
       };
 
-      console.log('chatRequest 🔥 🍵: ', chatRequest);
-      console.dir(chatRequest, { depth: null });
+      // console.log('chatRequest 🔥 🍵: ', chatRequest);
+      // console.dir(chatRequest, { depth: null });
 
       const stream = this.openAIProvider.streamChatCompletion(chatRequest);
 

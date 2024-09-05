@@ -25,7 +25,7 @@ import ollama, {
   ToolCall as OllamaToolCall,
   Options as OllamaOptions,
 } from 'ollama';
-import { createTextMessageContent, imageToBase64 } from '../../utils/images';
+import { imageToBase64 } from '../../utils/images';
 import { listModels } from './list-models';
 
 const DEFAULT_MODEL = 'llama3.1';
