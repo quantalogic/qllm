@@ -1,5 +1,11 @@
 # qllm
 
+## 2.9.2
+
+### Patch Changes
+
+- Add check for update at startup
+
 ## 2.9.1
 
 ### Patch Changes
