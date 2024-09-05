@@ -23,8 +23,6 @@ const CliConfigSchema = z.object({
 
 type Config = z.infer<typeof CliConfigSchema>;
 
-type ConfigKey = keyof Config;
-
 type PartialConfig = Partial<Config>;
 
 const CONFIG_FILE_NAME = ".qllmrc";
