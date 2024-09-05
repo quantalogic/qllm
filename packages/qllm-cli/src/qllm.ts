@@ -9,6 +9,7 @@ import { readFileSync } from "fs";
 import { IOManager } from "./utils/io-manager";
 import { askCommandAction } from "./commands/ask-command";
 import { chatAction } from "./commands/chat-command";
+import axios from "axios"; // Add axios import
 
 import path from "path";
 
@@ -24,8 +25,28 @@ const VERSION = packageJson.version;
 
 const ioManager = new IOManager();
 
+async function checkForUpdates(currentVersion: string) {
+    try {
+        const response = await axios.get(`https://registry.npmjs.org/qllm`, { timeout: 2000 });
+        const latestVersion = response.data["dist-tags"].latest;
+
+        if (latestVersion !== currentVersion) {
+            const message = `You are using qllm version ${VERSION}. A new version is available! 🎉 You can update to the latest version (${latestVersion}).\nRun: npm install -g qllm`;
+            ioManager.displayInfo(message);
+        }
+    } catch (_error) {
+        // Ignore errors
+    }
+}
+
 export async function main() {
     try {
+        // Check for updates at startup
+        const random = Math.random();
+        if (random < 0.30) {
+            await checkForUpdates(VERSION);
+        }
+
         const configManager = CliConfigManager.getInstance();
 
         await configManager.ensureConfigFileExists();
