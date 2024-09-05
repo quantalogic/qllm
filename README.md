@@ -187,7 +187,7 @@ SemVer uses a three-part version number: MAJOR.MINOR.PATCH
    🦋  Which packages would you like to include? · qllm-core, qllm-cli
    🦋  Which packages should have a major bump? · No items were selected
    🦋  Which packages should have a minor bump? · qllm-cli
-   🦋  Which packages should have a patch bump? · qllm-core
+   ���  Which packages should have a patch bump? · qllm-core
    🦋  Please enter a summary for this change (this will be in the changelogs).
    🦋  Summary · Added new CLI command and fixed core module bug
    ```
