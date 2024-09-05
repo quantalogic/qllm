@@ -61,7 +61,7 @@ export const askCommandAction = async (
     validOptions = {
         ...options,
     };
-    
+
     try {
         validOptions = await validateOptions(
             AskCommandOptionsPartialSchema,
@@ -83,8 +83,10 @@ export const askCommandAction = async (
     const modelName =
         validOptions.model || cliConfig.get("model") || DEFAULT_MODEL;
 
-    const maxTokens = validOptions.maxTokens || cliConfig.get("maxTokens") || undefined;
-    const temperature = validOptions.temperature || cliConfig.get("temperature") || undefined;
+    const maxTokens =
+        validOptions.maxTokens || cliConfig.get("maxTokens") || undefined;
+    const temperature =
+        validOptions.temperature || cliConfig.get("temperature") || undefined;
 
     const spinner = createSpinner("Processing...").start();
 

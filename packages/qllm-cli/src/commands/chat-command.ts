@@ -41,7 +41,7 @@ export const chatAction = async (options: ChatCommandOptions) => {
             validOptions.provider ||
             CliConfigManager.getInstance().get("provider") ||
             DEFAULT_PROVIDER;
-            
+
         const modelName =
             validOptions.model ||
             CliConfigManager.getInstance().get("model") ||

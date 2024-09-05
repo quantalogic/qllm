@@ -1,9 +1,6 @@
-// packages/qllm-cli/src/commands/configure-command.ts
 import { Command } from "commander";
 import { CliConfigManager } from "../utils/cli-config-manager";
 import { IOManager } from "../utils/io-manager";
-import { Config } from "../types/configure-command-options";
-import { ConfigSchema } from "../types/configure-command-options"; // {{ edit_1 }}
 import { z } from "zod";
 import { CONFIG_OPTIONS } from "../types/configure-command-options";
 import { utils } from "../chat/utils";
@@ -13,6 +10,7 @@ declare var process: NodeJS.Process; //eslint-disable-line
 
 const configManager = CliConfigManager.getInstance();
 const ioManager = new IOManager();
+
 export const configureCommand = new Command("configure")
     .description("Configure QLLM CLI settings")
     .option("-l, --list", "List all configuration settings")
@@ -23,10 +21,8 @@ export const configureCommand = new Command("configure")
             if (options.list) {
                 listConfig();
             } else if (options.set) {
-                if (options.set) {
-                    const [key, value] = options.set.split("="); // Split the input on '='
-                    await setConfig(key, value);
-                }
+                const [key, value] = options.set.split("="); // Split the input on '='
+                await setConfig(key, value);
             } else if (options.get) {
                 getConfig(options.get);
             } else {
@@ -50,18 +46,17 @@ function listConfig(): void {
     ioManager.displayInfo(`Path: ${pathConfig}`);
 
     ioManager.displaySectionHeader("Current Configuration");
-
     Object.entries(config).forEach(([key, value]) => {
         if (key === "apiKeys") {
             ioManager.displayInfo(`${key}:`);
             if (value) {
                 Object.entries(value).forEach(([provider, apiKey]) => {
                     ioManager.displayInfo(
-                        `  ${provider}: ${maskApiKey(apiKey)}`,
+                        ` ${provider}: ${maskApiKey(apiKey)}`,
                     );
                 });
             } else {
-                ioManager.displayInfo("  No API keys set");
+                ioManager.displayInfo(" No API keys set");
             }
         } else {
             ioManager.displayInfo(`${key}: ${JSON.stringify(value)}`);
@@ -81,36 +76,35 @@ function maskApiKey(apiKey: string): string {
 }
 
 async function setConfig(key: string, value: string): Promise<void> {
-    const config = configManager.configCopy(); // Ensure this is a fresh copy
-
-    // Declare variables outside the switch statement
-    let models: Array<{ id: string }>;
-    let modelIds: string[];
+    // Ensure this is a fresh copy
+    const config = configManager.configCopy();
 
     if (key === "model") {
         // Ensure the provider is set before setting the model
         if (!config.provider) {
             throw new Error("Provider must be set before setting the model.");
         }
-        const provider = await getLLMProvider(config.provider); // {{ edit_1 }}
-        models = await provider.listModels(); // {{ edit_2 }}
-        modelIds = models.map((model) => model.id);
+
+        const provider = await getLLMProvider(config.provider);
+        const models = await provider.listModels();
+        const modelIds = models.map((model) => model.id);
 
         if (!modelIds.includes(value)) {
             throw new Error(
                 `Invalid model: ${value}. Available models for provider ${config.provider}: ${modelIds.join(", ")}`,
             );
         }
-        config.model = value;
-    }
 
-    // Update the configManager with the new values
-    configManager.set(key as keyof Config, config[key as keyof Config]);
+        // Update the configuration using the config manager
+        configManager.set("model", value);
+    } else {
+        // Update the configuration using the config manager
+        configManager.setValue(key, value);
+    }
 
     // Save the updated configuration
     try {
         ioManager.displayInfo(`Setting ${key} to ${value}`);
-        configManager.set(key as keyof Config, value); // Ensure the key-value pair is set correctly
         await configManager.save();
         ioManager.displaySuccess(
             `Configuration updated and saved successfully`,
@@ -124,7 +118,7 @@ async function setConfig(key: string, value: string): Promise<void> {
 }
 
 function getConfig(key: string): void {
-    const configValue = configManager.get(key as keyof Config); // Ensure this retrieves the correct value
+    const configValue = configManager.getValue(key);
     if (configValue) {
         ioManager.displayInfo(`Configuration for ${key}: ${configValue}`);
     } else {
@@ -133,9 +127,7 @@ function getConfig(key: string): void {
 }
 
 async function interactiveConfig(): Promise<void> {
-    const config = configManager.configCopy(); // Ensure this is a fresh copy
     const validProviders = getListProviderNames(); // Fetch valid providers
-
     const configGroups = [
         {
             name: "Provider Settings",
@@ -163,14 +155,13 @@ async function interactiveConfig(): Promise<void> {
 
     for (const group of configGroups) {
         ioManager.displayGroupHeader(group.name);
-
         for (const key of group.options) {
             const configOption = CONFIG_OPTIONS.find(
                 (option) => option.name === key,
             );
             if (!configOption) continue;
 
-            const value = config[key as keyof Config];
+            const value = configManager.getValue(key);
             const currentValue =
                 value !== undefined
                     ? ioManager.colorize(JSON.stringify(value), "yellow")
@@ -180,7 +171,7 @@ async function interactiveConfig(): Promise<void> {
 
             if (key === "provider") {
                 newValue = await ioManager.getUserInput(
-                    `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}).\nAvailable providers:\n${validProviders.map((provider) => `  - ${provider}`).join("\n")}\nPlease select a provider: `,
+                    `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}).\nAvailable providers:\n${validProviders.map((provider) => ` - ${provider}`).join("\n")}\nPlease select a provider: `,
                 );
 
                 // Validate the input against the list of valid providers
@@ -196,14 +187,14 @@ async function interactiveConfig(): Promise<void> {
                 const models = await provider.listModels();
                 const modelIds = models.map(
                     (model: { id: string }) => model.id,
-                ); // Explicitly type the model parameter
+                );
 
-                // Update the current value to reflect the new provider
-                config.provider = newValue.trim();
+                // Update the current value using the config manager
+                configManager.set("provider", newValue.trim());
 
                 // Prompt for the default model with improved display
                 const modelInput = await ioManager.getUserInput(
-                    `${ioManager.colorize("model", "cyan")} (Available models):\n${modelIds.map((modelId) => `  - ${modelId}`).join("\n")}\nPlease select a model: `,
+                    `${ioManager.colorize("model", "cyan")} (Available models):\n${modelIds.map((modelId) => ` - ${modelId}`).join("\n")}\nPlease select a model: `,
                 );
 
                 // Validate the input against the list of models
@@ -214,48 +205,35 @@ async function interactiveConfig(): Promise<void> {
                     continue; // Skip to the next option
                 }
 
-                // Set the validated model
-                config.model = modelInput.trim(); // Ensure this line is executed after setting the provider
+                // Set the validated model using the config manager
+                configManager.set("model", modelInput.trim());
             } else {
                 newValue = await ioManager.getUserInput(
                     `${ioManager.colorize(key, "cyan")} (${configOption.description}) (current: ${currentValue}): `,
                 );
-            }
 
-            if (newValue && newValue.trim() !== "") {
-                await utils.retryOperation(
-                    async () => {
-                        try {
-                            const schema =
-                                ConfigSchema.shape[key as keyof Config];
-                            const validatedValue = schema.parse(
-                                configOption.type === "number"
-                                    ? parseFloat(newValue)
-                                    : newValue,
-                            );
-                            configManager.set(
-                                key as keyof Config,
-                                validatedValue,
-                            );
-                            ioManager.displaySuccess(
-                                `${key} updated successfully`,
-                            );
-                        } catch (error) {
-                            if (error instanceof z.ZodError) {
-                                throw new Error(
-                                    `Invalid input: ${error.errors[0].message}`,
+                if (newValue && newValue.trim() !== "") {
+                    await utils.retryOperation(
+                        async () => {
+                            try {
+                                configManager.setValue(key, newValue);
+                                ioManager.displaySuccess(
+                                    `${key} updated successfully`,
                                 );
+                            } catch (error) {
+                                if (error instanceof z.ZodError) {
+                                    throw new Error(
+                                        `Invalid input: ${error.errors[0].message}`,
+                                    );
+                                }
+                                throw error;
                             }
-                            throw error;
-                        }
-                    },
-                    3,
-                    0,
-                );
+                        },
+                        3,
+                        0,
+                    );
+                }
             }
-
-            // Update the configManager with the new values
-            configManager.set(key as keyof Config, config[key as keyof Config]); // Ensure the manager is updated
         }
         ioManager.newLine(); // Add a newline after each group
     }

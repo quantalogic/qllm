@@ -67,7 +67,7 @@ export async function main() {
                 "-v, --variables <variables>",
                 "Template variables in JSON format",
             )
-            .option("-ns, --no-stream", "Stream the response",true)
+            .option("-ns, --no-stream", "Stream the response", true)
             .option("-o, --output <output>", "Output file for the response")
             .option(
                 "-e, --extract <variables>",
