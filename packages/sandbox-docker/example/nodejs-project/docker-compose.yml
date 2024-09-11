@@ -1,0 +1,8 @@
+version: '3'
+services:
+  app:
+    build: .
+    environment:
+      - INPUT_VALUE=${INPUT_VALUE}
+    volumes:
+      - ./output:/app/output

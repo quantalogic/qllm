@@ -1,0 +1,10 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      - INPUT_VALUE=${INPUT_VALUE}
+    volumes:
+      - ./output:/app/output
