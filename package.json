@@ -36,7 +36,7 @@
     "rollup-plugin-analyzer": "4.0.0",
     "rollup-plugin-gzip": "4.0.1",
     "ts-jest": "29.2.5",
-    "typedoc": "0.26.6",
+    "typedoc": "0.26.7",
     "typedoc-plugin-markdown": "4.2.6",
     "typescript": "^5.5.4"
   },
