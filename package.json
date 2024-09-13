@@ -20,12 +20,14 @@
   },
   "devDependencies": {
     "@aws-sdk/client-sso-oidc": "^3.614.0",
+    "@babel/preset-env": "7.25.4",
     "@changesets/cli": "^2.27.7",
     "@rollup/plugin-commonjs": "26.0.1",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "15.2.3",
     "@rollup/plugin-terser": "0.4.4",
     "@rollup/plugin-typescript": "11.1.6",
+    "babel-jest": "29.7.0",
     "eslint": "^9.9.1",
     "espree": "10.1.0",
     "prettier": "^3.3.3",
@@ -33,6 +35,7 @@
     "rollup": "4.21.1",
     "rollup-plugin-analyzer": "4.0.0",
     "rollup-plugin-gzip": "4.0.1",
+    "ts-jest": "29.2.5",
     "typedoc": "0.26.6",
     "typedoc-plugin-markdown": "4.2.6",
     "typescript": "^5.5.4"
