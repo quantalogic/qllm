@@ -1,5 +1,11 @@
 # qllm-lib
 
+## 3.6.2
+
+### Patch Changes
+
+- update aws-credentials to use profile or environment variables
+
 ## 3.6.0
 
 ### Minor Changes
