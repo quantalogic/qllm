@@ -140,6 +140,15 @@ $ qllm configure
 ? Log Level: info
 ```
 
+#### AWS Configuration
+To use AWS Bedrock with QLLM, you need to configure your AWS credentials. Ensure you have the following environment variables set:
+- `AWS_ACCESS_KEY_ID`: Your AWS access key ID.
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret access key.
+- `AWS_BEDROCK_REGION`: The AWS region you want to use (optional, defaults to a predefined region).
+- `AWS_BEDROCK_PROFILE`: If you prefer to use a named profile from your AWS credentials file, set this variable instead of the access key and secret.
+
+You can set these variables in your terminal or include them in your environment configuration file (e.g., `.env` file) for convenience.
+
 > 💡 Pro Tip: You can always change these settings later, either through the `qllm configure` command or directly in the configuration file located at `~/.qllmrc`.
 >
 

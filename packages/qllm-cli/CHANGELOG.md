@@ -1,5 +1,12 @@
 # qllm
 
+## 2.9.3
+
+### Patch Changes
+
+- Updated dependencies
+  - qllm-lib@3.6.2
+
 ## 2.9.2
 
 ### Patch Changes
