@@ -27,7 +27,12 @@
         "lint": "eslint .",
         "format": "prettier --write .",
         "test": "jest",
-        "prepublishOnly": "pnpm run build"
+        "prepublishOnly": "pnpm run build",
+        "dev:aisearch": "ts-node src/template-workflow/ai_research_workflow.ts",
+        "dev:creativewriting": "ts-node src/template-workflow/creative_writing_workflow.ts",
+        "dev:codereview": "ts-node src/template-workflow/code_review_workflow.ts",
+        "dev:quantum": "ts-node src/template-workflow/Quantum.ts",
+        "dev:adv": "ts-node src/template-workflow/comprehensive_research_workflow.ts"
     },
     "repository": {
         "type": "git",
