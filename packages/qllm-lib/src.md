@@ -12,6 +12,9 @@
 - src/utils/document/document-loader.ts
 - src/utils/document/document-inclusion-resolver.ts
 - src/utils/functions/index.ts
+- src/workflow/index.ts
+- src/workflow/workflow-manager.ts
+- src/workflow/workflow-executor.ts
 - src/templates/template-loader.ts
 - src/templates/template-definition-builder.ts
 - src/templates/template-manager.ts
@@ -29,6 +32,7 @@
 - src/conversation/conversation-manager.ts
 - src/types/index.ts
 - src/types/llm-types.ts
+- src/types/workflow-types.ts
 - src/types/conversations-types.ts
 - src/types/llm-provider.ts
 - src/providers/index.ts
@@ -55,9 +59,9 @@
 
 - Extension: .ts
 - Language: typescript
-- Size: 2008 bytes
-- Created: 2024-11-05 17:05:45
-- Modified: 2024-11-05 17:05:45
+- Size: 2037 bytes
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-05 17:59:09
 
 ### Code
 
@@ -76,6 +80,8 @@ export * from './conversation';
 
 // Template management
 export * from './templates';
+
+export * from "./workflow";
 
 // Main classes and interfaces
 import type { LLMProvider, EmbeddingProvider } from './types';
@@ -159,7 +165,7 @@ export default {
 - Extension: .ts
 - Language: typescript
 - Size: 81 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -176,7 +182,7 @@ export * from './logger';
 - Extension: .ts
 - Language: typescript
 - Size: 2393 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -259,7 +265,7 @@ export class ErrorManager {
 - Extension: .ts
 - Language: typescript
 - Size: 2038 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -354,7 +360,7 @@ export default logger;
 - Extension: .ts
 - Language: typescript
 - Size: 37 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -369,7 +375,7 @@ export * from './conversation-util';
 - Extension: .ts
 - Language: typescript
 - Size: 5237 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -571,7 +577,7 @@ export function sortConversationsByLastUpdate(conversations: Conversation[]): Co
 - Extension: .ts
 - Language: typescript
 - Size: 2948 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -667,7 +673,7 @@ export function clearCachedCredentials(): void {
 - Extension: .ts
 - Language: typescript
 - Size: 1032 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -716,7 +722,7 @@ export async function listModels(
 - Extension: .ts
 - Language: typescript
 - Size: 418 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -741,7 +747,7 @@ export const createTextMessageContent = (content: string | string[]): ChatMessag
 - Extension: .ts
 - Language: typescript
 - Size: 2780 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -841,7 +847,7 @@ export function extractMimeType(dataUrl: string): string | null {
 - Extension: .ts
 - Language: typescript
 - Size: 9007 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -1143,7 +1149,7 @@ export class DocumentLoader extends EventEmitter {
 - Extension: .ts
 - Language: typescript
 - Size: 3036 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -1246,7 +1252,7 @@ function fileUrlToPath(fileUrl: string): string {
 - Extension: .ts
 - Language: typescript
 - Size: 2800 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -1362,12 +1368,252 @@ export function createFunctionToolFromZod(config: FunctionToolConfig): FunctionT
 
 ```
 
+## File: src/workflow/index.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 74 bytes
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-05 18:01:56
+
+### Code
+
+```typescript
+export * from './workflow-executor';
+export * from './workflow-manager'; 
+
+```
+
+## File: src/workflow/workflow-manager.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 2392 bytes
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-05 17:50:58
+
+### Code
+
+```typescript
+// src/workflow/workflow-manager.ts
+
+import { readFile } from 'fs/promises';
+import { parse } from 'yaml';
+import { WorkflowExecutor } from './workflow-executor';
+import { WorkflowDefinition, WorkflowExecutionResult, WorkflowStep } from '../types/workflow-types';
+import { LLMProvider } from '../types';
+
+export class WorkflowManager {
+  private workflowExecutor: WorkflowExecutor;
+  private workflows: Map<string, WorkflowDefinition>;
+  private providers: Record<string, LLMProvider>;
+
+  constructor(providers: Record<string, LLMProvider>) {
+    this.workflowExecutor = new WorkflowExecutor();
+    this.workflows = new Map();
+    this.providers = providers;
+  }
+
+  async loadWorkflow(workflowDefinition: WorkflowDefinition | string): Promise<void> {
+    const workflow = typeof workflowDefinition === 'string' 
+      ? await this.loadWorkflowFromYaml(workflowDefinition)
+      : workflowDefinition;
+      
+    this.workflows.set(workflow.name, workflow);
+  }
+
+  private async loadWorkflowFromYaml(path: string): Promise<WorkflowDefinition> {
+    const content = await readFile(path, 'utf-8');
+    return parse(content) as WorkflowDefinition;
+  }
+
+  async runWorkflow(
+    workflowName: string,
+    input: Record<string, any>,
+    options: {
+      onStepStart?: (step: WorkflowStep, index: number) => void;
+      onStepComplete?: (step: WorkflowStep, index: number, result: WorkflowExecutionResult) => void;
+      onStreamChunk?: (chunk: string) => void;
+      onRequestSent?: (request: any) => void;
+    } = {}
+  ): Promise<Record<string, WorkflowExecutionResult>> {
+    const workflow = this.workflows.get(workflowName);
+    
+    if (!workflow) {
+      throw new Error(`Workflow "${workflowName}" not found`);
+    }
+
+    // Set up event handlers
+    if (options.onStepStart) {
+      this.workflowExecutor.on('stepStart', options.onStepStart);
+    }
+    if (options.onStepComplete) {
+      this.workflowExecutor.on('stepComplete', options.onStepComplete);
+    }
+    if (options.onStreamChunk) {
+      this.workflowExecutor.on('streamChunk', options.onStreamChunk);
+    }
+    if (options.onRequestSent) {
+      this.workflowExecutor.on('requestSent', options.onRequestSent);
+    }
+
+    try {
+      return await this.workflowExecutor.executeWorkflow(
+        workflow,
+        this.providers,
+        input
+      );
+    } finally {
+      this.workflowExecutor.removeAllListeners();
+    }
+  }
+}
+```
+
+## File: src/workflow/workflow-executor.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 4270 bytes
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-06 15:43:01
+
+### Code
+
+```typescript
+// src/workflow/workflow-executor.ts
+
+import { EventEmitter } from 'events';
+import { TemplateExecutor } from '../templates/template-executor';
+import { WorkflowDefinition, WorkflowStep, WorkflowExecutionContext, WorkflowExecutionResult } from '../types/workflow-types';
+import { LLMProvider } from '../types';
+import { logger } from '../utils/logger';
+
+export class WorkflowExecutor extends EventEmitter {
+  private templateExecutor: TemplateExecutor;
+  
+  constructor() {
+    super();
+    this.templateExecutor = new TemplateExecutor();
+    this.setupTemplateExecutorEvents();
+  }
+
+  private setupTemplateExecutorEvents() {
+    this.templateExecutor.on('streamChunk', (chunk: string) => {
+      this.emit('streamChunk', chunk);
+    });
+
+    this.templateExecutor.on('requestSent', (request: any) => {
+      this.emit('requestSent', request);
+    });
+  }
+
+  async executeWorkflow(
+    workflow: WorkflowDefinition,
+    providers: Record<string, LLMProvider>,
+    initialInput: Record<string, any>
+  ): Promise<Record<string, WorkflowExecutionResult>> {
+    const context: WorkflowExecutionContext = {
+      variables: { ...initialInput },
+      results: {}
+    };
+
+    logger.info(`Executing workflow: ${workflow.name}`);
+
+    for (const [index, step] of workflow.steps.entries()) {
+      this.emit('stepStart', step, index);
+      logger.info(`Step ${index + 1}: ${step.template.name}`);
+
+      try {
+        const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
+        const provider = providers[step.provider || workflow.defaultProvider || ''];
+
+        if (!provider) {
+          throw new Error(`Provider not found for step ${index + 1}`);
+        }
+        logger.info(`Step ${index + 1} => resolvedInput: ${JSON.stringify(resolvedInput, null, 2)}`);
+        const result = await this.templateExecutor.execute({
+          template: step.template,
+          provider,
+          variables: resolvedInput,
+          stream: true
+        });
+
+        // logger.info(`Step ${index + 1} => result: ${JSON.stringify(result, null, 2)}`); 
+        const executionResult: WorkflowExecutionResult = {
+          response: result.response,
+          outputVariables: result.outputVariables
+        };
+        logger.info(`Step ${index + 1} => executionResult: ${JSON.stringify(executionResult, null, 2)}`); 
+
+        // Store step results in context
+        if (typeof step.output === 'string') {
+          context.results[step.output] = executionResult;
+        } else {
+          Object.entries(step.output).forEach(([key, varName]) => {
+            if (typeof varName === 'string') {
+              context.results[varName] = executionResult.outputVariables[key];
+            }
+          });
+        }
+
+        this.emit('stepComplete', step, index, executionResult);
+        logger.info(`Completed step ${index + 1}`);
+
+      } catch (error) {
+        this.emit('stepError', step, index, error as Error);
+        throw error;
+      }
+    }
+
+    return context.results;
+  }
+
+    private resolveTemplateVariables(
+      value: string, 
+      context: Record<string, any>
+    ): string {
+      return value.replace(/\{\{([^}]+)\}\}/g, (_, key) => {
+        return context[key.trim()] || '';
+      });
+    }
+    // src/workflow/workflow-executor.ts
+    private async resolveStepInputs(
+      inputs: Record<string, string | number | boolean>,
+      context: WorkflowExecutionContext
+    ): Promise<Record<string, any>> {
+      const resolved: Record<string, any> = {};
+    
+      for (const [key, value] of Object.entries(inputs)) {
+        if (typeof value === 'string') {
+          if (value.startsWith('$')) {
+            // Handle reference to previous step output
+            const varName = value.slice(1);
+            resolved[key] = context.results[varName]?.response || 
+                           context.results[varName]?.outputVariables || 
+                           context.results[varName];
+          } else if (value.match(/\{\{.*\}\}/)) {
+            // Handle template variables
+            resolved[key] = this.resolveTemplateVariables(value, context.variables);
+          } else {
+            resolved[key] = value;
+          }
+        } else {
+          resolved[key] = value;
+        }
+      }
+    
+      return resolved;
+    }
+}
+```
+
 ## File: src/templates/template-loader.ts
 
 - Extension: .ts
 - Language: typescript
 - Size: 1380 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -1412,7 +1658,7 @@ function getBuilder(content: { mimeType: string; content: string }): TemplateDef
 - Extension: .ts
 - Language: typescript
 - Size: 12824 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -1858,8 +2104,8 @@ export function generatePromptFromTemplate(
 - Extension: .ts
 - Language: typescript
 - Size: 5209 bytes
-- Created: 2024-11-05 17:05:45
-- Modified: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-05 17:32:52
 
 ### Code
 
@@ -2030,7 +2276,7 @@ export class TemplateManager {
 - Extension: .ts
 - Language: typescript
 - Size: 178 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -2049,7 +2295,7 @@ export * from './types';
 - Extension: .ts
 - Language: typescript
 - Size: 3399 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -2165,7 +2411,7 @@ export class OutputVariableExtractor {
 - Extension: .ts
 - Language: typescript
 - Size: 3116 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -2287,7 +2533,7 @@ export class FileOperationError extends TemplateManagerError {
 - Extension: .ts
 - Language: typescript
 - Size: 5177 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -2430,7 +2676,7 @@ export type OutputVariable = z.infer<typeof outputVariableSchema>;
 - Extension: .ts
 - Language: typescript
 - Size: 1780 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -2497,8 +2743,8 @@ export class TemplateValidator {
 - Extension: .ts
 - Language: typescript
 - Size: 8414 bytes
-- Created: 2024-11-05 17:05:45
-- Modified: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-05 17:29:13
 
 ### Code
 
@@ -2771,7 +3017,7 @@ export class TemplateExecutor extends EventEmitter {
 - Extension: .yaml
 - Language: yaml
 - Size: 1798 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -2841,7 +3087,7 @@ content: |
 - Extension: .ts
 - Language: typescript
 - Size: 4523 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -3025,7 +3271,7 @@ export function extractVariablesFromContent(
 - Extension: .ts
 - Language: typescript
 - Size: 4779 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -3198,7 +3444,7 @@ describe('extractVariablesFromContent', () => {
 - Extension: .ts
 - Language: typescript
 - Size: 6560 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -3416,7 +3662,7 @@ const isValidConversation = (data: any): data is Conversation => {
 - Extension: .ts
 - Language: typescript
 - Size: 40 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -3431,7 +3677,7 @@ export * from './conversation-manager';
 - Extension: .ts
 - Language: typescript
 - Size: 7107 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -3650,9 +3896,9 @@ export const createConversationManager = (
 
 - Extension: .ts
 - Language: typescript
-- Size: 100 bytes
-- Created: 2024-11-05 17:05:45
-- Modified: 2024-11-05 17:05:45
+- Size: 134 bytes
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-05 19:42:47
 
 ### Code
 
@@ -3660,6 +3906,7 @@ export const createConversationManager = (
 export * from './llm-provider';
 export * from './llm-types';
 export * from './conversations-types';
+export * from './workflow-types';
 
 ```
 
@@ -3668,7 +3915,7 @@ export * from './conversations-types';
 - Extension: .ts
 - Language: typescript
 - Size: 7167 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -3941,12 +4188,53 @@ export type ChatCompletionParams = {
 
 ```
 
+## File: src/types/workflow-types.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 722 bytes
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-05 19:40:40
+
+### Code
+
+```typescript
+// src/types/workflow-types.ts
+
+import { TemplateDefinition } from '../templates/types';
+
+export interface WorkflowStep {
+    template: TemplateDefinition;
+    provider?: string;
+    input?: Record<string, string | number | boolean>; // Updated to allow more types
+    output: string | Record<string, string>;
+}
+
+export interface WorkflowDefinition {
+    name: string;
+    description?: string;
+    version?: string;
+    defaultProvider?: string;
+    steps: WorkflowStep[];
+}
+
+export interface WorkflowExecutionResult {
+    response: string;
+    outputVariables: Record<string, any>;
+}
+
+export interface WorkflowExecutionContext {
+    variables: Record<string, any>;
+    results: Record<string, WorkflowExecutionResult>;
+}
+```
+
 ## File: src/types/conversations-types.ts
 
 - Extension: .ts
 - Language: typescript
 - Size: 3173 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -4051,7 +4339,7 @@ export class InvalidConversationOperationError extends ConversationError {
 - Extension: .ts
 - Language: typescript
 - Size: 3184 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -4172,7 +4460,7 @@ export abstract class BaseEmbeddingProvider implements EmbeddingProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 1834 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -4248,7 +4536,7 @@ export async function getEmbeddingProvider(providerName: string): Promise<Embedd
 - Extension: .ts
 - Language: typescript
 - Size: 5678 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -4449,7 +4737,7 @@ export class GroqProvider extends BaseLLMProvider implements EmbeddingProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 7388 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -4724,7 +5012,7 @@ function formatOptions(options: LLMOptions): Partial<OllamaOptions> {
 - Extension: .ts
 - Language: typescript
 - Size: 1614 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -4797,8 +5085,8 @@ function formatModelDescription(details: OllamaModelDetails): string {
 - Extension: .ts
 - Language: typescript
 - Size: 9434 bytes
-- Created: 2024-11-05 17:05:45
-- Modified: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-06 17:16:17
 
 ### Code
 
@@ -5082,7 +5370,7 @@ export class AnthropicProvider extends BaseLLMProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 245 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -5101,7 +5389,7 @@ export const DEFAULT_MAX_TOKENS = 128 * 1024; // 128,000 tokens
 - Extension: .ts
 - Language: typescript
 - Size: 2227 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -5171,7 +5459,7 @@ export const createAwsBedrockAnthropicProvider = async () => {
 - Extension: .ts
 - Language: typescript
 - Size: 1861 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -5243,7 +5531,7 @@ export async function formatContent(
 - Extension: .ts
 - Language: typescript
 - Size: 7093 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -5489,7 +5777,7 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 4743 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -5667,7 +5955,7 @@ export class OpenRouterProvider extends BaseLLMProvider implements LLMProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 5816 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -5866,7 +6154,7 @@ export class PerplexityProvider implements LLMProvider, EmbeddingProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 1856 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -5950,7 +6238,7 @@ export const DEFAULT_PERPLEXITY_MODEL = PERPLEXITY_SONAR_MODELS.SONAR_SMALL_ONLI
 - Extension: .ts
 - Language: typescript
 - Size: 9990 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -6243,7 +6531,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 5847 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -6433,7 +6721,7 @@ export class SQLiteConversationStorageProvider implements StorageProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 878 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -6474,7 +6762,7 @@ export default function createStorageProvider(
 - Extension: .ts
 - Language: typescript
 - Size: 983 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -6515,7 +6803,7 @@ export class InMemoryStorageProvider implements StorageProvider {
 - Extension: .yaml
 - Language: yaml
 - Size: 2207 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -6611,7 +6899,7 @@ content: |
 - Extension: .md
 - Language: markdown
 - Size: 301 bytes
-- Created: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:24:50
 - Modified: 2024-11-05 17:05:45
 
 ### Code
@@ -6638,9 +6926,9 @@ Format markdown:
 
 - Extension: .json
 - Language: json
-- Size: 2765 bytes
-- Created: 2024-11-05 17:05:45
-- Modified: 2024-11-05 17:05:45
+- Size: 2786 bytes
+- Created: 2024-11-06 17:24:50
+- Modified: 2024-11-06 12:03:17
 
 ### Code
 
@@ -6673,7 +6961,8 @@ Format markdown:
     "format": "prettier --write .",
     "test": "jest",
     "prepublishOnly": "npm run clean && npm run build:prod",
-    "docs": "typedoc --options typedoc.json"
+    "docs": "typedoc --options typedoc.json",
+    "dev": "tsc -w"
   },
   "repository": {
     "type": "git",
