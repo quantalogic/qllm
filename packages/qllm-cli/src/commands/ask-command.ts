@@ -1,7 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
 import { getLLMProvider, ChatMessage, LLMProvider } from "qllm-lib";
-import { createSpinner, Spinner } from "nanospinner";
+import { createSpinner } from "nanospinner";
+
 import {
     AskCommandOptions,
     AskCommandOptionsPartialSchema,
@@ -243,7 +244,7 @@ function formatBytes(bytes: number): string {
 }
 
 async function askQuestion(
-    spinner: Spinner,
+    spinner: ReturnType<typeof createSpinner>,
     question: string,
     provider: LLMProvider,
     options: AskCommandOptions,
@@ -288,7 +289,7 @@ function createMessageContent(
 }
 
 async function streamResponse(
-    spinner: Spinner,
+    spinner: ReturnType<typeof createSpinner>,
     provider: LLMProvider,
     params: any,
 ): Promise<string> {
