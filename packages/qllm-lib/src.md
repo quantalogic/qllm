@@ -1,6 +1,10 @@
 # Table of Contents
 - src/index.ts
 - src/utils/index.ts
+- src/utils/file-handlers/local-handler.ts
+- src/utils/file-handlers/index.ts
+- src/utils/file-handlers/factory.ts
+- src/utils/file-handlers/s3-handler.ts
 - src/utils/error/index.ts
 - src/utils/logger/index.ts
 - src/utils/conversation/index.ts
@@ -9,6 +13,8 @@
 - src/utils/cloud/aws/bedrock.ts
 - src/utils/images/index.ts
 - src/utils/images/image-to-base64.ts
+- src/utils/document/index.ts
+- src/utils/document/format-handlers.ts
 - src/utils/document/document-loader.ts
 - src/utils/document/document-inclusion-resolver.ts
 - src/utils/functions/index.ts
@@ -34,6 +40,7 @@
 - src/types/llm-types.ts
 - src/types/workflow-types.ts
 - src/types/conversations-types.ts
+- src/types/file-handler.ts
 - src/types/llm-provider.ts
 - src/providers/index.ts
 - src/providers/qroq/index.ts
@@ -51,17 +58,15 @@
 - src/storage/sqlite-conversation-storage-provider.ts
 - src/storage/index.ts
 - src/storage/in-memory-storage-provider.ts
-- prompts/create_story.yaml
-- prompts/story.md
 - package.json
 
 ## File: src/index.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 2037 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:59:09
+- Size: 2038 bytes
+- Created: 2024-11-06 18:03:45
+- Modified: 2024-11-06 18:03:45
 
 ### Code
 
@@ -82,6 +87,7 @@ export * from './conversation';
 export * from './templates';
 
 export * from "./workflow";
+
 
 // Main classes and interfaces
 import type { LLMProvider, EmbeddingProvider } from './types';
@@ -164,9 +170,9 @@ export default {
 
 - Extension: .ts
 - Language: typescript
-- Size: 81 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:05:45
+- Size: 108 bytes
+- Created: 2024-11-06 18:03:52
+- Modified: 2024-11-06 18:03:52
 
 ### Code
 
@@ -174,16 +180,168 @@ export default {
 export * from './images';
 export * from './functions';
 export * from './logger';
+export * from "./document";
+```
 
+## File: src/utils/file-handlers/local-handler.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 819 bytes
+- Created: 2024-11-06 21:04:31
+- Modified: 2024-11-06 21:04:31
+
+### Code
+
+```typescript
+// src/utils/file-handlers/local-handler.ts
+import fs from 'fs/promises';
+import mime from 'mime-types';
+import path from 'path';
+import { FileHandler } from '../../types';
+
+export class LocalFileHandler implements FileHandler {
+    async read(filePath: string): Promise<string> {
+        try {
+            const content = await fs.readFile(filePath, 'utf-8');
+            return content;
+        } catch (error) {
+            throw new Error(`Failed to read local file: ${error as Error}`);
+        }
+    }
+
+    async exists(filePath: string): Promise<boolean> {
+        try {
+            await fs.access(filePath);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async getType(filePath: string): Promise<string> {
+        return mime.lookup(filePath) || 'text/plain';
+    }
+}
+```
+
+## File: src/utils/file-handlers/index.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 89 bytes
+- Created: 2024-11-06 21:05:15
+- Modified: 2024-11-06 21:05:15
+
+### Code
+
+```typescript
+export * from "./local-handler";
+export * from "./s3-handler";
+export * from "./factory";
+```
+
+## File: src/utils/file-handlers/factory.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 370 bytes
+- Created: 2024-11-06 21:05:05
+- Modified: 2024-11-06 21:05:05
+
+### Code
+
+```typescript
+// src/utils/file-handlers/factory.ts
+import { FileHandler } from '../../types/file-handler';
+import { LocalFileHandler } from './local-handler';
+import { S3FileHandler } from './s3-handler';
+
+export function createFileHandler(path: string): FileHandler {
+    if (path.startsWith('s3://')) {
+        return new S3FileHandler();
+    }
+    return new LocalFileHandler();
+}
+```
+
+## File: src/utils/file-handlers/s3-handler.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 1788 bytes
+- Created: 2024-11-06 17:53:01
+- Modified: 2024-11-06 17:53:01
+
+### Code
+
+```typescript
+// src/utils/file-handlers/s3-handler.ts
+import { S3Client, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { FileHandler } from '../../types';
+
+export class S3FileHandler implements FileHandler {
+    private client: S3Client;
+
+    constructor(region: string = 'us-east-1') {
+        this.client = new S3Client({ region });
+    }
+
+    private parseS3Url(s3Url: string): { Bucket: string; Key: string } {
+        const url = new URL(s3Url);
+        return {
+            Bucket: url.hostname.split('.')[0],
+            Key: url.pathname.slice(1)
+        };
+    }
+
+    async read(s3Url: string): Promise<string> {
+        try {
+            const params = this.parseS3Url(s3Url);
+            const command = new GetObjectCommand(params);
+            const response = await this.client.send(command);
+            
+            if (!response.Body) {
+                throw new Error('Empty response from S3');
+            }
+
+            return await response.Body.transformToString();
+        } catch (error) {
+            throw new Error(`Failed to read S3 file: ${error as Error}`);
+        }
+    }
+
+    async exists(s3Url: string): Promise<boolean> {
+        try {
+            const params = this.parseS3Url(s3Url);
+            const command = new HeadObjectCommand(params);
+            await this.client.send(command);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async getType(s3Url: string): Promise<string> {
+        try {
+            const params = this.parseS3Url(s3Url);
+            const command = new HeadObjectCommand(params);
+            const response = await this.client.send(command);
+            return response.ContentType || 'text/plain';
+        } catch {
+            return 'text/plain';
+        }
+    }
+}
 ```
 
 ## File: src/utils/error/index.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 2393 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:05:45
+- Size: 2783 bytes
+- Created: 2024-11-06 17:54:04
+- Modified: 2024-11-06 17:54:04
 
 ### Code
 
@@ -258,6 +416,20 @@ export class ErrorManager {
   }
 }
 
+// src/utils/error/file-errors.ts
+export class FileNotFoundError extends Error {
+  constructor(path: string) {
+      super(`File not found: ${path}`);
+      this.name = 'FileNotFoundError';
+  }
+}
+
+export class FileAccessError extends Error {
+  constructor(path: string, message: string) {
+      super(`Failed to access file ${path}: ${message}`);
+      this.name = 'FileAccessError';
+  }
+}
 ```
 
 ## File: src/utils/logger/index.ts
@@ -842,13 +1014,113 @@ export function extractMimeType(dataUrl: string): string | null {
 
 ```
 
+## File: src/utils/document/index.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 81 bytes
+- Created: 2024-11-06 18:03:34
+- Modified: 2024-11-06 18:03:34
+
+### Code
+
+```typescript
+export * from "./document-inclusion-resolver";
+export * from "./document-loader";
+```
+
+## File: src/utils/document/format-handlers.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 1974 bytes
+- Created: 2024-11-06 21:03:06
+- Modified: 2024-11-06 21:03:06
+
+### Code
+
+```typescript
+// src/utils/document/format-handlers.ts
+//import * as pdf from 'pdf-parse';
+import * as docx from 'docx';
+import * as xlsx from 'xlsx';
+import * as yaml from 'js-yaml';
+import * as mammoth from 'mammoth';
+import { readFile } from 'fs/promises';
+
+export interface FormatHandler {
+  mimeTypes: string[];
+  handle: (buffer: Buffer) => Promise<string>;
+}
+
+export const formatHandlers: Record<string, FormatHandler> = {
+  /* pdf: {
+    mimeTypes: ['application/pdf'],
+    handle: async (buffer: Buffer) => {
+      const data = await pdf(buffer);
+      return data.text;
+    }
+  }, */
+  
+  docx: {
+    mimeTypes: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    handle: async (buffer: Buffer) => {
+      const result = await mammoth.extractRawText({ buffer });
+      return result.value;
+    }
+  },
+
+  txt: {
+    mimeTypes: ['text/plain'],
+    handle: async (buffer: Buffer) => buffer.toString('utf-8')
+  },
+
+  json: {
+    mimeTypes: ['application/json'],
+    handle: async (buffer: Buffer) => {
+      const content = JSON.parse(buffer.toString());
+      return JSON.stringify(content, null, 2);
+    }
+  },
+
+  yaml: {
+    mimeTypes: ['text/yaml', 'application/x-yaml'],
+    handle: async (buffer: Buffer) => {
+      const content = yaml.load(buffer.toString());
+      return yaml.dump(content);
+    }
+  },
+
+  xlsx: {
+    mimeTypes: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+    handle: async (buffer: Buffer) => {
+      const workbook = xlsx.read(buffer);
+      let text = '';
+      for (const sheet of workbook.SheetNames) {
+        const worksheet = workbook.Sheets[sheet];
+        text += `Sheet: ${sheet}\n`;
+        text += xlsx.utils.sheet_to_txt(worksheet);
+        text += '\n\n';
+      }
+      return text;
+    }
+  }
+};
+
+export function getHandlerForMimeType(mimeType: string): FormatHandler | undefined {
+  return Object.values(formatHandlers).find(handler => 
+    handler.mimeTypes.includes(mimeType)
+  );
+}
+```
+
 ## File: src/utils/document/document-loader.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 9007 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:05:45
+- Size: 10172 bytes
+- Created: 2024-11-07 09:52:46
+- Modified: 2024-11-07 09:52:46
 
 ### Code
 
@@ -865,6 +1137,8 @@ import { promisify } from 'util';
 import mime from 'mime-types';
 import { URL } from 'url';
 import { createHash } from 'crypto'; // New import statement
+import { getHandlerForMimeType, FormatHandler } from './format-handlers';
+
 
 const gunzip = promisify(zlib.gunzip);
 
@@ -900,19 +1174,22 @@ export class DocumentLoader extends EventEmitter {
 
   constructor(inputPath: string, options: DocumentLoaderOptions = {}) {
     super();
+    // Validate input path immediately
+    this.validateFilePath(inputPath);
+    
     this.inputPath = inputPath;
     this.options = {
-      chunkSize: 1024 * 1024, // 1MB default chunk size
-      encoding: 'utf-8',
-      timeout: 30000, // 30 seconds default timeout
-      headers: {},
-      maxRetries: 3,
-      retryDelay: 1000,
-      cacheDir: path.join(os.tmpdir(), 'document-loader-cache'),
-      proxy: '',
-      decompress: true,
-      useCache: false,
-      ...options,
+        chunkSize: 1024 * 1024,
+        encoding: 'utf-8',
+        timeout: 30000,
+        headers: {},
+        maxRetries: 3,
+        retryDelay: 1000,
+        cacheDir: path.join(os.tmpdir(), 'document-loader-cache'),
+        proxy: '',
+        decompress: true,
+        useCache: false,
+        ...options,
     };
   }
 
@@ -935,10 +1212,27 @@ export class DocumentLoader extends EventEmitter {
     const url = new URL(fileUrl);
     return decodeURIComponent(url.pathname);
   }
-
-  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
+  private validateFilePath(filePath: string): void {
+    if (typeof filePath !== 'string') {
+        throw new Error('File path must be a string');
+    }
+    
+    // Basic security check to prevent directory traversal
+    const normalizedPath = path.normalize(filePath);
+    if (normalizedPath.includes('..')) {
+        throw new Error('File path cannot contain parent directory references');
+    }
+    
+    // Additional security checks
+    if (filePath.includes('\0')) {
+        throw new Error('File path cannot contain null bytes');
+    }
+  }
+  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> { 
+    
     const expandedPath = this.expandTilde(filePath);
     const absolutePath = path.resolve(expandedPath);
+    
     const mimeType = mime.lookup(absolutePath) || 'application/octet-stream';
 
     if (this.options.useCache) {
@@ -1062,8 +1356,27 @@ export class DocumentLoader extends EventEmitter {
   }
 
   public async loadAsString(): Promise<LoadResult<string>> {
-    const { content, mimeType } = await this.loadAsBuffer();
-    return { content: content.toString(this.options.encoding), mimeType };
+    const { content: buffer, mimeType } = await this.loadAsBuffer();
+    
+    try {
+      const handler = getHandlerForMimeType(mimeType);
+      if (handler) {
+        const text = await handler.handle(buffer);
+        return { content: text, mimeType };
+      } else {
+        // Fallback to basic text conversion
+        return { 
+          content: buffer.toString(this.options.encoding), 
+          mimeType 
+        };
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to process file (${mimeType}): ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 
   public async loadAsBuffer(): Promise<LoadResult<Buffer>> {
@@ -1140,6 +1453,7 @@ export class DocumentLoader extends EventEmitter {
   ): boolean {
     return super.emit(event, ...args);
   }
+  
 }
 
 ```
@@ -1149,8 +1463,8 @@ export class DocumentLoader extends EventEmitter {
 - Extension: .ts
 - Language: typescript
 - Size: 3036 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:05:45
+- Created: 2024-11-06 20:59:29
+- Modified: 2024-11-06 20:59:29
 
 ### Code
 
@@ -2742,9 +3056,9 @@ export class TemplateValidator {
 
 - Extension: .ts
 - Language: typescript
-- Size: 8414 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:29:13
+- Size: 9582 bytes
+- Created: 2024-11-06 21:06:26
+- Modified: 2024-11-06 21:06:26
 
 ### Code
 
@@ -2761,6 +3075,9 @@ import {
   findIncludeStatements,
   resolveIncludedContent,
 } from '../utils/document/document-inclusion-resolver';
+import { DocumentLoader } from '../utils/document/document-loader';
+import path from 'path';
+
 
 interface TemplateExecutorEvents {
   executionStart: { template: TemplateDefinition; variables: Record<string, any> };
@@ -2927,9 +3244,33 @@ export class TemplateExecutor extends EventEmitter {
     variables: Record<string, any>,
   ): Promise<string> {
     let content = template.resolved_content || template.content;
+    
+    // Handle file path variables first
     for (const [key, value] of Object.entries(variables)) {
-      content = content.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), this.formatValue(value));
+      if (key.includes('file_path')) {
+        try {
+          const fileContent = await this.resolveFileContent(value);
+          variables[key] = fileContent;
+        } catch (error) {
+          this.handleExecutionError(`Failed to process file ${key}: ${error}`);
+        }
+      }
     }
+  
+    // Replace variables in content
+    for (const [key, value] of Object.entries(variables)) {
+      content = content.replace(
+        new RegExp(`{{\\s*${key}\\s*}}`, 'g'), 
+        this.formatValue(value)
+      );
+    }
+  
+    // Handle any remaining include statements
+    if (findIncludeStatements(content).length > 0) {
+      const currentPath = process.cwd();
+      content = await resolveIncludedContent(content, currentPath);
+    }
+  
     return content;
   }
 
@@ -3007,6 +3348,20 @@ export class TemplateExecutor extends EventEmitter {
       'TemplateExecutionError',
       error instanceof Error ? error.message : String(error),
     );
+  }
+
+  private async resolveFileContent(filePath: string): Promise<string> {
+    try {
+      const documentLoader = new DocumentLoader(filePath, {
+        encoding: 'utf-8',
+        useCache: true
+      });
+      
+      const { content } = await documentLoader.loadAsString();
+      return content;
+    } catch (error) {
+      this.handleExecutionError(`Failed to load file: ${error}`);
+    }
   }
 }
 
@@ -3896,9 +4251,9 @@ export const createConversationManager = (
 
 - Extension: .ts
 - Language: typescript
-- Size: 134 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 19:42:47
+- Size: 166 bytes
+- Created: 2024-11-06 17:51:44
+- Modified: 2024-11-06 17:51:44
 
 ### Code
 
@@ -3907,6 +4262,7 @@ export * from './llm-provider';
 export * from './llm-types';
 export * from './conversations-types';
 export * from './workflow-types';
+export * from './file-handler';
 
 ```
 
@@ -4332,6 +4688,25 @@ export class InvalidConversationOperationError extends ConversationError {
   }
 }
 
+```
+
+## File: src/types/file-handler.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 190 bytes
+- Created: 2024-11-06 17:51:36
+- Modified: 2024-11-06 17:51:36
+
+### Code
+
+```typescript
+// src/types/file-handler.ts
+export interface FileHandler {
+    read(path: string): Promise<string>;
+    exists(path: string): Promise<boolean>;
+    getType(path: string): Promise<string>;
+}
 ```
 
 ## File: src/types/llm-provider.ts
@@ -5084,9 +5459,9 @@ function formatModelDescription(details: OllamaModelDetails): string {
 
 - Extension: .ts
 - Language: typescript
-- Size: 9434 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-06 17:16:17
+- Size: 9682 bytes
+- Created: 2024-11-06 17:34:53
+- Modified: 2024-11-06 17:34:53
 
 ### Code
 
@@ -5170,10 +5545,16 @@ export class AnthropicProvider extends BaseLLMProvider {
         description: 'Claude 3 Embedding: Embedding model for text embedding generation',
       },
       {
-        id: 'claude-3-5-sonnet-20240620',
-        created: new Date('2024-06-20'),
+        id: 'claude-3-5-sonnet-20241022',
+        created: new Date('2024-10-22'),
         description:
           'Claude 3.5 Sonnet: Ideal balance of intelligence and speed for enterprise workloads. Stronger than Claude 3 Opus.',
+      },
+      {
+        id: 'claude-3-5-haiku-20241022',
+        created: new Date('2024-10-22'),
+        description:
+          'Claude 3.5 Haiku: Ideal balance of intelligence and speed for enterprise workloads. Stronger than Claude 3 sonnet.',
       },
     ];
   }
@@ -5370,8 +5751,8 @@ export class AnthropicProvider extends BaseLLMProvider {
 - Extension: .ts
 - Language: typescript
 - Size: 245 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:05:45
+- Created: 2024-11-06 17:31:40
+- Modified: 2024-11-06 17:31:40
 
 ### Code
 
@@ -6798,137 +7179,13 @@ export class InMemoryStorageProvider implements StorageProvider {
 
 ```
 
-## File: prompts/create_story.yaml
-
-- Extension: .yaml
-- Language: yaml
-- Size: 2207 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:05:45
-
-### Code
-
-```yaml
-name: create_satirical_story
-version: '1.1'
-description: Create a witty and satirical story based on a given subject
-author: Raphaël MANSUY
-input_variables:
-  subject:
-    type: string
-    description: The main topic or event for the story
-    place_holder: "Emmanuel Macron dissout l'assemblée"
-  genre:
-    type: string
-    description: The specific genre or style of the story
-    place_holder: 'Humour et satire politique'
-  role:
-    type: string
-    description: The persona or character perspective to write from
-    place_holder: 'Gaspar PROUST'
-  lang:
-    type: string
-    description: The language in which the story should be written
-    place_holder: 'Français'
-  max_length:
-    type: number
-    description: The maximum word count for the story
-    default: 1000
-output_variables:
-  story:
-    type: string
-    description: The complete satirical story
-
-content: |
-  Craft a satirical story about {{subject}} from the perspective of {{role}} in {{lang}}, adhering to the {{genre}} style. The story should not exceed {{max_length}} words.
-
-  The story MUST WRITEN in {{lang}} LANGAGE.
-
-  Follow these steps:
-
-  1. Brainstorm 5-7 witty and subversive ideas related to the subject. Present these ideas in a markdown table with columns for "Idea" and "Satirical Angle".
-
-  2. Select the top 3 ideas based on their potential for humor and social commentary.
-
-  3. Develop a compelling outline for the story, incorporating the chosen ideas. Use markdown headers to structure the outline.
-
-  4. Write the full story, ensuring it's engaging, humorous, and thought-provoking. Use markdown formatting to enhance readability and emphasis.
-
-  5. Conclude with a punchy, memorable ending that ties back to the main subject.
-
-  Format your response as follows:
-
-  <ideas>
-  | Idea | Satirical Angle |
-  |------|-----------------|
-  | Idea 1 | Angle 1 |
-  | ... | ... |
-  </ideas>
-
-  <outline>
-  ## Introduction
-  - Point 1
-  - Point 2
-
-  ## Main Body
-  ### Section 1
-  - Subpoint a
-  - Subpoint b
-
-  ### Section 2
-  - Subpoint a
-  - Subpoint b
-
-  ## Conclusion
-  - Final thought
-  </outline>
-
-  <story>
-  # Title of the Story
-
-  [Your full story here, using markdown for formatting]
-
-  </story>
-
-  END.
-
-```
-
-## File: prompts/story.md
-
-- Extension: .md
-- Language: markdown
-- Size: 301 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-05 17:05:45
-
-### Code
-
-```markdown
-Write a story aboout {{subject}} as {{role}} in {{lang}} max length.
-
-Use the style of this {{author}}
-
-1 - First find funny and subversive ideas format as a table
-2 - Select the best 3 ideas
-3 - Create the outline of the story
-4 - Write the full story
-
-Format markdown:
-
-<ideas/>
-<outline/>
-<story/>
-
-```
-
 ## File: package.json
 
 - Extension: .json
 - Language: json
-- Size: 2786 bytes
-- Created: 2024-11-06 17:24:50
-- Modified: 2024-11-06 12:03:17
+- Size: 2973 bytes
+- Created: 2024-11-06 20:53:47
+- Modified: 2024-11-06 20:53:47
 
 ### Code
 
@@ -6999,19 +7256,26 @@ Format markdown:
     "@anthropic-ai/bedrock-sdk": "^0.10.2",
     "@anthropic-ai/sdk": "^0.27.0",
     "@aws-sdk/client-bedrock": "^3.645.0",
+    "@aws-sdk/client-s3": "3.685.0",
     "@aws-sdk/client-sso-oidc": "^3.645.0",
     "@aws-sdk/client-sts": "^3.645.0",
     "@aws-sdk/credential-providers": "^3.645.0",
     "@mistralai/mistralai": "1.0.4",
     "axios": "^1.7.5",
+    "docx": "9.0.2",
     "groq-sdk": "^0.5.0",
     "js-yaml": "^4.1.0",
+    "mammoth": "1.8.0",
     "mime-types": "^2.1.35",
     "node-gyp": "^10.2.0",
     "ollama": "^0.5.8",
     "openai": "^4.56.0",
+    "pdf-parse": "1.1.1",
+    "pptx-parser": "1.1.7-beta.9",
     "sqlite": "^5.1.1",
     "uuid": "^10.0.0",
+    "xlsx": "0.18.5",
+    "yaml": "^2.5.0",
     "zod": "^3.23.8"
   },
   "overrides": {

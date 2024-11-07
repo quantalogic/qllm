@@ -32,7 +32,10 @@
         "dev:creativewriting": "ts-node src/template-workflow/creative_writing_workflow.ts",
         "dev:codereview": "ts-node src/template-workflow/code_review_workflow.ts",
         "dev:quantum": "ts-node src/template-workflow/Quantum.ts",
-        "dev:adv": "ts-node src/template-workflow/comprehensive_research_workflow.ts"
+        "dev:adv": "ts-node src/template-workflow/comprehensive_research_workflow.ts",
+        "dev:filepath": "ts-node src/template-with-files/demo-prompt-with-file-path.ts",
+        "dev:filespath": "ts-node src/template-with-files/demo-prompt-with-files-path.ts",
+        "dev:execurl": "ts-node src/template-demos/demo-template-builder-exec-url.ts"
     },
     "repository": {
         "type": "git",
@@ -74,18 +77,25 @@
         "commander": "^12.1.0",
         "console-table-printer": "^2.12.1",
         "copy-paste": "^1.5.3",
+        "docx": "9.0.2",
         "gradient-string": "^2.0.2",
         "jimp": "^0.22.12",
+        "js-yaml": "^4.1.0",
         "kleur": "^4.1.5",
         "lru-cache": "^11.0.0",
+        "mammoth": "1.8.0",
         "mime-types": "^2.1.35",
         "nanospinner": "^1.1.0",
+        "pdf-parse": "1.1.1",
+        "pptx-parser": "1.1.7-beta.9",
         "prompts": "^2.4.2",
         "qllm-lib": "workspace:*",
         "readline": "^1.3.0",
         "screenshot-desktop": "^1.15.0",
         "table": "^6.8.2",
         "uuid": "^10.0.0",
+        "xlsx": "0.18.5",
+        "yaml": "^2.5.0",
         "zod": "^3.23.8"
     },
     "overrides": {
