@@ -4,6 +4,7 @@ import json from '@rollup/plugin-json';
 import terser from '@rollup/plugin-terser';
 import analyze from 'rollup-plugin-analyzer';
 import gzip from 'rollup-plugin-gzip';
+import wasm from '@rollup/plugin-wasm';
 
 const isProduction = false;
 
@@ -27,6 +28,10 @@ export default {
     },
   ],
   plugins: [
+    wasm({ 
+      targetEnv: 'node',
+      maxFileSize: 10000000 
+    }),
     resolve({
       preferBuiltins: true,
     }),
@@ -37,6 +42,7 @@ export default {
     isProduction && gzip(),
   ],
   external: [
+    'tiktoken',
     /*    'openai',
     'groq-sdk',
     '@anthropic-ai/sdk',
@@ -49,6 +55,7 @@ export default {
     'ollama',
     'sqlite',
     'uuid',
+    'tiktoken',
     'zod',*/
   ],
 };
