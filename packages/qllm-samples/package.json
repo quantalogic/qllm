@@ -27,15 +27,7 @@
         "lint": "eslint .",
         "format": "prettier --write .",
         "test": "jest",
-        "prepublishOnly": "pnpm run build",
-        "dev:aisearch": "ts-node src/template-workflow/ai_research_workflow.ts",
-        "dev:creativewriting": "ts-node src/template-workflow/creative_writing_workflow.ts",
-        "dev:codereview": "ts-node src/template-workflow/code_review_workflow.ts",
-        "dev:quantum": "ts-node src/template-workflow/Quantum.ts",
-        "dev:adv": "ts-node src/template-workflow/comprehensive_research_workflow.ts",
-        "dev:filepath": "ts-node src/template-with-files/demo-prompt-with-file-path.ts",
-        "dev:filespath": "ts-node src/template-with-files/demo-prompt-with-files-path.ts",
-        "dev:execurl": "ts-node src/template-demos/demo-template-builder-exec-url.ts"
+        "prepublishOnly": "pnpm run build"
     },
     "repository": {
         "type": "git",
