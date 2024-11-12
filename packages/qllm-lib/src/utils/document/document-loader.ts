@@ -10,6 +10,9 @@ import { promisify } from 'util';
 import mime from 'mime-types';
 import { URL } from 'url';
 import { createHash } from 'crypto'; // New import statement
+import { getHandlerForMimeType, FormatHandler } from './format-handlers';
+import logger from '../logger';
+
 
 const gunzip = promisify(zlib.gunzip);
 
@@ -45,19 +48,22 @@ export class DocumentLoader extends EventEmitter {
 
   constructor(inputPath: string, options: DocumentLoaderOptions = {}) {
     super();
+    // Validate input path immediately
+    this.validateFilePath(inputPath);
+    
     this.inputPath = inputPath;
     this.options = {
-      chunkSize: 1024 * 1024, // 1MB default chunk size
-      encoding: 'utf-8',
-      timeout: 30000, // 30 seconds default timeout
-      headers: {},
-      maxRetries: 3,
-      retryDelay: 1000,
-      cacheDir: path.join(os.tmpdir(), 'document-loader-cache'),
-      proxy: '',
-      decompress: true,
-      useCache: false,
-      ...options,
+        chunkSize: 1024 * 1024,
+        encoding: 'utf-8',
+        timeout: 30000,
+        headers: {},
+        maxRetries: 3,
+        retryDelay: 1000,
+        cacheDir: path.join(os.tmpdir(), 'document-loader-cache'),
+        proxy: '',
+        decompress: true,
+        useCache: false,
+        ...options,
     };
   }
 
@@ -80,10 +86,27 @@ export class DocumentLoader extends EventEmitter {
     const url = new URL(fileUrl);
     return decodeURIComponent(url.pathname);
   }
-
-  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
+  private validateFilePath(filePath: string): void {
+    if (typeof filePath !== 'string') {
+        throw new Error('File path must be a string');
+    }
+    
+    // Basic security check to prevent directory traversal
+    const normalizedPath = path.normalize(filePath);
+    if (normalizedPath.includes('..')) {
+        throw new Error('File path cannot contain parent directory references');
+    }
+    
+    // Additional security checks
+    if (filePath.includes('\0')) {
+        throw new Error('File path cannot contain null bytes');
+    }
+  }
+  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> { 
+    
     const expandedPath = this.expandTilde(filePath);
     const absolutePath = path.resolve(expandedPath);
+    
     const mimeType = mime.lookup(absolutePath) || 'application/octet-stream';
 
     if (this.options.useCache) {
@@ -207,8 +230,28 @@ export class DocumentLoader extends EventEmitter {
   }
 
   public async loadAsString(): Promise<LoadResult<string>> {
-    const { content, mimeType } = await this.loadAsBuffer();
-    return { content: content.toString(this.options.encoding), mimeType };
+    const { content: buffer, mimeType } = await this.loadAsBuffer();
+    
+    try {
+      const handler = getHandlerForMimeType(mimeType);
+      if (handler) {
+        const text = await handler.handle(buffer);
+        return { content: text, mimeType };
+      } else {
+        // Fallback to basic text conversion
+        logger.warn(`No handler found for mime type ${mimeType}, falling back to basic text conversion`);
+        return { 
+          content: buffer.toString(this.options.encoding), 
+          mimeType 
+        };
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to process file (${mimeType}): ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 
   public async loadAsBuffer(): Promise<LoadResult<Buffer>> {
@@ -285,4 +328,5 @@ export class DocumentLoader extends EventEmitter {
   ): boolean {
     return super.emit(event, ...args);
   }
+  
 }

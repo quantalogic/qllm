@@ -3,7 +3,7 @@ import * as z from 'zod';
 export const templateVariableSchema = z
   .object({
     type: z
-      .enum(['string', 'number', 'boolean', 'array'])
+      .enum(['string', 'number', 'boolean', 'array', 'file_path', 'files_path'])
       .describe('The data type of the variable.'),
     description: z.string().describe('A brief description of the variable.'),
     default: z.any().optional().describe('The default value for the variable, if applicable.'),

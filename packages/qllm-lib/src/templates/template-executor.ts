@@ -10,6 +10,9 @@ import {
   findIncludeStatements,
   resolveIncludedContent,
 } from '../utils/document/document-inclusion-resolver';
+import { DocumentLoader } from '../utils/document/document-loader';
+import path from 'path';
+
 
 interface TemplateExecutorEvents {
   executionStart: { template: TemplateDefinition; variables: Record<string, any> };
@@ -133,20 +136,56 @@ export class TemplateExecutor extends EventEmitter {
     context: ExecutionContext,
     template: TemplateDefinition,
     initialVariables: Record<string, any>,
-  ): Promise<Record<string, any>> {
-    if (!context.onPromptForMissingVariables)
-      return this.applyDefaultValues(template, initialVariables);
+): Promise<Record<string, any>> {
+    const resolvedVariables = { ...initialVariables };
 
-    const missingVariables = this.findMissingVariables(template, initialVariables);
-    if (missingVariables.length > 0) {
-      const promptedVariables = await context.onPromptForMissingVariables(
-        template,
-        initialVariables,
-      );
-      return this.applyDefaultValues(template, { ...initialVariables, ...promptedVariables });
+    // Handle file path variables first
+    for (const [key, value] of Object.entries(initialVariables)) {
+        const varDef = template.input_variables?.[key];
+        if (!varDef) continue;
+
+        if (varDef.type === 'file_path' || varDef.type === 'files_path') {
+            try {
+                if (Array.isArray(value) && varDef.type === 'files_path') {
+                    // Handle multiple files
+                    const contents = await Promise.all(value.map(async (filePath) => {
+                        const loader = new DocumentLoader(filePath, {
+                            encoding: 'utf-8',
+                            useCache: true
+                        });
+                        const { content } = await loader.loadAsString();
+                        return content;
+                    }));
+                    resolvedVariables[key] = contents.join('\n\n');
+                    varDef["type"] = "string"
+                } else if (typeof value === 'string' && varDef.type === 'file_path') {
+                    // Handle single file
+                    const loader = new DocumentLoader(value, {
+                        encoding: 'utf-8',
+                        useCache: true
+                    });
+                    const { content } = await loader.loadAsString();
+                    resolvedVariables[key] = content;
+                    varDef["type"] = "string"
+                }
+            } catch (error) {
+                this.handleExecutionError(`Failed to process file ${key}: ${error}`);
+            }
+        }
     }
-    return this.applyDefaultValues(template, initialVariables);
-  }
+
+    if (!context.onPromptForMissingVariables) return this.applyDefaultValues(template, resolvedVariables);
+    const missingVariables = this.findMissingVariables(template, resolvedVariables);
+    if (missingVariables.length > 0) {
+        const promptedVariables = await context.onPromptForMissingVariables(
+            template,
+            resolvedVariables,
+        );
+        return this.applyDefaultValues(template, { ...resolvedVariables, ...promptedVariables });
+    }
+
+    return this.applyDefaultValues(template, resolvedVariables);
+}
 
   private applyDefaultValues(
     template: TemplateDefinition,
@@ -176,14 +215,42 @@ export class TemplateExecutor extends EventEmitter {
     variables: Record<string, any>,
   ): Promise<string> {
     let content = template.resolved_content || template.content;
+    
+    // Handle file path variables first
     for (const [key, value] of Object.entries(variables)) {
-      content = content.replace(new RegExp(`{{\\s*${key}\\s*}}`, 'g'), this.formatValue(value));
+      if (key.includes('file_path')) {
+        try {
+          const fileContent = await this.resolveFileContent(value);
+          variables[key] = fileContent;
+        } catch (error) {
+          this.handleExecutionError(`Failed to process file ${key}: ${error}`);
+        }
+      }
     }
+  
+    // Replace variables in content
+    for (const [key, value] of Object.entries(variables)) {
+      content = content.replace(
+        new RegExp(`{{\\s*${key}\\s*}}`, 'g'), 
+        this.formatValue(value)
+      );
+    }
+  
+    // Handle any remaining include statements
+    if (findIncludeStatements(content).length > 0) {
+      const currentPath = process.cwd();
+      content = await resolveIncludedContent(content, currentPath);
+    }
+  
     return content;
   }
 
+  
   private formatValue(value: any): string {
-    return Array.isArray(value) ? value.join('\n') : String(value);
+    if (Array.isArray(value)) {
+        return value.join('\n');
+    }
+    return String(value);
   }
 
   private createChatMessages(content: string): ChatMessage[] {
@@ -256,5 +323,19 @@ export class TemplateExecutor extends EventEmitter {
       'TemplateExecutionError',
       error instanceof Error ? error.message : String(error),
     );
+  }
+
+  private async resolveFileContent(filePath: string): Promise<string> {
+    try {
+      const documentLoader = new DocumentLoader(filePath, {
+        encoding: 'utf-8',
+        useCache: true
+      });
+      
+      const { content } = await documentLoader.loadAsString();
+      return content;
+    } catch (error) {
+      this.handleExecutionError(`Failed to load file: ${error}`);
+    }
   }
 }

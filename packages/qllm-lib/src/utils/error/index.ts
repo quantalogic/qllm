@@ -67,3 +67,18 @@ export class ErrorManager {
     }
   }
 }
+
+// src/utils/error/file-errors.ts
+export class FileNotFoundError extends Error {
+  constructor(path: string) {
+      super(`File not found: ${path}`);
+      this.name = 'FileNotFoundError';
+  }
+}
+
+export class FileAccessError extends Error {
+  constructor(path: string, message: string) {
+      super(`Failed to access file ${path}: ${message}`);
+      this.name = 'FileAccessError';
+  }
+}

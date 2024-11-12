@@ -77,10 +77,16 @@ export class AnthropicProvider extends BaseLLMProvider {
         description: 'Claude 3 Embedding: Embedding model for text embedding generation',
       },
       {
-        id: 'claude-3-5-sonnet-20240620',
-        created: new Date('2024-06-20'),
+        id: 'claude-3-5-sonnet-20241022',
+        created: new Date('2024-10-22'),
         description:
           'Claude 3.5 Sonnet: Ideal balance of intelligence and speed for enterprise workloads. Stronger than Claude 3 Opus.',
+      },
+      {
+        id: 'claude-3-5-haiku-20241022',
+        created: new Date('2024-10-22'),
+        description:
+          'Claude 3.5 Haiku: Ideal balance of intelligence and speed for enterprise workloads. Stronger than Claude 3 sonnet.',
       },
     ];
   }
