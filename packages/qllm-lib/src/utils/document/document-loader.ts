@@ -105,7 +105,7 @@ export class DocumentLoader extends EventEmitter {
   }
 
   private validateFilePath(filePath: string): void {
-    if (typeof filePath !== 'string') {
+    if (!filePath || typeof filePath !== 'string') {
         throw new Error('File path must be a string');
     }
 
@@ -115,11 +115,11 @@ export class DocumentLoader extends EventEmitter {
         throw new Error('File path cannot contain parent directory references');
     }
 
-    // Check for suspicious characters
-    const suspiciousChars = /[\0<>:"|?*]/;
-    if (suspiciousChars.test(filePath)) {
-        throw new Error('File path contains invalid characters');
-    }
+    // // Check for suspicious characters
+    // const suspiciousChars = /[\0<>:"|?*]/;
+    // if (suspiciousChars.test(filePath)) {
+    //     throw new Error('File path contains invalid characters');
+    // }
 
     // Check path length
     if (filePath.length > 255) {
@@ -139,6 +139,42 @@ export class DocumentLoader extends EventEmitter {
         return 'text/typescript';
     }
     return mime.lookup(filePath) || 'application/octet-stream';
+}
+
+private getRawGitHubUrl(url: string): string {
+  try {
+      const githubUrl = new URL(url);
+      
+      // Check if it's a GitHub URL
+      if (!githubUrl.hostname.includes('github.com')) {
+          throw new Error('Not a GitHub URL');
+      }
+
+      // Convert github.com to raw.githubusercontent.com
+      // Remove 'blob/' from the path if present
+      // Example: https://github.com/user/repo/blob/master/file.txt
+      // becomes: https://raw.githubusercontent.com/user/repo/master/file.txt
+      const pathParts = githubUrl.pathname.split('/');
+      
+      // Remove empty strings from path parts
+      const filteredParts = pathParts.filter(part => part.length > 0);
+      
+      // Check if we have enough parts (user, repo, blob/tree, branch, filepath)
+      if (filteredParts.length < 5) {
+          throw new Error('Invalid GitHub URL format');
+      }
+
+      // Remove 'blob' or 'tree' from path
+      const blobIndex = filteredParts.findIndex(part => part === 'blob' || part === 'tree');
+      if (blobIndex !== -1) {
+          filteredParts.splice(blobIndex, 1);
+      }
+
+      // Construct raw URL
+      return `https://raw.githubusercontent.com/${filteredParts.join('/')}`;
+  } catch (error) {
+      throw new Error(`Failed to parse GitHub URL: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 
@@ -279,24 +315,23 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
     }
 }
 
-//   public async load(filePath: string): Promise<string> {
-//     try {
-//       const result = await this.loadFromFile(filePath);
-//       if (!result.parsedContent) {
-//         throw new Error(`No parser available for file: ${filePath}`);
-//       }
-//       return result.parsedContent;
-//     } catch (error) {
-//       throw new Error(`Failed to load document: ${error}`);
-//     }
-//   }
-
   private async loadFromUrl(url: string): Promise<LoadResult<Buffer>> {
+    let finalUrl = url;
+    
+    // Convert GitHub URLs to raw content URLs
+    if (url.includes('github.com')) {
+        try {
+            finalUrl = this.getRawGitHubUrl(url);
+        } catch (error) {
+            logger.warn(`Failed to convert GitHub URL, using original URL: ${error}`);
+        }
+    }
+
     if (this.options.useCache) {
-      const cachedPath = this.getCachePath(url);
-      if (await this.isCacheValid(url, cachedPath)) {
+      const cachedPath = this.getCachePath(finalUrl);
+      if (await this.isCacheValid(finalUrl, cachedPath)) {
         const content = await fs.readFile(cachedPath);
-        const mimeType = mime.lookup(url) || 'application/octet-stream';
+        const mimeType = mime.lookup(finalUrl) || 'application/octet-stream';
         return { content, mimeType };
       }
     }
@@ -322,7 +357,7 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
             : undefined,
         };
 
-        const response = await axios.get(url, axiosConfig);
+        const response = await axios.get(finalUrl, axiosConfig);
         let content = Buffer.from(response.data);
 
         if (this.options.decompress && response.headers['content-encoding'] === 'gzip') {
@@ -332,7 +367,7 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
         const mimeType = response.headers['content-type'] || 'application/octet-stream';
 
         if (this.options.useCache) {
-          const cachedPath = this.getCachePath(url);
+          const cachedPath = this.getCachePath(finalUrl);
           await this.cacheContent(cachedPath, content);
         }
 
