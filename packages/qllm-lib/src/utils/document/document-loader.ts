@@ -14,6 +14,7 @@ import { getHandlerForMimeType } from './format-handlers';
 import logger from '../logger';
 import { DocumentParser, LoadResult } from '../../types/document-types';
 import { ParserRegistry, DefaultParserRegistry } from './parsers/parser-registry';
+import { ContentValidator,ContentValidationOptions } from './content-validator';
 
 
 
@@ -32,6 +33,7 @@ export interface DocumentLoaderOptions {
   decompress?: boolean;
   useCache?: boolean;
   maxFileSize?: number;
+  validationOptions?: ContentValidationOptions;
 }
 
 
@@ -46,16 +48,17 @@ export class DocumentLoader extends EventEmitter {
   private inputPath: string;
   private options: Required<DocumentLoaderOptions>;
   private cancelTokenSource: CancelTokenSource | null = null;
-  // private parsers: DocumentParser[]; 
+  private contentValidator: ContentValidator;
 
   constructor(inputPath: string, 
     private parserRegistry: ParserRegistry = new DefaultParserRegistry(),
     options: DocumentLoaderOptions = {}) {
+
     super();
     // Validate input path immediately
     this.validateFilePath(inputPath);
-    
     this.inputPath = inputPath;
+
     this.options = {
         chunkSize: 1024 * 1024,
         encoding: 'utf-8',
@@ -68,13 +71,17 @@ export class DocumentLoader extends EventEmitter {
         decompress: true,
         useCache: false,
         maxFileSize: 100 * 1024 * 1024, // 100MB
+        validationOptions: {
+          maxFileSize: 100 * 1024 * 1024,
+          allowedMimeTypes: ['text/plain', 'application/pdf', 'text/typescript','application/octet-stream','application/pdf'],
+          validateEncoding: true,
+          securityScanEnabled: true
+      },
         ...options,
     };
 
-    // this.parsers = [
-    //   new TextParser(),
-    //   new PDFParser()
-    // ];
+    this.contentValidator = new ContentValidator(this.options.validationOptions);
+
   }
 
   private expandTilde(filePath: string): string {
@@ -96,22 +103,29 @@ export class DocumentLoader extends EventEmitter {
     const url = new URL(fileUrl);
     return decodeURIComponent(url.pathname);
   }
+
   private validateFilePath(filePath: string): void {
     if (typeof filePath !== 'string') {
         throw new Error('File path must be a string');
     }
-    
+
     // Basic security check to prevent directory traversal
     const normalizedPath = path.normalize(filePath);
     if (normalizedPath.includes('..')) {
         throw new Error('File path cannot contain parent directory references');
     }
-    
-    // Additional security checks
-    if (filePath.includes('\0')) {
-        throw new Error('File path cannot contain null bytes');
+
+    // Check for suspicious characters
+    const suspiciousChars = /[\0<>:"|?*]/;
+    if (suspiciousChars.test(filePath)) {
+        throw new Error('File path contains invalid characters');
     }
-  }
+
+    // Check path length
+    if (filePath.length > 255) {
+        throw new Error('File path exceeds maximum length');
+    }
+}
 
 
   private getParser(filename: string): DocumentParser | undefined {
@@ -236,73 +250,34 @@ private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
   }
 }
   
-  // private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
-  //   const expandedPath = this.expandTilde(filePath);
-  //   const absolutePath = path.resolve(expandedPath);
-  //   const mimeType = this.getMimeType(absolutePath) || 'application/octet-stream';
 
-  //   // Check cache if enabled
-  //   if (this.options.useCache) {
-  //     const cachedPath = this.getCachePath(absolutePath);
-  //     if (await this.isCacheValid(absolutePath, cachedPath)) {
-  //       const content = await fs.readFile(cachedPath);
-  //       const parsedContent = await this.parseContent(content, absolutePath);
-  //       return { content, mimeType, parsedContent };
-  //     }
-  //   }
+  private async validateContent(buffer: Buffer, filePath: string): Promise<void> {
+    try {
+        const mimeType = this.getMimeType(filePath);
+        await this.contentValidator.validateContent(buffer, mimeType, filePath);
+    } catch (error) {
+        const errorMessage = error instanceof Error ? 
+            error.message : 
+            `Content validation failed: ${String(error)}`;
+        throw new Error(`Validation error for ${filePath}: ${errorMessage}`);
+    }
+}
 
-  //   // Load file in chunks
-  //   const fileStats = await fs.stat(absolutePath);
-  //   const totalSize = fileStats.size;
-  //   let loadedSize = 0;
 
-  //   const fileHandle = await fs.open(absolutePath, 'r');
-  //   const chunks: Buffer[] = [];
-
-  //   try {
-  //     let bytesRead: number;
-  //     const buffer = Buffer.alloc(this.options.chunkSize);
-
-  //     do {
-  //       const result = await fileHandle.read(buffer, 0, this.options.chunkSize, null);
-  //       bytesRead = result.bytesRead;
-  //       if (bytesRead > 0) {
-  //         chunks.push(buffer.subarray(0, bytesRead));
-  //         loadedSize += bytesRead;
-  //         this.emit('progress', loadedSize / totalSize);
-  //       }
-  //     } while (bytesRead > 0);
-  //   } finally {
-  //     await fileHandle.close();
-  //   }
-
-  //   const content = Buffer.concat(chunks);
-
-  //   // Cache content if enabled
-  //   if (this.options.useCache) {
-  //     const cachedPath = this.getCachePath(absolutePath);
-  //     await this.cacheContent(cachedPath, content);
-  //   }
-
-  //   // Parse content using appropriate parser
-  //   const parsedContent = await this.parseContent(content, absolutePath);
-
-  //   return { content, mimeType, parsedContent };
-  // }
-
-  private async parseContent(buffer: Buffer, filePath: string): Promise<string | undefined> {
+private async parseContent(buffer: Buffer, filePath: string): Promise<string | undefined> {
     const parser = this.getParser(filePath);
     if (!parser) {
-      return undefined;
+        return undefined;
     }
 
     try {
-      return await parser.parse(buffer, filePath);
+        await this.validateContent(buffer, this.getMimeType(filePath));
+        return await parser.parse(buffer, filePath);
     } catch (error) {
-      this.emit('error', new Error(`Parsing error for ${filePath}: ${error}`));
-      return undefined;
+        this.emit('error', new Error(`Parsing error for ${filePath}: ${error}`));
+        throw error;
     }
-  }
+}
 
 //   public async load(filePath: string): Promise<string> {
 //     try {
