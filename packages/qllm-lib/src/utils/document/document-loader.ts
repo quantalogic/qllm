@@ -10,11 +10,15 @@ import { promisify } from 'util';
 import mime from 'mime-types';
 import { URL } from 'url';
 import { createHash } from 'crypto'; // New import statement
-import { getHandlerForMimeType, FormatHandler } from './format-handlers';
+import { getHandlerForMimeType } from './format-handlers';
 import logger from '../logger';
+import { DocumentParser, LoadResult } from '../../types/document-types';
+import { ParserRegistry, DefaultParserRegistry } from './parsers/parser-registry';
+
 
 
 const gunzip = promisify(zlib.gunzip);
+
 
 export interface DocumentLoaderOptions {
   chunkSize?: number;
@@ -27,12 +31,9 @@ export interface DocumentLoaderOptions {
   proxy?: string; // Should be in the format "host:port"
   decompress?: boolean;
   useCache?: boolean;
+  maxFileSize?: number;
 }
 
-export interface LoadResult<T> {
-  content: T;
-  mimeType: string;
-}
 
 export interface DocumentLoaderEvents {
   progress: (progress: number) => void;
@@ -45,8 +46,11 @@ export class DocumentLoader extends EventEmitter {
   private inputPath: string;
   private options: Required<DocumentLoaderOptions>;
   private cancelTokenSource: CancelTokenSource | null = null;
+  // private parsers: DocumentParser[]; 
 
-  constructor(inputPath: string, options: DocumentLoaderOptions = {}) {
+  constructor(inputPath: string, 
+    private parserRegistry: ParserRegistry = new DefaultParserRegistry(),
+    options: DocumentLoaderOptions = {}) {
     super();
     // Validate input path immediately
     this.validateFilePath(inputPath);
@@ -55,7 +59,7 @@ export class DocumentLoader extends EventEmitter {
     this.options = {
         chunkSize: 1024 * 1024,
         encoding: 'utf-8',
-        timeout: 30000,
+        timeout: 30000, // 30 seconds
         headers: {},
         maxRetries: 3,
         retryDelay: 1000,
@@ -63,8 +67,14 @@ export class DocumentLoader extends EventEmitter {
         proxy: '',
         decompress: true,
         useCache: false,
+        maxFileSize: 100 * 1024 * 1024, // 100MB
         ...options,
     };
+
+    // this.parsers = [
+    //   new TextParser(),
+    //   new PDFParser()
+    // ];
   }
 
   private expandTilde(filePath: string): string {
@@ -102,20 +112,37 @@ export class DocumentLoader extends EventEmitter {
         throw new Error('File path cannot contain null bytes');
     }
   }
-  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> { 
-    
+
+  private getParser(filename: string): DocumentParser | undefined {
+    return this.parserRegistry.getParser(filename);
+}
+
+  private getMimeType(filePath: string): string {
+    const ext = path.extname(filePath).toLowerCase();
+    // Override MIME type for TypeScript files
+    if (ext === '.ts' || ext === '.tsx') {
+        return 'text/typescript';
+    }
+    return mime.lookup(filePath) || 'application/octet-stream';
+}
+
+  
+  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
     const expandedPath = this.expandTilde(filePath);
     const absolutePath = path.resolve(expandedPath);
-    
-    const mimeType = mime.lookup(absolutePath) || 'application/octet-stream';
+    const mimeType = this.getMimeType(absolutePath) || 'application/octet-stream';
 
+    // Check cache if enabled
     if (this.options.useCache) {
       const cachedPath = this.getCachePath(absolutePath);
       if (await this.isCacheValid(absolutePath, cachedPath)) {
-        return { content: await fs.readFile(cachedPath), mimeType };
+        const content = await fs.readFile(cachedPath);
+        const parsedContent = await this.parseContent(content, absolutePath);
+        return { content, mimeType, parsedContent };
       }
     }
 
+    // Load file in chunks
     const fileStats = await fs.stat(absolutePath);
     const totalSize = fileStats.size;
     let loadedSize = 0;
@@ -142,13 +169,43 @@ export class DocumentLoader extends EventEmitter {
 
     const content = Buffer.concat(chunks);
 
+    // Cache content if enabled
     if (this.options.useCache) {
       const cachedPath = this.getCachePath(absolutePath);
       await this.cacheContent(cachedPath, content);
     }
 
-    return { content, mimeType };
+    // Parse content using appropriate parser
+    const parsedContent = await this.parseContent(content, absolutePath);
+
+    return { content, mimeType, parsedContent };
   }
+
+  private async parseContent(buffer: Buffer, filePath: string): Promise<string | undefined> {
+    const parser = this.getParser(filePath);
+    if (!parser) {
+      return undefined;
+    }
+
+    try {
+      return await parser.parse(buffer, filePath);
+    } catch (error) {
+      this.emit('error', new Error(`Parsing error for ${filePath}: ${error}`));
+      return undefined;
+    }
+  }
+
+//   public async load(filePath: string): Promise<string> {
+//     try {
+//       const result = await this.loadFromFile(filePath);
+//       if (!result.parsedContent) {
+//         throw new Error(`No parser available for file: ${filePath}`);
+//       }
+//       return result.parsedContent;
+//     } catch (error) {
+//       throw new Error(`Failed to load document: ${error}`);
+//     }
+//   }
 
   private async loadFromUrl(url: string): Promise<LoadResult<Buffer>> {
     if (this.options.useCache) {
@@ -231,20 +288,26 @@ export class DocumentLoader extends EventEmitter {
 
   public async loadAsString(): Promise<LoadResult<string>> {
     const { content: buffer, mimeType } = await this.loadAsBuffer();
-    
     try {
       const handler = getHandlerForMimeType(mimeType);
+      let content: string;
+      
       if (handler) {
-        const text = await handler.handle(buffer);
-        return { content: text, mimeType };
+        content = await handler.handle(buffer);
       } else {
         // Fallback to basic text conversion
         logger.warn(`No handler found for mime type ${mimeType}, falling back to basic text conversion`);
-        return { 
-          content: buffer.toString(this.options.encoding), 
-          mimeType 
-        };
+        content = buffer.toString(this.options.encoding);
       }
+  
+      // Add parsing step
+      const parsedContent = await this.parseContent(buffer, this.inputPath);
+  
+      return {
+        content,
+        mimeType,
+        parsedContent
+      };
     } catch (error) {
       throw new Error(
         `Failed to process file (${mimeType}): ${
@@ -257,7 +320,7 @@ export class DocumentLoader extends EventEmitter {
   public async loadAsBuffer(): Promise<LoadResult<Buffer>> {
     try {
       let result: LoadResult<Buffer>;
-
+      
       if (this.isUrl(this.inputPath)) {
         result = await this.loadFromUrl(this.inputPath);
       } else if (this.isFileUrl(this.inputPath)) {
@@ -266,7 +329,11 @@ export class DocumentLoader extends EventEmitter {
       } else {
         result = await this.loadFromFile(this.inputPath);
       }
-
+  
+      // Add parsing step
+      const parsedContent = await this.parseContent(result.content, this.inputPath);
+      result.parsedContent = parsedContent;
+  
       this.emit('loaded', result);
       return result;
     } catch (error) {
@@ -286,7 +353,9 @@ export class DocumentLoader extends EventEmitter {
     input: string,
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<string>> {
-    const loader = new DocumentLoader(input, options);
+    
+    const defaultRegistry = new DefaultParserRegistry();
+    const loader = new DocumentLoader(input, defaultRegistry,options);
     return loader.loadAsString();
   }
 
@@ -294,7 +363,8 @@ export class DocumentLoader extends EventEmitter {
     input: string,
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<Buffer>> {
-    const loader = new DocumentLoader(input, options);
+    const defaultRegistry = new DefaultParserRegistry();
+    const loader = new DocumentLoader(input, defaultRegistry,options);
     return loader.loadAsBuffer();
   }
 
@@ -302,7 +372,8 @@ export class DocumentLoader extends EventEmitter {
     inputs: string[],
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<string>[]> {
-    const loaders = inputs.map((input) => new DocumentLoader(input, options));
+    const defaultRegistry = new DefaultParserRegistry();
+    const loaders = inputs.map((input) => new DocumentLoader(input,defaultRegistry, options));
     return Promise.all(loaders.map((loader) => loader.loadAsString()));
   }
 
@@ -310,7 +381,8 @@ export class DocumentLoader extends EventEmitter {
     inputs: string[],
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<Buffer>[]> {
-    const loaders = inputs.map((input) => new DocumentLoader(input, options));
+    const defaultRegistry = new DefaultParserRegistry();
+    const loaders = inputs.map((input) => new DocumentLoader(input,defaultRegistry, options));
     return Promise.all(loaders.map((loader) => loader.loadAsBuffer()));
   }
 

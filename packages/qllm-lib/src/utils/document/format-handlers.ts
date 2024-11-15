@@ -1,56 +1,52 @@
 // src/utils/document/format-handlers.ts
-// import * as pdf from 'pdf-parse';
 import * as docx from 'docx';
 import * as xlsx from 'xlsx';
 import * as yaml from 'js-yaml';
 import * as mammoth from 'mammoth';
 import { readFile } from 'fs/promises';
+import { default as pdfParse } from 'pdf-parse'; 
+import { FormatHandler } from '../../types/document-types';  // Import from document-types.ts
 
-export interface FormatHandler {
-  mimeTypes: string[];
-  handle: (buffer: Buffer) => Promise<string>;
-}
+export { FormatHandler };  // Re-export the type
 
 export const formatHandlers: Record<string, FormatHandler> = {
-  /* pdf: {
+  pdf: {
     mimeTypes: ['application/pdf'],
-    handle: async (buffer: Buffer) => {
-      const data = await pdf(buffer);
-      return data.text;
+    async handle(buffer: Buffer): Promise<string> {
+      try {
+        const data = await pdfParse(buffer);
+        let text = data.text;
+        text = text
+          .replace(/\r\n/g, '\n')
+          .replace(/\s*\n{3,}/g, '\n\n')
+          .replace(/([.!?])\s+/g, '$1\n')
+          .trim();
+        return text;
+      } catch (error) {
+        throw new Error(`Failed to parse PDF: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
-  }, */
-  
+  },
+
   docx: {
     mimeTypes: [
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/msword'
     ],
-    handle: async (buffer: Buffer) => {
-      const result = await mammoth.extractRawText({ buffer });
+    async handle(buffer: Buffer): Promise<string> {
+      const result = await mammoth.extractRawText({ buffer: Buffer.from(buffer) });
       return result.value;
     }
   },
 
-  txt: {
-    mimeTypes: ['text/plain', 'text/markdown', 'text/csv'],
-    handle: async (buffer: Buffer) => buffer.toString('utf-8')
-  },
-
-  json: {
-    mimeTypes: ['application/json'],
-    handle: async (buffer: Buffer) => {
-      try {
-        const content = JSON.parse(buffer.toString());
-        return JSON.stringify(content, null, 2);
-      } catch (error) {
-        throw new Error(`Invalid JSON file: ${error}`);
-      }
-    }
-  },
-
   yaml: {
-    mimeTypes: ['text/yaml', 'application/x-yaml', 'text/yml', 'application/yml'],
-    handle: async (buffer: Buffer) => {
+    mimeTypes: [
+      'text/yaml',
+      'application/x-yaml',
+      'text/yml',
+      'application/yml'
+    ],
+    async handle(buffer: Buffer): Promise<string> {
       try {
         const content = yaml.load(buffer.toString());
         return yaml.dump(content);
@@ -60,47 +56,32 @@ export const formatHandlers: Record<string, FormatHandler> = {
     }
   },
 
-  xlsx: {
-    mimeTypes: [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel'
-    ],
-    handle: async (buffer: Buffer) => {
+  json: {
+    mimeTypes: ['application/json'],
+    async handle(buffer: Buffer): Promise<string> {
       try {
-        const workbook = xlsx.read(buffer);
-        const sheets = workbook.SheetNames.map(sheet => {
-          const worksheet = workbook.Sheets[sheet];
-          return {
-            name: sheet,
-            content: xlsx.utils.sheet_to_txt(worksheet)
-          };
-        });
-
-        return sheets.map(sheet => 
-          `Sheet: ${sheet.name}\n${sheet.content}\n\n`
-        ).join('');
+        const content = JSON.parse(buffer.toString());
+        return JSON.stringify(content, null, 2);
       } catch (error) {
-        throw new Error(`Failed to process Excel file: ${error}`);
+        throw new Error(`Invalid JSON file: ${error}`);
       }
     }
   }
 };
 
-export function getHandlerForMimeType(mimeType: string): FormatHandler | undefined {
-  // Normalize mime type to lowercase
+export const getHandlerForMimeType = (mimeType: string): FormatHandler | undefined => {
   const normalizedMimeType = mimeType.toLowerCase();
-  
   return Object.values(formatHandlers).find(handler => 
-    handler.mimeTypes.some(type => type.toLowerCase() === normalizedMimeType)
+    handler.mimeTypes.some((type: string) => type.toLowerCase() === normalizedMimeType)
   );
-}
+};
 
-export function getSupportedMimeTypes(): string[] {
+export const getSupportedMimeTypes = (): string[] => {
   return Object.values(formatHandlers)
     .flatMap(handler => handler.mimeTypes)
     .sort();
-}
+};
 
-export function isSupportedMimeType(mimeType: string): boolean {
+export const isSupportedMimeType = (mimeType: string): boolean => {
   return !!getHandlerForMimeType(mimeType);
-}
+};

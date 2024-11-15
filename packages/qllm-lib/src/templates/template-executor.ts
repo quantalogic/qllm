@@ -11,6 +11,7 @@ import {
   resolveIncludedContent,
 } from '../utils/document/document-inclusion-resolver';
 import { DocumentLoader } from '../utils/document/document-loader';
+import { DefaultParserRegistry } from '../utils/document/parsers/parser-registry';
 import path from 'path';
 
 
@@ -149,7 +150,8 @@ export class TemplateExecutor extends EventEmitter {
                 if (Array.isArray(value) && varDef.type === 'files_path') {
                     // Handle multiple files
                     const contents = await Promise.all(value.map(async (filePath) => {
-                        const loader = new DocumentLoader(filePath, {
+                      const defaultRegistry = new DefaultParserRegistry();
+                        const loader = new DocumentLoader(filePath,defaultRegistry,{
                             encoding: 'utf-8',
                             useCache: true
                         });
@@ -160,7 +162,8 @@ export class TemplateExecutor extends EventEmitter {
                     varDef["type"] = "string"
                 } else if (typeof value === 'string' && varDef.type === 'file_path') {
                     // Handle single file
-                    const loader = new DocumentLoader(value, {
+                    const defaultRegistry = new DefaultParserRegistry();
+                    const loader = new DocumentLoader(value,defaultRegistry, {
                         encoding: 'utf-8',
                         useCache: true
                     });
@@ -327,7 +330,8 @@ export class TemplateExecutor extends EventEmitter {
 
   private async resolveFileContent(filePath: string): Promise<string> {
     try {
-      const documentLoader = new DocumentLoader(filePath, {
+      const defaultRegistry = new DefaultParserRegistry();
+      const documentLoader = new DocumentLoader(filePath,defaultRegistry, {
         encoding: 'utf-8',
         useCache: true
       });
