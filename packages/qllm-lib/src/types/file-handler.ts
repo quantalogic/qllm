@@ -4,3 +4,4 @@ export interface FileHandler {
     exists(path: string): Promise<boolean>;
     getType(path: string): Promise<string>;
 }
+

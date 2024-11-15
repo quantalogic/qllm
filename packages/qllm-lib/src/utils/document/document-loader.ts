@@ -113,6 +113,7 @@ export class DocumentLoader extends EventEmitter {
     }
   }
 
+
   private getParser(filename: string): DocumentParser | undefined {
     return this.parserRegistry.getParser(filename);
 }
@@ -126,60 +127,168 @@ export class DocumentLoader extends EventEmitter {
     return mime.lookup(filePath) || 'application/octet-stream';
 }
 
-  
-  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
-    const expandedPath = this.expandTilde(filePath);
-    const absolutePath = path.resolve(expandedPath);
-    const mimeType = this.getMimeType(absolutePath) || 'application/octet-stream';
 
-    // Check cache if enabled
-    if (this.options.useCache) {
-      const cachedPath = this.getCachePath(absolutePath);
-      if (await this.isCacheValid(absolutePath, cachedPath)) {
-        const content = await fs.readFile(cachedPath);
-        const parsedContent = await this.parseContent(content, absolutePath);
-        return { content, mimeType, parsedContent };
+private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
+  try {
+      // Initial path processing
+      const expandedPath = this.expandTilde(filePath);
+      const absolutePath = path.resolve(expandedPath);
+      const mimeType = this.getMimeType(absolutePath) || 'application/octet-stream';
+
+      // Validate file existence and accessibility
+      try {
+          await fs.access(absolutePath, fs.constants.R_OK);
+      } catch (error) {
+          throw new Error(`File not accessible: ${filePath}`);
       }
-    }
 
-    // Load file in chunks
-    const fileStats = await fs.stat(absolutePath);
-    const totalSize = fileStats.size;
-    let loadedSize = 0;
+      // Check cache if enabled
+      if (this.options.useCache) {
+          const cachedPath = this.getCachePath(absolutePath);
+          if (await this.isCacheValid(absolutePath, cachedPath)) {
+              try {
+                  const content = await fs.readFile(cachedPath);
+                  const parsedContent = await this.parseContent(content, absolutePath);
+                  return { content, mimeType, parsedContent };
+              } catch (error) {
+                  // Cache read failed, continue with normal file loading
+                  logger.warn(`Cache read failed for ${filePath}, loading from source`);
+              }
+          }
+      }
 
-    const fileHandle = await fs.open(absolutePath, 'r');
-    const chunks: Buffer[] = [];
+      // Get file stats and validate size
+      const fileStats = await fs.stat(absolutePath);
+      if (fileStats.size > this.options.maxFileSize) {
+          throw new Error(
+              `File size (${fileStats.size} bytes) exceeds maximum allowed size (${this.options.maxFileSize} bytes)`
+          );
+      }
 
-    try {
-      let bytesRead: number;
-      const buffer = Buffer.alloc(this.options.chunkSize);
+      // Load file in chunks with proper resource management
+      let fileHandle: fs.FileHandle | undefined;
+      try {
+          fileHandle = await fs.open(absolutePath, 'r');
+          const totalSize = fileStats.size;
+          let loadedSize = 0;
+          const chunks: Buffer[] = [];
 
-      do {
-        const result = await fileHandle.read(buffer, 0, this.options.chunkSize, null);
-        bytesRead = result.bytesRead;
-        if (bytesRead > 0) {
-          chunks.push(buffer.subarray(0, bytesRead));
-          loadedSize += bytesRead;
-          this.emit('progress', loadedSize / totalSize);
-        }
-      } while (bytesRead > 0);
-    } finally {
-      await fileHandle.close();
-    }
+          // Read file in chunks
+          while (loadedSize < totalSize) {
+              const buffer = Buffer.alloc(Math.min(this.options.chunkSize, totalSize - loadedSize));
+              const result = await fileHandle.read(buffer, 0, buffer.length, loadedSize);
+              
+              if (result.bytesRead <= 0) {
+                  break; // End of file or error
+              }
 
-    const content = Buffer.concat(chunks);
+              chunks.push(buffer.subarray(0, result.bytesRead));
+              loadedSize += result.bytesRead;
+              
+              // Emit progress
+              this.emit('progress', loadedSize / totalSize);
 
-    // Cache content if enabled
-    if (this.options.useCache) {
-      const cachedPath = this.getCachePath(absolutePath);
-      await this.cacheContent(cachedPath, content);
-    }
+              // Check if operation was cancelled
+              if (this.cancelTokenSource?.token.reason) {
+                  throw new Error('Operation cancelled by user');
+              }
+          }
 
-    // Parse content using appropriate parser
-    const parsedContent = await this.parseContent(content, absolutePath);
+          const content = Buffer.concat(chunks);
 
-    return { content, mimeType, parsedContent };
+          // Validate content size after reading
+          if (content.length !== totalSize) {
+              throw new Error(`File size mismatch: expected ${totalSize}, got ${content.length}`);
+          }
+
+          // Cache content if enabled
+          if (this.options.useCache) {
+              try {
+                  const cachedPath = this.getCachePath(absolutePath);
+                  await this.cacheContent(cachedPath, content);
+              } catch (error) {
+                  // Log cache write failure but continue
+                  logger.error(`Failed to cache content for ${filePath}: ${error}`);
+              }
+          }
+
+          // Parse content using appropriate parser
+          const parsedContent = await this.parseContent(content, absolutePath);
+
+          return { content, mimeType, parsedContent };
+
+      } finally {
+          // Ensure file handle is always closed
+          if (fileHandle) {
+              await fileHandle.close().catch(error => {
+                  logger.error(`Failed to close file handle for ${filePath}: ${error}`);
+              });
+          }
+      }
+
+  } catch (error) {
+      // Transform and rethrow errors with context
+      const errorMessage = error instanceof Error ? 
+          error.message : 
+          `Unknown error: ${String(error)}`;
+      
+      throw new Error(`Failed to load file ${filePath}: ${errorMessage}`);
   }
+}
+  
+  // private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
+  //   const expandedPath = this.expandTilde(filePath);
+  //   const absolutePath = path.resolve(expandedPath);
+  //   const mimeType = this.getMimeType(absolutePath) || 'application/octet-stream';
+
+  //   // Check cache if enabled
+  //   if (this.options.useCache) {
+  //     const cachedPath = this.getCachePath(absolutePath);
+  //     if (await this.isCacheValid(absolutePath, cachedPath)) {
+  //       const content = await fs.readFile(cachedPath);
+  //       const parsedContent = await this.parseContent(content, absolutePath);
+  //       return { content, mimeType, parsedContent };
+  //     }
+  //   }
+
+  //   // Load file in chunks
+  //   const fileStats = await fs.stat(absolutePath);
+  //   const totalSize = fileStats.size;
+  //   let loadedSize = 0;
+
+  //   const fileHandle = await fs.open(absolutePath, 'r');
+  //   const chunks: Buffer[] = [];
+
+  //   try {
+  //     let bytesRead: number;
+  //     const buffer = Buffer.alloc(this.options.chunkSize);
+
+  //     do {
+  //       const result = await fileHandle.read(buffer, 0, this.options.chunkSize, null);
+  //       bytesRead = result.bytesRead;
+  //       if (bytesRead > 0) {
+  //         chunks.push(buffer.subarray(0, bytesRead));
+  //         loadedSize += bytesRead;
+  //         this.emit('progress', loadedSize / totalSize);
+  //       }
+  //     } while (bytesRead > 0);
+  //   } finally {
+  //     await fileHandle.close();
+  //   }
+
+  //   const content = Buffer.concat(chunks);
+
+  //   // Cache content if enabled
+  //   if (this.options.useCache) {
+  //     const cachedPath = this.getCachePath(absolutePath);
+  //     await this.cacheContent(cachedPath, content);
+  //   }
+
+  //   // Parse content using appropriate parser
+  //   const parsedContent = await this.parseContent(content, absolutePath);
+
+  //   return { content, mimeType, parsedContent };
+  // }
 
   private async parseContent(buffer: Buffer, filePath: string): Promise<string | undefined> {
     const parser = this.getParser(filePath);
