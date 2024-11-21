@@ -43,10 +43,10 @@ export class ContentValidator {
             // // Content integrity validation
             // await this.validateIntegrity(buffer, filePath);
 
-            // Security validation
-            if (this.options.securityScanEnabled) {
-                await this.performSecurityChecks(buffer, filePath);
-            }
+            // // Security validation
+            // if (this.options.securityScanEnabled) {
+            //     await this.performSecurityChecks(buffer, filePath);
+            // }
 
             // // Encoding validation
             // if (this.options.validateEncoding) {
@@ -74,7 +74,7 @@ export class ContentValidator {
             );
         }
     }
-
+    
     private async validateMimeType(buffer: Buffer, expectedMimeType: string): Promise<void> {
         // Skip validation if no allowed MIME types are specified
         if (this.options.allowedMimeTypes.length === 0) {

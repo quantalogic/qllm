@@ -27,7 +27,11 @@
         "lint": "eslint .",
         "format": "prettier --write .",
         "test": "jest",
-        "prepublishOnly": "pnpm run build"
+        "prepublishOnly": "pnpm run build",
+        "start:exm": "ts-node src/template-workflow/ai_research_workflow.ts",
+        "test:parsing": "ts-node src/utilities/demo-document-loader-multiplesFiles.ts",
+        "parseLocal": "ts-node src/utilities/demo-document-loader-local.ts",
+        "parseRemote": "ts-node src/utilities/demo-document-loader-remote.ts"
     },
     "repository": {
         "type": "git",
@@ -48,6 +52,7 @@
         "@rollup/plugin-node-resolve": "15.2.3",
         "@rollup/plugin-typescript": "11.1.6",
         "@types/copy-paste": "^1.1.33",
+        "@types/html-to-text": "9.0.4",
         "@types/jest": "^29.5.12",
         "@types/mime-types": "^2.1.4",
         "@types/node": "^22.5.1",
@@ -71,6 +76,7 @@
         "copy-paste": "^1.5.3",
         "docx": "9.0.2",
         "gradient-string": "^2.0.2",
+        "html-to-text": "9.0.5",
         "jimp": "^0.22.12",
         "js-yaml": "^4.1.0",
         "kleur": "^4.1.5",
@@ -78,6 +84,7 @@
         "mammoth": "1.8.0",
         "mime-types": "^2.1.35",
         "nanospinner": "^1.1.0",
+        "node-html-parser": "6.1.13",
         "pdf-parse": "1.1.1",
         "pptx-parser": "1.1.7-beta.9",
         "prompts": "^2.4.2",
