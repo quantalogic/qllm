@@ -5,6 +5,7 @@ import { TemplateExecutor } from '../templates/template-executor';
 import { WorkflowDefinition, WorkflowStep, WorkflowExecutionContext, WorkflowExecutionResult } from '../types/workflow-types';
 import { LLMProvider } from '../types';
 import { logger } from '../utils/logger';
+import { TemplateLoader } from '../templates';
 
 export class WorkflowExecutor extends EventEmitter {
   private templateExecutor: TemplateExecutor;
@@ -34,35 +35,45 @@ export class WorkflowExecutor extends EventEmitter {
       variables: { ...initialInput },
       results: {}
     };
-
+  
     logger.info(`Executing workflow: ${workflow.name}`);
-
+  
     for (const [index, step] of workflow.steps.entries()) {
       this.emit('stepStart', step, index);
-      logger.info(`Step ${index + 1}: ${step.template.name}`);
-
+      logger.info(`Step ${index + 1}`);
+  
       try {
+        // Load template if URL is provided
+        if (step.templateUrl && !step.template) {
+          const template = await TemplateLoader.load(step.templateUrl);
+          step.template = template;
+        }
+  
+        if (!step.template) {
+          throw new Error(`No template found for step ${index + 1}`);
+        }
+  
         const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
         const provider = providers[step.provider || workflow.defaultProvider || ''];
-
+  
         if (!provider) {
           throw new Error(`Provider not found for step ${index + 1}`);
         }
+  
         logger.info(`Step ${index + 1} => resolvedInput: ${JSON.stringify(resolvedInput, null, 2)}`);
+        
         const result = await this.templateExecutor.execute({
           template: step.template,
           provider,
           variables: resolvedInput,
           stream: true
         });
-
-        // logger.info(`Step ${index + 1} => result: ${JSON.stringify(result, null, 2)}`); 
+  
         const executionResult: WorkflowExecutionResult = {
           response: result.response,
           outputVariables: result.outputVariables
         };
-        logger.info(`Step ${index + 1} => executionResult: ${JSON.stringify(executionResult, null, 2)}`); 
-
+  
         // Store step results in context
         if (typeof step.output === 'string') {
           context.results[step.output] = executionResult;
@@ -73,16 +84,16 @@ export class WorkflowExecutor extends EventEmitter {
             }
           });
         }
-
+  
         this.emit('stepComplete', step, index, executionResult);
         logger.info(`Completed step ${index + 1}`);
-
+  
       } catch (error) {
         this.emit('stepError', step, index, error as Error);
         throw error;
       }
     }
-
+  
     return context.results;
   }
 

@@ -27,7 +27,8 @@
         "lint": "eslint .",
         "format": "prettier --write .",
         "test": "jest",
-        "prepublishOnly": "pnpm run build"
+        "prepublishOnly": "pnpm run build",
+        "start:exm": "ts-node src/template-workflow/dynamic_yaml_search.ts"
     },
     "repository": {
         "type": "git",

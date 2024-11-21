@@ -105,3 +105,45 @@ export function createFunctionToolFromZod(config: FunctionToolConfig): FunctionT
     strict,
   };
 }
+
+
+
+export function parseTemplateUrl(url: string): string {
+  if (url.startsWith('https://github.com/')) {
+    return githubUrlToRaw(url);
+  } else if (url.startsWith('https://s3.amazonaws.com/') || url.includes('.s3.amazonaws.com/')) {
+    return parseS3Url(url);
+  } else if (url.includes('drive.google.com')) {
+    return parseGoogleDriveUrl(url);
+  }
+  return url;
+}
+
+function githubUrlToRaw(url: string): string {
+  return url
+    .replace('github.com', 'raw.githubusercontent.com')
+    .replace('/blob/', '/');
+}
+
+function parseS3Url(url: string): string {
+  // S3 URLs are already direct download links
+  // Just ensure proper URL encoding
+  return encodeURI(url);
+}
+
+function parseGoogleDriveUrl(url: string): string {
+  // Extract file ID from various Google Drive URL formats
+  let fileId = '';
+  
+  if (url.includes('/file/d/')) {
+    fileId = url.split('/file/d/')[1].split('/')[0];
+  } else if (url.includes('id=')) {
+    fileId = new URL(url).searchParams.get('id') || '';
+  }
+  
+  if (!fileId) {
+    throw new Error('Invalid Google Drive URL format');
+  }
+  
+  return `https://drive.google.com/uc?export=download&id=${fileId}`;
+}
