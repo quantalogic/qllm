@@ -28,7 +28,9 @@
         "format": "prettier --write .",
         "test": "jest",
         "prepublishOnly": "pnpm run build",
-        "start:exm": "ts-node src/template-workflow/dynamic_yaml_search.ts"
+        "start:exm": "ts-node src/template-workflow/dynamic_yaml_search.ts",
+        "start:exm:ad": "ts-node src/template-workflow/dynamic_yaml_search-with-tool.ts",
+        "start:exm:ads": "ts-node src/template-workflow/dynamic_yaml_search-with-tool-bis.ts"
     },
     "repository": {
         "type": "git",

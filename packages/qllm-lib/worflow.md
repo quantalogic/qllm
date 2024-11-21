@@ -7,7 +7,11 @@
 - src/tools/s3-loader.tool.ts
 - src/tools/github-loader.ts
 - src/tools/file-saver.tool.ts
+- src/tools/s3-saver.tool.ts
 - src/tools/base-tool.ts
+- src/tools/mongodb-saver.tool.ts
+- src/tools/redis-saver.tool.ts
+- src/tools/text-to-json.ts
 - src/tools/local-loader.tool.ts
 - src/types/workflow-types.ts
 
@@ -16,8 +20,8 @@
 - Extension: .ts
 - Language: typescript
 - Size: 74 bytes
-- Created: 2024-11-21 16:19:14
-- Modified: 2024-11-21 16:19:14
+- Created: 2024-11-21 22:50:35
+- Modified: 2024-11-21 22:50:35
 
 ### Code
 
@@ -31,9 +35,9 @@ export * from './workflow-manager';
 
 - Extension: .ts
 - Language: typescript
-- Size: 4066 bytes
-- Created: 2024-11-21 17:02:49
-- Modified: 2024-11-21 17:02:49
+- Size: 6019 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
@@ -47,13 +51,22 @@ import { WorkflowDefinition, WorkflowExecutionResult, WorkflowStep } from '../ty
 import { LLMProvider } from '../types';
 import { TemplateDefinition, TemplateLoader } from '../templates';
 import { BaseTool, ToolDefinition } from "../tools/base-tool"
+import { GithubLoaderTool } from '../tools/github-loader';
+import { FileSaverTool } from '../tools/file-saver.tool';
+import { S3LoaderTool } from '../tools/s3-loader.tool';
+import { SlackStreamerTool } from '../tools/slack-streamer.tool';
+import { HtmlFormatterTool } from '../tools/html-formatter.tool';
+import { LocalLoaderTool } from '../tools/local-loader.tool';
+import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
+import { RedisSaverTool } from '../tools/redis-saver.tool';
+import { TextToJsonTool } from '../tools/text-to-json';
 
 export class WorkflowManager {
   private workflowExecutor: WorkflowExecutor;
   private workflows: Map<string, WorkflowDefinition>;
   private providers: Record<string, LLMProvider>;
   private templateCache: Map<string, TemplateDefinition>;
-  private tools: Map<string, BaseTool>;
+  private toolFactories: Map<string, new (...args: any[]) => BaseTool>;
 
   constructor(
     providers: Record<string, LLMProvider>,
@@ -63,15 +76,31 @@ export class WorkflowManager {
     this.workflows = new Map();
     this.providers = providers;
     this.templateCache = new Map();
-    this.tools = new Map(Object.entries(tools || {}));
+    this.toolFactories = new Map();
+
+
+    // Register default tools
+    this.registerToolFactory('githubLoader', GithubLoaderTool);
+    this.registerToolFactory('fileSaver', FileSaverTool);
+    this.registerToolFactory('s3Loader', S3LoaderTool);
+    this.registerToolFactory('slackStreamer', SlackStreamerTool);
+    this.registerToolFactory('htmlFormatter', HtmlFormatterTool);
+    this.registerToolFactory('localLoader', LocalLoaderTool);
+    this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
+    this.registerToolFactory('RedisSaver', RedisSaverTool);
+    this.registerToolFactory('TextToJson', TextToJsonTool);
   }
   
-  registerTool(name: string, tool: BaseTool): void {
-    this.tools.set(name, tool);
+  registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
+    this.toolFactories.set(name, toolClass);
   }
 
-  getTool(name: string): BaseTool | undefined {
-    return this.tools.get(name);
+  private createTool(name: string, config: any): BaseTool {
+    const ToolClass = this.toolFactories.get(name);
+    if (!ToolClass) {
+      throw new Error(`Tool factory "${name}" not found`);
+    }
+    return new ToolClass(config);
   }
 
   private async loadTemplateFromUrl(url: string): Promise<TemplateDefinition> {
@@ -90,20 +119,29 @@ export class WorkflowManager {
       ? await this.loadWorkflowFromYaml(workflowDefinition) 
       : workflowDefinition;
     
-    // Validate tools exist
+    // Validate and register tools from workflow
     for (const step of workflow.steps) {
-      if (step.tool && !this.tools.has(step.tool)) {
-        throw new Error(`Tool "${step.tool}" not found`);
+      if (step.tool) {
+        const ToolClass = this.toolFactories.get(step.tool);
+        if (!ToolClass) {
+          throw new Error(`Tool factory "${step.tool}" not found`);
+        }
+        
+        // Tool will be instantiated during execution with config from input
+        if (!this.toolFactories.has(step.tool)) {
+          throw new Error(`Tool factory "${step.tool}" not registered`);
+        }
       }
+      
       if (step.templateUrl) {
         const template = await this.loadTemplateFromUrl(step.templateUrl);
         step.template = template;
       }
     }
-
+  
     this.workflows.set(workflow.name, workflow);
   }
-
+  
   private async loadWorkflowFromYaml(path: string): Promise<WorkflowDefinition> {
     let content: string;
     
@@ -117,7 +155,14 @@ export class WorkflowManager {
       content = await readFile(path, 'utf-8');
     }
     
-    return parse(content) as WorkflowDefinition;
+    const workflow = parse(content) as WorkflowDefinition;
+    
+    // Validate workflow schema
+    if (!workflow.name || !Array.isArray(workflow.steps)) {
+      throw new Error('Invalid workflow schema: missing required fields');
+    }
+    
+    return workflow;
   }
 
   
@@ -156,11 +201,12 @@ export class WorkflowManager {
     }
 
     try {
+      // Pass toolFactories instead of tool instances
       return await this.workflowExecutor.executeWorkflow(
         workflow,
         this.providers,
         input,
-        this.tools
+        this.toolFactories
       );
     } finally {
       this.workflowExecutor.removeAllListeners();
@@ -173,9 +219,9 @@ export class WorkflowManager {
 
 - Extension: .ts
 - Language: typescript
-- Size: 5664 bytes
-- Created: 2024-11-21 17:06:26
-- Modified: 2024-11-21 17:06:26
+- Size: 7083 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
@@ -189,18 +235,44 @@ import { LLMProvider } from '../types';
 import { logger } from '../utils/logger';
 import { TemplateLoader } from '../templates';
 import { BaseTool } from '../tools/base-tool';
+import { GithubLoaderTool } from '../tools/github-loader';
+import { FileSaverTool } from '../tools/file-saver.tool';
+import { S3LoaderTool } from '../tools/s3-loader.tool';
+import { SlackStreamerTool } from '../tools/slack-streamer.tool';
+import { HtmlFormatterTool } from '../tools/html-formatter.tool';
+import { LocalLoaderTool } from '../tools/local-loader.tool';
+import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
+import { RedisSaverTool } from '../tools/redis-saver.tool';
+import { TextToJsonTool } from '../tools/text-to-json';
 
 export class WorkflowExecutor extends EventEmitter {
   private templateExecutor: TemplateExecutor;
-  private tools: Map<string, BaseTool>;
+  private toolFactories: Map<string, new (...args: any[]) => BaseTool>;
+  private toolInstances: Map<string, BaseTool>;
   
   constructor() {
     super();
     this.templateExecutor = new TemplateExecutor();
     this.setupTemplateExecutorEvents();
-    this.tools = new Map(); // Initialize the tools map
+    this.toolFactories = new Map();
+    this.toolInstances = new Map();
+    
+    // Register default tool factories
+    this.registerToolFactory('githubLoader', GithubLoaderTool);
+    this.registerToolFactory('fileSaver', FileSaverTool);
+    this.registerToolFactory('s3Loader', S3LoaderTool);
+    this.registerToolFactory('slackStreamer', SlackStreamerTool);
+    this.registerToolFactory('htmlFormatter', HtmlFormatterTool);
+    this.registerToolFactory('localLoader', LocalLoaderTool);
+    this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
+    this.registerToolFactory('RedisSaver', RedisSaverTool);
+    this.registerToolFactory('TextToJson', TextToJsonTool);
   }
 
+
+  registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
+    this.toolFactories.set(name, toolClass);
+  }
 
   private setupTemplateExecutorEvents() {
     this.templateExecutor.on('streamChunk', (chunk: string) => {
@@ -210,22 +282,22 @@ export class WorkflowExecutor extends EventEmitter {
     this.templateExecutor.on('requestSent', (request: any) => {
       this.emit('requestSent', request);
     });
-  }
+  } 
 
   async executeWorkflow(
     workflow: WorkflowDefinition,
     providers: Record<string, LLMProvider>,
     initialInput: Record<string, any>,
-    tools: Map<string, BaseTool>
+    toolFactories: Map<string, new (...args: any[]) => BaseTool>
   ): Promise<Record<string, WorkflowExecutionResult>> {
-    this.tools = tools;
+    this.toolFactories = toolFactories;
     const context: WorkflowExecutionContext = {
       variables: { ...initialInput },
       results: {}
     };
-  
+
     logger.info(`Executing workflow: ${workflow.name}`);
-  
+
     for (const [index, step] of workflow.steps.entries()) {
       this.emit('stepStart', step, index);
       logger.info(`Step ${index + 1}`);
@@ -234,16 +306,12 @@ export class WorkflowExecutor extends EventEmitter {
         let executionResult: WorkflowExecutionResult;
 
         if (step.tool) {
-          // Execute tool
           executionResult = await this.executeToolStep(step, context);
         } else {
-          // Execute template
           executionResult = await this.executeTemplateStep(step, context, providers, workflow.defaultProvider);
         }
   
-        // Store step results in context
         this.storeStepResults(step, executionResult, context);
-  
         this.emit('stepComplete', step, index, executionResult);
         logger.info(`Completed step ${index + 1}`);
   
@@ -256,6 +324,8 @@ export class WorkflowExecutor extends EventEmitter {
     return context.results;
   }
 
+  
+
   private async executeToolStep(
     step: WorkflowStep, 
     context: WorkflowExecutionContext
@@ -264,14 +334,15 @@ export class WorkflowExecutor extends EventEmitter {
       throw new Error('Tool name not specified');
     }
 
-    const tool = this.tools.get(step.tool);
-    if (!tool) {
-      throw new Error(`Tool ${step.tool} not found`);
+    const ToolClass = this.toolFactories.get(step.tool);
+    if (!ToolClass) {
+      throw new Error(`Tool factory "${step.tool}" not found`);
     }
 
     const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
-    this.emit('toolExecution', step.tool, resolvedInput);
+    const tool = new ToolClass(resolvedInput.config || {});
     
+    this.emit('toolExecution', step.tool, resolvedInput);
     const result = await tool.execute(resolvedInput);
     
     return {
@@ -373,9 +444,9 @@ export class WorkflowExecutor extends EventEmitter {
 
 - Extension: .ts
 - Language: typescript
-- Size: 796 bytes
-- Created: 2024-11-21 18:36:55
-- Modified: 2024-11-21 18:36:55
+- Size: 779 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
@@ -383,131 +454,129 @@ export class WorkflowExecutor extends EventEmitter {
 import { BaseTool, ToolDefinition } from "./base-tool";
 
 export class HtmlFormatterTool extends BaseTool {
-    getDefinition(): ToolDefinition {
-      return {
-        name: 'html-formatter',
-        description: 'Formats content as HTML',
-        input: {
-          content: { type: 'string', required: true, description: 'Content to format' },
-          template: { type: 'string', required: false, description: 'HTML template' }
-        },
-        output: {
-          html: { type: 'string', description: 'Formatted HTML content' }
-        }
-      };
-    }
-  
-    async execute(inputs: Record<string, any>) {
-      const template = inputs.template || '<div class="content">{{content}}</div>';
-      const html = template.replace('{{content}}', inputs.content);
-      return { html };
-    }
+  constructor(config: Record<string, any> = {}) {
+    super(config);
   }
+
+  getDefinition(): ToolDefinition {
+    return {
+      name: 'html-formatter',
+      description: 'Formats content as HTML',
+      input: {
+        content: { type: 'string', required: true, description: 'Content to format' },
+        template: { type: 'string', required: false, description: 'HTML template' }
+      },
+      output: { type: 'string', description: 'Formatted HTML content' }
+    };
+  }
+
+  async execute(inputs: Record<string, any>) {
+    const template = inputs.template || '<div class="content">{{content}}</div>';
+    return template.replace('{{content}}', inputs.content);
+  }
+}
 ```
 
 ## File: src/tools/slack-streamer.tool.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 1100 bytes
-- Created: 2024-11-21 18:42:37
-- Modified: 2024-11-21 18:42:37
+- Size: 1112 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
 ```typescript
+// src/tools/slack-streamer.tool.ts
 import { WebClient } from "@slack/web-api";
 import { BaseTool, ToolDefinition } from "./base-tool";
 
 export class SlackStreamerTool extends BaseTool {
-    private client: WebClient;
-  
-    constructor(token: string) {
-      super();
-      this.client = new WebClient(token);
-    }
-  
-    getDefinition(): ToolDefinition {
-      return {
-        name: 'slack-streamer',
-        description: 'Streams messages to Slack',
-        input: {
-          channel: { type: 'string', required: true, description: 'Channel ID or name' },
-          message: { type: 'string', required: true, description: 'Message content' },
-          thread_ts: { type: 'string', required: false, description: 'Thread timestamp' }
-        },
-        output: {
-          messageId: { type: 'string', description: 'Sent message ID' }
-        }
-      };
-    }
-  
-    async execute(inputs: Record<string, any>) {
-      const response = await this.client.chat.postMessage({
-        channel: inputs.channel,
-        text: inputs.message,
-        thread_ts: inputs.thread_ts
-      });
-      return { messageId: response.ts };
-    }
+  private client: WebClient | null = null;
+
+  getDefinition(): ToolDefinition {
+    return {
+      name: 'slack-streamer',
+      description: 'Streams messages to Slack',
+      input: {
+        token: { type: 'string', required: true, description: 'Slack Bot Token' },
+        channel: { type: 'string', required: true, description: 'Channel ID or name' },
+        message: { type: 'string', required: true, description: 'Message content' },
+        thread_ts: { type: 'string', required: false, description: 'Thread timestamp' }
+      },
+      output: { type: 'string', description: 'Message ID' }
+    };
   }
+
+  async execute(inputs: Record<string, any>) {
+    if (!this.client) {
+      this.client = new WebClient(inputs.token);
+    }
+    const response = await this.client.chat.postMessage({
+      channel: inputs.channel,
+      text: inputs.message,
+      thread_ts: inputs.thread_ts
+    });
+    return response.ts;
+  }
+}
 ```
 
 ## File: src/tools/s3-loader.tool.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 1159 bytes
-- Created: 2024-11-21 18:42:24
-- Modified: 2024-11-21 18:42:24
+- Size: 983 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
 ```typescript
+// src/tools/s3-loader.tool.ts
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { BaseTool, ToolDefinition } from "./base-tool";
 
-
 export class S3LoaderTool extends BaseTool {
-    private s3Client: S3Client;
-  
-    constructor(config: { region: string, credentials: { accessKeyId: string, secretAccessKey: string } }) {
-      super();
-      this.s3Client = new S3Client(config);
-    }
-  
-    getDefinition(): ToolDefinition {
-      return {
-        name: 's3-loader',
-        description: 'Loads files from AWS S3',
-        input: {
-          bucket: { type: 'string', required: true, description: 'S3 bucket name' },
-          key: { type: 'string', required: true, description: 'S3 object key' }
-        },
-        output: {
-          content: { type: 'string', description: 'File content' }
-        }
-      };
-    }
-  
-    async execute(inputs: Record<string, any>) {
-      const command = new GetObjectCommand({
-        Bucket: inputs.bucket, // Capital B for Bucket
-        Key: inputs.key       // Capital K for Key
-      });
-      const response = await this.s3Client.send(command);
-      return { content: await response.Body?.transformToString() };
-    }
+  private s3Client: S3Client;
+
+  constructor(config: Record<string, any>) {
+    super(config);
+    this.s3Client = new S3Client(config);
   }
+
+  getDefinition(): ToolDefinition {
+    return {
+      name: 's3-loader',
+      description: 'Loads files from AWS S3',
+      input: {
+        bucket: { type: 'string', required: true, description: 'S3 bucket name' },
+        key: { type: 'string', required: true, description: 'S3 object key' }
+      },
+      output: { type: 'string', description: 'File content' }
+    };
+  }
+
+  async execute(inputs: Record<string, any>) {
+    const command = new GetObjectCommand({
+      Bucket: inputs.bucket,
+      Key: inputs.key
+    });
+    const response = await this.s3Client.send(command);
+    return await response.Body?.transformToString();
+  }
+}
+
 ```
 
 ## File: src/tools/github-loader.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 1699 bytes
-- Created: 2024-11-21 17:10:14
-- Modified: 2024-11-21 17:10:14
+- Size: 1423 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
@@ -516,12 +585,13 @@ export class S3LoaderTool extends BaseTool {
 import { Octokit } from '@octokit/rest';
 import { BaseTool, ToolDefinition } from './base-tool';
 
+// src/tools/github-loader.tool.ts
 export class GithubLoaderTool extends BaseTool {
   private octokit: Octokit;
 
-  constructor(authToken: string) {
-    super();
-    this.octokit = new Octokit({ auth: authToken });
+  constructor(config: Record<string, any>) {
+    super(config);
+    this.octokit = new Octokit({ auth: config.authToken });
   }
 
   getDefinition(): ToolDefinition {
@@ -529,39 +599,15 @@ export class GithubLoaderTool extends BaseTool {
       name: 'github-loader',
       description: 'Loads content from GitHub repositories',
       input: {
-        owner: {
-          type: 'string',
-          required: true,
-          description: 'Repository owner'
-        },
-        repo: {
-          type: 'string',
-          required: true,
-          description: 'Repository name'
-        },
-        path: {
-          type: 'string',
-          required: true,
-          description: 'File path in repository'
-        },
-        ref: {
-          type: 'string',
-          required: false,
-          description: 'Git reference (branch, tag, or commit SHA)'
-        }
+        owner: { type: 'string', required: true, description: 'Repository owner' },
+        repo: { type: 'string', required: true, description: 'Repository name' },
+        path: { type: 'string', required: true, description: 'File path' },
+        ref: { type: 'string', required: false, description: 'Git reference' }
       },
-      output: {
-        content: {
-          type: 'string',
-          description: 'File content'
-        },
-        sha: {
-          type: 'string',
-          description: 'File SHA'
-        }
-      }
+      output: { type: 'string', description: 'File content' }
     };
   }
+
 
   async execute(inputs: Record<string, any>): Promise<Record<string, any>> {
     const { owner, repo, path, ref } = inputs;
@@ -583,41 +629,95 @@ export class GithubLoaderTool extends BaseTool {
     throw new Error('Retrieved content is not a file');
   }
 }
+
 ```
 
 ## File: src/tools/file-saver.tool.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 834 bytes
-- Created: 2024-11-21 18:36:05
-- Modified: 2024-11-21 18:36:05
+- Size: 876 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
 ```typescript
-import { writeFile } from "fs";
+// src/tools/file-saver.tool.ts
+import { writeFile } from "fs/promises";
 import { BaseTool, ToolDefinition } from "./base-tool";
 
 export class FileSaverTool extends BaseTool {
+  constructor(config: Record<string, any> = {}) {
+    super(config);
+  }
+
+  getDefinition(): ToolDefinition {
+    return {
+      name: 'file-saver',
+      description: 'Saves content to local file',
+      input: {
+        path: { type: 'string', required: true, description: 'File path' },
+        content: { type: 'string', required: true, description: 'Content to save' },
+        encoding: { type: 'string', required: false, description: 'File encoding' }
+      },
+      output: { type: 'string', description: 'Saved file path' }
+    };
+  }
+
+  async execute(inputs: Record<string, any>) {
+    await writeFile(inputs.path, inputs.content, inputs.encoding || 'utf-8');
+    return inputs.path;
+  }
+}
+
+```
+
+## File: src/tools/s3-saver.tool.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 1267 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
+
+### Code
+
+```typescript
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { BaseTool, ToolDefinition } from "./base-tool";
+
+export class S3SaverTool extends BaseTool {
+    private s3Client: S3Client;
+  
+    constructor(config: Record<string, any>) {
+      super(config);
+      this.s3Client = new S3Client(config);
+    }
+  
     getDefinition(): ToolDefinition {
       return {
-        name: 'file-saver',
-        description: 'Saves content to local file',
+        name: 's3-saver',
+        description: 'Saves content to AWS S3',
         input: {
-          path: { type: 'string', required: true, description: 'File path' },
+          bucket: { type: 'string', required: true, description: 'S3 bucket name' },
+          key: { type: 'string', required: true, description: 'S3 object key' },
           content: { type: 'string', required: true, description: 'Content to save' },
-          encoding: { type: 'string', required: false, description: 'File encoding' }
+          contentType: { type: 'string', required: false, description: 'Content type' }
         },
-        output: {
-          path: { type: 'string', description: 'Saved file path' }
-        }
+        output: { type: 'string', description: 'S3 object URL' }
       };
     }
   
     async execute(inputs: Record<string, any>) {
-      await writeFile(inputs.path, inputs.content, inputs.encoding || 'utf-8');
-      return { path: inputs.path };
+      const command = new PutObjectCommand({
+        Bucket: inputs.bucket,
+        Key: inputs.key,
+        Body: inputs.content,
+        ContentType: inputs.contentType || 'text/plain'
+      });
+      await this.s3Client.send(command);
+      return `s3://${inputs.bucket}/${inputs.key}`;
     }
   }
 ```
@@ -626,77 +726,379 @@ export class FileSaverTool extends BaseTool {
 
 - Extension: .ts
 - Language: typescript
-- Size: 467 bytes
-- Created: 2024-11-21 16:57:21
-- Modified: 2024-11-21 16:57:21
+- Size: 463 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
 ```typescript
 // src/tools/base-tool.ts
 export interface ToolDefinition {
-    name: string;
+  name: string;
+  description: string;
+  input: Record<string, {
+    type: string;
+    required: boolean;
     description: string;
-    input: Record<string, {
-      type: string;
-      required: boolean;
-      description: string;
-    }>;
-    output: Record<string, {
-      type: string;
-      description: string;
-    }>;
-  }
+  }>;
+  output: {
+    type: string;
+    description: string;
+  };
+}
+
+export abstract class BaseTool {
+  constructor(protected config: Record<string, any> = {}) {}
+  abstract execute(inputs: Record<string, any>): Promise<any>;
+  abstract getDefinition(): ToolDefinition;
+}
+
+```
+
+## File: src/tools/mongodb-saver.tool.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 2099 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
+
+### Code
+
+```typescript
+/**
+ * MongoDB Saver Tool
+ * 
+ * A tool for saving documents to MongoDB collections.
+ * 
+ * Installation:
+ * ```bash
+ * npm install mongodb
+ * # or
+ * pnpm add mongodb
+ * ```
+ * 
+ * Configuration:
+ * - uri: MongoDB connection string (required)
+ * Example config: { uri: 'mongodb://localhost:27017' }
+ * 
+ * Usage example in workflow:
+ * ```yaml
+ * - tool: mongodb-saver
+ *   input:
+ *     config:
+ *       uri: "{{mongodb_uri}}"
+ *     database: "mydb"
+ *     collection: "mycollection"
+ *     document: 
+ *       name: "John"
+ *       age: 30
+ *   output: "saved_id"
+ * ```
+ * 
+ * Features:
+ * - Automatic connection management (connects before operation, disconnects after)
+ * - Returns the MongoDB ObjectId of the inserted document as string
+ * - Supports all MongoDB document types
+ * 
+ * Error handling:
+ * - Throws if connection fails
+ * - Throws if insertion fails
+ * - Always attempts to close connection, even on error
+ */
+
+import { MongoClient } from "mongodb";
+import { BaseTool, ToolDefinition } from "./base-tool";
+
+export class MongoDBSaverTool extends BaseTool {
+    private client: MongoClient;
   
-  export abstract class BaseTool {
-    abstract execute(inputs: Record<string, any>): Promise<Record<string, any>>;
-    abstract getDefinition(): ToolDefinition;
+    constructor(config: Record<string, any>) {
+      super(config);
+      this.client = new MongoClient(config.uri);
+    }
+  
+    getDefinition(): ToolDefinition {
+      return {
+        name: 'mongodb-saver',
+        description: 'Saves content to MongoDB',
+        input: {
+          database: { type: 'string', required: true, description: 'Database name' },
+          collection: { type: 'string', required: true, description: 'Collection name' },
+          document: { type: 'object', required: true, description: 'Document to save' }
+        },
+        output: { type: 'string', description: 'Inserted document ID' }
+      };
+    }
+  
+    async execute(inputs: Record<string, any>) {
+      await this.client.connect();
+      const db = this.client.db(inputs.database);
+      const collection = db.collection(inputs.collection);
+      const result = await collection.insertOne(inputs.document);
+      await this.client.close();
+      return result.insertedId.toString();
+    }
   }
+```
+
+## File: src/tools/redis-saver.tool.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 2077 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
+
+### Code
+
+```typescript
+/**
+ * Redis Saver Tool
+ * 
+ * A tool for saving key-value pairs to Redis with optional expiration.
+ * 
+ * Installation:
+ * ```bash
+ * npm install ioredis
+ * # or
+ * pnpm add ioredis
+ * ```
+ * 
+ * Configuration:
+ * - host: Redis host (default: 'localhost')
+ * - port: Redis port (default: 6379)
+ * - password: Redis password (optional)
+ * - db: Redis database number (optional)
+ * Example config: { host: 'localhost', port: 6379, password: 'secret' }
+ * 
+ * Usage example in workflow:
+ * ```yaml
+ * - tool: redis-saver
+ *   input:
+ *     config:
+ *       host: "{{redis_host}}"
+ *       password: "{{redis_password}}"
+ *     key: "user:123"
+ *     value: "John Doe"
+ *     expiration: 3600  # Optional, in seconds
+ *   output: "save_status"
+ * ```
+ * 
+ * Features:
+ * - Supports both persistent and expiring keys
+ * - Automatic connection management
+ * - Returns 'OK' on successful operation
+ * 
+ * Error handling:
+ * - Throws if connection fails
+ * - Throws if set operation fails
+ * - Automatically handles connection pooling
+ */
+
+import Redis from "ioredis";
+import { BaseTool, ToolDefinition } from "./base-tool";
+
+export class RedisSaverTool extends BaseTool {
+    private client: Redis;
+  
+    constructor(config: Record<string, any>) {
+      super(config);
+      this.client = new Redis(config);
+    }
+  
+    getDefinition(): ToolDefinition {
+      return {
+        name: 'redis-saver',
+        description: 'Saves content to Redis',
+        input: {
+          key: { type: 'string', required: true, description: 'Redis key' },
+          value: { type: 'string', required: true, description: 'Value to save' },
+          expiration: { type: 'number', required: false, description: 'Expiration in seconds' }
+        },
+        output: { type: 'string', description: 'Operation status' }
+      };
+    }
+  
+    async execute(inputs: Record<string, any>) {
+      if (inputs.expiration) {
+        await this.client.setex(inputs.key, inputs.expiration, inputs.value);
+      } else {
+        await this.client.set(inputs.key, inputs.value);
+      }
+      return 'OK';
+    }
+  }
+```
+
+## File: src/tools/text-to-json.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 3225 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
+
+### Code
+
+```typescript
+/**
+ * Text to JSON Converter Tool
+ * 
+ * A tool that converts various text formats into structured JSON data.
+ * 
+ * Features:
+ * - Auto-detects if input is already valid JSON
+ * - Supports structured text conversion with custom schema
+ * - Handles CSV-like data with custom separators
+ * - Supports both single object and array of objects output
+ * - Pretty prints JSON output with proper indentation
+ * 
+ * Configuration:
+ * No specific configuration required. Uses default settings.
+ * 
+ * Usage examples in workflow:
+ * 1. Simple key-value conversion:
+ * ```yaml
+ * - tool: text-to-json
+ *   input:
+ *     text: "name: John\nage: 30"
+ *   output: "json_result"
+ * ```
+ * 
+ * 2. Structured data with schema:
+ * ```yaml
+ * - tool: text-to-json
+ *   input:
+ *     text: "John,30,john@email.com\nJane,25,jane@email.com"
+ *     schema:
+ *       name: "string"
+ *       age: "number"
+ *       email: "string"
+ *     separator: ","
+ *   output: "json_result"
+ * ```
+ * 
+ * Input Formats Supported:
+ * - JSON strings
+ * - Key-value pairs (name: value)
+ * - CSV-like data with custom separators
+ * - Line-delimited data
+ * 
+ * Error Handling:
+ * - Validates JSON syntax
+ * - Handles malformed input gracefully
+ * - Provides clear error messages for invalid schemas
+ * - Sanitizes input to prevent JSON injection
+ */
+
+import { BaseTool, ToolDefinition } from "./base-tool";
+
+export class TextToJsonTool extends BaseTool {
+  constructor(config: Record<string, any> = {}) {
+    super(config);
+  }
+
+  getDefinition(): ToolDefinition {
+    return {
+      name: 'text-to-json',
+      description: 'Converts text content to JSON format',
+      input: {
+        text: { type: 'string', required: true, description: 'Text to convert' },
+        schema: { type: 'object', required: false, description: 'JSON schema structure' },
+        separator: { type: 'string', required: false, description: 'Field separator for structured text' }
+      },
+      output: { 
+        type: 'string', 
+        description: 'JSON formatted string' 
+      }
+    };
+  }
+
+  async execute(inputs: Record<string, any>) {
+    const { text, schema, separator = ',' } = inputs;
+
+    try {
+      // First try to parse as JSON in case it's already JSON
+      JSON.parse(text);
+      return text;
+    } catch {
+      // If not JSON, process as structured text
+      if (schema) {
+        const lines = text.split('\n').filter((line:any) => line.trim());
+        const result = lines.map((line:any) => {
+          const values = line.split(separator);
+          const obj: Record<string, any> = {};
+          Object.keys(schema).forEach((key, index) => {
+            obj[key] = values[index]?.trim();
+          });
+          return obj;
+        });
+        return JSON.stringify(result, null, 2);
+      }
+
+      // If no schema, try to create a simple key-value object
+      const lines = text.split('\n').filter((line:any) => line.trim());
+      const result = lines.reduce((acc: Record<string, string>, line:any) => {
+        const [key, ...values] = line.split(separator).map((s:any) => s.trim());
+        if (key) {
+          acc[key] = values.join(separator);
+        }
+        return acc;
+      }, {});
+
+      return JSON.stringify(result, null, 2);
+    }
+  }
+}
 ```
 
 ## File: src/tools/local-loader.tool.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 745 bytes
-- Created: 2024-11-21 18:35:36
-- Modified: 2024-11-21 18:35:36
+- Size: 770 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
 ```typescript
-import { readFile } from "fs";
+import { readFile } from "fs/promises";
 import { BaseTool, ToolDefinition } from "./base-tool";
 
 export class LocalLoaderTool extends BaseTool {
-    getDefinition(): ToolDefinition {
-      return {
-        name: 'local-loader',
-        description: 'Loads files from local filesystem',
-        input: {
-          path: { type: 'string', required: true, description: 'File path' },
-          encoding: { type: 'string', required: false, description: 'File encoding' }
-        },
-        output: {
-          content: { type: 'string', description: 'File content' }
-        }
-      };
-    }
-  
-    async execute(inputs: Record<string, any>) {
-      const content = await readFile(inputs.path, inputs.encoding || 'utf-8');
-      return { content };
-    }
+  constructor(config: Record<string, any> = {}) {
+    super(config);
   }
+
+  getDefinition(): ToolDefinition {
+    return {
+      name: 'local-loader',
+      description: 'Loads files from local filesystem',
+      input: {
+        path: { type: 'string', required: true, description: 'File path' },
+        encoding: { type: 'string', required: false, description: 'File encoding' }
+      },
+      output: { type: 'string', description: 'File content' }
+    };
+  }
+
+  async execute(inputs: Record<string, any>) {
+    const content = await readFile(inputs.path, inputs.encoding || 'utf-8');
+    return content.toString();
+  }
+}
 ```
 
 ## File: src/types/workflow-types.ts
 
 - Extension: .ts
 - Language: typescript
-- Size: 740 bytes
-- Created: 2024-11-21 17:03:04
-- Modified: 2024-11-21 17:03:04
+- Size: 779 bytes
+- Created: 2024-11-21 22:57:28
+- Modified: 2024-11-21 22:57:28
 
 ### Code
 
@@ -708,7 +1110,8 @@ import { TemplateDefinition } from '../templates/types';
 export interface WorkflowStep {
     template?: TemplateDefinition;
     templateUrl?: string;
-    tool?: string; 
+    tool?: string;
+    toolConfig?: Record<string, any>;  
     provider?: string;
     input?: Record<string, string | number | boolean>;
     output: string | Record<string, string>;
