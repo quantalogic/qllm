@@ -1,19 +1,20 @@
 // src/tools/base-tool.ts
 export interface ToolDefinition {
-    name: string;
+  name: string;
+  description: string;
+  input: Record<string, {
+    type: string;
+    required: boolean;
     description: string;
-    input: Record<string, {
-      type: string;
-      required: boolean;
-      description: string;
-    }>;
-    output: Record<string, {
-      type: string;
-      description: string;
-    }>;
-  }
-  
-  export abstract class BaseTool {
-    abstract execute(inputs: Record<string, any>): Promise<Record<string, any>>;
-    abstract getDefinition(): ToolDefinition;
-  }
+  }>;
+  output: {
+    type: string;
+    description: string;
+  };
+}
+
+export abstract class BaseTool {
+  constructor(protected config: Record<string, any> = {}) {}
+  abstract execute(inputs: Record<string, any>): Promise<any>;
+  abstract getDefinition(): ToolDefinition;
+}

@@ -7,18 +7,44 @@ import { LLMProvider } from '../types';
 import { logger } from '../utils/logger';
 import { TemplateLoader } from '../templates';
 import { BaseTool } from '../tools/base-tool';
+import { GithubLoaderTool } from '../tools/github-loader';
+import { FileSaverTool } from '../tools/file-saver.tool';
+import { S3LoaderTool } from '../tools/s3-loader.tool';
+import { SlackStreamerTool } from '../tools/slack-streamer.tool';
+import { HtmlFormatterTool } from '../tools/html-formatter.tool';
+import { LocalLoaderTool } from '../tools/local-loader.tool';
+import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
+import { RedisSaverTool } from '../tools/redis-saver.tool';
+import { TextToJsonTool } from '../tools/text-to-json';
 
 export class WorkflowExecutor extends EventEmitter {
   private templateExecutor: TemplateExecutor;
-  private tools: Map<string, BaseTool>;
+  private toolFactories: Map<string, new (...args: any[]) => BaseTool>;
+  private toolInstances: Map<string, BaseTool>;
   
   constructor() {
     super();
     this.templateExecutor = new TemplateExecutor();
     this.setupTemplateExecutorEvents();
-    this.tools = new Map(); // Initialize the tools map
+    this.toolFactories = new Map();
+    this.toolInstances = new Map();
+    
+    // Register default tool factories
+    this.registerToolFactory('githubLoader', GithubLoaderTool);
+    this.registerToolFactory('fileSaver', FileSaverTool);
+    this.registerToolFactory('s3Loader', S3LoaderTool);
+    this.registerToolFactory('slackStreamer', SlackStreamerTool);
+    this.registerToolFactory('htmlFormatter', HtmlFormatterTool);
+    this.registerToolFactory('localLoader', LocalLoaderTool);
+    this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
+    this.registerToolFactory('RedisSaver', RedisSaverTool);
+    this.registerToolFactory('TextToJson', TextToJsonTool);
   }
 
+
+  registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
+    this.toolFactories.set(name, toolClass);
+  }
 
   private setupTemplateExecutorEvents() {
     this.templateExecutor.on('streamChunk', (chunk: string) => {
@@ -28,22 +54,22 @@ export class WorkflowExecutor extends EventEmitter {
     this.templateExecutor.on('requestSent', (request: any) => {
       this.emit('requestSent', request);
     });
-  }
+  } 
 
   async executeWorkflow(
     workflow: WorkflowDefinition,
     providers: Record<string, LLMProvider>,
     initialInput: Record<string, any>,
-    tools: Map<string, BaseTool>
+    toolFactories: Map<string, new (...args: any[]) => BaseTool>
   ): Promise<Record<string, WorkflowExecutionResult>> {
-    this.tools = tools;
+    this.toolFactories = toolFactories;
     const context: WorkflowExecutionContext = {
       variables: { ...initialInput },
       results: {}
     };
-  
+
     logger.info(`Executing workflow: ${workflow.name}`);
-  
+
     for (const [index, step] of workflow.steps.entries()) {
       this.emit('stepStart', step, index);
       logger.info(`Step ${index + 1}`);
@@ -52,16 +78,12 @@ export class WorkflowExecutor extends EventEmitter {
         let executionResult: WorkflowExecutionResult;
 
         if (step.tool) {
-          // Execute tool
           executionResult = await this.executeToolStep(step, context);
         } else {
-          // Execute template
           executionResult = await this.executeTemplateStep(step, context, providers, workflow.defaultProvider);
         }
   
-        // Store step results in context
         this.storeStepResults(step, executionResult, context);
-  
         this.emit('stepComplete', step, index, executionResult);
         logger.info(`Completed step ${index + 1}`);
   
@@ -74,6 +96,8 @@ export class WorkflowExecutor extends EventEmitter {
     return context.results;
   }
 
+  
+
   private async executeToolStep(
     step: WorkflowStep, 
     context: WorkflowExecutionContext
@@ -82,14 +106,15 @@ export class WorkflowExecutor extends EventEmitter {
       throw new Error('Tool name not specified');
     }
 
-    const tool = this.tools.get(step.tool);
-    if (!tool) {
-      throw new Error(`Tool ${step.tool} not found`);
+    const ToolClass = this.toolFactories.get(step.tool);
+    if (!ToolClass) {
+      throw new Error(`Tool factory "${step.tool}" not found`);
     }
 
     const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
-    this.emit('toolExecution', step.tool, resolvedInput);
+    const tool = new ToolClass(resolvedInput.config || {});
     
+    this.emit('toolExecution', step.tool, resolvedInput);
     const result = await tool.execute(resolvedInput);
     
     return {

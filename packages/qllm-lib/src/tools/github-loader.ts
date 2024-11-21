@@ -2,12 +2,13 @@
 import { Octokit } from '@octokit/rest';
 import { BaseTool, ToolDefinition } from './base-tool';
 
+// src/tools/github-loader.tool.ts
 export class GithubLoaderTool extends BaseTool {
   private octokit: Octokit;
 
-  constructor(authToken: string) {
-    super();
-    this.octokit = new Octokit({ auth: authToken });
+  constructor(config: Record<string, any>) {
+    super(config);
+    this.octokit = new Octokit({ auth: config.authToken });
   }
 
   getDefinition(): ToolDefinition {
@@ -15,39 +16,15 @@ export class GithubLoaderTool extends BaseTool {
       name: 'github-loader',
       description: 'Loads content from GitHub repositories',
       input: {
-        owner: {
-          type: 'string',
-          required: true,
-          description: 'Repository owner'
-        },
-        repo: {
-          type: 'string',
-          required: true,
-          description: 'Repository name'
-        },
-        path: {
-          type: 'string',
-          required: true,
-          description: 'File path in repository'
-        },
-        ref: {
-          type: 'string',
-          required: false,
-          description: 'Git reference (branch, tag, or commit SHA)'
-        }
+        owner: { type: 'string', required: true, description: 'Repository owner' },
+        repo: { type: 'string', required: true, description: 'Repository name' },
+        path: { type: 'string', required: true, description: 'File path' },
+        ref: { type: 'string', required: false, description: 'Git reference' }
       },
-      output: {
-        content: {
-          type: 'string',
-          description: 'File content'
-        },
-        sha: {
-          type: 'string',
-          description: 'File SHA'
-        }
-      }
+      output: { type: 'string', description: 'File content' }
     };
   }
+
 
   async execute(inputs: Record<string, any>): Promise<Record<string, any>> {
     const { owner, repo, path, ref } = inputs;

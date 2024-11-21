@@ -5,7 +5,8 @@ import { TemplateDefinition } from '../templates/types';
 export interface WorkflowStep {
     template?: TemplateDefinition;
     templateUrl?: string;
-    tool?: string; 
+    tool?: string;
+    toolConfig?: Record<string, any>;  
     provider?: string;
     input?: Record<string, string | number | boolean>;
     output: string | Record<string, string>;
