@@ -70,6 +70,8 @@
     "@aws-sdk/client-sts": "^3.645.0",
     "@aws-sdk/credential-providers": "^3.645.0",
     "@mistralai/mistralai": "1.0.4",
+    "@octokit/rest": "21.0.2",
+    "@slack/web-api": "7.7.0",
     "axios": "^1.7.5",
     "docx": "9.0.2",
     "groq-sdk": "^0.5.0",

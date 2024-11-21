@@ -6,15 +6,19 @@ import { WorkflowDefinition, WorkflowStep, WorkflowExecutionContext, WorkflowExe
 import { LLMProvider } from '../types';
 import { logger } from '../utils/logger';
 import { TemplateLoader } from '../templates';
+import { BaseTool } from '../tools/base-tool';
 
 export class WorkflowExecutor extends EventEmitter {
   private templateExecutor: TemplateExecutor;
+  private tools: Map<string, BaseTool>;
   
   constructor() {
     super();
     this.templateExecutor = new TemplateExecutor();
     this.setupTemplateExecutorEvents();
+    this.tools = new Map(); // Initialize the tools map
   }
+
 
   private setupTemplateExecutorEvents() {
     this.templateExecutor.on('streamChunk', (chunk: string) => {
@@ -29,8 +33,10 @@ export class WorkflowExecutor extends EventEmitter {
   async executeWorkflow(
     workflow: WorkflowDefinition,
     providers: Record<string, LLMProvider>,
-    initialInput: Record<string, any>
+    initialInput: Record<string, any>,
+    tools: Map<string, BaseTool>
   ): Promise<Record<string, WorkflowExecutionResult>> {
+    this.tools = tools;
     const context: WorkflowExecutionContext = {
       variables: { ...initialInput },
       results: {}
@@ -43,47 +49,18 @@ export class WorkflowExecutor extends EventEmitter {
       logger.info(`Step ${index + 1}`);
   
       try {
-        // Load template if URL is provided
-        if (step.templateUrl && !step.template) {
-          const template = await TemplateLoader.load(step.templateUrl);
-          step.template = template;
+        let executionResult: WorkflowExecutionResult;
+
+        if (step.tool) {
+          // Execute tool
+          executionResult = await this.executeToolStep(step, context);
+        } else {
+          // Execute template
+          executionResult = await this.executeTemplateStep(step, context, providers, workflow.defaultProvider);
         }
-  
-        if (!step.template) {
-          throw new Error(`No template found for step ${index + 1}`);
-        }
-  
-        const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
-        const provider = providers[step.provider || workflow.defaultProvider || ''];
-  
-        if (!provider) {
-          throw new Error(`Provider not found for step ${index + 1}`);
-        }
-  
-        logger.info(`Step ${index + 1} => resolvedInput: ${JSON.stringify(resolvedInput, null, 2)}`);
-        
-        const result = await this.templateExecutor.execute({
-          template: step.template,
-          provider,
-          variables: resolvedInput,
-          stream: true
-        });
-  
-        const executionResult: WorkflowExecutionResult = {
-          response: result.response,
-          outputVariables: result.outputVariables
-        };
   
         // Store step results in context
-        if (typeof step.output === 'string') {
-          context.results[step.output] = executionResult;
-        } else {
-          Object.entries(step.output).forEach(([key, varName]) => {
-            if (typeof varName === 'string') {
-              context.results[varName] = executionResult.outputVariables[key];
-            }
-          });
-        }
+        this.storeStepResults(step, executionResult, context);
   
         this.emit('stepComplete', step, index, executionResult);
         logger.info(`Completed step ${index + 1}`);
@@ -95,6 +72,80 @@ export class WorkflowExecutor extends EventEmitter {
     }
   
     return context.results;
+  }
+
+  private async executeToolStep(
+    step: WorkflowStep, 
+    context: WorkflowExecutionContext
+  ): Promise<WorkflowExecutionResult> {
+    if (!step.tool) {
+      throw new Error('Tool name not specified');
+    }
+
+    const tool = this.tools.get(step.tool);
+    if (!tool) {
+      throw new Error(`Tool ${step.tool} not found`);
+    }
+
+    const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
+    this.emit('toolExecution', step.tool, resolvedInput);
+    
+    const result = await tool.execute(resolvedInput);
+    
+    return {
+      response: JSON.stringify(result),
+      outputVariables: result
+    };
+  }
+
+  private async executeTemplateStep(
+    step: WorkflowStep,
+    context: WorkflowExecutionContext,
+    providers: Record<string, LLMProvider>,
+    defaultProvider?: string
+  ): Promise<WorkflowExecutionResult> {
+    if (step.templateUrl && !step.template) {
+      step.template = await TemplateLoader.load(step.templateUrl);
+    }
+
+    if (!step.template) {
+      throw new Error('No template found for step');
+    }
+
+    const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
+    const provider = providers[step.provider || defaultProvider || ''];
+
+    if (!provider) {
+      throw new Error('Provider not found');
+    }
+
+    const result = await this.templateExecutor.execute({
+      template: step.template,
+      provider,
+      variables: resolvedInput,
+      stream: true
+    });
+
+    return {
+      response: result.response,
+      outputVariables: result.outputVariables
+    };
+  }
+
+  private storeStepResults(
+    step: WorkflowStep,
+    executionResult: WorkflowExecutionResult,
+    context: WorkflowExecutionContext
+  ): void {
+    if (typeof step.output === 'string') {
+      context.results[step.output] = executionResult;
+    } else {
+      Object.entries(step.output).forEach(([key, varName]) => {
+        if (typeof varName === 'string') {
+          context.results[varName] = executionResult.outputVariables[key];
+        }
+      });
+    }
   }
 
     private resolveTemplateVariables(
