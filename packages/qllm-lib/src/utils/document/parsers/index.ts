@@ -3,7 +3,10 @@ import * as path from 'path';
 import { DocumentParser } from '../../../types/document-types';
 // src/utils/document/parsers/pdf-parser.ts
 import * as mime from 'mime-types';
-import pdfParse from 'pdf-parse';
+console.log("In index parsers")
+// import pdfParse from 'pdf-parse';
+const pdfParse = require('pdf-parse');
+console.log("pdf-parse imported")
 
 export abstract class BaseParser implements DocumentParser {
   abstract parse(buffer: Buffer, filename: string): Promise<string>;
