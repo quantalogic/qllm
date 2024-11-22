@@ -180,9 +180,6 @@ async function main(): Promise<void> {
           "🎯 Generate comprehensive, engaging learning article for impatient learners",
       )
       .build();
-
-  console.log("creating LLMProvider...")
-  console.log(process.env.OPENAI_API_KEY)
   // Create providers
   const providers = {
     openai: createLLMProvider({
@@ -190,7 +187,6 @@ async function main(): Promise<void> {
       apiKey: process.env.OPENAI_API_KEY
     })
   };
-  console.log("debug")
 
   // Initialize workflow manager
   const workflowManager = new WorkflowManager(providers);
