@@ -15,7 +15,7 @@ async function main(): Promise<void> {
   const workflowManager = new WorkflowManager(providers); 
   try {
     // Load workflow
-    await workflowManager.loadWorkflow('https://raw.githubusercontent.com/YatchiYa/templates_prompts_qllm/refs/heads/main/github-review-code.yaml');
+    await workflowManager.loadWorkflow('https://raw.githubusercontent.com/YatchiYa/templates_prompts_qllm/refs/heads/main/code-review-source-github.yaml');
     console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables
