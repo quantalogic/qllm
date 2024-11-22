@@ -30,7 +30,9 @@
         "prepublishOnly": "pnpm run build",
         "start:exm": "ts-node src/template-workflow/dynamic_yaml_search.ts",
         "start:exm:ad": "ts-node src/template-workflow/dynamic_yaml_search-with-tool.ts",
-        "start:exm:ads": "ts-node src/template-workflow/dynamic_yaml_search-with-tool-bis.ts"
+        "start:exm:ads": "ts-node src/template-workflow/dynamic_yaml_search-with-tool-bis.ts",
+        "start:github-review-code": "ts-node src/template-workflow/github-code-analysis.ts",
+        "start:test-tool": "ts-node src/template-workflow/testTool.ts"
     },
     "repository": {
         "type": "git",

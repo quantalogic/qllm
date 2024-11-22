@@ -16,6 +16,7 @@ import { LocalLoaderTool } from '../tools/local-loader.tool';
 import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
 import { RedisSaverTool } from '../tools/redis-saver.tool';
 import { TextToJsonTool } from '../tools/text-to-json';
+import { LocalProjectLoaderTool } from '../tools/local-project-loader'; 
 
 export class WorkflowExecutor extends EventEmitter {
   private templateExecutor: TemplateExecutor;
@@ -39,6 +40,7 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
     this.registerToolFactory('RedisSaver', RedisSaverTool);
     this.registerToolFactory('TextToJson', TextToJsonTool);
+    this.registerToolFactory('LocalProjectLoader', LocalProjectLoaderTool);
   }
 
 
