@@ -4,6 +4,8 @@ import {
   WorkflowManager,
   WorkflowDefinition,
 } from "qllm-lib";
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function main(): Promise<void> {
   console.log("\n🔍 Debug - Starting template definitions");
@@ -178,7 +180,6 @@ async function main(): Promise<void> {
           "🎯 Generate comprehensive, engaging learning article for impatient learners",
       )
       .build();
-
   // Create providers
   const providers = {
     openai: createLLMProvider({

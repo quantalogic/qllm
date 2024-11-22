@@ -4,10 +4,12 @@ import * as xlsx from 'xlsx';
 import * as yaml from 'js-yaml';
 import * as mammoth from 'mammoth';
 import { readFile } from 'fs/promises';
-import { default as pdfParse } from 'pdf-parse'; 
+const pdfParse = require('pdf-parse')
 import { FormatHandler } from '../../types/document-types';  // Import from document-types.ts
 
 export { FormatHandler };  // Re-export the type
+
+console.log("In format-handlers")
 
 export const formatHandlers: Record<string, FormatHandler> = {
   pdf: {
