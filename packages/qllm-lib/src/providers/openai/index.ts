@@ -1,3 +1,11 @@
+/**
+ * @fileoverview OpenAI provider implementation for the QLLM library.
+ * This module implements both LLMProvider and EmbeddingProvider interfaces for OpenAI's language models.
+ * 
+ * @module providers/openai
+ * @version 1.0.0
+ */
+
 import OpenAI from 'openai';
 import {
   LLMProvider,
@@ -25,19 +33,41 @@ import {
 } from 'openai/resources/chat/completions';
 import { createBase64Url, imageToBase64 } from '../../utils/images/image-to-base64';
 
+/** Default maximum number of tokens for completion requests */
 const DEFAULT_MAX_TOKENS = 1024 * 8;
+/** Default model for chat completions */
 const DEFAULT_MODEL = 'gpt-4o-mini';
+/** Default model for embeddings */
 const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
 
 /**
- * OpenAIProvider class implements the LLMProvider interface for OpenAI's language models.
- * It provides methods for generating messages, streaming messages, and generating embeddings.
+ * OpenAI provider implementation that supports both chat completions and embeddings.
+ * This class handles authentication, request formatting, and error handling for OpenAI's API.
+ * 
+ * @implements {LLMProvider}
+ * @implements {EmbeddingProvider}
+ * 
+ * @example
+ * ```typescript
+ * const provider = new OpenAIProvider(); // Uses OPENAI_API_KEY from environment
+ * const response = await provider.generateChatCompletion({
+ *   messages: [{ role: 'user', content: { type: 'text', text: 'Hello!' } }],
+ *   options: { model: 'gpt-4' }
+ * });
+ * ```
  */
 export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
   private client: OpenAI;
   public readonly version = '1.0.0';
   public readonly name = 'OpenAI';
 
+  /**
+   * Creates a new OpenAI provider instance.
+   * 
+   * @param {string} [key] - Optional API key. If not provided, uses OPENAI_API_KEY environment variable
+   * @param {string} [baseUrl] - Optional base URL for API requests
+   * @throws {Error} If no API key is found in environment variables when not provided
+   */
   constructor(key?: string, baseUrl?: string) {
     const apiKey = key ?? process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -46,11 +76,20 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     this.client = new OpenAI({ apiKey, baseURL: baseUrl });
   }
 
+  /** Default options for LLM requests */
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
     maxTokens: DEFAULT_MAX_TOKENS,
   };
 
+  /**
+   * Filters and formats LLM options for OpenAI API requests.
+   * Removes undefined and null values, and handles special cases.
+   * 
+   * @private
+   * @param {LLMOptions} options - Raw options to filter
+   * @returns {LLMOptions} Filtered options object
+   */
   private getFilteredOptions(options: LLMOptions): LLMOptions {
     const optionsToInclude = {
       temperature: options.temperature,
@@ -73,6 +112,13 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     return filteredOptions;
   }
 
+  /**
+   * Generates a chat completion using OpenAI's API.
+   * 
+   * @param {ChatCompletionParams} params - Parameters for the chat completion
+   * @returns {Promise<ChatCompletionResponse>} Response containing generated text and metadata
+   * @throws {AuthenticationError | RateLimitError | InvalidRequestError} On API errors
+   */
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
       const { messages, options, tools, toolChoice, parallelToolCalls, responseFormat } = params;
@@ -117,6 +163,13 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Generates a streaming chat completion using OpenAI's API.
+   * 
+   * @param {ChatCompletionParams} params - Parameters for the chat completion
+   * @returns {AsyncIterableIterator<ChatStreamCompletionResponse>} Stream of completion chunks
+   * @throws {AuthenticationError | RateLimitError | InvalidRequestError} On API errors
+   */
   async *streamChatCompletion(
     params: ChatCompletionParams,
   ): AsyncIterableIterator<ChatStreamCompletionResponse> {
@@ -160,6 +213,13 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Generates embeddings for given text content using OpenAI's API.
+   * 
+   * @param {EmbeddingRequestParams} input - Parameters for embedding generation
+   * @returns {Promise<EmbeddingResponse>} Generated embeddings
+   * @throws {AuthenticationError | RateLimitError | InvalidRequestError} On API errors
+   */
   async generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse> {
     try {
       const { content, model } = input;
@@ -186,6 +246,12 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Lists available models from OpenAI's API.
+   * 
+   * @returns {Promise<Model[]>} List of available models with metadata
+   * @throws {AuthenticationError | RateLimitError | InvalidRequestError} On API errors
+   */
   async listModels(): Promise<Model[]> {
     try {
       const { data } = await this.client.models.list();
@@ -200,12 +266,27 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Adds system message to the chat messages if provided in options.
+   * 
+   * @private
+   * @param {LLMOptions} options - Options containing potential system message
+   * @param {ChatMessage[]} messages - Original chat messages
+   * @returns {ChatMessageWithSystem[]} Messages with system message prepended if provided
+   */
   private withSystemMessage(options: LLMOptions, messages: ChatMessage[]): ChatMessageWithSystem[] {
     return options.systemMessage && options.systemMessage.length > 0
       ? [{ role: 'system', content: { type: 'text', text: options.systemMessage } }, ...messages]
       : messages;
   }
 
+  /**
+   * Formats messages for OpenAI's API, handling both text and image content.
+   * 
+   * @private
+   * @param {ChatMessageWithSystem[]} messages - Messages to format
+   * @returns {Promise<ChatCompletionMessageParamOpenAI[]>} Formatted messages for API
+   */
   private async formatMessages(
     messages: ChatMessageWithSystem[],
   ): Promise<ChatCompletionMessageParamOpenAI[]> {
@@ -254,6 +335,13 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     return formattedMessages;
   }
 
+  /**
+   * Formats tools for OpenAI's API.
+   * 
+   * @private
+   * @param {Tool[]} [tools] - Tools to format
+   * @returns {ChatCompletionToolOpenAI[] | undefined} Formatted tools for API
+   */
   private formatTools(tools?: Tool[]): ChatCompletionToolOpenAI[] | undefined {
     if (!tools) return undefined;
     return tools.map((tool) => ({
@@ -261,6 +349,15 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     }));
   }
 
+  /**
+   * Handles errors from OpenAI's API, converting them to appropriate error types.
+   * 
+   * @private
+   * @param {unknown} error - Error from API call
+   * @throws {AuthenticationError} On authentication failures
+   * @throws {RateLimitError} On rate limit exceeded
+   * @throws {InvalidRequestError} On other API errors
+   */
   private handleError(error: unknown): never {
     if (error instanceof OpenAI.APIError) {
       if (error.status === 401) {
