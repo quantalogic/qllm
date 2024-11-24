@@ -1,16 +1,47 @@
-// Validator.ts
+/**
+ * @fileoverview Template Validator for QLLM Library
+ * 
+ * This module provides validation functionality for template input variables.
+ * It ensures that all required variables are present and that their types
+ * match the expected types defined in the template.
+ * 
+ * @version 1.0.0
+ * @module qllm-lib/templates
+ */
 
 import { ErrorManager } from '../utils/error';
 import { TemplateDefinition } from './types';
 
+/**
+ * Valid types for template variables.
+ */
 type ValidatorType = 'string' | 'number' | 'boolean' | 'array';
 
+/**
+ * Interface defining the structure of a variable definition.
+ */
 interface VariableDefinition {
+  /** The expected type of the variable */
   type: ValidatorType;
+  /** Optional default value if the variable is not provided */
   default?: any;
 }
 
+/**
+ * Validates template input variables against their definitions.
+ * Ensures type safety and presence of required variables.
+ * 
+ * @class TemplateValidator
+ */
 export class TemplateValidator {
+  /**
+   * Validates all input variables for a template.
+   * 
+   * @static
+   * @param {TemplateDefinition} template - The template containing variable definitions
+   * @param {Record<string, any>} variables - The variables to validate
+   * @throws {InputValidationError} If validation fails
+   */
   static validateInputVariables(
     template: TemplateDefinition,
     variables: Record<string, any>,
@@ -24,6 +55,16 @@ export class TemplateValidator {
     }
   }
 
+  /**
+   * Validates the type of a single variable.
+   * 
+   * @private
+   * @static
+   * @param {string} key - The variable name
+   * @param {any} value - The variable value to validate
+   * @param {VariableDefinition} variable - The variable definition
+   * @throws {InputValidationError} If type validation fails
+   */
   private static validateVariableType(key: string, value: any, variable: VariableDefinition): void {
     if (value === undefined && 'default' in variable) return;
 

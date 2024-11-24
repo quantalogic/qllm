@@ -1,4 +1,13 @@
-// packages/qllm-lib/src/templates/types.ts
+/**
+ * @fileoverview Type Definitions for QLLM Library
+ * 
+ * This module provides type definitions and error classes for the QLLM library.
+ * It includes types for execution context, template definitions, and specialized
+ * error classes for different types of failures.
+ * 
+ * @version 1.0.0
+ * @module qllm-lib/templates
+ */
 
 import { LLMOptions, LLMProvider } from '../types';
 import { TemplateDefinition } from './template-schema';
@@ -6,24 +15,36 @@ import { TemplateDefinition } from './template-schema';
 export * from './template-schema';
 export * from './template-definition-builder';
 
-// ==============================
-// Execution Context Interface
-// ==============================
+/**
+ * Execution context for template processing.
+ * Contains all necessary information for template execution.
+ * 
+ * @interface ExecutionContext
+ */
 export interface ExecutionContext {
+  /** The template to execute */
   template: TemplateDefinition;
+  /** Variables to be used in template execution */
   variables?: Record<string, any>;
+  /** Optional provider-specific options */
   providerOptions?: Partial<LLMOptions>;
+  /** The LLM provider to use */
   provider?: LLMProvider;
+  /** Whether to use streaming mode */
   stream?: boolean;
+  /** Callback for handling missing variables */
   onPromptForMissingVariables?: (
     template: TemplateDefinition,
     initialVariables: Record<string, any>,
   ) => Promise<Record<string, any>>;
 }
 
-// ==============================
-// Error Classes
-// ==============================
+/**
+ * Base error class for QLLM-specific errors.
+ * 
+ * @class QllmError
+ * @extends Error
+ */
 export class QllmError extends Error {
   constructor(message: string) {
     super(message);
@@ -32,6 +53,12 @@ export class QllmError extends Error {
   }
 }
 
+/**
+ * Error class for configuration-related errors.
+ * 
+ * @class ConfigurationError
+ * @extends QllmError
+ */
 export class ConfigurationError extends QllmError {
   constructor(message: string) {
     super(message);
@@ -40,6 +67,12 @@ export class ConfigurationError extends QllmError {
   }
 }
 
+/**
+ * Error class for provider-specific errors.
+ * 
+ * @class ProviderError
+ * @extends QllmError
+ */
 export class ProviderError extends QllmError {
   constructor(
     message: string,
@@ -51,6 +84,12 @@ export class ProviderError extends QllmError {
   }
 }
 
+/**
+ * Error class for template-related errors.
+ * 
+ * @class TemplateError
+ * @extends QllmError
+ */
 export class TemplateError extends QllmError {
   constructor(message: string) {
     super(message);
@@ -59,6 +98,12 @@ export class TemplateError extends QllmError {
   }
 }
 
+/**
+ * Error class for input validation failures.
+ * 
+ * @class InputValidationError
+ * @extends QllmError
+ */
 export class InputValidationError extends QllmError {
   constructor(message: string) {
     super(message);
@@ -67,6 +112,12 @@ export class InputValidationError extends QllmError {
   }
 }
 
+/**
+ * Error class for output validation failures.
+ * 
+ * @class OutputValidationError
+ * @extends QllmError
+ */
 export class OutputValidationError extends QllmError {
   constructor(message: string) {
     super(message);
@@ -75,6 +126,12 @@ export class OutputValidationError extends QllmError {
   }
 }
 
+/**
+ * Error class for template manager failures.
+ * 
+ * @class TemplateManagerError
+ * @extends QllmError
+ */
 export class TemplateManagerError extends QllmError {
   constructor(message: string) {
     super(message);
@@ -83,6 +140,12 @@ export class TemplateManagerError extends QllmError {
   }
 }
 
+/**
+ * Error class for template not found errors.
+ * 
+ * @class TemplateNotFoundError
+ * @extends TemplateManagerError
+ */
 export class TemplateNotFoundError extends TemplateManagerError {
   constructor(templateName: string) {
     super(`Template not found: ${templateName}`);
@@ -91,6 +154,12 @@ export class TemplateNotFoundError extends TemplateManagerError {
   }
 }
 
+/**
+ * Error class for invalid template errors.
+ * 
+ * @class InvalidTemplateError
+ * @extends TemplateManagerError
+ */
 export class InvalidTemplateError extends TemplateManagerError {
   constructor(templateName: string, reason: string) {
     super(`Invalid template ${templateName}: ${reason}`);
@@ -99,6 +168,12 @@ export class InvalidTemplateError extends TemplateManagerError {
   }
 }
 
+/**
+ * Error class for file operation failures.
+ * 
+ * @class FileOperationError
+ * @extends TemplateManagerError
+ */
 export class FileOperationError extends TemplateManagerError {
   constructor(operation: string, fileName: string, reason: string) {
     super(`Failed to ${operation} file ${fileName}: ${reason}`);

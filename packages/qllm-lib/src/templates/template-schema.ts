@@ -1,5 +1,20 @@
+/**
+ * @fileoverview Schema definitions for QLLM templates using Zod.
+ * 
+ * This module defines the schema for QLLM templates, including input variables,
+ * output variables, and template definitions. It uses Zod for runtime type
+ * checking and validation.
+ * 
+ * @version 1.0.0
+ * @module qllm-lib/templates
+ */
+
 import * as z from 'zod';
 
+/**
+ * Schema for template input variables.
+ * Defines the structure and validation rules for template input variables.
+ */
 export const templateVariableSchema = z
   .object({
     type: z
@@ -21,6 +36,10 @@ export const templateVariableSchema = z
   })
   .describe('Schema for defining template variables.');
 
+/**
+ * Schema for template output variables.
+ * Defines the structure and validation rules for template output variables.
+ */
 export const outputVariableSchema = z
   .object({
     type: z
@@ -34,6 +53,10 @@ export const outputVariableSchema = z
   })
   .describe('Schema for defining output variables.');
 
+/**
+ * Schema for complete template definitions.
+ * Defines the structure and validation rules for entire template documents.
+ */
 export const templateDefinitionSchema = z
   .object({
     name: z.string().describe('The name of the template.'),
@@ -101,7 +124,7 @@ export const templateDefinitionSchema = z
           .describe('Sequences that trigger output completion.'),
       })
       .optional()
-      .describe("Fine-tuning parameters for the AI model's behavior."),
+      .describe('Model-specific parameters for template execution.'),
     prompt_type: z
       .string()
       .describe("Categorizes the template's primary function or output type.")
@@ -115,15 +138,35 @@ export const templateDefinitionSchema = z
       .optional()
       .describe('Sample outputs demonstrating expected results from the template.'),
   })
-  .describe('Comprehensive schema for defining an AI prompt template.');
+  .describe('Schema for complete template definitions.');
 
+/**
+ * Schema for complete template definitions with resolved content.
+ * Extends templateDefinitionSchema to include fully resolved content.
+ */
 export const templateDefinitionSchemaWithResolvedContent = templateDefinitionSchema.extend({
   resolved_content: z.string().optional().describe('The resolved content of the variable.'),
 });
 
+/**
+ * Type definition for a template, inferred from the schema.
+ */
 export type TemplateDefinition = z.infer<typeof templateDefinitionSchema>;
+
+/**
+ * Type definition for a template with resolved content.
+ * Extends TemplateDefinition to include fully resolved content.
+ */
 export type TemplateDefinitionWithResolvedContent = z.infer<
   typeof templateDefinitionSchemaWithResolvedContent
 >;
+
+/**
+ * Type definition for a template variable, inferred from the schema.
+ */
 export type TemplateVariable = z.infer<typeof templateVariableSchema>;
+
+/**
+ * Type definition for an output variable, inferred from the schema.
+ */
 export type OutputVariable = z.infer<typeof outputVariableSchema>;
