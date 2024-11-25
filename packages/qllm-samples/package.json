@@ -32,7 +32,8 @@
         "start:exm:ad": "ts-node src/template-workflow/dynamic_yaml_search-with-tool.ts",
         "start:exm:ads": "ts-node src/template-workflow/dynamic_yaml_search-with-tool-bis.ts",
         "start:github-review-code": "ts-node src/template-workflow/github-code-analysis.ts",
-        "start:test-tool": "ts-node src/template-workflow/testTool.ts"
+        "start:test-tool": "ts-node src/template-workflow/testTool.ts",
+        "start:test-package": "ts-node src/template-workflow/testTool-github.ts"
     },
     "repository": {
         "type": "git",

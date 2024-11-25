@@ -1,57 +1,11 @@
 # Repository: YatchiYa/argon-react-native
 
-Generated at: 2024-11-22T13:57:42.699Z
+Generated at: 2024-11-25T14:29:52.291Z
 
 # Table of Contents
-- .gitignore
 - .watchmanconfig
 - App.js
-- CHANGELOG.md
-- ISSUE_TEMPLATE.md
-- LICENSE.md
-- README.md
 - app.json
-- assets/config/argon.json
-- assets/font/argon.ttf
-- assets/icon.png
-- assets/imgs/android.png
-- assets/imgs/argon-logo-onboarding.png
-- assets/imgs/argon-logo-onboarding@2x.png
-- assets/imgs/argon-logo.png
-- assets/imgs/argon-logo@2x.png
-- assets/imgs/argonlogo.png
-- assets/imgs/bg.png
-- assets/imgs/getPro-bg.png
-- assets/imgs/getPro-bg@2x.png
-- assets/imgs/icon.png
-- assets/imgs/ios.png
-- assets/imgs/profile-screen-bg.png
-- assets/imgs/register-bg.png
-- assets/imgs/splash.png
-- assets/nucleo icons/svg/bag-17.svg
-- assets/nucleo icons/svg/basket.svg
-- assets/nucleo icons/svg/bell.svg
-- assets/nucleo icons/svg/calendar-date.svg
-- assets/nucleo icons/svg/chart-pie-35.svg
-- assets/nucleo icons/svg/diamond.svg
-- assets/nucleo icons/svg/engine-start.svg
-- assets/nucleo icons/svg/g-check.svg
-- assets/nucleo icons/svg/hat-3.svg
-- assets/nucleo icons/svg/ic_mail_24px.svg
-- assets/nucleo icons/svg/map-big.svg
-- assets/nucleo icons/svg/menu-8.svg
-- assets/nucleo icons/svg/nav-down.svg
-- assets/nucleo icons/svg/nav-left.svg
-- assets/nucleo icons/svg/nav-right.svg
-- assets/nucleo icons/svg/padlock-unlocked.svg
-- assets/nucleo icons/svg/palette.svg
-- assets/nucleo icons/svg/search-zoom-in.svg
-- assets/nucleo icons/svg/shop.svg
-- assets/nucleo icons/svg/spaceship.svg
-- assets/nucleo icons/svg/support.svg
-- assets/nucleo icons/svg/switches.svg
-- assets/nucleo icons/svg/ungroup.svg
-- assets/splash.png
 - babel.config.js
 - components/Button.js
 - components/Card.js
@@ -81,38 +35,14 @@ Generated at: 2024-11-22T13:57:42.699Z
 - screens/Register.js
 
 
-## File: .gitignore
-
-- Extension: .gitignore
-- Language: gitignore
-- Size: 102 bytes
-- SHA: 6f2647b38b2eae85329f8616934b40980c487b0e
-- Created: 2024-11-22
-- Modified: 2024-11-22
-
-### Code
-
-```gitignore
-node_modules/**/*
-.expo/*
-npm-debug.*
-package-lock.json
-yarn.lock
-*.jks
-*.p12
-*.key
-*.mobileprovision
-
-```
-
 ## File: .watchmanconfig
 
 - Extension: .watchmanconfig
 - Language: watchmanconfig
 - Size: 4 bytes
-- SHA: 311847daa5a050a215b149561e1e00c818f5b03b
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -127,9 +57,9 @@ yarn.lock
 - Extension: .js
 - Language: javascript
 - Size: 2113 bytes
-- SHA: 92631902edc5b0caa70a69dc29eb3ab315165aef
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -221,523 +151,14 @@ export default function App() {
 
 ```
 
-## File: CHANGELOG.md
-
-- Extension: .md
-- Language: markdown
-- Size: 7861 bytes
-- SHA: 8e360cc51505b68c582e102d4219102a45b4137b
-- Created: 2024-11-22
-- Modified: 2024-11-22
-
-### Code
-
-```markdown
-## [1.9.0] 2022 - 08 - 01
-- dependencies updated
-- expo version updated
-- react native version updated
-- implement expo-splash-screen for splash loading
-
-## [1.8.1] 2022-07-19
-
-### Updated dependencies
-
-- Fixed the dual header shown issue.
-- Updated @react-native-masked-view/masked-view@0.2.4 to @react-native-masked-view/masked-view@0.2.6
-- Updated expo@^42.0.0 to expo@^45.0.0
-- Updated expo-app-loading@~1.1.2 to expo-app-loading@~2.0.0
-- Updated expo-expo-asset@~8.3.2 to expo-asset@~8.5.0
-- Updated expo-font@~9.2.1 to expo-font@~10.1.0
-- Updated expo-module-core@^0.2.0 to expo-module-core@~0.9.2
-- Updated expo-linear-gradient@~9.2.0 to expo-linear-gradient@~11.3.0
-- Updated react@16.13.1 to react@17.0.2
-- Updated react-native@42.0.0 to react@0.68.2
-- Updated react-native-gesture-handler@^1.10.3 to react-native-gesture-handler@~2.2.1
-- Updated react-native-reanimated@~2.2.0 to react-native-reanimated@~2.8.0
-- Updated react-native-safe-area-context@3.2.0 to react-native-safe-area-context@4.2.4
-- Updated react-native-screens@~3.4.0 to react-native-screens@~3.11.1
-- Updated dev dependencies
-- Updated babel-preset-expo@8.3.0 to babel-preset-expo@~9.1.0
-- Updated Babel Config
-- Added a new plugin of react-native-reanimated/plugin
-
-## [1.8.0] 2022-04-12
-
-### Updated dependencies
-
-- added `expo-modules-core` dependency
-- updated existent dependencies
-- issues poped up in `stackNagivator` after updating dependencies so fixed in `screenOption` and updated its code
-
-## [1.7.1] 2021 - 07 - 15
-
-### Updated dependencies
-
-- updated `expo@40.0.0` to `expo@42.0.0`
-- updated `expo-asset@8.2.1` to `expo-asset@8.3.2`
-- updated `expo-font@8.4.0` to `expo-font@9.2.1`
-- updated `galio-framework@0.7.1` to `galio-framework@0.8.0`
-- updated `react-native@sdk-40.0.1.tar.gz` to `react-native@sdk-42.0.0.tar.gz`
-- updated `react-native-gesture-handler@1.8.0` to `react-native-gesture-handler@1.10.2`
-- updated `react-native-reanimated@1.13.0` to `react-native-reanimated@2.2.0`
-- updated `react-native-safe-area-context@3.1.9` to `react-native-safe-area-context@3.2.0`
-- updated `react-native-screens@2.15.2` to `react-native-screens@3.4.0`
-
-### Updated files
-
-- removed deprecated `useSafeArea` from `navigation/Menu.js`
-
-## [1.7.0] 2020 - 11 - 04
-
-### Updated dependencies
-
-- updated `@react-navigation/bottom-tabs@5.06` to `@react-navigation/bottom-tabs@5.5.1`
-- updated `@react-navigation/compat@5.0.0` to `@react-navigation/compat@5.1.25`
-- updated `@react-navigation/drawer@5.0.0` to `@react-navigation/drawer@5.12.4`
-- updated `@react-navigation/native@5.0.0` to `@react-navigation/native@5.9.3`
-- updated `@react-navigation/stack@5.0.0` to `@react-navigation/stack@5.14.3`
-- updated `expo SDK@39` to `expo SDK@40`
-- updated `expo-asset@8.2.0` to `expo-asset@8.2.1`
-- updated `expo-font@8.3.0` to `expo-font@8.4.0`
-- updated `react-native SDK@39` to `react-native SDK@40`
-- updated `react-native-gesture-handler@1.7.0` to `react-native-gesture-handler@1.8.0`
-- updated `react-native-safe-area-context@3.1.4` to `react-native-safe-area-context@3.1.9`
-- updated `react-native-screens@2.10.1` to `react-native-screens@2.15.2`
-- added `expo-app-loading@1.01`
-
-### Updated files
-
-- `useNativeDriver` warning fixed in `Tabs.js`
-- card height changed in `Register.js`
-
-## [1.6.0] 2020 - 11 - 04
-
-### Updated dependencies
-
-- updated `expo-asset@8.1.5` to `expo-asset@8.2.0`
-- updated `expo-font@8.1.0` to `expo-font@8.3.0`
-- updated `react-native-gesture-handler@1.6.0` to `react-native-gesture-handler@1.7.0`
-- updated `react-native-reanimated@1.7.0` to `react-native-reanimated@1.13.0`
-- updated `react-native-screens@2.2.0` to `react-native-screens@2.10.1`
-- updated `react-native-safe-area-context@0.7.3` to `react-native-safe-area-context@3.1.4`
-- updated `@react-native-community/maksed-view@0.1.6` to `@react-native-community/maksed-view@0.1.10`
-- updated `react-native SDK@37.0.0` to `react-native SDK@39.0.0`
-- updated `react@16.9.0` to `react@16.13.1`
-- updated `babel-preset-expo@8.2.1` to `babel-preset-expo@8.3.0`
-- updated `expo SDK@37.0.0` to `expo SDK@39.0.0`
-- updated `galio-framework@0.6.3` to `galio-framework@0.7.1`
-- changed the git source for react-native-modal-dropdown
-
-### Updated files
-
-- Profile.js - fixed elements regarding the Photo Album
-- Elements.js - ScrollView fixed by adding width, PR accepted which removed a duplicate styling [#24](https://github.com/creativetimofficial/argon-react-native/pull/24)
-- App.js - fixed Invariant Violation via PR [#29](https://github.com/creativetimofficial/argon-react-native/pull/29)
-
-## [1.5.0] 2020 - 06 - 04
-
-### Updated dependencies
-
-- updated `expo-asset@8.0.0` to `expo-asset@8.1.5`
-- updated `expo-font@8.0.0` to `expo-font@8.1.0`
-- updated `react-native-gesture-handler@1.5.0` to `react-native-gesture-handler@1.6.0`
-- updated `react-native-reanimated@1.4.0` to `react-native-reanimated@1.7.0`
-- updated `react-native-screens@2.0.0-alpha.12` to `react-native-screens@2.2.0`
-- updated `react-native-safe-area-context@0.6.0` to `react-native-safe-area-context@0.7.3`
-- updated `@react-native-community/masked-view@0.1.5` to `@react-native-community/masked-view@0.1.6`
-- updated `react-native SDK@36.0.0` to `react-native SDK@37.0.0`
-- updated `babel-preset-expo@7.0.0` to `babel-preset-expo@8.2.1`
-- updated `Expo @36.0.0` to `Expo @37.0.0`
-
-### Updated files
-
-- used hooks for App.js
-- moved `assets/font/argon.json` to `assets/config/argon.json` in order to make sure there wouldn't be any issue with the build for Android
-
-## [1.4.0] 2020 - 03 - 05
-
-### Removed dependencies
-
-- removed `react-navigation@3.11.0`
-
-### Added dependencies
-
-- added `@react-navigation/compat@5.0.0`
-- added `@react-navigation/drawer@5.0.0`
-- added `@react-navigation/native@5.0.0`
-- added `@react-navigation/stack@5.0.0`
-- added `@react-native-community/masked-view@0.1.5`
-- added `react-native-reanimated@1.4.0`
-- added `react-native-safe-area-context@0.6.0`
-- added `react-native-screeens@2.0.0-alpha.12`
-
-### Updated dependencies
-
-- updated `expo@35.0.0` to `expo@36.0.0`
-- updated `expo-asset@7.0.0` to `expo-asset@8.0.0`
-- updated `expo-font@7.0.0` to `expo-font@8.0.0`
-- updated `expo-cli@2.4.0` to `expo-cli@3.11.7`
-- updated `expo-linear-gradient@7.0.0` to `expo-linear-gradient@8.0.0`
-- updated `react@16.8.3` to `react@16.9.0`
-
-### Updated files
-
-- changed the whole routing from `Screens.js` because `react-navigation@5.0.0` has a new dynamic API
-- changed `Menu.js` for a new Drawer custom component
-- changed `DrawerItem.js` for a new type of `<DrawerCustomItem />`
-- changed props and variables so that the new `react-navigation` API could work with the following files: `Beauty.js`, `Header.js`, `Product.js`, `Gallery.js`, `Pro.js`, `Product.js`, `Settings.js`, `Register.js`, `Onboarding.js`
-
-## [1.3.0] 2019-11-06
-
-### Updated dependencies
-
-- `expo@34.0.3` to `expo@35.0.0`
-- `expo-font@6.0.1` to `expo-font@7.0.0`
-- `expo-asset@6.0.0` to `expo-asset@7.0.0`
-- `react-native SDK@34.0.0` to `react-native SDK@35.0.0`
-- `galio-framework@0.6.1` to `galio-framework@0.6.3`
-- `babel-preset-expo@5.0.0` to `babel-preset-expo@7.0.0`
-
-### Updated files
-
-- changed drawer items in order to have a similar look to the PRO version
-
-## [1.2.0] 2019-09-18
-
-### Updated dependencies
-
-- `expo@33.0.0` to `expo@34.0.3`
-- `expo-font@5.0.1` to `expo-font@6.0.1`
-- added `expo-asset@6.0.0`
-- `react-native SDK@33.0.0` to `react-native SDK@34.0.0`
-- added `react-native-gesture-handler@1.3.0`
-- `galio-framework@0.5.3` to `galio-framework@0.6.1`
-
-## [1.1.0] 2019-06-21
-
-### Updated dependencies
-
-- `expo@32.0.0` to `expo@33.0.0`
-- `galio-framework@0.5.1` to `galio-framework@0.5.3`
-- `react-native SDK@32.0.0` to `react-native SDK@33.0.0`
-- `react-navigation@3.8.1` to `react-navigation@3.11.0`
-- `react@16.5.0` to `react@16.8.3`
-- added `expo-font@5.0.1`
-
-## [1.0.0] 2019-06-07
-
-### Initial Release
-
-```
-
-## File: ISSUE_TEMPLATE.md
-
-- Extension: .md
-- Language: markdown
-- Size: 1044 bytes
-- SHA: 8ef7b6891d5ae2e035dc7374ecbbba35e5ddd84d
-- Created: 2024-11-22
-- Modified: 2024-11-22
-
-### Code
-
-```markdown
-# Prerequisites
-
-Please answer the following questions for yourself before submitting an issue.
-
-- [ ] I am running the latest version
-- [ ] I checked the documentation and found no answer
-- [ ] I checked to make sure that this issue has not already been filed
-- [ ] I'm reporting the issue to the correct repository (for multi-repository projects)
-
-# Expected Behavior
-
-Please describe the behavior you are expecting
-
-# Current Behavior
-
-What is the current behavior?
-
-# Failure Information (for bugs)
-
-Please help provide information about the failure if this is a bug. If it is not a bug, please remove the rest of this template.
-
-## Steps to Reproduce
-
-Please provide detailed steps for reproducing the issue.
-
-1. step 1
-2. step 2
-3. you get it...
-
-## Context
-
-Please provide any relevant information about your setup. This is important in case the issue is not reproducible except for under certain conditions.
-
-* Device:
-* Operating System:
-* Browser and Version:
-
-## Failure Logs
-
-Please include any relevant log snippets or files here.
-
-```
-
-## File: LICENSE.md
-
-- Extension: .md
-- Language: markdown
-- Size: 1068 bytes
-- SHA: 6f49c4d66bb14e3e302edf19a56fbbe4aea1c554
-- Created: 2024-11-22
-- Modified: 2024-11-22
-
-### Code
-
-```markdown
-MIT License
-
-Copyright (c) 2019 Creative Tim
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-## File: README.md
-
-- Extension: .md
-- Language: markdown
-- Size: 11970 bytes
-- SHA: f7445b7924680d8327277b038ce7e099e28fbb3a
-- Created: 2024-11-22
-- Modified: 2024-11-22
-
-### Code
-
-```markdown
-# [Argon React Native](https://creativetimofficial.github.io/argon-react-native/docs/#) [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&logo=twitter)](https://twitter.com/home?status=Argon%20React%20Native,%20a%20cool%20Argon%20React%20Native%20App%20Template%20%E2%9D%A4%EF%B8%8F%20https%3A//bit.ly/2KAj86H%20%23reactnative%20%23argon%20%23designsystem%20%23developers%20via%20%40CreativeTim)
-
-
- ![version](https://img.shields.io/badge/version-1.9.0-blue.svg)  [![GitHub issues open](https://img.shields.io/github/issues/creativetimofficial/argon-react-native.svg?style=flat)](https://github.com/creativetimofficial/argon-react-native/issues?q=is%3Aopen+is%3Aissue) [![GitHub issues closed](https://img.shields.io/github/issues-closed-raw/creativetimofficial/argon-react-native.svg?maxAge=2592000)](https://github.com/creativetimofficial/argon-react-native/issues?q=is%3Aissue+is%3Aclosed)
-
-
-![Product Gif](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-react-native/arg-rn-thumbnail.jpg)
-
-Argon React Native is a fully coded app template built over [Galio.io](https://galio.io/?ref=creativetim), [React Native](https://facebook.github.io/react-native/?ref=creativetim) and [Expo](https://expo.io/?ref=creativetim) to allow you to create powerful and beautiful e-commerce mobile applications. We have redesigned all the usual components in Galio to make it look like Argon's Design System, minimalistic and easy to use.
-
-Start your development with a badass Design System for React Native inspired by Argon Design System. If you like Argon's Design System, you will love this react native app template! It features a huge number of components and screens built to fit together and look amazing. 
-
-### FULLY CODED COMPONENTS
-
-Argon React Native features over 200 variations of components like buttons, inputs, cards, navigations etc, giving you the freedom of choosing and combining. All components can take variations in colour, that you can easily modify inside our theme file.
-
-You will save a lot of time going from prototyping to full-functional code, because all elements are implemented. We wanted the design process to be seamless, so switching from image to the real page is very easy to do.
-
-### Components & Cards
-Argon React Native comes packed with a large number of components and cards. Putting together a mobile app has never been easier than matching together different components. From the profile screen to a settings screen, you can easily customise and build your screens. We have created multiple options for you to put together and customise into pixel perfect screens. 
-
-View [ all components/cards here](https://demos.creative-tim.com/argon-react-native/index.html#cards).
-
-### Example Screens
-If you want to get inspiration or just show something directly to your clients, you can jump start your development with our pre-built example screens. From onboarding screens to profile or discover screens, you will be able to quickly set up the basic structure for your React Native mobile project. 
-
-View [all screens here](https://demos.creative-tim.com/argon-react-native/index.html#screens).
-
-
-Let us know your thoughts below. And good luck with development!
-
-
-## Table of Contents
-
-* [Versions](#versions) 
-* [Demo](#demo)
-* [Quick Start](#quick-start)
-* [Documentation](#documentation)
-* [File Structure](#file-structure)
-* [OS Support](#os-support)
-* [Resources](#resources)
-* [Reporting Issues](#reporting-issues)
-* [Technical Support or Questions](#technical-support-or-questions)
-* [Licensing](#licensing)
-* [Useful Links](#useful-links)
-
-## Versions
-
-[<img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/html-logo.jpg?raw=true" width="60" height="60" />](https://www.creative-tim.com/product/argon-design-system)[<img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/vue-logo.jpg?raw=true" width="60" height="60" />](https://www.creative-tim.com/product/vue-argon-design-system)[<img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/react-logo.jpg?raw=true" width="60" height="60" />](https://www.creative-tim.com/product/argon-design-system-react)[<img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/react-native-logo.jpg?raw=true" width="60" height="60" />](https://www.creative-tim.com/product/argon-react-native)[<img src="https://github.com/creativetimofficial/public-assets/blob/master/logos/angular-logo.jpg?raw=true" width="60" height="60" />](https://www.creative-tim.com/product/argon-dashboard-angular)
-
-
-
-
-
-| HTML | React | Angular  |
-| --- | --- | ---  |
-| [![Argon Design System](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-design-system/argon-design-system.jpg)](https://www.creative-tim.com/product/argon-design-system)  | [![Argon Design System React](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-design-system-react/argon-design-system-react.jpg)](https://www.creative-tim.com/product/argon-design-system-react)  | [![Argon Design System Angular](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-design-system-angular/argon-design-system-angular.jpg)](https://www.creative-tim.com/product/argon-design-system-angular)
-
-## Demo
-
-| Home Screen | Profile Screen | Elements Screen | Register Screen |
-| --- | --- | --- | --- |
-| [![Home Screen](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-react-native/home-screen.png)](https://demos.creative-tim.com/argon-react-native/) | [![Profile Screen](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-react-native/profile-screen.png)](https://demos.creative-tim.com/argon-react-native/) | [![Elements Screen](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-react-native/elements-screen.png)](https://demos.creative-tim.com/argon-react-native/) | [![Register Screen](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-react-native/register-screen.png)](https://demos.creative-tim.com/argon-react-native/) |
-
-- [Start page](https://demos.creative-tim.com/argon-react-native)
-- [How to install our free demo](https://demos.creative-tim.com/argon-react-native/docs/#/install)
-
-[View more](https://demos.creative-tim.com/argon-react-native)
-
-## Quick start
-- Try it out on Expo (Simulator for iOS or even your physical device if you have an Android)
-- Download from [Creative Tim](https://www.creative-tim.com/product/argon-react-native)
-
-
-## Documentation
-The documentation for the Argon React Native is hosted at our [website](https://demos.creative-tim.com/argon-react-native/docs/).
-
-
-## File Structure
-Within the download you'll find the following directories and files:
-
-```
-argon-react-native/
-├── App.js
-├── README.md
-├── app.json
-├── assets
-├── babel.config.js
-├── components
-│   ├── Button.js
-│   ├── DrawerItem.js
-│   ├── Header.js
-│   ├── Icon.js
-│   ├── Card.js
-│   ├── Select.js
-│   ├── Switch.js
-│   ├── Tabs.js
-│   └── index.js
-├── constants
-│   ├── Images.js
-│   ├── Theme.js
-│   ├── index.js
-│   ├── articles.js
-│   ├── tabs.js
-│   └── utils.js
-├── navigation
-│   ├── Menu.js
-│   └── Screens.js
-├── package.json
-├── screens
-│   ├── Articles.js
-│   ├── Home.js
-│   ├── Elements.js
-│   ├── Onboarding.js
-│   ├── Pro.js
-│   ├── Profile.js
-│   └── Register.js
-
-```
-
-
-## OS Support
-
-At present, we officially aim to support the last two versions of the following operating systems:
-
-[<img src="https://raw.githubusercontent.com/creativetimofficial/ct-material-kit-pro-react-native/master/assets/android-logo.png" width="60" height="60" />](https://www.creative-tim.com/product/material-kit-pro-react-native)[<img src="https://raw.githubusercontent.com/creativetimofficial/ct-material-kit-pro-react-native/master/assets/apple-logo.png" width="60" height="60" />](https://www.creative-tim.com/product/material-kit-pro-react-native)
-
-
-
-## Resources
-- Demo: <https://demos.creative-tim.com/argon-react-native>
-- Download Page: <https://www.creative-tim.com/product/argon-react-native>
-- Documentation: <https://demos.creative-tim.com/argon-react-native/docs>
-- License Agreement: <https://www.creative-tim.com/license>
-- Support: <https://www.creative-tim.com/contact-us>
-- Issues: [Github Issues Page](https://github.com/creativetimofficial/argon-react-native/issues)
-- [Argon Design System](https://www.creative-tim.com/product/argon-design-system?ref=argonrn-readme) - For Front End Development
-- **Dashboards:**
-
-| HTML | React | Angular |
-| --- | --- | ---  |
-| [![Argon HTML](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard/argon-dashboard.jpg)](https://www.creative-tim.com/product/argon-dashboard) | [![Argon Dashboard React](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-react/argon-dashboard-react.jpg)](https://www.creative-tim.com/product/argon-dashboard-react) | [![Argon Dashboard Angular](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-angular/argon-dashboard-angular.jpg)](https://www.creative-tim.com/product/argon-dashboard-angular)
-
-| Node.js | ASP.NET  |
-| --- | --- |
-| [![Argon Dashboard NodeJS](https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-nodejs/argon-dashboard-nodejs.jpg)](https://www.creative-tim.com/product/argon-dashboard-nodejs) | [![Argon Dashboard ASP.NET](https://github.com/creativetimofficial/public-assets/blob/master/argon-dashboard-aspnet/argon-dashboard-aspnet.gif)](https://www.creative-tim.com/product/argon-dashboard-asp-net)
-
-
-## Reporting Issues
-
-We use GitHub Issues as the official bug tracker for the Argon React Native. Here are some advices for our users that want to report an issue:
-
-1. Make sure that you are using the latest version of the Argon React Native.
-2. Providing us reproducible steps for the issue will shorten the time it takes for it to be fixed.
-3. Some issues may be browser specific, so specifying in what browser you encountered the issue might help.
-
-
-### Technical Support or Questions
-
-If you have questions or need help integrating the product please [contact us](https://www.creative-tim.com/contact-us) instead of opening an issue.
-
-
-## Licensing
-
-- Copyright 2020 Creative Tim (https://www.creative-tim.com/)
-
-- Licensed under MIT (https://github.com/creativetimofficial/argon-react-native/blob/master/LICENSE.md)
-
-
-
-## Useful Links
-
-- [Tutorials](https://www.youtube.com/channel/UCVyTG4sCw-rOvB9oHkzZD1w)
-- [Affiliate Program](https://www.creative-tim.com/affiliates/new) (earn money)
-- [Blog Creative Tim](http://blog.creative-tim.com/)
-- [Free Products](https://www.creative-tim.com/bootstrap-themes/free) from Creative Tim
-- [Premium Products](https://www.creative-tim.com/bootstrap-themes/premium) from Creative Tim
-- [React Products](https://www.creative-tim.com/bootstrap-themes/react-themes) from Creative Tim
-- [Angular Products](https://www.creative-tim.com/bootstrap-themes/angular-themes) from Creative Tim
-- [VueJS Products](https://www.creative-tim.com/bootstrap-themes/vuejs-themes) from Creative Tim
-- [More products](https://www.creative-tim.com/bootstrap-themes) from Creative Tim
-- Check our Bundles [here](https://www.creative-tim.com/bundles?ref="argon-github-readme")
-
-
-### Social Media
-
-Twitter: <https://twitter.com/CreativeTim>
-
-Facebook: <https://www.facebook.com/CreativeTim>
-
-Dribbble: <https://dribbble.com/creativetim>
-
-Instagram: <https://www.instagram.com/CreativeTimOfficial>
-
-
-```
-
 ## File: app.json
 
 - Extension: .json
 - Language: json
 - Size: 640 bytes
-- SHA: b1702aa3e80bd58355be4a9aaaa5fa2e164ee4a3
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -774,29 +195,14 @@ Instagram: <https://www.instagram.com/CreativeTimOfficial>
 
 ```
 
-## File: assets/config/argon.json
-
-- Extension: .json
-- Language: json
-- Size: 16936 bytes
-- SHA: 716c8ba31b666c4519ea317330095162cdb39664
-- Created: 2024-11-22
-- Modified: 2024-11-22
-
-### Code
-
-```json
-{"IcoMoonType":"selection","icons":[{"icon":{"paths":["M675.84 0l-512 512 512 512 179.2-179.2-332.8-332.8 332.8-332.8-179.2-179.2z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["nav-left"]},"attrs":[{}],"properties":{"order":50,"id":22,"name":"nav-left","prevSize":32,"code":59670},"setIdx":0,"setId":3,"iconIdx":0},{"icon":{"paths":["M853.333 0h-682.667c-72.533 0-128 55.467-128 128v853.333c0 25.6 17.067 42.667 42.667 42.667h853.333c25.6 0 42.667-17.067 42.667-42.667v-853.333c0-72.533-55.467-128-128-128zM512 682.667c-140.8 0-256-115.2-256-256 0-25.6 17.067-42.667 42.667-42.667s42.667 17.067 42.667 42.667c0 93.867 76.8 170.667 170.667 170.667s170.667-76.8 170.667-170.667c0-25.6 17.067-42.667 42.667-42.667s42.667 17.067 42.667 42.667c0 140.8-115.2 256-256 256zM853.333 170.667h-682.667c-25.6 0-42.667-17.067-42.667-42.667s17.067-42.667 42.667-42.667h682.667c25.6 0 42.667 17.067 42.667 42.667s-17.067 42.667-42.667 42.667z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["bag-17"]},"attrs":[{}],"properties":{"order":28,"id":21,"name":"bag-17","prevSize":32,"code":59648},"setIdx":0,"setId":3,"iconIdx":1},{"icon":{"paths":["M85.333 896c0 70.692 57.308 128 128 128v0h597.333c70.692 0 128-57.308 128-128v0-298.667h-853.333z","M839.509 341.333l-142.251-284.587c-10.815-20.917-32.285-34.968-57.036-34.968-35.346 0-64 28.654-64 64 0 10.245 2.407 19.927 6.687 28.513l-0.167-0.371 113.749 227.413h-368.981l113.749-227.413c4.112-8.214 6.519-17.897 6.519-28.141 0-35.346-28.654-64-64-64-24.752 0-46.222 14.051-56.868 34.612l-0.168 0.357-142.251 284.587h-184.491v170.667h1024v-170.667z"],"attrs":[{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["basket"]},"attrs":[{},{}],"properties":{"order":29,"id":20,"name":"basket","prevSize":32,"code":59649},"setIdx":0,"setId":3,"iconIdx":2},{"icon":{"paths":["M853.333 426.667v-85.333c0-188.513-152.82-341.333-341.333-341.333s-341.333 152.82-341.333 341.333v0 85.333c-2.264 54.579-27.284 102.899-65.757 136.026l-0.248 0.209c-34.496 29.523-57.513 71.592-61.941 119.058l-0.053 0.708c0 106.667 175.445 170.667 469.333 170.667s469.333-64 469.333-170.667c-4.482-48.174-27.498-90.242-61.752-119.562l-0.243-0.203c-38.722-33.335-63.741-81.655-65.993-135.855l-0.013-0.38z","M390.187 934.4c16.761 52.286 64.945 89.472 121.813 89.472s105.053-37.186 121.563-88.568l0.251-0.904c-38.144 2.816-78.677 4.267-121.813 4.267s-83.669-1.365-121.813-4.267z"],"attrs":[{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["bell"]},"attrs":[{},{}],"properties":{"order":30,"id":19,"name":"bell","prevSize":32,"code":59650},"setIdx":0,"setId":3,"iconIdx":3},{"icon":{"paths":["M170.667 426.667h170.667v128h-170.667v-128z","M426.667 426.667h170.667v128h-170.667v-128z","M170.667 640h170.667v128h-170.667v-128z","M426.667 640h170.667v128h-170.667v-128z","M682.667 426.667h170.667v128h-170.667v-128z","M981.333 128h-213.333v-85.333c0-23.564-19.103-42.667-42.667-42.667s-42.667 19.103-42.667 42.667v0 85.333h-341.333v-85.333c0-23.564-19.103-42.667-42.667-42.667s-42.667 19.103-42.667 42.667v0 85.333h-213.333c-23.564 0-42.667 19.103-42.667 42.667v0 768c0 23.564 19.103 42.667 42.667 42.667v0h938.667c23.564 0 42.667-19.103 42.667-42.667v0-768c0-23.564-19.103-42.667-42.667-42.667v0zM938.667 896h-853.333v-597.333h853.333z"],"attrs":[{},{},{},{},{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["calendar-date"]},"attrs":[{},{},{},{},{},{}],"properties":{"order":31,"id":18,"name":"calendar-date","prevSize":32,"code":59651},"setIdx":0,"setId":3,"iconIdx":4},{"icon":{"paths":["M554.667 469.333h467.157c-20.608-248.277-218.88-446.549-467.157-467.157v467.157z","M529.664 554.667l-347.947 347.947c89.259 75.563 204.459 121.387 330.283 121.387 267.904 0 488.021-206.976 509.824-469.333h-492.16z","M469.333 494.336v-492.16c-262.357 21.803-469.333 241.92-469.333 509.824 0 125.824 45.824 241.024 121.387 330.283l347.947-347.947z"],"attrs":[{},{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["chart-pie-35"]},"attrs":[{},{},{}],"properties":{"order":32,"id":17,"name":"chart-pie-35","prevSize":32,"code":59652},"setIdx":0,"setId":3,"iconIdx":5},{"icon":{"paths":["M800.768 58.027c-8.107-9.728-20.096-15.36-32.768-15.36h-512c-12.672 0-24.661 5.632-32.768 15.36l-213.333 256c-12.544 15.061-13.227 36.736-1.664 52.523l469.333 640c8.064 10.965 20.864 17.451 34.432 17.451s26.368-6.485 34.432-17.451l469.333-640c11.563-15.829 10.923-37.461-1.664-52.523l-213.333-256zM810.667 384h-597.333v-85.333h597.333v85.333z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["diamond"]},"attrs":[{}],"properties":{"order":33,"id":16,"name":"diamond","prevSize":32,"code":59653},"setIdx":0,"setId":3,"iconIdx":6},{"icon":{"paths":["M512 960c-247.418-0.008-447.986-200.581-447.986-448 0-132.464 57.49-251.501 148.881-333.52l0.417-0.368 85.376 95.36c-65.605 58.85-106.688 143.894-106.688 238.533 0 176.731 143.269 320 320 320s320-143.269 320-320c0-94.639-41.083-179.683-106.389-238.269l-0.299-0.264 85.312-95.36c91.808 82.388 149.298 201.424 149.298 333.888 0 247.396-200.532 447.956-447.918 448l-0.004 0z","M448 0h128v448h-128v-448z"],"attrs":[{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["engine-start"]},"attrs":[{},{}],"properties":{"order":34,"id":15,"name":"engine-start","prevSize":32,"code":59654},"setIdx":0,"setId":3,"iconIdx":7},{"icon":{"paths":["M1024 230.4l-51.2-102.4c-441.6 128-665.6 409.6-665.6 409.6l-204.8-153.6-102.4 102.4 307.2 409.6c236.8-441.6 716.8-665.6 716.8-665.6z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["g-check"]},"attrs":[{}],"properties":{"order":35,"id":14,"name":"g-check","prevSize":32,"code":59655},"setIdx":0,"setId":3,"iconIdx":8},{"icon":{"paths":["M938.667 469.333h85.333v256h-85.333v-256z","M564.949 671.147c-16.811 7.68-34.603 11.52-52.949 11.52s-36.139-3.84-52.907-11.477l-288.427-131.115v227.925c0 112.043 171.691 170.667 341.333 170.667s341.333-58.624 341.333-170.667v-227.883l-288.384 131.029z","M998.997 302.507l-469.333-213.333c-11.221-5.077-24.064-5.077-35.285 0l-469.333 213.333c-15.275 6.912-25.045 22.059-25.045 38.827s9.771 31.915 25.003 38.827l469.333 213.333c5.632 2.56 11.648 3.84 17.664 3.84s12.032-1.28 17.664-3.84l469.333-213.333c15.232-6.912 25.003-22.059 25.003-38.827s-9.771-31.915-25.003-38.827z"],"attrs":[{},{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["hat-3"]},"attrs":[{},{},{}],"properties":{"order":36,"id":13,"name":"hat-3","prevSize":32,"code":59656},"setIdx":0,"setId":3,"iconIdx":9},{"icon":{"paths":["M853.333 170.667h-682.667c-46.933 0-84.907 38.4-84.907 85.333l-0.427 512c0 46.933 38.4 85.333 85.333 85.333h682.667c46.933 0 85.333-38.4 85.333-85.333v-512c0-46.933-38.4-85.333-85.333-85.333zM853.333 341.333l-341.333 213.333-341.333-213.333v-85.333l341.333 213.333 341.333-213.333v85.333z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["ic_mail_24px"]},"attrs":[{}],"properties":{"order":46,"id":12,"name":"ic_mail_24px","prevSize":32,"code":59657},"setIdx":0,"setId":3,"iconIdx":10},{"icon":{"paths":["M725.333 58.965l-170.667 85.333v820.736l170.667-85.333z","M469.333 144.299l-170.667-85.333v820.736l170.667 85.333z","M213.333 61.184l-192.64 115.584c-12.8 7.68-20.693 21.547-20.693 36.565v810.667l213.333-137.984v-824.832z","M1003.307 176.768l-192.64-115.584v824.832l213.333 137.984v-810.667c0-15.019-7.893-28.885-20.693-36.565z"],"attrs":[{},{},{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["map-big"]},"attrs":[{},{},{},{}],"properties":{"order":47,"id":11,"name":"map-big","prevSize":32,"code":59658},"setIdx":0,"setId":3,"iconIdx":11},{"icon":{"paths":["M938.667 768h-853.333c-47.128 0-85.333 38.205-85.333 85.333s38.205 85.333 85.333 85.333v0h853.333c47.128 0 85.333-38.205 85.333-85.333s-38.205-85.333-85.333-85.333v0z","M938.667 85.333h-853.333c-47.128 0-85.333 38.205-85.333 85.333s38.205 85.333 85.333 85.333v0h853.333c47.128 0 85.333-38.205 85.333-85.333s-38.205-85.333-85.333-85.333v0z","M938.667 426.667h-853.333c-47.128 0-85.333 38.205-85.333 85.333s38.205 85.333 85.333 85.333v0h853.333c47.128 0 85.333-38.205 85.333-85.333s-38.205-85.333-85.333-85.333v0z"],"attrs":[{},{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["menu-8"]},"attrs":[{},{},{}],"properties":{"order":48,"id":10,"name":"menu-8","prevSize":32,"code":59659},"setIdx":0,"setId":3,"iconIdx":12},{"icon":{"paths":["M512 501.931l-328.704-328.704-176.981 176.981 505.685 505.685 505.685-505.685-176.981-176.981-328.704 328.704z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["nav-down"]},"attrs":[{}],"properties":{"order":49,"id":9,"name":"nav-down","prevSize":32,"code":59660},"setIdx":0,"setId":3,"iconIdx":13},{"icon":{"paths":["M168.96 179.2l332.8 332.8-332.8 332.8 179.2 179.2 512-512-512-512-179.2 179.2z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["nav-right"]},"attrs":[{}],"properties":{"order":37,"id":8,"name":"nav-right","prevSize":32,"code":59661},"setIdx":0,"setId":3,"iconIdx":14},{"icon":{"paths":["M512 128c38.4 0 70.4 12.8 96 44.8l44.8 44.8 96-83.2-44.8-51.2c-51.2-51.2-121.6-83.2-192-83.2-140.8 0-256 115.2-256 256v96c-76.8 70.4-128 172.8-128 288 0 211.2 172.8 384 384 384s384-172.8 384-384-172.8-384-384-384c-44.8 0-89.6 6.4-128 25.6v-25.6c0-70.4 57.6-128 128-128zM512 448c70.4 0 128 57.6 128 128 0 44.8-25.6 89.6-64 108.8v147.2h-128v-147.2c-38.4-19.2-64-64-64-108.8 0-70.4 57.6-128 128-128z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["padlock-unlocked"]},"attrs":[{}],"properties":{"order":38,"id":7,"name":"padlock-unlocked","prevSize":32,"code":59662},"setIdx":0,"setId":3,"iconIdx":15},{"icon":{"paths":["M870.4 260.267c-46.933-21.333-93.867-34.133-145.067-34.133-68.267 0-128 21.333-183.467 38.4-34.133 12.8-68.267 21.333-93.867 21.333-17.067 0-25.6-4.267-29.867-12.8 0-4.267 4.267-25.6 8.533-38.4 12.8-38.4 25.6-85.333-8.533-132.267-21.333-25.6-55.467-42.667-93.867-42.667s-72.533 12.8-106.667 34.133c-136.533 93.867-217.6 251.733-217.6 418.133 0 281.6 230.4 512 512 512 226.133 0 430.933-153.6 494.933-375.467 4.267-25.6 64-290.133-136.533-388.267zM128 512c0-46.933 38.4-85.333 85.333-85.333s85.333 38.4 85.333 85.333-38.4 85.333-85.333 85.333-85.333-38.4-85.333-85.333zM320 810.667c-46.933 0-85.333-38.4-85.333-85.333s38.4-85.333 85.333-85.333 85.333 38.4 85.333 85.333-38.4 85.333-85.333 85.333zM554.667 896c-46.933 0-85.333-38.4-85.333-85.333s38.4-85.333 85.333-85.333 85.333 38.4 85.333 85.333-38.4 85.333-85.333 85.333zM725.333 640c-72.533 0-128-55.467-128-128s55.467-128 128-128 128 55.467 128 128-55.467 128-128 128z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["palette"]},"attrs":[{}],"properties":{"order":39,"id":6,"name":"palette","prevSize":32,"code":59663},"setIdx":0,"setId":3,"iconIdx":16},{"icon":{"paths":["M640 512h-128v128h-128v-128h-128v-128h128v-128h128v128h128v128z","M448 896c-247.040 0-448-200.96-448-448s200.96-448 448-448 448 200.96 448 448-200.96 448-448 448zM448 128c-176.448 0-320 143.552-320 320s143.552 320 320 320 320-143.552 320-320-143.552-320-320-320z","M1005.248 914.752l-153.152-153.152c-26.304 33.856-56.64 64.192-90.496 90.496l153.152 153.152c12.48 12.48 28.864 18.752 45.248 18.752s32.768-6.272 45.248-18.752c25.024-25.024 25.024-65.472 0-90.496z"],"attrs":[{},{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["search-zoom-in"]},"attrs":[{},{},{}],"properties":{"order":40,"id":5,"name":"search-zoom-in","prevSize":32,"code":59664},"setIdx":0,"setId":3,"iconIdx":17},{"icon":{"paths":["M889.6 32c-12.8-19.2-32-32-57.6-32h-640c-25.6 0-44.8 12.8-57.6 32-134.4 256-134.4 268.8-134.4 288 0 70.4 57.6 128 128 128v512c0 38.4 25.6 64 64 64h640c38.4 0 64-25.6 64-64v-512c70.4 0 128-57.6 128-128 0-19.2 0-32-134.4-288zM640 896v-256h-256v256h-128v-467.2c19.2 12.8 38.4 19.2 64 19.2 38.4 0 70.4-19.2 96-44.8 25.6 25.6 57.6 44.8 96 44.8s70.4-19.2 96-44.8c25.6 25.6 57.6 44.8 96 44.8 25.6 0 44.8-6.4 64-19.2v467.2h-128z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["shop"]},"attrs":[{}],"properties":{"order":41,"id":4,"name":"shop","prevSize":32,"code":59665},"setIdx":0,"setId":3,"iconIdx":18},{"icon":{"paths":["M1006.080 18.091c-7.731-7.783-18.44-12.601-30.273-12.601-0.772 0-1.54 0.021-2.302 0.061l0.106-0.005c-598.528 31.232-819.627 564.395-821.76 569.771-1.953 4.716-3.087 10.192-3.087 15.933 0 11.77 4.766 22.428 12.474 30.147l-0.001-0.001 241.365 241.365c7.719 7.708 18.376 12.474 30.147 12.474 5.822 0 11.371-1.166 16.428-3.277l-0.282 0.104c5.333-2.176 535.637-225.749 569.515-821.461 0.044-0.729 0.070-1.581 0.070-2.439 0-11.734-4.737-22.362-12.403-30.075l0.002 0.002zM657.664 486.997c-15.443 15.448-36.78 25.003-60.349 25.003-47.128 0-85.333-38.205-85.333-85.333s38.205-85.333 85.333-85.333c23.569 0 44.906 9.555 60.349 25.002l0 0c15.437 15.441 24.984 36.771 24.984 60.331s-9.548 44.889-24.985 60.331l0-0z","M47.488 804.011c21.988-22.134 52.442-35.834 86.095-35.834 67.016 0 121.344 54.328 121.344 121.344 0 33.654-13.7 64.107-35.827 86.089l-0.007 0.007c-47.403 47.403-219.093 48.384-219.093 48.384s0-172.629 47.488-219.989z","M441.899 99.883c-19.601-3.582-42.158-5.631-65.193-5.631-105.117 0-200.271 42.659-269.094 111.609l-0.006 0.006c-22.251 22.451-41.797 47.646-58.068 75.015l-0.983 1.785c-3.709 6.195-5.902 13.667-5.902 21.652 0 11.791 4.783 22.465 12.515 30.188l0 0 84.864 84.907c80.614-126.65 181.178-232.842 298.486-317.218l3.381-2.313z","M924.117 582.101c3.582 19.601 5.631 42.158 5.631 65.193 0 105.117-42.659 200.271-111.609 269.094l-0.006 0.006c-22.451 22.251-47.646 41.797-75.015 58.068l-1.785 0.983c-6.195 3.709-13.667 5.902-21.652 5.902-11.791 0-22.465-4.783-30.188-12.515l-0-0-84.907-84.864c126.65-80.614 232.842-181.178 317.218-298.486l2.313-3.381z"],"attrs":[{},{},{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["spaceship"]},"attrs":[{},{},{},{}],"properties":{"order":42,"id":3,"name":"spaceship","prevSize":32,"code":59666},"setIdx":0,"setId":3,"iconIdx":19},{"icon":{"paths":["M512 0c-281.6 0-512 230.4-512 512s230.4 512 512 512 512-230.4 512-512c0-281.6-230.4-512-512-512zM512 640c-70.4 0-128-57.6-128-128s57.6-128 128-128 128 57.6 128 128c0 70.4-57.6 128-128 128zM512 128c57.6 0 115.2 12.8 166.4 38.4l-99.584 99.584c-48.704-13.248-84.928-13.248-133.696 0l-99.52-99.584c51.2-25.6 108.8-38.4 166.4-38.4zM128 512c0-57.6 12.8-115.2 38.4-166.4l99.584 99.584c-13.248 48.704-13.248 84.928 0 133.696l-99.584 99.52c-25.6-51.2-38.4-108.8-38.4-166.4zM512 896c-57.6 0-115.2-12.8-166.4-38.4l99.584-99.584c48.704 13.248 84.928 13.248 133.696 0l99.52 99.584c-51.2 25.6-108.8 38.4-166.4 38.4zM857.6 678.4l-99.584-99.584c13.248-48.704 13.248-84.928 0-133.696l99.584-99.52c25.6 51.2 38.4 108.8 38.4 166.4s-12.8 115.2-38.4 166.4z"],"attrs":[{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["support"]},"attrs":[{}],"properties":{"order":43,"id":2,"name":"support","prevSize":32,"code":59667},"setIdx":0,"setId":3,"iconIdx":20},{"icon":{"paths":["M277.333 469.333h469.333c128 0 234.667-106.667 234.667-234.667s-106.667-234.667-234.667-234.667h-469.333c-128 0-234.667 106.667-234.667 234.667s106.667 234.667 234.667 234.667zM277.333 85.333c81.067 0 149.333 68.267 149.333 149.333s-68.267 149.333-149.333 149.333-149.333-68.267-149.333-149.333 68.267-149.333 149.333-149.333z","M746.667 554.667h-469.333c-128 0-234.667 106.667-234.667 234.667s106.667 234.667 234.667 234.667h469.333c128 0 234.667-106.667 234.667-234.667s-106.667-234.667-234.667-234.667zM746.667 938.667c-81.067 0-149.333-68.267-149.333-149.333s68.267-149.333 149.333-149.333 149.333 68.267 149.333 149.333-68.267 149.333-149.333 149.333z"],"attrs":[{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["switches"]},"attrs":[{},{}],"properties":{"order":44,"id":1,"name":"switches","prevSize":32,"code":59668},"setIdx":0,"setId":3,"iconIdx":21},{"icon":{"paths":["M704 768h-640c-35.392 0-64-28.608-64-64v-640c0-35.328 28.608-64 64-64h640c35.392 0 64 28.672 64 64v640c0 35.392-28.608 64-64 64z","M960 1024h-704v-128h640v-640h128v704c0 35.392-28.608 64-64 64z"],"attrs":[{},{}],"isMulticolor":false,"isMulticolor2":false,"grid":0,"tags":["ungroup"]},"attrs":[{},{}],"properties":{"order":45,"id":0,"name":"ungroup","prevSize":32,"code":59669},"setIdx":0,"setId":3,"iconIdx":22}],"height":1024,"metadata":{"name":"argon"},"preferences":{"showGlyphs":true,"showQuickUse":true,"showQuickUse2":true,"showSVGs":true,"fontPref":{"prefix":"icon-","metadata":{"fontFamily":"argon","majorVersion":1,"minorVersion":0},"metrics":{"emSize":1024,"baseline":6.25,"whitespace":50},"embed":false,"showMetadata":false,"showVersion":false,"showMetrics":false,"showSelector":false},"imagePref":{"prefix":"icon-","png":true,"useClassSelector":true,"color":0,"bgColor":16777215,"classSelector":".icon"},"historySize":50,"showCodes":false,"gridSize":16,"showLiga":false}}
-```
-
 ## File: babel.config.js
 
 - Extension: .js
 - Language: javascript
 - Size: 290 bytes
-- SHA: c0d6e654161ea723e5bd3eb6b2184f9aa86ab0fa
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -824,9 +230,9 @@ module.exports = function (api) {
 - Extension: .js
 - Language: javascript
 - Size: 1286 bytes
-- SHA: 9f39f8beba5866ee479be7d656c96033b22288e0
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -896,9 +302,9 @@ export default ArButton;
 - Extension: .js
 - Language: javascript
 - Size: 2601 bytes
-- SHA: 6b7bc89df3745cbf775633996d87378e02627462
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1008,9 +414,9 @@ export default withNavigation(Card);
 - Extension: .js
 - Language: javascript
 - Size: 3209 bytes
-- SHA: 36ba69899975bcc0d243fe921f163d434e06aa78
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1153,9 +559,9 @@ export default DrawerItem;
 - Extension: .js
 - Language: javascript
 - Size: 8649 bytes
-- SHA: 207c7e841e76615b635a48c472211fc00eff1deb
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1449,9 +855,9 @@ export default withNavigation(Header);
 - Extension: .js
 - Language: javascript
 - Size: 921 bytes
-- SHA: 075515c84b8b0aec93ff5ea7815116511b37b421
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1498,9 +904,9 @@ export default IconExtra;
 - Extension: .js
 - Language: javascript
 - Size: 1607 bytes
-- SHA: ee890229613faee19adc8d5c27c34e55c8545f06
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1589,9 +995,9 @@ export default ArInput;
 - Extension: .js
 - Language: javascript
 - Size: 2068 bytes
-- SHA: f18b3f8d21a8b0f5071589d0e0bb2825e160871e
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1689,9 +1095,9 @@ export default DropDown;
 - Extension: .js
 - Language: javascript
 - Size: 680 bytes
-- SHA: 53146832b37d2f9d52e90fbb46e6e7c722f18371
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1727,9 +1133,9 @@ export default MkSwitch;
 - Extension: .js
 - Language: javascript
 - Size: 3648 bytes
-- SHA: bcf286213b6ed0e1d46101b99fbbf55a30d7ef1e
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1901,9 +1307,9 @@ const styles = StyleSheet.create({
 - Extension: .js
 - Language: javascript
 - Size: 337 bytes
-- SHA: d9410658bbb127b33ba9c9229f8a1b787e43f86c
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1934,9 +1340,9 @@ export {
 - Extension: .js
 - Language: javascript
 - Size: 1589 bytes
-- SHA: 0e9b5121a873017f0768ac8840c41145cdbe4e87
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -1989,9 +1395,9 @@ export default {
 - Extension: .js
 - Language: javascript
 - Size: 755 bytes
-- SHA: d22100d9dbf4e1686845b19521f96ecfa78a1c4b
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2035,9 +1441,9 @@ export default {
 - Extension: .js
 - Language: javascript
 - Size: 1171 bytes
-- SHA: 9186194655faa5907a400b202ac883f3d0fb366d
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2078,9 +1484,9 @@ export default [
 - Extension: .js
 - Language: javascript
 - Size: 183 bytes
-- SHA: 1a834fc8105fb3a6a4959d88b95af5b4155f5ea5
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2103,9 +1509,9 @@ export {
 - Extension: .js
 - Language: javascript
 - Size: 224 bytes
-- SHA: 149657f4f6c85466e099420fbcd847ed3c0f433a
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2125,9 +1531,9 @@ export default tabs = {
 - Extension: .js
 - Language: javascript
 - Size: 311 bytes
-- SHA: 561e5cfc4b8369597660e3576206912442425551
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2145,9 +1551,9 @@ export const iPhoneX = () => Platform.OS === 'ios' && (height === 812 || width =
 - Extension: .js
 - Language: javascript
 - Size: 1988 bytes
-- SHA: fda94f77f45f57a2a84d1718417b9496cc4f649f
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2231,9 +1637,9 @@ export default CustomDrawerContent;
 - Extension: .js
 - Language: javascript
 - Size: 6724 bytes
-- SHA: db91d65b6957811e389f36db0d9f7bd4407a253c
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2532,9 +1938,9 @@ function AppStack(props) {
 - Extension: .json
 - Language: json
 - Size: 2062 bytes
-- SHA: ee75f806ae7cf10d70d587be603351afc442022b
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2614,9 +2020,9 @@ function AppStack(props) {
 - Extension: .js
 - Language: javascript
 - Size: 6940 bytes
-- SHA: ecb6d4172277a54f99b311f43a64b4e8b304d5b4
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -2881,9 +2287,9 @@ export default Articles;
 - Extension: .js
 - Language: javascript
 - Size: 13530 bytes
-- SHA: 7a73d80e7386b2b3e211672eaf479bf232ff4d42
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -3383,9 +2789,9 @@ export default Elements;
 - Extension: .js
 - Language: javascript
 - Size: 1170 bytes
-- SHA: 36a699e042da5dbd1f2e0aa10cef4e665a3ddf29
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -3445,9 +2851,9 @@ export default Home;
 - Extension: .js
 - Language: javascript
 - Size: 2500 bytes
-- SHA: 983d550bf4325e9222b0c57066568def3636445e
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -3559,9 +2965,9 @@ export default Onboarding;
 - Extension: .js
 - Language: javascript
 - Size: 3374 bytes
-- SHA: ef914e7c5727e76e03bf22599331062ed981bfba
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -3674,9 +3080,9 @@ const styles = StyleSheet.create({
 - Extension: .js
 - Language: javascript
 - Size: 10863 bytes
-- SHA: e70150fa13a7e4b7990541adb3c826fc8ea22768
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 
@@ -4031,9 +3437,9 @@ export default Profile;
 - Extension: .js
 - Language: javascript
 - Size: 7006 bytes
-- SHA: c6e8f7ed9684b887e9cc00589064a17027975191
-- Created: 2024-11-22
-- Modified: 2024-11-22
+- SHA: undefined
+- Created: 2024-11-25
+- Modified: 2024-11-25
 
 ### Code
 

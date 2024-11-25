@@ -21,6 +21,7 @@ async function main(): Promise<void> {
     // Define workflow input variables
     const workflowInput = {
       input: "https://github.com/YatchiYa/argon-react-native",
+      excludePatterns: '.test.ts,/temp/,*.log,*/argon.json',
       path: "/home/youcef/Bureau/github-repo-analysis.txt",
     };
 

@@ -2,6 +2,9 @@
 import { Octokit } from '@octokit/rest';
 import { BaseTool, ToolDefinition } from './base-tool';
 import { writeFile } from 'fs/promises';
+import * as fs from "fs/promises"
+import path from 'path';
+import simpleGit, { SimpleGit } from 'simple-git';
 
 interface TreeItem {
   path: string;
@@ -13,6 +16,41 @@ interface TreeItem {
 export class GithubLoaderTool extends BaseTool {
   private octokit: Octokit;
   private rateLimitDelay: number = 1000; // 1 second delay between requests
+  private tmpDir: string;
+  private git: SimpleGit;
+
+  private defaultExcludePatterns = [
+    '.git/**',
+    'node_modules/**',
+    '.env*',
+    '*.log',
+    '*.lock',
+    'dist/**',
+    'build/**',
+    '*.png',
+    '*.jpg',
+    '*.jpeg',
+    '*.gif',
+    '*.ico',
+    '*.ttf',
+    '*.woff*',
+    '*.eot',
+    '*.svg',
+    '*.mp3',
+    '*.mp4',
+    '*.pdf',
+    '*.zip',
+    '*.tar',
+    '*.gz',
+    '*.7z',
+    '*.jar',
+    '*.war',
+    '*.class',
+    '*.dll',
+    '*.exe',
+    '*.so',
+    '*.dylib'
+  ];
 
   constructor(config: Record<string, any>) {
     super(config);
@@ -20,30 +58,190 @@ export class GithubLoaderTool extends BaseTool {
       auth: config.authToken || process.env.GITHUB_TOKEN,
       retry: { enabled: true }
     });
+    this.tmpDir = path.join(process.cwd(), 'tmp');
+    this.git = simpleGit();
   }
 
   getDefinition(): ToolDefinition {
-    return {
-      name: 'github-loader',
-      description: 'Loads content from GitHub repositories',
-      input: {
-        repositoryUrl: { 
-          type: 'string', 
-          required: true, 
-          description: 'Full GitHub repository URL' 
-        },
-        authToken: {
-          type: 'string',
-          required: false,
-          description: 'GitHub authentication token'
-        }
-      },
-      output: { 
-        type: 'object', 
-        description: 'Repository contents with file metadata and content' 
-      }
-    };
+      return {
+          name: 'github-loader',
+          description: 'Loads content from GitHub repositories',
+          input: {
+              repositoryUrl: {
+                  type: 'string',
+                  required: true,
+                  description: 'Full GitHub repository URL'
+              },
+              authToken: {
+                  type: 'string',
+                  required: false,
+                  description: 'GitHub authentication token'
+              },
+              excludePatterns: {
+                  type: 'string',
+                  required: false,
+                  description: 'Comma-separated list of files, folders, or extensions to exclude'
+              },
+              includePatterns: {
+                  type: 'string',
+                  required: false,
+                  description: 'Comma-separated list of files, folders, or extensions to include'
+              }
+          },
+          output: {
+              type: 'object',
+              description: 'Repository contents with file metadata and content'
+          }
+      };
   }
+
+    private parsePatternString(patterns: string | undefined): string[] {
+        if (!patterns) return [];
+        return patterns.split(',')
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+    }
+ 
+  private async initTempDirectory(): Promise<void> {
+    try {
+      await fs.mkdir(this.tmpDir, { recursive: true });
+      console.log(`📁 Temporary directory created at: ${this.tmpDir}`);
+    } catch (error) {
+      console.error('Error creating temp directory:', error);
+      throw error;
+    }
+  }
+
+  private async cleanupTempDirectory(repoPath: string): Promise<void> {
+    try {
+      await fs.rm(repoPath, { recursive: true, force: true });
+      console.log(`🧹 Cleaned up repository directory: ${repoPath}`);
+    } catch (error) {
+      console.warn('Error cleaning up temp directory:', error);
+    }
+  }
+
+  private async cloneRepository(repositoryUrl: string): Promise<string> {
+    const { owner, repo } = this.parseGithubUrl(repositoryUrl);
+    const repoPath = path.join(this.tmpDir, `${owner}-${repo}`);
+
+    try {
+      // Clean up existing directory if it exists
+      await this.cleanupTempDirectory(repoPath);
+      
+      // Clone the repository
+      console.log(`📥 Cloning repository: ${repositoryUrl}`);
+      await this.git.clone(repositoryUrl, repoPath);
+      console.log(`✅ Repository cloned to: ${repoPath}`);
+      
+      return repoPath;
+    } catch (error) {
+      console.error('Error cloning repository:', error);
+      throw error;
+    }
+  }
+
+  private async readLocalFile(filePath: string): Promise<string> {
+    try {
+      const content = await fs.readFile(filePath, 'utf-8');
+      return content;
+    } catch (error) {
+      console.error(`Error reading file ${filePath}:`, error);
+      return `// Error reading file: ${error}`;
+    }
+  }
+ 
+  private async getAllLocalFiles(
+    dirPath: string,
+    baseDir: string,
+    excludePatterns: string[] = [],
+    includePatterns: string[] = []
+  ): Promise<any[]> {
+    const files: any[] = [];
+    const items = await fs.readdir(dirPath, { withFileTypes: true });
+    
+    // Add default exclude patterns
+    const defaultExcludes = [
+      '.git',
+      'node_modules',
+      '.md',
+      'argon.json',
+      'dist',
+      'build',
+      'coverage',
+      '.env',
+      '.DS_Store',
+      'package-lock.json',
+      'yarn.lock'
+    ];
+    
+    const allExcludes = [...new Set([...defaultExcludes, ...excludePatterns])];
+  
+    for (const item of items) {
+      const fullPath = path.join(dirPath, item.name);
+      const relativePath = path.relative(baseDir, fullPath);
+  
+      // Skip if matches exclude patterns
+      if (this.matchesPattern(relativePath, allExcludes)) {
+        continue;
+      }
+  
+      // Skip binary files and specific directories
+      if (item.isFile() && this.isBinaryFile(item.name)) {
+        continue;
+      }
+  
+      if (item.isDirectory()) {
+        const subFiles = await this.getAllLocalFiles(
+          fullPath,
+          baseDir,
+          allExcludes,
+          includePatterns
+        );
+        files.push(...subFiles);
+      } else if (item.isFile()) {
+        // Check include patterns if specified
+        if (includePatterns.length === 0 || this.matchesPattern(relativePath, includePatterns)) {
+          files.push({
+            path: relativePath,
+            name: item.name,
+            type: 'file',
+            size: (await fs.stat(fullPath)).size
+          });
+        }
+      }
+    }
+    return files;
+  }
+  
+  
+  private matchesPattern(filepath: string, patterns: string[]): boolean {
+    if (patterns.length === 0) return false;
+    
+    return patterns.some(pattern => {
+      // Handle glob patterns
+      if (pattern.includes('*')) {
+        const regexPattern = pattern
+          .replace(/\./g, '\\.')
+          .replace(/\*/g, '.*');
+        return new RegExp(regexPattern).test(filepath);
+      }
+      
+      // Handle extension patterns
+      if (pattern.startsWith('.')) {
+        return filepath.endsWith(pattern);
+      }
+      
+      // Handle directory patterns
+      if (pattern.startsWith('/')) {
+        return filepath.startsWith(pattern.slice(1));
+      }
+      
+      // Handle exact matches or contains
+      return filepath.includes(pattern);
+    });
+  }
+
 
   private async sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -198,52 +396,64 @@ ${content}
 
     return languageMap[extension] || extension;
   }
-
+    
   async execute(inputs: Record<string, any>): Promise<Record<string, any>> {
     try {
-      const { repositoryUrl } = inputs;
-      const { owner, repo } = this.parseGithubUrl(repositoryUrl);
+        const { repositoryUrl, excludePatterns, includePatterns } = inputs;
+        const excludeList = this.parsePatternString(excludePatterns);
+        const includeList = this.parsePatternString(includePatterns);
 
-      console.log(`\n📦 Processing repository: ${owner}/${repo}`);
-      
-      const files = await this.getAllFiles(owner, repo);
-      files.forEach(file => file.repository = repositoryUrl);
+        const { owner, repo } = this.parseGithubUrl(repositoryUrl);
+        console.log(`\n📦 Processing repository: ${owner}/${repo}`);
 
-      let output = `# Repository: ${owner}/${repo}\n\n`;
-      output += `Generated at: ${new Date().toISOString()}\n\n`;
-      output += '# Table of Contents\n';
-      files.forEach(file => output += `- ${file.path}\n`);
-      output += '\n';
+        // Initialize temp directory
+        await this.initTempDirectory();
 
-      let processedFiles = 0;
-      for (const file of files) {
-        if (this.isBinaryFile(file.path)) {
-          console.log(`⏭️  Skipping binary file: ${file.path}`);
-          continue;
+        // Clone repository
+        const repoPath = await this.cloneRepository(repositoryUrl);
+
+        // Get all files with filtering
+        const files = await this.getAllLocalFiles(repoPath, repoPath, excludeList, includeList);
+
+        let output = `# Repository: ${owner}/${repo}\n\n`;
+        output += `Generated at: ${new Date().toISOString()}\n\n`;
+        output += '# Table of Contents\n';
+        files.forEach(file => output += `- ${file.path}\n`);
+        output += '\n';
+
+        let processedFiles = 0;
+        for (const file of files) {
+            processedFiles++;
+            console.log(`📄 [${processedFiles}/${files.length}] Processing: ${file.path}`);
+            const fullPath = path.join(repoPath, file.path);
+            const content = await this.readLocalFile(fullPath);
+            output += this.formatFileInfo(file, content);
         }
 
-        processedFiles++;
-        console.log(`📄 [${processedFiles}/${files.length}] Processing: ${file.path}`);
-        const content = await this.getFileContent(file);
-        output += this.formatFileInfo(file, content);
-      }
+        // Cleanup
+        await this.cleanupTempDirectory(repoPath);
 
-      return {
-        content: output,
-        fileCount: processedFiles,
-        repository: `${owner}/${repo}`,
-        totalFiles: files.length
-      };
-
+        return {
+            content: output,
+            fileCount: processedFiles,
+            repository: `${owner}/${repo}`,
+            totalFiles: files.length
+        };
     } catch (error) {
-      console.error('Error processing repository:', error);
-      throw new Error(`Failed to process repository: ${error}`);
+        console.error('Error processing repository:', error);
+        throw new Error(`Failed to process repository: ${error}`);
     }
-  }
+}
+
 
   private isBinaryFile(filepath: string): boolean {
+    // Add .git directory check
+    if (filepath.startsWith('.git') || filepath === '.git') {
+        return true;
+    }
+
     const binaryExtensions = [
-      '.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.woff', 
+      '.png', '.jpg', '.md', '.jpeg', '.gif', '.ico', '.ttf', '.woff', 
       '.woff2', '.eot', '.svg', '.mp3', '.mp4', '.webm', '.wav', 
       '.ogg', '.pdf', '.zip', '.tar', '.gz', '.7z', '.jar', '.war',
       '.ear', '.class', '.dll', '.exe', '.so', '.dylib'

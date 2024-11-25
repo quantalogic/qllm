@@ -10,7 +10,8 @@ async function main(): Promise<void> {
 
   try {
     const result = await githubLoader.execute({
-      repositoryUrl: "https://github.com/YatchiYa/argon-react-native"
+      repositoryUrl: "https://github.com/YatchiYa/argon-react-native",
+      excludePatterns: '.test.ts,/temp/,*.log,*/argon.json',
     });
 
     await writeFile('repository-content.md', result.content, 'utf-8');
