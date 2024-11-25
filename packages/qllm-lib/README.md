@@ -28,9 +28,7 @@ qllm-lib is a powerful TypeScript library that provides a unified interface for 
 
 To install qllm-lib, use npm:
 
-- **Install qllm-lib:**
-
-```
+```bash
 npm install qllm-lib
 ```
 
@@ -45,10 +43,10 @@ To start using the API, first import the necessary functions and initialize a pr
 ```typescript
 import { createLLMProvider, LLMProvider } from 'qllm-lib';
 
+// Make sure to set the appropriate environment variables for your chosen provider
+// e.g., OPENAI_API_KEY for OpenAI
 const provider: LLMProvider = createLLMProvider({ name: 'openai' });
 ```
-
-Make sure to set the `OPENAI_API_KEY` environment variable before initializing the OpenAI provider.
 
 #### 📋 Listing Models
 
@@ -74,8 +72,9 @@ const result = await provider.generateChatCompletion({
     },
   ],
   options: {
-    model: 'gpt-4o-mini',
+    model: 'gpt-4',
     maxTokens: 1024,
+    temperature: 0.7,
   },
 });
 
@@ -95,8 +94,12 @@ const stream = await provider.streamChatCompletion({
     },
   ],
   options: {
-    model: 'gpt-4o-mini',
+    model: 'gpt-4',
     maxTokens: 1024,
+    temperature: 0.7,
+    topProbability: 1,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
   },
 });
 
@@ -138,8 +141,9 @@ const result = await provider.generateChatCompletion({
     },
   ],
   options: {
-    model: 'gpt-4o-mini',
+    model: 'gpt-4-vision-preview',
     maxTokens: 1024,
+    temperature: 0.7,
   },
 });
 
@@ -172,8 +176,9 @@ const result = await provider.generateChatCompletion({
   tools: [weatherTool],
   toolChoice: 'auto',
   options: {
-    model: 'gpt-4o-mini',
+    model: 'gpt-4',
     maxTokens: 1024,
+    temperature: 0.7,
   },
 });
 
@@ -202,12 +207,59 @@ const result = await templateManager.executeTemplate({
   },
   provider,
   providerOptions: {
-    model: 'gpt-4o-mini',
+    model: 'gpt-4',
     maxTokens: 1024,
+    temperature: 0.7,
   },
 });
 
-console.log(result.qllm_response);
+console.log(result.response);
+```
+
+### Example Template
+
+Here's an example of a template structure:
+
+```yaml
+name: create_story
+description: Generate a story based on given parameters
+provider: openai
+model: gpt-4
+parameters:
+  temperature: 0.7
+  top_p: 1.0
+  frequency_penalty: 0.0
+  presence_penalty: 0.0
+  max_tokens: 1024
+  stop_sequences: []
+  system_message: You are a creative storyteller.
+
+input_variables:
+  - name: subject
+    description: The main subject or theme of the story
+    type: string
+    required: true
+  - name: genre
+    description: The genre of the story
+    type: string
+    required: true
+  - name: role
+    description: The narrative perspective
+    type: string
+    required: true
+  - name: lang
+    description: The language to generate the story in
+    type: string
+    required: true
+  - name: max_length
+    description: Maximum length of the story in words
+    type: number
+    required: true
+
+content: |
+  Write a {{genre}} story about {{subject}} from the perspective of a {{role}}.
+  The story should be in {{lang}} and should not exceed {{max_length}} words.
+  Make it engaging and descriptive.
 ```
 
 #### 🗨️ Managing Conversations
@@ -217,45 +269,32 @@ qllm-lib provides a ConversationManager to help you manage multi-turn conversati
 ```typescript
 import { createConversationManager, createLLMProvider } from 'qllm-lib';
 
-const conversationManager = createConversationManager();
 const provider = createLLMProvider({ name: 'openai' });
+const conversationManager = createConversationManager();
 
-const conversation = await conversationManager.createConversation({
-  metadata: { title: 'Trip Planning', description: 'Planning a trip to Paris' },
-  initialMessage: "I'm planning a trip to Paris. Can you help me?",
-  providerIds: ['openai'],
+// Create a new conversation
+const conversation = await conversationManager.createConversation();
+
+// Add a user message
+await conversationManager.addMessage(conversation.id, {
+  role: 'user',
+  content: { type: 'text', text: 'Tell me about Paris.' },
 });
 
-async function chatTurn(userMessage: string) {
-  await conversationManager.addMessage(conversation.id, {
-    role: 'user',
-    content: { type: 'text', text: userMessage },
-    providerId: 'openai',
-  });
+// Get conversation history
+const history = await conversationManager.getHistory(conversation.id);
+const messages = history.map((msg) => ({ role: msg.role, content: msg.content }));
 
-  const history = await conversationManager.getHistory(conversation.id);
-  const messages = history.map((msg) => ({ role: msg.role, content: msg.content }));
+const result = await provider.generateChatCompletion({
+  messages,
+  options: { model: 'gpt-4', maxTokens: 1024, temperature: 0.7 },
+});
 
-  const result = await provider.generateChatCompletion({
-    messages,
-    options: { model: 'gpt-4o-mini', maxTokens: 1024 },
-  });
-
-  await conversationManager.addMessage(conversation.id, {
-    role: 'assistant',
-    content: { type: 'text', text: result.text || 'No response' },
-    providerId: 'openai',
-  });
-
-  console.log('AI:', result.text);
-}
-
-await chatTurn('What are the top 3 attractions I should visit?');
-await chatTurn('How many days should I plan for my trip?');
-await chatTurn('Can you suggest some local restaurants?');
-
-const finalHistory = await conversationManager.getHistory(conversation.id);
-console.log('Conversation History:', finalHistory);
+await conversationManager.addMessage(conversation.id, {
+  role: 'assistant',
+  content: { type: 'text', text: result.text || 'No response' },
+  providerId: provider.name,
+});
 ```
 
 ## 📄 Templates
@@ -344,123 +383,6 @@ You are an expert prompt engineer. Your task is to improve the following prompt:
 Please provide an improved version of this prompt, making it clearer, more specific, and more effective.
 ```
 
-### Example 4 with a system message and parameters
-
-```yaml
-name: create_story_with_system
-version: '1.1'
-description: Create a short story with a system message
-author: QLLM Team
-input_variables:
-  genre:
-    type: string
-    description: The genre of the story
-    default: 'Science Fiction'
-  protagonist:
-    type: string
-    description: The main character of the story
-  setting:
-    type: string
-    description: The setting of the story
-parameters:
-  max_tokens: 300
-  temperature: 0.7
-  top_p: 0.9
-  top_k: 50
-  seed: 42
-  system_message: 'You are a creative storyteller.'
-content: >
-  Write a {{genre}} story featuring a protagonist named {{protagonist}} set in {{setting}}. 
-  The story should be approximately 200 words long.
-output_variables:
-  story:
-    type: string
-    description: The generated story
-```
-
-## 3. Advanced Concepts
-
-### Output Variables
-
-Output variables allow you to specify expected outputs from the LLM. They can be used to structure the LLM's response or to extract specific information.
-
-```yaml
-output_variables:
-  summary:
-    type: string
-    description: A brief summary of the generated content
-  key_points:
-    type: array
-    description: An array of key points from the generated content
-```
-
-### Inferred Variables
-
-Inferred variables are automatically determined by the system based on the content of the template. For example, if your template content includes `{{variable_name}}`, the system will infer that `variable_name` is an input variable, even if it's not explicitly defined in the `input_variables` section.
-
-## 4. Template Include
-
-Template inclusion allows you to modularize your prompts by including content from external files. This is particularly useful for managing complex prompts or reusing common sections across multiple templates.
-
-### Syntax
-
-To include a file in your template, use the following syntax:
-
-```
-{{file:./path/to/file.md}}
-```
-
-### Example
-
-main_template.yaml:
-
-```yaml
-name: comprehensive_analysis
-version: '1.0'
-description: Perform a comprehensive analysis
-author: QLLM Team
-input_variables:
-  topic:
-    type: string
-    description: The topic to analyze
-content: >
-  {{file:./analysis_intro.md}}
-
-  Topic: {{topic}}
-
-  {{file:./analysis_steps.md}}
-
-  {{file:./analysis_conclusion.md}}
-```
-
-analysis_intro.md:
-
-```markdown
-# Comprehensive Analysis
-
-This analysis will provide a detailed examination of the given topic, covering various aspects and implications.
-```
-
-analysis_steps.md:
-
-```markdown
-## Analysis Steps
-
-1. Historical context
-2. Current state
-3. Future implications
-4. Potential challenges
-5. Opportunities for improvement
-```
-
-analysis_conclusion.md:
-
-```markdown
-## Conclusion
-
-Summarize the key findings of the analysis and provide recommendations based on the insights gained.
-```
-
 By using template includes, you can create more maintainable and modular prompt structures, making it easier to update and reuse common elements across different templates.
 
 ## 📚 API Reference
@@ -499,16 +421,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is licensed under the Apache License, Version 2.0. You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-## 👋 Why We Created QuantaLogic
-
-The potential of generative AI is immense, yet its practical application remains a challenge for many organizations. At QuantaLogic, we believe that the true value of AI lies not in its theoretical capabilities, but in its ability to solve real-world business problems efficiently and effectively.
-
-We created QuantaLogic because we saw a significant gap between the advanced AI models developed by companies like OpenAI, Anthropic, and Mistral, and their practical implementation in everyday business processes. Our mission is to bridge this gap, making the power of generative AI accessible and actionable for businesses of all sizes.
-
-QLLM-LIB is a testament to this mission, providing a versatile and user-friendly AI toolbox that empowers users to harness the full potential of various LLMs and AI Tools through a single, unified interface. By simplifying the interaction with these powerful AI models, we aim to accelerate innovation and drive efficiency across industries.
+This project is licensed under the MIT License - see the LICENSE file for details.
