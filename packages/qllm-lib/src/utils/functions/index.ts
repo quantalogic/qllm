@@ -1,6 +1,18 @@
+/**
+ * @fileoverview Utility module for converting Zod schemas to JSON Schema format and creating function tools.
+ * Provides functionality to transform Zod validation schemas into OpenAI function-calling compatible JSON Schema.
+ * 
+ * @author QLLM Team
+ * @module utils/functions
+ */
+
 import { z } from 'zod';
 import { FunctionTool } from '../../types';
 
+/**
+ * Represents the structure of a JSON Schema type definition.
+ * Supports common JSON Schema properties including nested objects, arrays, and enums.
+ */
 type JsonSchemaType = {
   type?: string;
   description?: string;
@@ -11,6 +23,13 @@ type JsonSchemaType = {
   anyOf?: JsonSchemaType[];
 };
 
+/**
+ * Converts a Zod schema to its equivalent JSON Schema representation.
+ * Supports common Zod types including objects, strings, numbers, booleans, arrays, enums, and unions.
+ * 
+ * @param {z.ZodTypeAny} schema - The Zod schema to convert
+ * @returns {JsonSchemaType} Equivalent JSON Schema representation
+ */
 function zodToJsonSchema(schema: z.ZodTypeAny): JsonSchemaType {
   if (schema instanceof z.ZodObject) {
     const properties: Record<string, JsonSchemaType> = {};
@@ -85,13 +104,41 @@ function zodToJsonSchema(schema: z.ZodTypeAny): JsonSchemaType {
   return {}; // fallback for unsupported types
 }
 
+/**
+ * Configuration options for creating a function tool.
+ */
 export type FunctionToolConfig = {
+  /** Name of the function tool */
   name: string;
+  /** Description of what the function does */
   description: string;
+  /** Zod schema defining the function's parameter structure */
   schema: z.ZodObject<z.ZodRawShape>;
+  /** Whether to enforce strict validation (optional) */
   strict?: boolean;
 };
 
+/**
+ * Creates a function tool compatible with OpenAI's function calling format using a Zod schema.
+ * This allows for type-safe function definitions that can be used with LLM function calling.
+ * 
+ * @param {FunctionToolConfig} config - Configuration for the function tool
+ * @returns {FunctionTool} OpenAI-compatible function tool definition
+ * 
+ * @example
+ * ```typescript
+ * const schema = z.object({
+ *   name: z.string().describe('The user\'s name'),
+ *   age: z.number().describe('The user\'s age')
+ * });
+ * 
+ * const functionTool = createFunctionToolFromZod({
+ *   name: 'getUserInfo',
+ *   description: 'Get user information',
+ *   schema
+ * });
+ * ```
+ */
 export function createFunctionToolFromZod(config: FunctionToolConfig): FunctionTool {
   const { name, description, schema, strict } = config;
   const jsonSchema = zodToJsonSchema(schema);
