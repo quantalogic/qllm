@@ -1,3 +1,11 @@
+/**
+ * @fileoverview Utility functions for formatting messages and content for the Anthropic API.
+ * Handles conversion of various message formats and content types, including text and images.
+ * 
+ * @author QLLM Team
+ * @version 1.0.0
+ */
+
 import Anthropic from '@anthropic-ai/sdk';
 import { ChatMessage, isImageUrlContent, isTextContent, MessageContent } from '../../types';
 import axios from 'axios';
@@ -7,6 +15,13 @@ import * as mime from 'mime-types';
 import { imageToBase64 } from '../../utils';
 import { extractMimeType } from '../../utils/images/image-to-base64';
 
+/**
+ * Formats a single chat message for the Anthropic API.
+ * Handles both text and multimedia content, converting them to the appropriate format.
+ * 
+ * @param {ChatMessage} message - The message to format
+ * @returns {Promise<Anthropic.MessageParam>} Formatted message for the Anthropic API
+ */
 export const formatMessage = async (message: ChatMessage): Promise<Anthropic.MessageParam> => {
   let content: string | Anthropic.MessageParam['content'];
 
@@ -24,11 +39,24 @@ export const formatMessage = async (message: ChatMessage): Promise<Anthropic.Mes
   };
 };
 
+/**
+ * Formats an array of chat messages for the Anthropic API.
+ * 
+ * @param {ChatMessage[]} messages - Array of messages to format
+ * @returns {Promise<Anthropic.MessageParam[]>} Array of formatted messages
+ */
 export async function formatMessages(messages: ChatMessage[]): Promise<Anthropic.MessageParam[]> {
   const formattedMessages = await Promise.all(messages.map(formatMessage));
   return formattedMessages;
 }
 
+/**
+ * Formats a single content item (text or image) for the Anthropic API.
+ * Handles conversion of image URLs to base64-encoded content with appropriate MIME types.
+ * 
+ * @param {MessageContent} content - The content to format
+ * @returns {Promise<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>} Formatted content block
+ */
 export async function formatContent(
   content: MessageContent,
 ): Promise<Anthropic.TextBlockParam | Anthropic.ImageBlockParam> {

@@ -1,4 +1,13 @@
-// packages/qllm-lib/src/conversation/conversation-reducer.ts
+/**
+ * @fileoverview Implements the reducer pattern for managing conversation state changes.
+ * This module contains the core logic for handling all conversation-related actions
+ * in an immutable way, following Redux-like patterns.
+ * 
+ * @module conversation-reducer
+ * @author QLLM Team
+ * @version 1.0.0
+ */
+
 import { v4 as uuidv4 } from 'uuid';
 import {
   Conversation,
@@ -14,6 +23,13 @@ import {
   InvalidConversationOperationError,
 } from '../types';
 
+/**
+ * Defines all possible actions that can be performed on a conversation.
+ * Each action type corresponds to a specific operation and includes
+ * the necessary payload data for that operation.
+ * 
+ * @typedef {Object} ConversationAction
+ */
 export type ConversationAction =
   | { type: 'CREATE_CONVERSATION'; payload: CreateConversationOptions }
   | { type: 'UPDATE_CONVERSATION'; payload: { id: ConversationId; updates: Partial<Conversation> } }
@@ -31,6 +47,26 @@ export type ConversationAction =
   | { type: 'CLEAR_HISTORY'; payload: ConversationId }
   | { type: 'IMPORT_CONVERSATION'; payload: string };
 
+/**
+ * Handles state transitions for conversations based on dispatched actions.
+ * Implements a pure reducer pattern where each action produces a new state
+ * without modifying the existing state.
+ * 
+ * @param {Map<ConversationId, Conversation>} state - Current conversation state
+ * @param {ConversationAction} action - Action to process
+ * @returns {Map<ConversationId, Conversation>} New conversation state
+ * @throws {ConversationNotFoundError} When trying to operate on a non-existent conversation
+ * @throws {ConversationError} When conversation operations fail
+ * @throws {InvalidConversationOperationError} When attempting invalid operations
+ * 
+ * @example
+ * ```typescript
+ * const newState = conversationReducer(currentState, {
+ *   type: 'CREATE_CONVERSATION',
+ *   payload: { metadata: { title: 'New Chat' } }
+ * });
+ * ```
+ */
 export const conversationReducer = (
   state: Map<ConversationId, Conversation>,
   action: ConversationAction,
@@ -193,7 +229,14 @@ export const conversationReducer = (
   }
 };
 
-const isValidConversation = (data: any): data is Conversation => {
+/**
+ * Type guard to validate if an object conforms to the Conversation interface.
+ * Used primarily during conversation import operations.
+ * 
+ * @param {any} data - Data to validate
+ * @returns {boolean} True if the data is a valid Conversation object
+ */
+function isValidConversation(data: any): data is Conversation {
   return (
     typeof data === 'object' &&
     typeof data.id === 'string' &&
@@ -201,4 +244,4 @@ const isValidConversation = (data: any): data is Conversation => {
     typeof data.metadata === 'object' &&
     data.activeProviders instanceof Set
   );
-};
+}

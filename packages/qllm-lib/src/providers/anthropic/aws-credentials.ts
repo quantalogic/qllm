@@ -1,15 +1,47 @@
+/**
+ * @fileoverview AWS credentials management for Anthropic Bedrock integration.
+ * Handles credential retrieval and provider initialization for AWS Bedrock access.
+ * 
+ * @author QLLM Team
+ * @version 1.0.0
+ */
+
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import { getCredentials } from '../../utils/cloud/aws/credential';
 import { DEFAULT_AWS_BEDROCK_REGION } from './constants';
 
+/**
+ * Retrieves the AWS region for Bedrock service.
+ * Falls back to default region if not specified in environment.
+ * 
+ * @returns {string} AWS region identifier
+ */
 export const region = () => process.env.AWS_BEDROCK_REGION || DEFAULT_AWS_BEDROCK_REGION;
+
+/**
+ * Retrieves the AWS profile name for Bedrock service.
+ * 
+ * @returns {string | undefined} AWS profile name if specified
+ */
 export const profile = () => process.env.AWS_BEDROCK_PROFILE;
 
+/**
+ * Retrieves AWS credentials for the specified region.
+ * 
+ * @returns {Promise<AWS.Credentials>} AWS credentials object
+ */
 export async function getAwsCredential() {
   const credentials = await getCredentials(region());
   return credentials;
 }
 
+/**
+ * Creates an Anthropic provider instance configured for AWS Bedrock.
+ * Handles both profile-based and environment-based credentials.
+ * 
+ * @returns {Promise<AnthropicProvider>} Configured Anthropic provider instance
+ * @throws {Error} When required AWS credentials are not available
+ */
 export const createAwsBedrockAnthropicProvider = async () => {
   let client;
 

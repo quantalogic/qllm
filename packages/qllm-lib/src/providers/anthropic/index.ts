@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Anthropic API provider implementation for QLLM library.
+ * Supports both direct Anthropic API and AWS Bedrock integration for Claude models.
+ * 
+ * @author QLLM Team
+ * @version 1.0.0
+ * @license MIT
+ */
+
 import { Anthropic } from '@anthropic-ai/sdk';
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import {
@@ -18,11 +27,25 @@ import { listModels as listBedrockModels } from '../../utils/cloud/aws/bedrock';
 import { region, getAwsCredential } from './aws-credentials';
 import { DEFAULT_MAX_TOKENS, DEFAULT_MODEL } from './constants';
 
+/**
+ * AnthropicProvider implements the BaseLLMProvider interface for Anthropic's Claude models.
+ * Supports both direct API access and AWS Bedrock integration.
+ * 
+ * @extends BaseLLMProvider
+ */
 export class AnthropicProvider extends BaseLLMProvider {
   private client: Anthropic | AnthropicBedrock;
   public readonly name = 'Anthropic';
   public readonly version = '1.0.0';
 
+  /**
+   * Creates an instance of AnthropicProvider.
+   * 
+   * @param {Object} options - Provider configuration options
+   * @param {string} [options.apiKey] - Anthropic API key. If not provided, falls back to ANTHROPIC_API_KEY environment variable
+   * @param {AnthropicBedrock} [options.client] - Optional pre-configured AWS Bedrock client
+   * @throws {LLMProviderError} When no API key is found and no client is provided
+   */
   constructor({ apiKey, client }: { apiKey?: string; client?: AnthropicBedrock } = {}) {
     super();
     if (!client) {
@@ -36,11 +59,19 @@ export class AnthropicProvider extends BaseLLMProvider {
     }
   }
 
+  /** @type {LLMOptions} Default configuration options for the provider */
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
     maxTokens: DEFAULT_MAX_TOKENS,
   };
 
+  /**
+   * Lists available Claude models.
+   * For direct API access, returns a static list of supported models.
+   * For AWS Bedrock, dynamically fetches available Anthropic models.
+   * 
+   * @returns {Promise<Model[]>} Array of available models with their details
+   */
   async listModels(): Promise<Model[]> {
     if (this.client instanceof AnthropicBedrock) {
       const models = await listBedrockModels(await getAwsCredential(), region());
@@ -91,6 +122,16 @@ export class AnthropicProvider extends BaseLLMProvider {
     ];
   }
 
+  /**
+   * Generates a chat completion using Anthropic's Claude model.
+   * 
+   * @param {ChatCompletionParams} params - Parameters for the chat completion
+   * @param {ChatMessage[]} params.messages - Array of messages in the conversation
+   * @param {LLMOptions} params.options - Model configuration options
+   * @param {Tool[]} [params.tools] - Optional array of tools available to the model
+   * @returns {Promise<ChatCompletionResponse>} The model's response
+   * @throws {LLMProviderError} When the API request fails
+   */
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
       const { messages, options, tools } = params;
@@ -183,6 +224,16 @@ export class AnthropicProvider extends BaseLLMProvider {
     }
   }
 
+  /**
+   * Streams a chat completion using Anthropic's Claude model.
+   * 
+   * @param {ChatCompletionParams} params - Parameters for the chat completion
+   * @param {ChatMessage[]} params.messages - Array of messages in the conversation
+   * @param {LLMOptions} params.options - Model configuration options
+   * @param {Tool[]} [params.tools] - Optional array of tools available to the model
+   * @yields {ChatStreamCompletionResponse} The model's response
+   * @throws {LLMProviderError} When the API request fails
+   */
   async *streamChatCompletion(
     params: ChatCompletionParams,
   ): AsyncIterableIterator<ChatStreamCompletionResponse> {
@@ -237,10 +288,23 @@ export class AnthropicProvider extends BaseLLMProvider {
     }
   }
 
+  /**
+   * Generates an embedding using Anthropic's Claude model.
+   * 
+   * @param {EmbeddingRequestParams} input - Parameters for the embedding
+   * @returns {Promise<EmbeddingResponse>} The model's response
+   * @throws {LLMProviderError} When the API request fails
+   */
   async generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse> {
     throw new LLMProviderError('Embedding generation is not supported by Anthropic', this.name);
   }
 
+  /**
+   * Formats tools for the Anthropic API.
+   * 
+   * @param {Tool[]} tools - Array of tools to format
+   * @returns {Anthropic.Tool[]} Formatted tools
+   */
   private formatTools(tools?: Tool[]): Anthropic.Tool[] | undefined {
     if (!tools) return undefined;
     return tools.map((tool) => ({
@@ -250,6 +314,12 @@ export class AnthropicProvider extends BaseLLMProvider {
     }));
   }
 
+  /**
+   * Formats tool calls for the Anthropic API.
+   * 
+   * @param {any} toolCalls - Tool calls to format
+   * @returns {ToolCall[]} Formatted tool calls
+   */
   private formatToolCalls(toolCalls?: any): ToolCall[] | undefined {
     //console.log('tool calls:');
     //console.dir(toolCalls, { depth: null });
@@ -264,6 +334,12 @@ export class AnthropicProvider extends BaseLLMProvider {
     }));
   }
 
+  /**
+   * Handles errors that occur during API requests.
+   * 
+   * @param {unknown} error - Error to handle
+   * @throws {LLMProviderError} When the error is an API error or an unknown error
+   */
   protected handleError(error: unknown): never {
     const name = this.client instanceof AnthropicBedrock ? 'Anthropic Bedrock' : 'Anthropic';
     if (error instanceof Anthropic.APIError) {

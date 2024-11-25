@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Mistral AI provider implementation for the QLLM library.
+ * This module provides integration with Mistral's language models for text generation and embeddings.
+ * 
+ * @module providers/mistral
+ * @version 1.0.0
+ * 
+ * @remarks
+ * The Mistral provider enables access to Mistral AI's language models through their API.
+ * It supports both text generation and embedding capabilities, with features like
+ * streaming responses and tool/function calling.
+ */
+
 import { Mistral } from '@mistralai/mistralai';
 
 import {
@@ -16,18 +29,38 @@ import {
   ToolCall,
 } from '../../types';
 
+/** Default maximum tokens for model responses */
 const DEFAULT_MAX_TOKENS = 1024 * 4;
+
+/** Default model for text generation */
 const DEFAULT_MODEL = 'mistral-small-latest';
+
+/** Default model for embedding generation */
 const DEFAULT_EMBEDDING_MODEL = 'mistral-embed';
 
 /**
- * MistralProvider class implements the LLMProvider interface for Mistral AI's language models.
- * It provides methods for generating messages, streaming messages, and generating embeddings.
+ * MistralProvider implements both LLM and embedding capabilities using Mistral AI's models.
+ * 
+ * @implements {LLMProvider}
+ * @implements {EmbeddingProvider}
+ * 
+ * @remarks
+ * This provider connects to Mistral AI's API to provide:
+ * - Text generation with chat-style interactions
+ * - Streaming responses for real-time output
+ * - Tool/function calling capabilities
+ * - Text embeddings for vector operations
  */
 export class MistralProvider implements LLMProvider, EmbeddingProvider {
   public readonly version = '1.0.0';
   public readonly name = 'Mistral';
 
+  /**
+   * Creates an instance of MistralProvider.
+   * 
+   * @param {string} [key] - Optional API key. If not provided, falls back to MISTRAL_API_KEY environment variable
+   * @throws {AuthenticationError} When no API key is found
+   */
   constructor(private key?: string) {
     const apiKey = key ?? process.env.MISTRAL_API_KEY;
     if (!apiKey) {
@@ -35,6 +68,13 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Retrieves the API key from constructor or environment.
+   * 
+   * @returns {string} The Mistral API key
+   * @throws {AuthenticationError} When no API key is found
+   * @private
+   */
   private getKey() {
     const apiKey = this.key || process.env.MISTRAL_API_KEY || 'MISTRAL_API_KEY';
 
@@ -44,15 +84,35 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
     return this.key;
   }
 
+  /**
+   * Creates a new Mistral API client instance.
+   * 
+   * @returns {Mistral} Configured Mistral client
+   * @private
+   */
   private getClient() {
     return new Mistral({ apiKey: this.getKey() });
   }
 
+  /** Default options for the Mistral provider */
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
     maxTokens: DEFAULT_MAX_TOKENS,
   };
 
+  /**
+   * Generates a chat completion using Mistral's models.
+   * 
+   * @param {ChatCompletionParams} params - Parameters for the chat completion
+   * @returns {Promise<ChatCompletionResponse>} The generated completion
+   * @throws {LLMProviderError} If there's an error during generation
+   * 
+   * @remarks
+   * This method supports:
+   * - Multi-turn conversations
+   * - Tool/function calling
+   * - Custom model parameters
+   */
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
       const { messages, options, tools } = params;
@@ -95,6 +155,13 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Prepares tools for the Mistral API format.
+   * 
+   * @param {Object[]} [tools] - Array of tool definitions
+   * @returns {Object[] | undefined} Formatted tools for Mistral API
+   * @private
+   */
   private prepareMistraTools(
     tools:
       | {
@@ -116,6 +183,13 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
     );
   }
 
+  /**
+   * Extracts and formats tool call results from Mistral's response.
+   * 
+   * @param {any} toolCalls - Raw tool calls from Mistral API
+   * @returns {ToolCall[]} Formatted tool calls
+   * @private
+   */
   private extractToolCallsResult(toolCalls: any): ToolCall[] {
     return toolCalls.map((mistralToolCall: any) => {
       const toolCall: ToolCall = {
@@ -130,6 +204,17 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
     });
   }
 
+  /**
+   * Streams a chat completion for real-time responses.
+   * 
+   * @param {ChatCompletionParams} params - Parameters for the chat completion
+   * @returns {AsyncIterableIterator<ChatStreamCompletionResponse>} Stream of completion chunks
+   * @throws {LLMProviderError} If there's an error during generation
+   * 
+   * @remarks
+   * The stream provides real-time updates as the model generates text,
+   * enabling more responsive applications.
+   */
   async *streamChatCompletion(
     params: ChatCompletionParams,
   ): AsyncIterableIterator<ChatStreamCompletionResponse> {
@@ -170,6 +255,14 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Generates embeddings for the given text input.
+   * 
+   * @param {EmbeddingRequestParams} input - Parameters for embedding generation
+   * @returns {Promise<EmbeddingResponse>} The generated embeddings
+   * @throws {InvalidRequestError} If input is not a string
+   * @throws {LLMProviderError} If there's an error during generation
+   */
   async generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse> {
     try {
       const { content, model } = input;
@@ -203,6 +296,12 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Lists available Mistral models.
+   * 
+   * @returns {Promise<Model[]>} Array of available models
+   * @throws {LLMProviderError} If there's an error fetching models
+   */
   async listModels(): Promise<Model[]> {
     const models = await this.getClient().models.list();
 
@@ -216,6 +315,13 @@ export class MistralProvider implements LLMProvider, EmbeddingProvider {
     return modelList;
   }
 
+  /**
+   * Handles errors by wrapping them in appropriate error types.
+   * 
+   * @param {unknown} error - Error to handle
+   * @throws {LLMProviderError} Always throws a wrapped error
+   * @private
+   */
   private handleError(error: unknown): never {
     if (error instanceof Error) {
       if (error.message.includes('401')) {

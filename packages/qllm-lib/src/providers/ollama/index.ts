@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Ollama provider implementation for the QLLM library.
+ * This module provides integration with Ollama, allowing local execution of open-source language models.
+ * 
+ * @module providers/ollama
+ * @version 1.0.0
+ * 
+ * @remarks
+ * The Ollama provider enables local model execution through the Ollama server.
+ * It supports both text generation and embedding capabilities, with additional
+ * features like multimodal inputs (text + images) and tool calling.
+ */
+
 import {
   ChatCompletionParams,
   ChatCompletionResponse,
@@ -31,12 +44,34 @@ import { listModels } from './list-models';
 const DEFAULT_MODEL = 'llama3.1';
 const BASE_URL = 'http://localhost:11434';
 
+/**
+ * Ollama provider implementation that supports both LLM and embedding capabilities.
+ * 
+ * @implements {LLMProvider}
+ * @implements {EmbeddingProvider}
+ * 
+ * @remarks
+ * This provider connects to a local Ollama server to execute language models.
+ * It supports features like:
+ * - Text generation with chat-style interactions
+ * - Streaming responses for real-time output
+ * - Multimodal inputs (text + images)
+ * - Tool calling for function execution
+ * - Text embeddings for vector operations
+ */
 export class OllamaProvider implements LLMProvider, EmbeddingProvider {
   constructor(private baseUrl: string = BASE_URL) {}
 
   public readonly version: string = '1.0.0';
   public readonly name = 'Ollama';
 
+  /**
+   * Generates embeddings for the given text input using Ollama models.
+   * 
+   * @param {EmbeddingRequestParams} input - The text to generate embeddings for
+   * @returns {Promise<EmbeddingResponse>} The generated embeddings
+   * @throws {Error} If multiple text inputs are provided (not supported by Ollama)
+   */
   async generateEmbedding(input: EmbeddingRequestParams): Promise<EmbeddingResponse> {
     if (Array.isArray(input.content)) {
       throw new Error('Ollama embeddings does not support multiple text inputs');
@@ -54,10 +89,17 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
     return embeddingResponse;
   }
 
+  /** Default options for the Ollama provider */
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
   };
 
+  /**
+   * Retrieves a list of available models from the Ollama server.
+   * 
+   * @returns {Promise<Model[]>} Array of available models
+   * @throws {LLMProviderError} If there's an error fetching the models
+   */
   async listModels(): Promise<Model[]> {
     try {
       const models = await listModels(this.baseUrl);
@@ -73,6 +115,20 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Generates a chat completion using the specified model and parameters.
+   * 
+   * @param {ChatCompletionParams} params - Parameters for the chat completion
+   * @returns {Promise<ChatCompletionResponse>} The generated completion
+   * @throws {LLMProviderError} If there's an error during generation
+   * 
+   * @remarks
+   * This method supports:
+   * - System messages for context setting
+   * - Multi-turn conversations
+   * - Tool/function calling
+   * - Image inputs (when supported by the model)
+   */
   async generateChatCompletion(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
     try {
       const { messages, options, tools } = params;
@@ -104,6 +160,17 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Generates a streaming chat completion for real-time responses.
+   * 
+   * @param {ChatCompletionParams} params - Parameters for the chat completion
+   * @returns {AsyncIterableIterator<ChatStreamCompletionResponse>} Stream of completion chunks
+   * @throws {LLMProviderError} If there's an error during generation
+   * 
+   * @remarks
+   * The stream provides real-time updates as the model generates text,
+   * allowing for more responsive user interfaces.
+   */
   async *streamChatCompletion(
     params: ChatCompletionParams,
   ): AsyncIterableIterator<ChatStreamCompletionResponse> {
@@ -135,6 +202,13 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Formats messages for the Ollama API, handling both text and image inputs.
+   * 
+   * @param {ChatMessageWithSystem[]} messages - Array of messages to format
+   * @returns {Promise<Array>} Formatted messages for the Ollama API
+   * @protected
+   */
   protected async formatMessages(
     messages: ChatMessageWithSystem[],
   ): Promise<{ role: string; content: string; images?: string[] }[]> {
@@ -165,6 +239,14 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
     }
     return formattedMessages;
   }
+
+  /**
+   * Handles errors by wrapping them in LLMProviderError.
+   * 
+   * @param {unknown} error - The error to handle
+   * @throws {LLMProviderError} Always throws a wrapped error
+   * @protected
+   */
   protected handleError(error: unknown): never {
     if (error instanceof LLMProviderError) {
       throw error;
@@ -175,6 +257,14 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
     }
   }
 
+  /**
+   * Adds a system message to the conversation if specified in options.
+   * 
+   * @param {LLMOptions} options - Options containing potential system message
+   * @param {ChatMessage[]} messages - Original message array
+   * @returns {ChatMessageWithSystem[]} Messages with system message prepended if present
+   * @protected
+   */
   protected withSystemMessage(
     options: LLMOptions,
     messages: ChatMessage[],
@@ -193,6 +283,12 @@ export class OllamaProvider implements LLMProvider, EmbeddingProvider {
   }
 }
 
+/**
+ * Creates an image content object from a source URL or path.
+ * 
+ * @param {string} source - URL or path to the image
+ * @returns {Promise<ImageUrlContent>} Formatted image content for Ollama
+ */
 export const createOllamaImageContent = async (source: string): Promise<ImageUrlContent> => {
   const content = await imageToBase64(source);
   // Return the raw base64 string without the data URL prefix
@@ -202,6 +298,13 @@ export const createOllamaImageContent = async (source: string): Promise<ImageUrl
   };
 };
 
+/**
+ * Formats tool definitions for the Ollama API.
+ * 
+ * @param {Tool[] | undefined} tools - Array of tool definitions
+ * @returns {OllamaTool[] | undefined} Formatted tools for Ollama
+ * @private
+ */
 function formatTools(tools: Tool[] | undefined): OllamaTool[] | undefined {
   if (!tools) {
     return undefined;
@@ -221,6 +324,13 @@ function formatTools(tools: Tool[] | undefined): OllamaTool[] | undefined {
   return ollamaTools;
 }
 
+/**
+ * Maps Ollama tool calls to the standard QLLM format.
+ * 
+ * @param {OllamaToolCall[] | undefined} toolCalls - Tool calls from Ollama
+ * @returns {ToolCall[] | undefined} Standardized tool calls
+ * @private
+ */
 function mapOllamaToolCallToToolCall(
   toolCalls: OllamaToolCall[] | undefined,
 ): ToolCall[] | undefined {
@@ -240,6 +350,13 @@ function mapOllamaToolCallToToolCall(
   );
 }
 
+/**
+ * Formats LLM options for the Ollama API.
+ * 
+ * @param {LLMOptions} options - QLLM options
+ * @returns {Partial<OllamaOptions>} Formatted options for Ollama
+ * @private
+ */
 function formatOptions(options: LLMOptions): Partial<OllamaOptions> {
   const stops: string[] = [];
   if (Array.isArray(options.stop)) {
