@@ -32,3 +32,4 @@ export interface FileHandler {
      */
     getType(path: string): Promise<string>;
 }
+

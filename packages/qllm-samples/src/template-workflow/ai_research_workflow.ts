@@ -4,6 +4,8 @@ import {
   WorkflowManager,
   WorkflowDefinition,
 } from "qllm-lib";
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function main(): Promise<void> {
   console.log("\n🔍 Debug - Starting template definitions");
@@ -178,7 +180,6 @@ async function main(): Promise<void> {
           "🎯 Generate comprehensive, engaging learning article for impatient learners",
       )
       .build();
-
   // Create providers
   const providers = {
     openai: createLLMProvider({
@@ -242,10 +243,10 @@ async function main(): Promise<void> {
       workflowInput,
       {
         onStepStart: (step, index) => {
-          console.log(`\n🔍 Starting step ${index + 1}: ${step.template.name}`);
+          console.log(`\n🔍 Starting step ${index + 1}: ${step?.template?.name}`);
         },
         onStepComplete: (step, index, result) => {
-          console.log(`\n✅ Completed step ${index + 1}: ${step.template.name}`);
+          console.log(`\n✅ Completed step ${index + 1}: ${step?.template?.name}`);
           console.log(`Result for step ${index + 1}:`, result);
         }
       }
