@@ -7,6 +7,10 @@ export * from './providers';
 // Utilities
 export * from './utils';
 
+// Utilities
+export * from './tools';
+
+
 // Conversation management
 export * from './conversation';
 

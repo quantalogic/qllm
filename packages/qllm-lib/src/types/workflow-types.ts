@@ -3,11 +3,14 @@
 import { TemplateDefinition } from '../templates/types';
 
 export interface WorkflowStep {
-    template: TemplateDefinition;
+    template?: TemplateDefinition;
+    templateUrl?: string;
+    tool?: string;
+    toolConfig?: Record<string, any>;  
     provider?: string;
-    input?: Record<string, string | number | boolean>; // Updated to allow more types
+    input?: Record<string, string | number | boolean>;
     output: string | Record<string, string>;
-}
+  }
 
 export interface WorkflowDefinition {
     name: string;
