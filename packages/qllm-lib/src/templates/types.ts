@@ -1,12 +1,51 @@
 /**
  * @fileoverview Type Definitions for QLLM Library
  * 
- * This module provides type definitions and error classes for the QLLM library.
- * It includes types for execution context, template definitions, and specialized
- * error classes for different types of failures.
+ * This module provides comprehensive type definitions and specialized error classes
+ * for the QLLM library. It establishes the core type system that ensures type safety
+ * and proper error handling throughout the application.
+ * 
+ * Key components:
+ * - Execution context types
+ * - Template definition types
+ * - Error hierarchy
+ * - Provider interfaces
+ * - Validation types
+ * 
+ * The error hierarchy is designed to provide specific, contextual error handling
+ * for different types of failures that may occur during template processing.
  * 
  * @version 1.0.0
  * @module qllm-lib/templates
+ * @since 2023
+ * 
+ * @example
+ * ```typescript
+ * // Using execution context
+ * const context: ExecutionContext = {
+ *   template: myTemplate,
+ *   variables: { key: 'value' },
+ *   stream: true,
+ *   providerOptions: {
+ *     temperature: 0.7,
+ *     maxTokens: 1000
+ *   }
+ * };
+ * 
+ * // Error handling
+ * try {
+ *   await executeTemplate(context);
+ * } catch (error) {
+ *   if (error instanceof TemplateError) {
+ *     console.error('Template error:', error.message);
+ *   } else if (error instanceof ProviderError) {
+ *     console.error(`Provider ${error.providerName} error:`, error.message);
+ *   }
+ * }
+ * ```
+ * 
+ * @see {@link TemplateExecutor} for execution handling
+ * @see {@link TemplateManager} for template management
  */
 
 import { LLMOptions, LLMProvider } from '../types';
@@ -17,9 +56,31 @@ export * from './template-definition-builder';
 
 /**
  * Execution context for template processing.
- * Contains all necessary information for template execution.
+ * Contains all necessary information and configuration for template execution,
+ * including the template itself, variables, provider options, and callbacks.
  * 
  * @interface ExecutionContext
+ * 
+ * @example
+ * ```typescript
+ * const context: ExecutionContext = {
+ *   template: {
+ *     name: 'example',
+ *     content: 'Hello {{name}}!',
+ *     input_variables: {
+ *       name: { type: 'string' }
+ *     }
+ *   },
+ *   variables: {
+ *     name: 'World'
+ *   },
+ *   provider: new OpenAIProvider(),
+ *   stream: true,
+ *   providerOptions: {
+ *     temperature: 0.5
+ *   }
+ * };
+ * ```
  */
 export interface ExecutionContext {
   /** The template to execute */
@@ -41,9 +102,22 @@ export interface ExecutionContext {
 
 /**
  * Base error class for QLLM-specific errors.
+ * Provides a foundation for the error hierarchy with consistent
+ * error naming and prototype chain setup.
  * 
  * @class QllmError
  * @extends Error
+ * 
+ * @example
+ * ```typescript
+ * class CustomError extends QllmError {
+ *   constructor(message: string) {
+ *     super(message);
+ *     this.name = 'CustomError';
+ *     Object.setPrototypeOf(this, CustomError.prototype);
+ *   }
+ * }
+ * ```
  */
 export class QllmError extends Error {
   constructor(message: string) {

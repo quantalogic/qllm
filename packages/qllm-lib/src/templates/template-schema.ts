@@ -1,19 +1,80 @@
 /**
  * @fileoverview Schema definitions for QLLM templates using Zod.
  * 
- * This module defines the schema for QLLM templates, including input variables,
- * output variables, and template definitions. It uses Zod for runtime type
- * checking and validation.
+ * This module provides comprehensive schema definitions for QLLM templates,
+ * implementing strict runtime type checking and validation using Zod.
+ * The schema system ensures data integrity and type safety throughout
+ * the template lifecycle.
+ * 
+ * Key features:
+ * - Runtime type validation
+ * - Detailed error messages
+ * - Custom validation rules
+ * - Extensible schema definitions
+ * - TypeScript type inference
  * 
  * @version 1.0.0
  * @module qllm-lib/templates
+ * @since 2023
+ * 
+ * @example
+ * ```typescript
+ * // Define a template using the schema
+ * const template = {
+ *   name: 'api-request',
+ *   version: '1.0.0',
+ *   description: 'Template for API requests',
+ *   input_variables: {
+ *     endpoint: {
+ *       type: 'string',
+ *       description: 'API endpoint URL',
+ *       customValidator: (url) => url.startsWith('https://')
+ *     },
+ *     headers: {
+ *       type: 'object',
+ *       default: { 'Content-Type': 'application/json' }
+ *     }
+ *   },
+ *   output_variables: {
+ *     response: {
+ *       type: 'object',
+ *       description: 'Parsed API response'
+ *     }
+ *   }
+ * };
+ * 
+ * // Validate the template
+ * const validated = templateDefinitionSchema.parse(template);
+ * ```
+ * 
+ * @see {@link TemplateValidator} for validation logic
+ * @see {@link TemplateDefinitionBuilder} for template construction
  */
 
 import * as z from 'zod';
 
 /**
  * Schema for template input variables.
- * Defines the structure and validation rules for template input variables.
+ * Defines the structure and validation rules for template input variables,
+ * supporting various data types and validation options.
+ * 
+ * Features:
+ * - Multiple data type support
+ * - Optional default values
+ * - Custom validation functions
+ * - Type inference for TypeScript
+ * 
+ * @example
+ * ```typescript
+ * const variable = {
+ *   type: 'string',
+ *   description: 'API key for authentication',
+ *   default: process.env.API_KEY,
+ *   customValidator: (key) => key.length === 32
+ * };
+ * 
+ * const validated = templateVariableSchema.parse(variable);
+ * ```
  */
 export const templateVariableSchema = z
   .object({
@@ -38,7 +99,25 @@ export const templateVariableSchema = z
 
 /**
  * Schema for template output variables.
- * Defines the structure and validation rules for template output variables.
+ * Defines the structure and validation rules for template output variables,
+ * supporting various data types and output formats.
+ * 
+ * Features:
+ * - Rich type system
+ * - Optional descriptions
+ * - Default value support
+ * - Nested object support
+ * 
+ * @example
+ * ```typescript
+ * const outputVar = {
+ *   type: 'object',
+ *   description: 'Processed API response',
+ *   default: { status: 'pending' }
+ * };
+ * 
+ * const validated = outputVariableSchema.parse(outputVar);
+ * ```
  */
 export const outputVariableSchema = z
   .object({
@@ -55,7 +134,38 @@ export const outputVariableSchema = z
 
 /**
  * Schema for complete template definitions.
- * Defines the structure and validation rules for entire template documents.
+ * Defines the structure and validation rules for entire template documents,
+ * including metadata, input variables, output variables, and content.
+ * 
+ * Features:
+ * - Comprehensive metadata support
+ * - Input and output variable validation
+ * - Content validation
+ * - Extensible schema definitions
+ * 
+ * @example
+ * ```typescript
+ * const template = {
+ *   name: 'api-request',
+ *   version: '1.0.0',
+ *   description: 'Template for API requests',
+ *   input_variables: {
+ *     endpoint: {
+ *       type: 'string',
+ *       description: 'API endpoint URL'
+ *     }
+ *   },
+ *   output_variables: {
+ *     response: {
+ *       type: 'object',
+ *       description: 'Parsed API response'
+ *     }
+ *   },
+ *   content: 'API request template content'
+ * };
+ * 
+ * const validated = templateDefinitionSchema.parse(template);
+ * ```
  */
 export const templateDefinitionSchema = z
   .object({

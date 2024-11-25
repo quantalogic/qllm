@@ -1,18 +1,59 @@
 /**
  * @fileoverview Output Variable Extractor for QLLM Library
  * 
- * This module provides functionality for extracting and validating output variables
- * from template execution results. It supports parsing and type conversion for
- * various data types including strings, numbers, booleans, arrays, and objects.
+ * This module implements a sophisticated system for extracting, parsing, and validating
+ * output variables from template execution results. It provides robust handling of
+ * various data types and formats with comprehensive error checking.
+ * 
+ * Key features:
+ * - Type-safe variable extraction
+ * - Support for multiple data types
+ * - Robust error handling
+ * - Format validation
+ * - Default value handling
+ * - Custom type conversion
+ * 
+ * Supported data types:
+ * - Strings
+ * - Numbers (integers and floats)
+ * - Booleans
+ * - Arrays
+ * - Objects (JSON)
  * 
  * @version 1.0.0
  * @module qllm-lib/templates
+ * @since 2023
  * 
  * @example
  * ```typescript
- * const output = await executeTemplate(template);
+ * // Define template with output variables
+ * const template = {
+ *   name: 'data-processor',
+ *   output_variables: {
+ *     count: { type: 'integer' },
+ *     items: { type: 'array' },
+ *     metadata: { type: 'object' }
+ *   }
+ * };
+ * 
+ * // Extract variables from execution output
+ * const output = `
+ * Count: 42
+ * Items: ["apple", "banana", "orange"]
+ * Metadata: {"status": "success", "timestamp": 1234567890}
+ * `;
+ * 
  * const variables = OutputVariableExtractor.extractVariables(template, output);
+ * console.log(variables);
+ * // {
+ * //   count: 42,
+ * //   items: ["apple", "banana", "orange"],
+ * //   metadata: { status: "success", timestamp: 1234567890 }
+ * // }
  * ```
+ * 
+ * @see {@link TemplateExecutor} for template execution
+ * @see {@link TemplateDefinition} for template structure
  */
 
 import { ErrorManager } from '../utils/error';
@@ -20,17 +61,60 @@ import { TemplateDefinition, OutputVariable } from './types';
 
 /**
  * Extracts and validates output variables from template execution results.
+ * Implements a robust parsing system with type conversion and validation.
+ * 
+ * Key responsibilities:
+ * - Variable extraction from raw output
+ * - Type conversion and validation
+ * - Error handling and reporting
+ * - Default value application
  * 
  * @class OutputVariableExtractor
+ * 
+ * @example
+ * ```typescript
+ * // Basic usage
+ * const vars = OutputVariableExtractor.extractVariables(template, output);
+ * 
+ * // Handling complex types
+ * const template = {
+ *   output_variables: {
+ *     data: {
+ *       type: 'object',
+ *       default: { status: 'pending' }
+ *     },
+ *     timestamps: {
+ *       type: 'array',
+ *       description: 'List of processing timestamps'
+ *     }
+ *   }
+ * };
+ * 
+ * const result = OutputVariableExtractor.extractVariables(template, output);
+ * console.log(result.data.status);
+ * console.log(result.timestamps.length);
+ * ```
  */
 export class OutputVariableExtractor {
   /**
    * Creates a new instance and extracts variables from the output.
+   * Provides a convenient static interface for variable extraction.
    * 
    * @static
    * @param {TemplateDefinition} template - The template containing output variable definitions
    * @param {string} output - The raw output from template execution
    * @returns {Record<string, any>} Extracted and validated variables
+   * @throws {OutputVariableError} If extraction or validation fails
+   * 
+   * @example
+   * ```typescript
+   * try {
+   *   const variables = OutputVariableExtractor.extractVariables(template, output);
+   *   console.log('Extracted variables:', variables);
+   * } catch (error) {
+   *   console.error('Failed to extract variables:', error.message);
+   * }
+   * ```
    */
   static extractVariables(template: TemplateDefinition, output: string): Record<string, any> {
     const extractor = new OutputVariableExtractor(template);

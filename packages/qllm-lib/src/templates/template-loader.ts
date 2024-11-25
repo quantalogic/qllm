@@ -1,21 +1,42 @@
 /**
  * @fileoverview Template Loader for QLLM Library
  * 
- * This module provides functionality for loading template definitions from files.
- * It supports both JSON and YAML formats and handles the resolution of included
- * content within templates.
+ * This module provides a robust and flexible system for loading template definitions
+ * from various file formats. Key features include:
+ * 
+ * - Support for multiple file formats (JSON, YAML)
+ * - Automatic content type detection
+ * - Resolution of included content and dependencies
+ * - Builder pattern support for template modification
+ * - Error handling with detailed diagnostics
+ * 
+ * The loader handles all aspects of template loading, from file reading to
+ * content resolution, ensuring templates are properly initialized before use.
  * 
  * @version 1.0.0
  * @module qllm-lib/templates
+ * @since 2023
  * 
  * @example
  * ```typescript
- * // Load a template definition
- * const template = await TemplateLoader.load('path/to/template.yaml');
+ * // Load a template from YAML
+ * const yamlTemplate = await TemplateLoader.load('templates/greeting.yaml');
  * 
- * // Load as a builder for further modification
- * const builder = await TemplateLoader.loadAsBuilder('path/to/template.json');
+ * // Load a template from JSON
+ * const jsonTemplate = await TemplateLoader.load('templates/response.json');
+ * 
+ * // Load and modify a template using builder pattern
+ * const builder = await TemplateLoader.loadAsBuilder('templates/base.yaml');
+ * builder
+ *   .setName('custom-template')
+ *   .addVariable('user', { type: 'string', required: true })
+ *   .setContent('Hello {{user}}!');
+ * 
+ * const customTemplate = builder.build();
  * ```
+ * 
+ * @see {@link TemplateDefinitionBuilder} for template modification
+ * @see {@link TemplateManager} for template management
  */
 
 import { TemplateDefinitionWithResolvedContent } from './template-schema';
@@ -23,19 +44,55 @@ import { TemplateDefinitionBuilder } from './template-definition-builder';
 import { loadContent, resolveIncludedContent } from '../utils/document/document-inclusion-resolver';
 
 /**
- * Utility class for loading template definitions from files.
- * Supports both JSON and YAML formats and handles content resolution.
+ * Utility class for loading and initializing template definitions from files.
+ * Provides a high-level interface for template loading operations with built-in
+ * support for different file formats and content resolution.
+ * 
+ * Key features:
+ * - Automatic MIME type detection
+ * - Content resolution for included files
+ * - Builder pattern support
+ * - Error handling with context
  * 
  * @class TemplateLoader
+ * 
+ * @example
+ * ```typescript
+ * // Basic template loading
+ * const template = await TemplateLoader.load('templates/basic.yaml');
+ * 
+ * // Loading with included content
+ * const complexTemplate = await TemplateLoader.load('templates/complex.yaml');
+ * // Will automatically resolve any included files referenced in the template
+ * 
+ * // Load for modification
+ * const builder = await TemplateLoader.loadAsBuilder('templates/base.yaml');
+ * const modified = builder
+ *   .addVariable('apiKey', { type: 'string', required: true })
+ *   .build();
+ * ```
  */
 export class TemplateLoader {
   /**
-   * Loads a template definition from a file and resolves included content.
+   * Loads a template definition from a file and resolves all included content.
+   * Automatically detects the file format and handles content resolution for
+   * any included files or dependencies.
    * 
    * @static
-   * @param {string} inputFilePath - Path to the template definition file
-   * @returns {Promise<TemplateDefinitionWithResolvedContent>} Loaded and resolved template
-   * @throws {Error} If file loading or content resolution fails
+   * @param {string} inputFilePath - Path to the template definition file (JSON or YAML)
+   * @returns {Promise<TemplateDefinitionWithResolvedContent>} Fully resolved template definition
+   * @throws {Error} If file loading fails, format is invalid, or content resolution fails
+   * 
+   * @example
+   * ```typescript
+   * try {
+   *   const template = await TemplateLoader.load('templates/api-call.yaml');
+   *   console.log('Template loaded:', template.name);
+   *   console.log('Variables:', template.variables);
+   * } catch (error) {
+   *   console.error('Failed to load template:', error.message);
+   * }
+   * ```
    */
   static async load(inputFilePath: string): Promise<TemplateDefinitionWithResolvedContent> {
     const content = await loadContent(inputFilePath, inputFilePath);
