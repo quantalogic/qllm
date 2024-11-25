@@ -5,6 +5,21 @@
  * 
  * @module providers
  * @version 1.0.0
+ * 
+ * @remarks
+ * The provider system is designed to be extensible, allowing easy integration of new LLM providers.
+ * Each provider implements standard interfaces (LLMProvider/EmbeddingProvider) to ensure consistent
+ * behavior across different implementations.
+ * 
+ * Supported Providers:
+ * - OpenAI: GPT models and embeddings
+ * - Anthropic: Claude models
+ * - AWS Bedrock: Anthropic models via AWS
+ * - Ollama: Local open-source models
+ * - Groq: High-performance inference
+ * - Perplexity: Advanced language models
+ * - Mistral: Efficient language models
+ * - OpenRouter: Multi-model gateway
  */
 
 import { EmbeddingProvider, LLMProvider } from '../types/index';
@@ -46,6 +61,10 @@ export const getListProviderNames = (): string[] => {
  * @returns {Promise<LLMProvider>} A promise that resolves to an instance of the requested provider
  * @throws {Error} If the specified provider name is not supported
  * 
+ * @remarks
+ * This function serves as the main entry point for creating LLM provider instances.
+ * Each provider is initialized with default settings which can be customized after creation.
+ * 
  * @example
  * // Create an OpenAI provider
  * const openai = await getLLMProvider('openai');
@@ -79,11 +98,15 @@ export async function getLLMProvider(providerName: string): Promise<LLMProvider>
 
 /**
  * Factory function that creates and returns an embedding provider instance based on the provided name.
- * Currently supports OpenAI for text embeddings.
+ * Currently supports OpenAI, Ollama, Groq, and Perplexity for text embeddings.
  * 
  * @param {string} providerName - The name of the provider to instantiate
  * @returns {Promise<EmbeddingProvider>} A promise that resolves to an instance of the requested embedding provider
  * @throws {Error} If the specified provider name is not supported for embeddings
+ * 
+ * @remarks
+ * Not all LLM providers support embeddings. This function only instantiates providers
+ * that implement the EmbeddingProvider interface.
  * 
  * @example
  * // Create an OpenAI embedding provider
