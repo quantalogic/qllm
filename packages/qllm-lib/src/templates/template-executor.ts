@@ -1,26 +1,54 @@
 /**
  * @fileoverview Template Executor for QLLM Library
  * 
- * This module provides the execution engine for QLLM templates. It handles template
- * processing, variable resolution, LLM interaction, and output processing. The executor
- * implements an event-driven architecture to provide detailed visibility into the
- * execution lifecycle.
+ * This module provides the core execution engine for QLLM templates, implementing
+ * a robust event-driven architecture for template processing. It handles the complete
+ * execution lifecycle including:
+ * 
+ * - Template validation and preprocessing
+ * - Variable resolution and validation
+ * - File inclusion and content resolution
+ * - LLM provider interaction
+ * - Response streaming and processing
+ * - Output variable extraction
+ * 
+ * The executor emits events at each stage of processing, allowing for detailed
+ * monitoring and debugging of template execution.
  * 
  * @version 1.0.0
  * @module qllm-lib/templates
+ * @since 2023
  * 
  * @example
  * ```typescript
+ * // Create an executor instance
  * const executor = new TemplateExecutor();
- * executor.on('executionComplete', ({ response, outputVariables }) => {
- *   console.log('Execution completed:', response);
+ * 
+ * // Listen for execution events
+ * executor.on('executionStart', ({ template, variables }) => {
+ *   console.log('Starting execution with variables:', variables);
  * });
  * 
+ * executor.on('executionComplete', ({ response, outputVariables }) => {
+ *   console.log('Execution completed:', response);
+ *   console.log('Extracted variables:', outputVariables);
+ * });
+ * 
+ * // Execute a template with variables
  * const result = await executor.execute({
- *   template: myTemplate,
- *   variables: { input: 'Hello' }
+ *   template: {
+ *     name: 'greeting',
+ *     content: 'Generate a greeting for {{name}}',
+ *     variables: [{ name: 'name', type: 'string', required: true }]
+ *   },
+ *   variables: { name: 'Alice' },
+ *   stream: true // Enable streaming response
  * });
  * ```
+ * 
+ * @see {@link TemplateManager} for template management
+ * @see {@link OutputVariableExtractor} for output processing
+ * @see {@link TemplateValidator} for validation logic
  */
 
 import { EventEmitter } from 'events';
@@ -40,9 +68,19 @@ import path from 'path';
 
 /**
  * Events emitted during template execution.
- * Each event corresponds to a specific phase in the execution lifecycle.
+ * Each event provides detailed information about the current execution phase,
+ * enabling fine-grained monitoring and control of the execution process.
  * 
  * @interface TemplateExecutorEvents
+ * @property {Object} executionStart - Emitted when execution begins
+ * @property {Object} variablesResolved - Emitted after variable resolution
+ * @property {Object} contentPrepared - Emitted after content preparation
+ * @property {Object} llmResponseStart - Emitted when LLM starts responding
+ * @property {Object} llmResponseChunk - Emitted for each chunk in streaming mode
+ * @property {Object} llmResponseComplete - Emitted when LLM response is complete
+ * @property {Object} outputVariablesExtracted - Emitted after variable extraction
+ * @property {Object} executionComplete - Emitted when execution is complete
+ * @property {Object} executionError - Emitted on execution error
  */
 interface TemplateExecutorEvents {
   /** Emitted when template execution begins */

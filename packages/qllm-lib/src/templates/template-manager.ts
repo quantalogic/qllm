@@ -1,28 +1,48 @@
 /**
  * @fileoverview Template Manager for QLLM Library
  * 
- * This module provides a file system-based template management system for QLLM.
- * It handles template storage, retrieval, and management operations while providing
- * error handling and logging capabilities.
+ * This module provides a robust file system-based template management system for QLLM.
+ * It handles the complete lifecycle of templates including storage, retrieval, validation,
+ * and management operations while ensuring thread-safety and proper error handling.
+ * 
+ * Key Features:
+ * - Asynchronous template loading and caching
+ * - File system-based persistence
+ * - Version control for templates
+ * - Error handling with detailed logging
+ * - Type-safe template operations
  * 
  * @version 1.0.0
  * @module qllm-lib/templates
+ * @since 2023
  * 
  * @example
  * ```typescript
+ * // Initialize the template manager with a specific directory
  * const manager = new TemplateManager({ promptDirectory: './templates' });
  * await manager.init();
  * 
- * // List available templates
+ * // List all available templates
  * const templates = await manager.listTemplates();
  * 
- * // Save a new template
+ * // Save a new template with variables
  * await manager.saveTemplate({
- *   name: 'example',
+ *   name: 'greeting',
  *   content: 'Hello {{name}}!',
- *   version: '1.0.0'
+ *   version: '1.0.0',
+ *   variables: [{
+ *     name: 'name',
+ *     type: 'string',
+ *     description: 'Name of the person to greet'
+ *   }]
  * });
+ * 
+ * // Load a specific template
+ * const template = await manager.loadTemplate('greeting');
  * ```
+ * 
+ * @see {@link TemplateExecutor} for template execution
+ * @see {@link TemplateLoader} for template loading mechanics
  */
 
 import fs from 'fs/promises';
@@ -36,6 +56,9 @@ import { TemplateLoader } from './template-loader';
  * Configuration options for the Template Manager.
  * 
  * @interface TemplateManagerConfig
+ * @property {string} promptDirectory - Absolute or relative path to the directory containing template files.
+ *                                     The directory will be created if it doesn't exist.
+ * @throws {TemplateManagerError} If the directory path is invalid or inaccessible
  */
 export interface TemplateManagerConfig {
   /** Directory path where template files are stored */
@@ -43,10 +66,32 @@ export interface TemplateManagerConfig {
 }
 
 /**
- * Manages template storage and retrieval operations.
- * Provides a file system-based storage system for templates with caching capabilities.
+ * Manages the complete lifecycle of templates including storage, retrieval, and validation.
+ * Provides a file system-based storage system with built-in caching for optimal performance.
+ * 
+ * Key responsibilities:
+ * - Template storage and retrieval
+ * - Version management
+ * - Cache management
+ * - File system operations
+ * - Error handling and logging
  * 
  * @class TemplateManager
+ * @implements {ITemplateManager}
+ * 
+ * @example
+ * ```typescript
+ * const manager = new TemplateManager({
+ *   promptDirectory: path.join(__dirname, 'templates')
+ * });
+ * 
+ * // Initialize the manager
+ * await manager.init();
+ * 
+ * // Work with templates
+ * const template = await manager.loadTemplate('myTemplate');
+ * await manager.saveTemplate(newTemplate);
+ * ```
  */
 export class TemplateManager {
   /** Directory path where templates are stored */
