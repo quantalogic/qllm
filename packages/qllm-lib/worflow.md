@@ -124,12 +124,12 @@ export class WorkflowManager {
       if (step.tool) {
         const ToolClass = this.toolFactories.get(step.tool);
         if (!ToolClass) {
-          throw new Error(`Tool factory "${step.tool}" not found`);
+          throw new Error(`Tool factory "${step?.tool}" not found`);
         }
         
         // Tool will be instantiated during execution with config from input
         if (!this.toolFactories.has(step.tool)) {
-          throw new Error(`Tool factory "${step.tool}" not registered`);
+          throw new Error(`Tool factory "${step?.tool}" not registered`);
         }
       }
       
@@ -336,7 +336,7 @@ export class WorkflowExecutor extends EventEmitter {
 
     const ToolClass = this.toolFactories.get(step.tool);
     if (!ToolClass) {
-      throw new Error(`Tool factory "${step.tool}" not found`);
+      throw new Error(`Tool factory "${step?.tool}" not found`);
     }
 
     const resolvedInput = await this.resolveStepInputs(step.input || {}, context);

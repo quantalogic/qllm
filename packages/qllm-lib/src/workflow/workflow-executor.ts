@@ -110,7 +110,7 @@ export class WorkflowExecutor extends EventEmitter {
 
     const ToolClass = this.toolFactories.get(step.tool);
     if (!ToolClass) {
-      throw new Error(`Tool factory "${step.tool}" not found`);
+      throw new Error(`Tool factory "${step?.tool}" not found`);
     }
 
     const resolvedInput = await this.resolveStepInputs(step.input || {}, context);

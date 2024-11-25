@@ -6,51 +6,11 @@ import * as fs from "fs/promises"
 import path from 'path';
 import simpleGit, { SimpleGit } from 'simple-git';
 
-interface TreeItem {
-  path: string;
-  type: string;
-  sha: string;
-  size?: number;
-}
-
 export class GithubLoaderTool extends BaseTool {
   private octokit: Octokit;
   private rateLimitDelay: number = 1000; // 1 second delay between requests
   private tmpDir: string;
-  private git: SimpleGit;
-
-  private defaultExcludePatterns = [
-    '.git/**',
-    'node_modules/**',
-    '.env*',
-    '*.log',
-    '*.lock',
-    'dist/**',
-    'build/**',
-    '*.png',
-    '*.jpg',
-    '*.jpeg',
-    '*.gif',
-    '*.ico',
-    '*.ttf',
-    '*.woff*',
-    '*.eot',
-    '*.svg',
-    '*.mp3',
-    '*.mp4',
-    '*.pdf',
-    '*.zip',
-    '*.tar',
-    '*.gz',
-    '*.7z',
-    '*.jar',
-    '*.war',
-    '*.class',
-    '*.dll',
-    '*.exe',
-    '*.so',
-    '*.dylib'
-  ];
+  private git: SimpleGit; 
 
   constructor(config: Record<string, any>) {
     super(config);
@@ -102,15 +62,15 @@ export class GithubLoaderTool extends BaseTool {
             .filter(p => p.length > 0);
     }
  
-  private async initTempDirectory(): Promise<void> {
-    try {
-      await fs.mkdir(this.tmpDir, { recursive: true });
-      console.log(`📁 Temporary directory created at: ${this.tmpDir}`);
-    } catch (error) {
-      console.error('Error creating temp directory:', error);
-      throw error;
+    private async initTempDirectory(): Promise<void> {
+      try {
+        await fs.mkdir(this.tmpDir, { recursive: true });
+        console.log(`📁 Temporary directory created at: ${this.tmpDir}`);
+      } catch (error) {
+        console.error('Error creating temp directory:', error);
+        throw error;
+      }
     }
-  }
 
   private async cleanupTempDirectory(repoPath: string): Promise<void> {
     try {
@@ -172,7 +132,37 @@ export class GithubLoaderTool extends BaseTool {
       '.env',
       '.DS_Store',
       'package-lock.json',
-      'yarn.lock'
+      'yarn.lock',
+      '.git/**',
+      'node_modules/**',
+      '.env*',
+      '*.log',
+      '*.lock',
+      'dist/**',
+      'build/**',
+      '*.png',
+      '*.jpg',
+      '*.jpeg',
+      '*.gif',
+      '*.ico',
+      '*.ttf',
+      '*.woff*',
+      '*.eot',
+      '*.svg',
+      '*.mp3',
+      '*.mp4',
+      '*.pdf',
+      '*.zip',
+      '*.tar',
+      '*.gz',
+      '*.7z',
+      '*.jar',
+      '*.war',
+      '*.class',
+      '*.dll',
+      '*.exe',
+      '*.so',
+      '*.dylib'
     ];
     
     const allExcludes = [...new Set([...defaultExcludes, ...excludePatterns])];
