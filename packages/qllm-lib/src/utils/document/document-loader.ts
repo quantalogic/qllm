@@ -23,9 +23,13 @@ import zlib from 'zlib';
 import { promisify } from 'util';
 import mime from 'mime-types';
 import { URL } from 'url';
-import { createHash } from 'crypto';
-import { getHandlerForMimeType, FormatHandler } from './format-handlers';
+import { createHash } from 'crypto'; // New import statement
+import { getHandlerForMimeType } from './format-handlers';
 import logger from '../logger';
+import { DocumentParser, LoadResult } from '../../types/document-types';
+import { ParserRegistry, DefaultParserRegistry } from './parsers/parser-registry';
+import { ContentValidator,ContentValidationOptions } from './content-validator';
+
 
 const gunzip = promisify(zlib.gunzip);
 
@@ -53,17 +57,10 @@ export interface DocumentLoaderOptions {
   decompress?: boolean;
   /** Whether to use document caching */
   useCache?: boolean;
+  maxFileSize?: number;
+  validationOptions?: ContentValidationOptions;
 }
-
-/**
- * Result of a document load operation.
- */
-export interface LoadResult<T> {
-  /** The loaded document content */
-  content: T;
-  /** MIME type of the loaded document */
-  mimeType: string;
-}
+ 
 
 /**
  * Event handlers for document loading progress and status.
@@ -121,23 +118,21 @@ export class DocumentLoader extends EventEmitter {
    * Cancel token source for the current load operation.
    */
   private cancelTokenSource: CancelTokenSource | null = null;
+  private contentValidator: ContentValidator;
 
-  /**
-   * Creates a new document loader instance.
-   * 
-   * @param inputPath Input path or URL to load.
-   * @param options Configuration options for the loader.
-   */
-  constructor(inputPath: string, options: DocumentLoaderOptions = {}) {
+  constructor(inputPath: string, 
+    private parserRegistry: ParserRegistry = new DefaultParserRegistry(),
+    options: DocumentLoaderOptions = {}) {
+
     super();
     // Validate input path immediately
     this.validateFilePath(inputPath);
-    
     this.inputPath = inputPath;
+
     this.options = {
         chunkSize: 1024 * 1024,
         encoding: 'utf-8',
-        timeout: 30000,
+        timeout: 30000, // 30 seconds
         headers: {},
         maxRetries: 3,
         retryDelay: 1000,
@@ -145,8 +140,18 @@ export class DocumentLoader extends EventEmitter {
         proxy: '',
         decompress: true,
         useCache: false,
+        maxFileSize: 100 * 1024 * 1024, // 100MB
+        validationOptions: {
+          maxFileSize: 100 * 1024 * 1024,
+          allowedMimeTypes: ['text/plain', 'application/pdf', 'text/typescript','application/octet-stream','application/pdf'],
+          validateEncoding: true,
+          securityScanEnabled: true
+      },
         ...options,
     };
+
+    this.contentValidator = new ContentValidator(this.options.validationOptions);
+
   }
 
   /**
@@ -193,81 +198,216 @@ export class DocumentLoader extends EventEmitter {
     return decodeURIComponent(url.pathname);
   }
 
-  /**
-   * Validates a file path to prevent directory traversal and other security issues.
-   * 
-   * @param filePath File path to validate.
-   */
   private validateFilePath(filePath: string): void {
-    if (typeof filePath !== 'string') {
+    if (!filePath || typeof filePath !== 'string') {
         throw new Error('File path must be a string');
     }
-    
+
     // Basic security check to prevent directory traversal
     const normalizedPath = path.normalize(filePath);
     if (normalizedPath.includes('..')) {
         throw new Error('File path cannot contain parent directory references');
     }
-    
-    // Additional security checks
-    if (filePath.includes('\0')) {
-        throw new Error('File path cannot contain null bytes');
+
+    // // Check for suspicious characters
+    // const suspiciousChars = /[\0<>:"|?*]/;
+    // if (suspiciousChars.test(filePath)) {
+    //     throw new Error('File path contains invalid characters');
+    // }
+
+    // Check path length
+    if (filePath.length > 255) {
+        throw new Error('File path exceeds maximum length');
     }
-  }
+}
 
-  /**
-   * Loads a document from a local file.
-   * 
-   * @param filePath Local file path to load.
-   * @returns Loaded document content and MIME type.
-   */
-  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> { 
-    
-    const expandedPath = this.expandTilde(filePath);
-    const absolutePath = path.resolve(expandedPath);
-    
-    const mimeType = mime.lookup(absolutePath) || 'application/octet-stream';
 
-    if (this.options.useCache) {
-      const cachedPath = this.getCachePath(absolutePath);
-      if (await this.isCacheValid(absolutePath, cachedPath)) {
-        return { content: await fs.readFile(cachedPath), mimeType };
+  private getParser(filename: string): DocumentParser | undefined {
+    return this.parserRegistry.getParser(filename);
+}
+
+  private getMimeType(filePath: string): string {
+    const ext = path.extname(filePath).toLowerCase();
+    // Override MIME type for TypeScript files
+    if (ext === '.ts' || ext === '.tsx') {
+        return 'text/typescript';
+    }
+    return mime.lookup(filePath) || 'application/octet-stream';
+}
+
+private getRawGitHubUrl(url: string): string {
+  try {
+      const githubUrl = new URL(url);
+      
+      // Check if it's a GitHub URL
+      if (!githubUrl.hostname.includes('github.com')) {
+          throw new Error('Not a GitHub URL');
       }
+
+      // Convert github.com to raw.githubusercontent.com
+      // Remove 'blob/' from the path if present
+      // Example: https://github.com/user/repo/blob/master/file.txt
+      // becomes: https://raw.githubusercontent.com/user/repo/master/file.txt
+      const pathParts = githubUrl.pathname.split('/');
+      
+      // Remove empty strings from path parts
+      const filteredParts = pathParts.filter(part => part.length > 0);
+      
+      // Check if we have enough parts (user, repo, blob/tree, branch, filepath)
+      if (filteredParts.length < 5) {
+          throw new Error('Invalid GitHub URL format');
+      }
+
+      // Remove 'blob' or 'tree' from path
+      const blobIndex = filteredParts.findIndex(part => part === 'blob' || part === 'tree');
+      if (blobIndex !== -1) {
+          filteredParts.splice(blobIndex, 1);
+      }
+
+      // Construct raw URL
+      return `https://raw.githubusercontent.com/${filteredParts.join('/')}`;
+  } catch (error) {
+      throw new Error(`Failed to parse GitHub URL: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+
+private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
+  try {
+      // Initial path processing
+      const expandedPath = this.expandTilde(filePath);
+      const absolutePath = path.resolve(expandedPath);
+      const mimeType = this.getMimeType(absolutePath) || 'application/octet-stream';
+
+      // Validate file existence and accessibility
+      try {
+          await fs.access(absolutePath, fs.constants.R_OK);
+      } catch (error) {
+          throw new Error(`File not accessible: ${filePath}`);
+      }
+
+      // Check cache if enabled
+      if (this.options.useCache) {
+          const cachedPath = this.getCachePath(absolutePath);
+          if (await this.isCacheValid(absolutePath, cachedPath)) {
+              try {
+                  const content = await fs.readFile(cachedPath);
+                  const parsedContent = await this.parseContent(content, absolutePath);
+                  return { content, mimeType, parsedContent };
+              } catch (error) {
+                  // Cache read failed, continue with normal file loading
+                  logger.warn(`Cache read failed for ${filePath}, loading from source`);
+              }
+          }
+      }
+
+      // Get file stats and validate size
+      const fileStats = await fs.stat(absolutePath);
+      if (fileStats.size > this.options.maxFileSize) {
+          throw new Error(
+              `File size (${fileStats.size} bytes) exceeds maximum allowed size (${this.options.maxFileSize} bytes)`
+          );
+      }
+
+      // Load file in chunks with proper resource management
+      let fileHandle: fs.FileHandle | undefined;
+      try {
+          fileHandle = await fs.open(absolutePath, 'r');
+          const totalSize = fileStats.size;
+          let loadedSize = 0;
+          const chunks: Buffer[] = [];
+
+          // Read file in chunks
+          while (loadedSize < totalSize) {
+              const buffer = Buffer.alloc(Math.min(this.options.chunkSize, totalSize - loadedSize));
+              const result = await fileHandle.read(buffer, 0, buffer.length, loadedSize);
+              
+              if (result.bytesRead <= 0) {
+                  break; // End of file or error
+              }
+
+              chunks.push(buffer.subarray(0, result.bytesRead));
+              loadedSize += result.bytesRead;
+              
+              // Emit progress
+              this.emit('progress', loadedSize / totalSize);
+
+              // Check if operation was cancelled
+              if (this.cancelTokenSource?.token.reason) {
+                  throw new Error('Operation cancelled by user');
+              }
+          }
+
+          const content = Buffer.concat(chunks);
+
+          // Validate content size after reading
+          if (content.length !== totalSize) {
+              throw new Error(`File size mismatch: expected ${totalSize}, got ${content.length}`);
+          }
+
+          // Cache content if enabled
+          if (this.options.useCache) {
+              try {
+                  const cachedPath = this.getCachePath(absolutePath);
+                  await this.cacheContent(cachedPath, content);
+              } catch (error) {
+                  // Log cache write failure but continue
+                  logger.error(`Failed to cache content for ${filePath}: ${error}`);
+              }
+          }
+
+          // Parse content using appropriate parser
+          const parsedContent = await this.parseContent(content, absolutePath);
+
+          return { content, mimeType, parsedContent };
+
+      } finally {
+          // Ensure file handle is always closed
+          if (fileHandle) {
+              await fileHandle.close().catch(error => {
+                  logger.error(`Failed to close file handle for ${filePath}: ${error}`);
+              });
+          }
+      }
+
+  } catch (error) {
+      // Transform and rethrow errors with context
+      const errorMessage = error instanceof Error ? 
+          error.message : 
+          `Unknown error: ${String(error)}`;
+      
+      throw new Error(`Failed to load file ${filePath}: ${errorMessage}`);
+  }
+}
+  
+
+  private async validateContent(buffer: Buffer, filePath: string): Promise<void> {
+    try {
+        const mimeType = this.getMimeType(filePath);
+        await this.contentValidator.validateContent(buffer, mimeType, filePath);
+    } catch (error) {
+        const errorMessage = error instanceof Error ? 
+            error.message : 
+            `Content validation failed: ${String(error)}`;
+        throw new Error(`Validation error for ${filePath}: ${errorMessage}`);
     }
+}
 
-    const fileStats = await fs.stat(absolutePath);
-    const totalSize = fileStats.size;
-    let loadedSize = 0;
 
-    const fileHandle = await fs.open(absolutePath, 'r');
-    const chunks: Buffer[] = [];
+private async parseContent(buffer: Buffer, filePath: string): Promise<string | undefined> {
+    const parser = this.getParser(filePath);
+    if (!parser) {
+        return undefined;
+    }
 
     try {
-      let bytesRead: number;
-      const buffer = Buffer.alloc(this.options.chunkSize);
-
-      do {
-        const result = await fileHandle.read(buffer, 0, this.options.chunkSize, null);
-        bytesRead = result.bytesRead;
-        if (bytesRead > 0) {
-          chunks.push(buffer.subarray(0, bytesRead));
-          loadedSize += bytesRead;
-          this.emit('progress', loadedSize / totalSize);
-        }
-      } while (bytesRead > 0);
-    } finally {
-      await fileHandle.close();
+        await this.validateContent(buffer, this.getMimeType(filePath));
+        return await parser.parse(buffer, filePath);
+    } catch (error) {
+        this.emit('error', new Error(`Parsing error for ${filePath}: ${error}`));
+        throw error;
     }
-
-    const content = Buffer.concat(chunks);
-
-    if (this.options.useCache) {
-      const cachedPath = this.getCachePath(absolutePath);
-      await this.cacheContent(cachedPath, content);
-    }
-
-    return { content, mimeType };
-  }
+}
 
   /**
    * Loads a document from a URL.
@@ -276,11 +416,22 @@ export class DocumentLoader extends EventEmitter {
    * @returns Loaded document content and MIME type.
    */
   private async loadFromUrl(url: string): Promise<LoadResult<Buffer>> {
+    let finalUrl = url;
+    
+    // Convert GitHub URLs to raw content URLs
+    if (url.includes('github.com')) {
+        try {
+            finalUrl = this.getRawGitHubUrl(url);
+        } catch (error) {
+            logger.warn(`Failed to convert GitHub URL, using original URL: ${error}`);
+        }
+    }
+
     if (this.options.useCache) {
-      const cachedPath = this.getCachePath(url);
-      if (await this.isCacheValid(url, cachedPath)) {
+      const cachedPath = this.getCachePath(finalUrl);
+      if (await this.isCacheValid(finalUrl, cachedPath)) {
         const content = await fs.readFile(cachedPath);
-        const mimeType = mime.lookup(url) || 'application/octet-stream';
+        const mimeType = mime.lookup(finalUrl) || 'application/octet-stream';
         return { content, mimeType };
       }
     }
@@ -306,7 +457,7 @@ export class DocumentLoader extends EventEmitter {
             : undefined,
         };
 
-        const response = await axios.get(url, axiosConfig);
+        const response = await axios.get(finalUrl, axiosConfig);
         let content = Buffer.from(response.data);
 
         if (this.options.decompress && response.headers['content-encoding'] === 'gzip') {
@@ -316,7 +467,7 @@ export class DocumentLoader extends EventEmitter {
         const mimeType = response.headers['content-type'] || 'application/octet-stream';
 
         if (this.options.useCache) {
-          const cachedPath = this.getCachePath(url);
+          const cachedPath = this.getCachePath(finalUrl);
           await this.cacheContent(cachedPath, content);
         }
 
@@ -380,20 +531,26 @@ export class DocumentLoader extends EventEmitter {
    */
   public async loadAsString(): Promise<LoadResult<string>> {
     const { content: buffer, mimeType } = await this.loadAsBuffer();
-    
     try {
       const handler = getHandlerForMimeType(mimeType);
+      let content: string;
+      
       if (handler) {
-        const text = await handler.handle(buffer);
-        return { content: text, mimeType };
+        content = await handler.handle(buffer);
       } else {
         // Fallback to basic text conversion
         logger.warn(`No handler found for mime type ${mimeType}, falling back to basic text conversion`);
-        return { 
-          content: buffer.toString(this.options.encoding), 
-          mimeType 
-        };
+        content = buffer.toString(this.options.encoding);
       }
+  
+      // Add parsing step
+      const parsedContent = await this.parseContent(buffer, this.inputPath);
+  
+      return {
+        content,
+        mimeType,
+        parsedContent
+      };
     } catch (error) {
       throw new Error(
         `Failed to process file (${mimeType}): ${
@@ -411,7 +568,7 @@ export class DocumentLoader extends EventEmitter {
   public async loadAsBuffer(): Promise<LoadResult<Buffer>> {
     try {
       let result: LoadResult<Buffer>;
-
+      
       if (this.isUrl(this.inputPath)) {
         result = await this.loadFromUrl(this.inputPath);
       } else if (this.isFileUrl(this.inputPath)) {
@@ -420,7 +577,11 @@ export class DocumentLoader extends EventEmitter {
       } else {
         result = await this.loadFromFile(this.inputPath);
       }
-
+  
+      // Add parsing step
+      const parsedContent = await this.parseContent(result.content, this.inputPath);
+      result.parsedContent = parsedContent;
+  
       this.emit('loaded', result);
       return result;
     } catch (error) {
@@ -450,7 +611,9 @@ export class DocumentLoader extends EventEmitter {
     input: string,
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<string>> {
-    const loader = new DocumentLoader(input, options);
+    
+    const defaultRegistry = new DefaultParserRegistry();
+    const loader = new DocumentLoader(input, defaultRegistry,options);
     return loader.loadAsString();
   }
 
@@ -465,7 +628,8 @@ export class DocumentLoader extends EventEmitter {
     input: string,
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<Buffer>> {
-    const loader = new DocumentLoader(input, options);
+    const defaultRegistry = new DefaultParserRegistry();
+    const loader = new DocumentLoader(input, defaultRegistry,options);
     return loader.loadAsBuffer();
   }
 
@@ -480,7 +644,8 @@ export class DocumentLoader extends EventEmitter {
     inputs: string[],
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<string>[]> {
-    const loaders = inputs.map((input) => new DocumentLoader(input, options));
+    const defaultRegistry = new DefaultParserRegistry();
+    const loaders = inputs.map((input) => new DocumentLoader(input,defaultRegistry, options));
     return Promise.all(loaders.map((loader) => loader.loadAsString()));
   }
 
@@ -495,7 +660,8 @@ export class DocumentLoader extends EventEmitter {
     inputs: string[],
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<Buffer>[]> {
-    const loaders = inputs.map((input) => new DocumentLoader(input, options));
+    const defaultRegistry = new DefaultParserRegistry();
+    const loaders = inputs.map((input) => new DocumentLoader(input,defaultRegistry, options));
     return Promise.all(loaders.map((loader) => loader.loadAsBuffer()));
   }
 
@@ -515,4 +681,5 @@ export class DocumentLoader extends EventEmitter {
   ): boolean {
     return super.emit(event, ...args);
   }
+  
 }

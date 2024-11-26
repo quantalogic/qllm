@@ -1,8 +1,5 @@
 /**
- * @fileoverview Manages workflow definitions, their loading from YAML files, and their execution.
- * Provides a high-level interface for workflow operations and event handling.
- * 
- * @author QLLM Team
+ * @fileoverview Workflow Manager for orchestrating and executing workflow definitions
  * @module workflow/workflow-manager
  */
 
@@ -11,66 +8,166 @@ import { parse } from 'yaml';
 import { WorkflowExecutor } from './workflow-executor';
 import { WorkflowDefinition, WorkflowExecutionResult, WorkflowStep } from '../types/workflow-types';
 import { LLMProvider } from '../types';
+import { TemplateDefinition, TemplateLoader } from '../templates';
+import { BaseTool, ToolDefinition } from "../tools/base-tool"
+import { GithubLoaderTool } from '../tools/github-loader';
+import { FileSaverTool } from '../tools/file-saver.tool';
+import { S3LoaderTool } from '../tools/s3-loader.tool';
+import { SlackStreamerTool } from '../tools/slack-streamer.tool';
+import { HtmlFormatterTool } from '../tools/html-formatter.tool';
+import { LocalLoaderTool } from '../tools/local-loader.tool';
+import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
+import { RedisSaverTool } from '../tools/redis-saver.tool';
+import { TextToJsonTool } from '../tools/text-to-json';
 
 /**
- * Manages the lifecycle of workflows including loading, storage, and execution.
- * Provides event handling capabilities for monitoring workflow execution.
+ * @class WorkflowManager
+ * @description Manages the registration, loading, and execution of workflows
  */
 export class WorkflowManager {
   private workflowExecutor: WorkflowExecutor;
   private workflows: Map<string, WorkflowDefinition>;
   private providers: Record<string, LLMProvider>;
+  private templateCache: Map<string, TemplateDefinition>;
+  private toolFactories: Map<string, new (...args: any[]) => BaseTool>;
 
   /**
-   * Creates a new WorkflowManager instance.
-   * 
-   * @param providers - Map of provider names to LLM provider instances used in workflows
+   * @constructor
+   * @param {Record<string, LLMProvider>} providers - Map of LLM providers
+   * @param {Record<string, BaseTool>} [tools] - Optional map of pre-configured tools
    */
-  constructor(providers: Record<string, LLMProvider>) {
+  constructor(
+    providers: Record<string, LLMProvider>,
+    tools?: Record<string, BaseTool>
+  ) {
     this.workflowExecutor = new WorkflowExecutor();
     this.workflows = new Map();
     this.providers = providers;
+    this.templateCache = new Map();
+    this.toolFactories = new Map();
+
+
+    // Register default tools
+    this.registerToolFactory('githubLoader', GithubLoaderTool);
+    this.registerToolFactory('fileSaver', FileSaverTool);
+    this.registerToolFactory('s3Loader', S3LoaderTool);
+    this.registerToolFactory('slackStreamer', SlackStreamerTool);
+    this.registerToolFactory('htmlFormatter', HtmlFormatterTool);
+    this.registerToolFactory('localLoader', LocalLoaderTool);
+    this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
+    this.registerToolFactory('RedisSaver', RedisSaverTool);
+    this.registerToolFactory('TextToJson', TextToJsonTool);
+  }
+  
+  registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
+    this.toolFactories.set(name, toolClass);
   }
 
   /**
-   * Loads a workflow definition from either a YAML file path or a WorkflowDefinition object.
-   * 
-   * @param workflowDefinition - Path to YAML file or WorkflowDefinition object
-   * @throws Error if YAML file cannot be read or parsed
+   * Creates a tool instance from registered factory
+   * @private
+   * @param {string} name - The name of the tool to create
+   * @param {any} config - Configuration for the tool instance
+   * @returns {BaseTool} The created tool instance
+   * @throws {Error} If tool factory is not found
+   */
+  private createTool(name: string, config: any): BaseTool {
+    const ToolClass = this.toolFactories.get(name);
+    if (!ToolClass) {
+      throw new Error(`Tool factory "${name}" not found`);
+    }
+    return new ToolClass(config);
+  }
+
+
+  /**
+   * Loads a workflow definition from either an object or YAML file
+   * @param {WorkflowDefinition | string} workflowDefinition - The workflow definition or path to YAML
+   * @returns {Promise<void>}
+   * @throws {Error} If tool factory is not found or template loading fails
+   */
+  private async loadTemplateFromUrl(url: string): Promise<TemplateDefinition> {
+    if (this.templateCache.has(url)) {
+      return this.templateCache.get(url)!;
+    }
+
+    const template = await TemplateLoader.load(url);
+    this.templateCache.set(url, template);
+    return template;
+  }
+  
+  
+  /**
+   * Loads a workflow definition from a YAML file or URL
+   * @private
+   * @param {string} path - File path or URL to the YAML workflow definition
+   * @returns {Promise<WorkflowDefinition>} The parsed workflow definition
+   * @throws {Error} If fetch fails or workflow schema is invalid
    */
   async loadWorkflow(workflowDefinition: WorkflowDefinition | string): Promise<void> {
     const workflow = typeof workflowDefinition === 'string' 
-      ? await this.loadWorkflowFromYaml(workflowDefinition)
+      ? await this.loadWorkflowFromYaml(workflowDefinition) 
       : workflowDefinition;
+    
+    // Validate and register tools from workflow
+    for (const step of workflow.steps) {
+      if (step.tool) {
+        const ToolClass = this.toolFactories.get(step.tool);
+        if (!ToolClass) {
+          throw new Error(`Tool factory "${step?.tool}" not found`);
+        }
+        
+        // Tool will be instantiated during execution with config from input
+        if (!this.toolFactories.has(step.tool)) {
+          throw new Error(`Tool factory "${step?.tool}" not registered`);
+        }
+      }
       
+      if (step.templateUrl) {
+        const template = await this.loadTemplateFromUrl(step.templateUrl);
+        step.template = template;
+      }
+    }
+  
     this.workflows.set(workflow.name, workflow);
   }
-
-  /**
-   * Loads a workflow definition from a YAML file.
-   * 
-   * @private
-   * @param path - Path to the YAML file containing the workflow definition
-   * @returns Promise resolving to parsed WorkflowDefinition
-   * @throws Error if file cannot be read or parsed
-   */
+  
   private async loadWorkflowFromYaml(path: string): Promise<WorkflowDefinition> {
-    const content = await readFile(path, 'utf-8');
-    return parse(content) as WorkflowDefinition;
+    let content: string;
+    
+    if (path.startsWith('http')) {
+      const response = await fetch(path);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch workflow: ${response.statusText}`);
+      }
+      content = await response.text();
+    } else {
+      content = await readFile(path, 'utf-8');
+    }
+    
+    const workflow = parse(content) as WorkflowDefinition;
+    
+    // Validate workflow schema
+    if (!workflow.name || !Array.isArray(workflow.steps)) {
+      throw new Error('Invalid workflow schema: missing required fields');
+    }
+    
+    return workflow;
   }
 
+  
   /**
-   * Executes a loaded workflow with the given input and event handlers.
-   * 
-   * @param workflowName - Name of the workflow to execute
-   * @param input - Initial input variables for the workflow
-   * @param options - Optional event handlers for monitoring workflow execution
-   * @param options.onStepStart - Called when a workflow step begins
-   * @param options.onStepComplete - Called when a workflow step completes
-   * @param options.onStreamChunk - Called when new content is streamed from LLM
-   * @param options.onRequestSent - Called when a request is sent to LLM
-   * @returns Promise resolving to execution results for each step
-   * @throws Error if workflow is not found
+   * Executes a loaded workflow with given input and options
+   * @param {string} workflowName - Name of the workflow to execute
+   * @param {Record<string, any>} input - Input parameters for the workflow
+   * @param {Object} options - Execution options and callbacks
+   * @param {Function} [options.onStepStart] - Callback when a step starts
+   * @param {Function} [options.onStepComplete] - Callback when a step completes
+   * @param {Function} [options.onStreamChunk] - Callback for stream chunks
+   * @param {Function} [options.onRequestSent] - Callback when requests are sent
+   * @param {Function} [options.onToolExecution] - Callback when tools are executed
+   * @returns {Promise<Record<string, WorkflowExecutionResult>>} Results of workflow execution
+   * @throws {Error} If workflow is not found
    */
   async runWorkflow(
     workflowName: string,
@@ -80,6 +177,7 @@ export class WorkflowManager {
       onStepComplete?: (step: WorkflowStep, index: number, result: WorkflowExecutionResult) => void;
       onStreamChunk?: (chunk: string) => void;
       onRequestSent?: (request: any) => void;
+      onToolExecution?: (toolName: string, input: Record<string, any>) => void;
     } = {}
   ): Promise<Record<string, WorkflowExecutionResult>> {
     const workflow = this.workflows.get(workflowName);
@@ -101,12 +199,17 @@ export class WorkflowManager {
     if (options.onRequestSent) {
       this.workflowExecutor.on('requestSent', options.onRequestSent);
     }
+    if (options.onToolExecution) {
+      this.workflowExecutor.on('toolExecution', options.onToolExecution);
+    }
 
     try {
+      // Pass toolFactories instead of tool instances
       return await this.workflowExecutor.executeWorkflow(
         workflow,
         this.providers,
-        input
+        input,
+        this.toolFactories
       );
     } finally {
       this.workflowExecutor.removeAllListeners();

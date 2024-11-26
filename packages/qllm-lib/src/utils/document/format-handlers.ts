@@ -18,17 +18,12 @@ import * as xlsx from 'xlsx';
 import * as yaml from 'js-yaml';
 import * as mammoth from 'mammoth';
 import { readFile } from 'fs/promises';
+const pdfParse = require('pdf-parse')
+import { FormatHandler } from '../../types/document-types';  // Import from document-types.ts
 
-/**
- * Interface defining a document format handler.
- * Each handler must specify supported MIME types and provide a processing function.
- */
-export interface FormatHandler {
-  /** List of MIME types this handler can process */
-  mimeTypes: string[];
-  /** Function to convert document buffer to text */
-  handle: (buffer: Buffer) => Promise<string>;
-}
+export { FormatHandler };  // Re-export the type
+
+console.log("In format-handlers")
 
 /**
  * Registry of available format handlers.
@@ -42,61 +37,43 @@ export interface FormatHandler {
  * ```
  */
 export const formatHandlers: Record<string, FormatHandler> = {
-  /* pdf: {
+  pdf: {
     mimeTypes: ['application/pdf'],
-    handle: async (buffer: Buffer) => {
-      const data = await pdf(buffer);
-      return data.text;
+    async handle(buffer: Buffer): Promise<string> {
+      try {
+        const data = await pdfParse(buffer);
+        let text = data.text;
+        text = text
+          .replace(/\r\n/g, '\n')
+          .replace(/\s*\n{3,}/g, '\n\n')
+          .replace(/([.!?])\s+/g, '$1\n')
+          .trim();
+        return text;
+      } catch (error) {
+        throw new Error(`Failed to parse PDF: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
-  }, */
-  
-  /**
-   * Handler for Microsoft Word documents.
-   * Supports both modern DOCX and legacy DOC formats.
-   */
+  },
+
   docx: {
     mimeTypes: [
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/msword'
     ],
-    handle: async (buffer: Buffer) => {
-      const result = await mammoth.extractRawText({ buffer });
+    async handle(buffer: Buffer): Promise<string> {
+      const result = await mammoth.extractRawText({ buffer: Buffer.from(buffer) });
       return result.value;
     }
   },
 
-  /**
-   * Handler for plain text documents.
-   * Supports text, markdown, and CSV files.
-   */
-  txt: {
-    mimeTypes: ['text/plain', 'text/markdown', 'text/csv'],
-    handle: async (buffer: Buffer) => buffer.toString('utf-8')
-  },
-
-  /**
-   * Handler for JSON documents.
-   * Parses and pretty-prints JSON content.
-   */
-  json: {
-    mimeTypes: ['application/json'],
-    handle: async (buffer: Buffer) => {
-      try {
-        const content = JSON.parse(buffer.toString());
-        return JSON.stringify(content, null, 2);
-      } catch (error) {
-        throw new Error(`Invalid JSON file: ${error}`);
-      }
-    }
-  },
-
-  /**
-   * Handler for YAML documents.
-   * Supports both YAML and YML file formats.
-   */
   yaml: {
-    mimeTypes: ['text/yaml', 'application/x-yaml', 'text/yml', 'application/yml'],
-    handle: async (buffer: Buffer) => {
+    mimeTypes: [
+      'text/yaml',
+      'application/x-yaml',
+      'text/yml',
+      'application/yml'
+    ],
+    async handle(buffer: Buffer): Promise<string> {
       try {
         const content = yaml.load(buffer.toString());
         return yaml.dump(content);
@@ -106,91 +83,32 @@ export const formatHandlers: Record<string, FormatHandler> = {
     }
   },
 
-  /**
-   * Handler for Excel spreadsheets.
-   * Supports both modern XLSX and legacy XLS formats.
-   * Extracts text from all sheets in the workbook.
-   */
-  xlsx: {
-    mimeTypes: [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel'
-    ],
-    handle: async (buffer: Buffer) => {
+  json: {
+    mimeTypes: ['application/json'],
+    async handle(buffer: Buffer): Promise<string> {
       try {
-        const workbook = xlsx.read(buffer);
-        const sheets = workbook.SheetNames.map(sheet => {
-          const worksheet = workbook.Sheets[sheet];
-          return {
-            name: sheet,
-            content: xlsx.utils.sheet_to_txt(worksheet)
-          };
-        });
-
-        return sheets.map(sheet => 
-          `Sheet: ${sheet.name}\n${sheet.content}\n\n`
-        ).join('');
+        const content = JSON.parse(buffer.toString());
+        return JSON.stringify(content, null, 2);
       } catch (error) {
-        throw new Error(`Failed to process Excel file: ${error}`);
+        throw new Error(`Invalid JSON file: ${error}`);
       }
     }
   }
 };
 
-/**
- * Gets the appropriate format handler for a given MIME type.
- * MIME type matching is case-insensitive.
- * 
- * @param {string} mimeType - MIME type to find handler for
- * @returns {FormatHandler | undefined} Handler for the MIME type, or undefined if not supported
- * 
- * @example
- * ```typescript
- * const handler = getHandlerForMimeType('application/json');
- * if (handler) {
- *   const text = await handler.handle(buffer);
- * }
- * ```
- */
-export function getHandlerForMimeType(mimeType: string): FormatHandler | undefined {
-  // Normalize mime type to lowercase
+export const getHandlerForMimeType = (mimeType: string): FormatHandler | undefined => {
   const normalizedMimeType = mimeType.toLowerCase();
-  
   return Object.values(formatHandlers).find(handler => 
-    handler.mimeTypes.some(type => type.toLowerCase() === normalizedMimeType)
+    handler.mimeTypes.some((type: string) => type.toLowerCase() === normalizedMimeType)
   );
-}
+};
 
-/**
- * Gets a sorted list of all supported MIME types.
- * 
- * @returns {string[]} Array of supported MIME types
- * 
- * @example
- * ```typescript
- * const mimeTypes = getSupportedMimeTypes();
- * console.log('Supported formats:', mimeTypes.join(', '));
- * ```
- */
-export function getSupportedMimeTypes(): string[] {
+export const getSupportedMimeTypes = (): string[] => {
   return Object.values(formatHandlers)
     .flatMap(handler => handler.mimeTypes)
     .sort();
-}
+};
 
-/**
- * Checks if a given MIME type is supported.
- * 
- * @param {string} mimeType - MIME type to check
- * @returns {boolean} True if the MIME type is supported
- * 
- * @example
- * ```typescript
- * if (isSupportedMimeType('application/json')) {
- *   // Process JSON file
- * }
- * ```
- */
-export function isSupportedMimeType(mimeType: string): boolean {
+export const isSupportedMimeType = (mimeType: string): boolean => {
   return !!getHandlerForMimeType(mimeType);
-}
+};

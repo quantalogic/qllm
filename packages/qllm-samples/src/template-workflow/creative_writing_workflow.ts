@@ -186,10 +186,10 @@ async function main(): Promise<void> {
       workflowInput,
       {
         onStepStart: (step, index) => {
-          console.log(`\n🔍 Starting step ${index + 1}: ${step.template.name}`);
+          console.log(`\n🔍 Starting step ${index + 1}: ${step?.template?.name}`);
         },
         onStepComplete: (step, index, result) => {
-          console.log(`\n✅ Completed step ${index + 1}: ${step.template.name}`);
+          console.log(`\n✅ Completed step ${index + 1}: ${step?.template?.name}`);
           console.log(`Result for step ${index + 1}:`, result);
         }
       }

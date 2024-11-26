@@ -329,13 +329,13 @@ async function main(): Promise<void> {
         onStepStart: (step, index) => {
           console.log(`
 ┌────────────────────────────────────────
-│ 🚀 Starting Step ${index + 1}: ${step.template.name}
+│ 🚀 Starting Step ${index + 1}: ${step?.template?.name}
 └────────────────────────────────────────`);
         },
         onStepComplete: (step, index, result) => {
           console.log(`
 ┌────────────────────────────────────────
-│ ✅ Completed Step ${index + 1}: ${step.template.name}
+│ ✅ Completed Step ${index + 1}: ${step?.template?.name}
 │
 │ Results:
 │ ${JSON.stringify(result, null, 2).split('\n').map(line => ' ' + line).join('\n')}

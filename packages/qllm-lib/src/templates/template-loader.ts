@@ -38,100 +38,105 @@
  * @see {@link TemplateDefinitionBuilder} for template modification
  * @see {@link TemplateManager} for template management
  */
-
+// template-loader.ts
 import { TemplateDefinitionWithResolvedContent } from './template-schema';
 import { TemplateDefinitionBuilder } from './template-definition-builder';
 import { loadContent, resolveIncludedContent } from '../utils/document/document-inclusion-resolver';
+import fetch from 'node-fetch';
+import { readFile } from 'fs/promises';
 
-/**
- * Utility class for loading and initializing template definitions from files.
- * Provides a high-level interface for template loading operations with built-in
- * support for different file formats and content resolution.
- * 
- * Key features:
- * - Automatic MIME type detection
- * - Content resolution for included files
- * - Builder pattern support
- * - Error handling with context
- * 
- * @class TemplateLoader
- * 
- * @example
- * ```typescript
- * // Basic template loading
- * const template = await TemplateLoader.load('templates/basic.yaml');
- * 
- * // Loading with included content
- * const complexTemplate = await TemplateLoader.load('templates/complex.yaml');
- * // Will automatically resolve any included files referenced in the template
- * 
- * // Load for modification
- * const builder = await TemplateLoader.loadAsBuilder('templates/base.yaml');
- * const modified = builder
- *   .addVariable('apiKey', { type: 'string', required: true })
- *   .build();
- * ```
- */
 export class TemplateLoader {
-  /**
-   * Loads a template definition from a file and resolves all included content.
-   * Automatically detects the file format and handles content resolution for
-   * any included files or dependencies.
-   * 
-   * @static
-   * @param {string} inputFilePath - Path to the template definition file (JSON or YAML)
-   * @returns {Promise<TemplateDefinitionWithResolvedContent>} Fully resolved template definition
-   * @throws {Error} If file loading fails, format is invalid, or content resolution fails
-   * 
-   * @example
-   * ```typescript
-   * try {
-   *   const template = await TemplateLoader.load('templates/api-call.yaml');
-   *   console.log('Template loaded:', template.name);
-   *   console.log('Variables:', template.variables);
-   * } catch (error) {
-   *   console.error('Failed to load template:', error.message);
-   * }
-   * ```
-   */
-  static async load(inputFilePath: string): Promise<TemplateDefinitionWithResolvedContent> {
-    const content = await loadContent(inputFilePath, inputFilePath);
+  private static templateCache: Map<string, TemplateDefinitionWithResolvedContent> = new Map();
+
+  static async load(source: string): Promise<TemplateDefinitionWithResolvedContent> {
+    // Check cache first
+    if (this.templateCache.has(source)) {
+      return this.templateCache.get(source)!;
+    }
+
+    const content = await this.fetchContent(source);
     const builder = getBuilder(content);
     const template = builder.build();
-    const resolvedContent = await resolveIncludedContent(template.content, inputFilePath);
-
-    return { ...template, content: resolvedContent };
+    const resolvedContent = await resolveIncludedContent(template.content, source);
+    
+    const result = { ...template, content: resolvedContent };
+    this.templateCache.set(source, result);
+    return result;
   }
 
-  /**
-   * Loads a template as a builder for further modification.
-   * 
-   * @static
-   * @param {string} inputFilePath - Path to the template definition file
-   * @returns {Promise<TemplateDefinitionBuilder>} Builder with loaded template
-   * @throws {Error} If file loading or content resolution fails
-   */
-  static async loadAsBuilder(inputFilePath: string): Promise<TemplateDefinitionBuilder> {
-    const content = await loadContent(inputFilePath, inputFilePath);
+  static async loadAsBuilder(source: string): Promise<TemplateDefinitionBuilder> {
+    const content = await this.fetchContent(source);
     const builder = getBuilder(content);
-    const resolvedContent = await resolveIncludedContent(builder.build().content, inputFilePath);
+    const resolvedContent = await resolveIncludedContent(builder.build().content, source);
 
     return builder.setResolvedContent(resolvedContent);
   }
+
+  private static async fetchContent(source: string): Promise<{ mimeType: string; content: string }> {
+    if (source.startsWith('http')) {
+      const url = this.parseTemplateUrl(source);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch template: ${response.statusText}`);
+      }
+      const content = await response.text();
+      const mimeType = response.headers.get('content-type') || this.guessMimeType(source);
+      return { mimeType, content };
+    } else {
+      const content = await readFile(source, 'utf-8');
+      const mimeType = this.guessMimeType(source);
+      return { mimeType, content };
+    }
+  }
+
+  private static parseTemplateUrl(url: string): string {
+    if (url.startsWith('https://github.com/')) {
+      return this.githubUrlToRaw(url);
+    } else if (url.startsWith('https://s3.amazonaws.com/') || url.includes('.s3.amazonaws.com/')) {
+      return this.parseS3Url(url);
+    } else if (url.includes('drive.google.com')) {
+      return this.parseGoogleDriveUrl(url);
+    }
+    return url;
+  }
+
+  private static githubUrlToRaw(url: string): string {
+    return url
+      .replace('github.com', 'raw.githubusercontent.com')
+      .replace('/blob/', '/');
+  }
+
+  private static parseS3Url(url: string): string {
+    return encodeURI(url);
+  }
+
+  private static parseGoogleDriveUrl(url: string): string {
+    let fileId = '';
+    if (url.includes('/file/d/')) {
+      fileId = url.split('/file/d/')[1].split('/')[0];
+    } else if (url.includes('id=')) {
+      fileId = new URL(url).searchParams.get('id') || '';
+    }
+    if (!fileId) {
+      throw new Error('Invalid Google Drive URL format');
+    }
+    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  }
+
+  private static guessMimeType(source: string): string {
+    if (source.endsWith('.json')) return 'application/json';
+    if (source.endsWith('.yaml') || source.endsWith('.yml')) return 'application/yaml';
+    return 'application/yaml'; // default to yaml
+  }
+
+  static clearCache(): void {
+    this.templateCache.clear();
+  }
 }
 
-/**
- * Creates a template builder from loaded content.
- * 
- * @private
- * @param {Object} content - Loaded content with MIME type
- * @param {string} content.mimeType - MIME type of the content ('application/json' or 'text/yaml')
- * @param {string} content.content - Raw content string
- * @returns {TemplateDefinitionBuilder} Template builder instance
- */
 function getBuilder(content: { mimeType: string; content: string }): TemplateDefinitionBuilder {
   const { mimeType, content: contentString } = content;
-  if (mimeType === 'application/json') {
+  if (mimeType.includes('json')) {
     return TemplateDefinitionBuilder.fromJSON(contentString);
   }
   return TemplateDefinitionBuilder.fromYAML(contentString);

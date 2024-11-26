@@ -14,15 +14,16 @@ import { TemplateDefinition } from '../templates/types';
  * Each step contains a template, optional provider, input parameters, and output specification
  */
 export interface WorkflowStep {
-    /** Template definition for this step */
-    template: TemplateDefinition;
-    /** Optional provider override for this step */
+    template?: TemplateDefinition;
+    templateUrl?: string;
+    name?: string;
+    description?: string;
+    tool?: string;
+    toolConfig?: Record<string, any>;  
     provider?: string;
-    /** Input parameters for the step */
     input?: Record<string, string | number | boolean>;
-    /** Output specification for the step */
     output: string | Record<string, string>;
-}
+  }
 
 /**
  * Defines a complete workflow including its metadata and steps
