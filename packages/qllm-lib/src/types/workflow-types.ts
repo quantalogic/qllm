@@ -16,6 +16,8 @@ import { TemplateDefinition } from '../templates/types';
 export interface WorkflowStep {
     template?: TemplateDefinition;
     templateUrl?: string;
+    name?: string;
+    description?: string;
     tool?: string;
     toolConfig?: Record<string, any>;  
     provider?: string;
