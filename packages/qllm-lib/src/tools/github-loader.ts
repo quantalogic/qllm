@@ -1,4 +1,10 @@
-// src/tools/github-loader.ts
+/**
+ * @fileoverview GitHub Repository Loader Tool
+ * This module provides functionality to load and process GitHub repository contents
+ * with configurable filtering options.
+ * @module github-loader
+ */
+
 import { Octokit } from '@octokit/rest';
 import { BaseTool, ToolDefinition } from './base-tool';
 import { writeFile } from 'fs/promises';
@@ -6,12 +12,23 @@ import * as fs from "fs/promises"
 import path from 'path';
 import simpleGit, { SimpleGit } from 'simple-git';
 
+/**
+ * @class GithubLoaderTool
+ * @extends BaseTool
+ * @description A tool for loading and processing GitHub repository contents with filtering capabilities
+ */
 export class GithubLoaderTool extends BaseTool {
   private octokit: Octokit;
   private rateLimitDelay: number = 1000; // 1 second delay between requests
   private tmpDir: string;
   private git: SimpleGit; 
 
+  /**
+   * @constructor
+   * @param {Record<string, any>} config - Configuration object for the GitHub loader
+   * @param {string} [config.authToken] - GitHub authentication token
+   * @throws {Error} If unable to initialize Octokit client
+   */
   constructor(config: Record<string, any>) {
     super(config);
     this.octokit = new Octokit({
@@ -22,6 +39,11 @@ export class GithubLoaderTool extends BaseTool {
     this.git = simpleGit();
   }
 
+  /**
+   * @method getDefinition
+   * @returns {ToolDefinition} Tool definition object containing name, description, input/output specifications
+   * @description Provides the tool's definition including all required and optional parameters
+   */
   getDefinition(): ToolDefinition {
       return {
           name: 'github-loader',
@@ -55,23 +77,45 @@ export class GithubLoaderTool extends BaseTool {
       };
   }
 
-    private parsePatternString(patterns: string | undefined): string[] {
-        if (!patterns) return [];
-        return patterns.split(',')
-            .map(p => p.trim())
-            .filter(p => p.length > 0);
-    }
+  /**
+   * @private
+   * @method parsePatternString
+   * @param {string | undefined} patterns - Comma-separated string of patterns
+   * @returns {string[]} Array of trimmed pattern strings
+   * @description Converts a comma-separated string of patterns into an array of trimmed strings
+   */
+  private parsePatternString(patterns: string | undefined): string[] {
+      if (!patterns) return [];
+      return patterns.split(',')
+          .map(p => p.trim())
+          .filter(p => p.length > 0);
+  }
  
-    private async initTempDirectory(): Promise<void> {
-      try {
-        await fs.mkdir(this.tmpDir, { recursive: true });
-        console.log(`📁 Temporary directory created at: ${this.tmpDir}`);
-      } catch (error) {
-        console.error('Error creating temp directory:', error);
-        throw error;
-      }
+  /**
+   * @private
+   * @method initTempDirectory
+   * @returns {Promise<void>}
+   * @throws {Error} If directory creation fails
+   * @description Initializes a temporary directory for storing repository contents
+   */
+  private async initTempDirectory(): Promise<void> {
+    try {
+      await fs.mkdir(this.tmpDir, { recursive: true });
+      console.log(`📁 Temporary directory created at: ${this.tmpDir}`);
+    } catch (error) {
+      console.error('Error creating temp directory:', error);
+      throw error;
     }
-
+  }
+  
+  /**
+   * @private
+   * @method cleanupTempDirectory
+   * @param {string} repoPath - Path to the repository directory to clean up
+   * @returns {Promise<void>}
+   * @description Removes a temporary repository directory and its contents
+   * @throws {Error} Logs warning if cleanup fails
+   */
   private async cleanupTempDirectory(repoPath: string): Promise<void> {
     try {
       await fs.rm(repoPath, { recursive: true, force: true });
@@ -81,6 +125,14 @@ export class GithubLoaderTool extends BaseTool {
     }
   }
 
+  /**
+   * @private
+   * @method cloneRepository
+   * @param {string} repositoryUrl - URL of the GitHub repository to clone
+   * @returns {Promise<string>} Path to the cloned repository
+   * @throws {Error} If cloning fails
+   * @description Clones a GitHub repository to a local temporary directory
+   */
   private async cloneRepository(repositoryUrl: string): Promise<string> {
     const { owner, repo } = this.parseGithubUrl(repositoryUrl);
     const repoPath = path.join(this.tmpDir, `${owner}-${repo}`);
@@ -101,6 +153,14 @@ export class GithubLoaderTool extends BaseTool {
     }
   }
 
+  /**
+   * @private
+   * @method readLocalFile
+   * @param {string} filePath - Path to the file to read
+   * @returns {Promise<string>} Content of the file
+   * @description Reads content from a local file with UTF-8 encoding
+   * @throws {Error} Returns error message as string if reading fails
+   */
   private async readLocalFile(filePath: string): Promise<string> {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
@@ -111,6 +171,22 @@ export class GithubLoaderTool extends BaseTool {
     }
   }
  
+  /**
+   * @private
+   * @method getAllLocalFiles
+   * @param {string} dirPath - Directory path to scan
+   * @param {string} baseDir - Base directory for relative path calculation
+   * @param {string[]} [excludePatterns=[]] - Patterns to exclude from results
+   * @param {string[]} [includePatterns=[]] - Patterns to include in results
+   * @returns {Promise<any[]>} Array of file objects with metadata
+   * @description Recursively scans a directory and returns file information while applying filters
+   * 
+   * @typedef {Object} FileInfo
+   * @property {string} path - Relative path of the file
+   * @property {string} name - File name
+   * @property {'file'} type - Type of the entry
+   * @property {number} size - File size in bytes
+   */
   private async getAllLocalFiles(
     dirPath: string,
     baseDir: string,
@@ -204,7 +280,22 @@ export class GithubLoaderTool extends BaseTool {
     return files;
   }
   
-  
+  /**
+   * @private
+   * @method matchesPattern
+   * @param {string} filepath - Path of the file to check
+   * @param {string[]} patterns - Array of patterns to match against
+   * @returns {boolean} True if filepath matches any pattern
+   * @description Checks if a filepath matches any of the provided patterns using various matching strategies
+   * 
+   * @example
+   * // Glob pattern matching
+   * matchesPattern('src/file.ts', ['*.ts']) // returns true
+   * // Extension matching
+   * matchesPattern('file.jpg', ['.jpg']) // returns true
+   * // Directory matching
+   * matchesPattern('src/components/Button.tsx', ['/src']) // returns true
+   */
   private matchesPattern(filepath: string, patterns: string[]): boolean {
     if (patterns.length === 0) return false;
     
@@ -233,10 +324,24 @@ export class GithubLoaderTool extends BaseTool {
   }
 
 
+  /**
+   * @private
+   * @method sleep
+   * @param {number} ms - Number of milliseconds to sleep
+   * @returns {Promise<void>}
+   * @description Creates a promise that resolves after the specified number of milliseconds
+   */
   private async sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
+  /**
+   * @private
+   * @method checkRateLimit
+   * @returns {Promise<void>}
+   * @description Checks GitHub API rate limit and waits if necessary
+   * @throws {Error} Logs warning if unable to check rate limit
+   */
   private async checkRateLimit(): Promise<void> {
     try {
       const { data: rateLimit } = await this.octokit.rateLimit.get();
@@ -251,6 +356,19 @@ export class GithubLoaderTool extends BaseTool {
     }
   }
 
+
+  /**
+   * @private
+   * @method parseGithubUrl
+   * @param {string} url - GitHub repository URL
+   * @returns {{ owner: string; repo: string }} Object containing owner and repo names
+   * @throws {Error} If URL format is invalid
+   * @description Parses a GitHub URL to extract owner and repository names
+   * 
+   * @example
+   * parseGithubUrl('https://github.com/owner/repo')
+   * // returns { owner: 'owner', repo: 'repo' }
+   */
   private parseGithubUrl(url: string): { owner: string; repo: string } {
     const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
     if (!match) {
@@ -262,6 +380,16 @@ export class GithubLoaderTool extends BaseTool {
     };
   }
 
+  /**
+   * @private
+   * @method getRepositoryContent
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name
+   * @param {string} [path=''] - Path within repository
+   * @returns {Promise<any[]>} Array of repository content items
+   * @throws {Error} Handles rate limit errors and retries
+   * @description Fetches repository content from GitHub API with rate limiting handling
+   */
   private async getRepositoryContent(owner: string, repo: string, path: string = ''): Promise<any[]> {
     await this.checkRateLimit();
     try {
@@ -283,6 +411,13 @@ export class GithubLoaderTool extends BaseTool {
     }
   }
 
+  /**
+   * @private
+   * @method handleRateLimitError
+   * @param {any} error - Error object from GitHub API
+   * @returns {Promise<void>}
+   * @description Handles GitHub API rate limit errors by waiting for the reset time
+   */
   private async handleRateLimitError(error: any): Promise<void> {
     const resetTime = error.response?.headers?.['x-ratelimit-reset'];
     if (resetTime) {
@@ -294,6 +429,15 @@ export class GithubLoaderTool extends BaseTool {
     }
   }
 
+  /**
+   * @private
+   * @method getAllFiles
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name
+   * @param {string} [path=''] - Path within repository
+   * @returns {Promise<any[]>} Array of file objects
+   * @description Recursively retrieves all files from a GitHub repository
+   */
   private async getAllFiles(owner: string, repo: string, path: string = ''): Promise<any[]> {
     const contents = await this.getRepositoryContent(owner, repo, path);
     let files: any[] = [];
@@ -310,6 +454,15 @@ export class GithubLoaderTool extends BaseTool {
     return files;
   }
 
+  /**
+     * @private
+     * @method getAllFiles
+     * @param {string} owner - Repository owner
+     * @param {string} repo - Repository name
+     * @param {string} [path=''] - Path within repository
+     * @returns {Promise<any[]>} Array of file objects
+     * @description Recursively retrieves all files from a GitHub repository
+     */
   private async getFileContent(file: any): Promise<string> {
     await this.checkRateLimit();
     try {
@@ -337,6 +490,14 @@ export class GithubLoaderTool extends BaseTool {
     }
   }
 
+  /**
+   * @private
+   * @method formatFileInfo
+   * @param {any} file - File metadata object
+   * @param {string} content - File content
+   * @returns {string} Formatted file information in Markdown
+   * @description Formats file metadata and content into a Markdown document
+   */
   private formatFileInfo(file: any, content: string): string {
     const extension = file.name.split('.').pop() || '';
     const language = this.getLanguage(extension);
@@ -360,6 +521,13 @@ ${content}
 `;
   }
 
+  /**
+   * @private
+   * @method getLanguage
+   * @param {string} extension - File extension
+   * @returns {string} Programming language name
+   * @description Maps file extensions to programming language names for syntax highlighting
+   */
   private getLanguage(extension: string): string {
     const languageMap: Record<string, string> = {
       'ts': 'typescript',
@@ -387,6 +555,13 @@ ${content}
     return languageMap[extension] || extension;
   }
     
+  /**
+   * @method execute
+   * @param {Record<string, any>} inputs - Input parameters including repository URL and patterns
+   * @returns {Promise<Record<string, any>>} Processing results including content and statistics
+   * @description Main execution method that processes a GitHub repository
+   * @throws {Error} If repository processing fails
+   */
   async execute(inputs: Record<string, any>): Promise<Record<string, any>> {
     try {
         const { repositoryUrl, excludePatterns, includePatterns } = inputs;
@@ -433,9 +608,15 @@ ${content}
         console.error('Error processing repository:', error);
         throw new Error(`Failed to process repository: ${error}`);
     }
-}
+  }
 
-
+  /**
+   * @private
+   * @method isBinaryFile
+   * @param {string} filepath - Path of the file to check
+   * @returns {boolean} True if file is considered binary
+   * @description Determines if a file should be treated as binary based on its extension
+   */
   private isBinaryFile(filepath: string): boolean {
     // Add .git directory check
     if (filepath.startsWith('.git') || filepath === '.git') {
