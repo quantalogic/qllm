@@ -578,9 +578,11 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
         result = await this.loadFromFile(this.inputPath);
       }
   
+      console.log("fail before parsing")
       // Add parsing step
       const parsedContent = await this.parseContent(result.content, this.inputPath);
       result.parsedContent = parsedContent;
+      console.log("fail after parsing")
   
       this.emit('loaded', result);
       return result;
