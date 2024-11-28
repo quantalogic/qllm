@@ -18,10 +18,12 @@ import {
     NotFound,
     S3ServiceException
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { BaseTool, ToolDefinition } from "./base-tool";
 import * as crypto from "crypto";
 import { DocumentLoader } from '../utils/document/document-loader';
 import fs from 'fs/promises';
+import { createReadStream } from 'fs';
 import path from 'path';
 import os from 'os';
 
@@ -50,7 +52,9 @@ interface S3Operation {
     /** S3 bucket name */
     bucket: string;
     /** Object key in the bucket */
-    key: string;
+    key: string | string[];
+    /** Local file path (for save operations) */
+    filePath?: string;
     /** Content to upload (for save operations) */
     content?: string;
     /** Content type of the object */
@@ -65,6 +69,8 @@ interface S3Operation {
     destinationBucket?: string;
     /** Destination key for move operations */
     destinationKey?: string;
+    /** Optional separator for multiple files */
+    separator?: string;
 }
 
 /**
@@ -107,7 +113,7 @@ export class S3Tool extends BaseTool {
                 operation: {
                     type: 'string',
                     required: true,
-                    description: 'The operation to perform (save, load, move, delete)'
+                    description: 'The operation to perform (save, load, move, delete, getSignedUrl)'
                 },
                 bucket: {
                     type: 'string',
@@ -115,9 +121,14 @@ export class S3Tool extends BaseTool {
                     description: 'S3 bucket name'
                 },
                 key: {
-                    type: 'string',
+                    type: 'string | string[]',
                     required: true,
-                    description: 'Object key in the bucket'
+                    description: 'Object key(s) in the bucket'
+                },
+                filePath:{
+                    type: 'string',
+                    required: false,
+                    description: 'Local file path'
                 },
                 content: {
                     type: 'string',
@@ -153,6 +164,11 @@ export class S3Tool extends BaseTool {
                     type: 'string',
                     required: false,
                     description: 'Destination key for move operations'
+                },
+                separator: {
+                    type: 'string',
+                    required: false,
+                    description: 'Separator to use between multiple files (defaults to two newlines)'
                 }
             },
             output: {
@@ -164,12 +180,12 @@ export class S3Tool extends BaseTool {
 
     /**
      * @method execute
-     * @param {S3Operation & { operation: 'save' | 'load' | 'move' | 'delete' }} inputs - Operation parameters
+     * @param {S3Operation & { operation: 'save' | 'load' | 'move' | 'delete' | 'getSignedUrl' }} inputs - Operation parameters
      * @returns {Promise<string>} Result of the operation
      * @throws {Error} If operation is invalid or fails
      * @description Executes the specified S3 operation
      */
-    async execute(inputs: S3Operation & { operation: 'save' | 'load' | 'move' | 'delete' }): Promise<string> {
+    async execute(inputs: S3Operation & { operation: 'save' | 'load' | 'move' | 'delete' | 'getSignedUrl' }): Promise<string> {
         try {
             await this.verifyOperation(inputs.operation, inputs.bucket, inputs.key);
 
@@ -182,6 +198,8 @@ export class S3Tool extends BaseTool {
                     return this.moveObject(inputs);
                 case 'delete':
                     return this.deleteObject(inputs);
+                case 'getSignedUrl':
+                    return this.getSignedUrl(inputs);
                 default:
                     throw new Error(`Unsupported operation: ${inputs.operation}`);
             }
@@ -195,41 +213,39 @@ export class S3Tool extends BaseTool {
      * @private
      * @param {string} operation - Operation to verify
      * @param {string} bucket - S3 bucket name
-     * @param {string} key - Object key
+     * @param {string | string[]} key - Object key(s)
      * @throws {Error} If operation parameters are invalid
      * @description Verifies the validity of an S3 operation
      */
-    private async verifyOperation(operation: string, bucket: string, key: string): Promise<void> {
+    private async verifyOperation(operation: string, bucket: string, key: string | string[]): Promise<void> {
         if (!bucket || !key) {
             throw new Error('Both bucket and key must be provided');
         }
 
-        if (!['save', 'load', 'move', 'delete'].includes(operation)) {
+        if (!['save','load', 'move', 'delete', 'getSignedUrl'].includes(operation)) {
             throw new Error(`Invalid operation: ${operation}`);
         }
 
+        if (operation === 'load' && !Array.isArray(key)) {
+            throw new Error('load operation requires an array of keys');
+        }
+
+        if (operation !== 'load' && Array.isArray(key)) {
+            throw new Error(`${operation} operation requires a single key string`);
+        }
+
+        if (operation === 'getSignedUrl' && Array.isArray(key)) {
+            throw new Error('getSignedUrl operation requires a single key');
+        }
+
         try {
-            const exists = await this.checkFileExists(bucket, key);
-            
-            switch (operation) {
-                case 'save':
-                    if (exists) {
-                        throw new Error(`File ${key} already exists in bucket ${bucket}`);
-                    }
-                    break;
-                case 'load':
-                case 'move':
-                case 'delete':
-                    if (!exists) {
-                        throw new Error(`File ${key} does not exist in bucket ${bucket}`);
-                    }
-                    break;
+            if (Array.isArray(key)) {
+                await Promise.all(key.map(k => this.checkFileExists(bucket, k)));
+            } else {
+                await this.checkFileExists(bucket, key);
             }
         } catch (error) {
-            if (error instanceof Error) {
-                throw error;
-            }
-            throw new Error('Unknown error during operation verification');
+            throw new Error(`Failed to verify operation: ${(error as Error).message}`);
         }
     }
 
@@ -269,19 +285,20 @@ export class S3Tool extends BaseTool {
      * @private
      * @param {S3Operation} inputs - Save operation parameters
      * @returns {Promise<string>} Result of the save operation
-     * @description Saves an object to S3 with optional encryption and metadata
+     * @description Saves a file to S3 using streaming upload
      */
     private async saveObject(inputs: S3Operation): Promise<string> {
-        if (!inputs.content) {
-            throw new Error('Content must be provided for save operation');
+        if (!inputs.filePath) {
+            throw new Error('filePath must be provided for saveObject operation');
         }
 
         const commandInput: PutObjectCommandInput = {
             Bucket: inputs.bucket,
-            Key: inputs.key,
-            Body: inputs.content,
-            ContentType: inputs.contentType || 'text/plain'
+            Key: inputs.key as string,
+            Body: createReadStream(inputs.filePath),
         };
+        
+        console.log("commandInput passed")
 
         if (inputs.metadata) {
             commandInput.Metadata = inputs.metadata;
@@ -291,79 +308,70 @@ export class S3Tool extends BaseTool {
             commandInput.Tagging = this.formatTags(inputs.tags);
         }
 
-        if (inputs.encKey) {
-            const encKeyBuffer = Buffer.from(inputs.encKey);
-            const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
-            commandInput.SSECustomerAlgorithm = "AES256";
-            commandInput.SSECustomerKey = inputs.encKey;
-            commandInput.SSECustomerKeyMD5 = md5Hash;
-        }
-
         try {
+            console.log("try begin")
             const command = new PutObjectCommand(commandInput);
+            console.log("command passed")
             await this.s3Client.send(command);
-            return `s3://${inputs.bucket}/${inputs.key}`;
+            console.log("send passed")
+            return `Successfully saved file ${inputs.filePath} to ${inputs.bucket}/${inputs.key}`;
         } catch (error) {
-            throw new Error(`Failed to save object to S3: ${(error as Error).message}`);
+            throw new Error(`Failed to save file to S3: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
+
 
     /**
      * @method loadObject
      * @private
-     * @param {S3Operation} inputs - Load operation parameters
-     * @returns {Promise<string>} Content of the loaded object
-     * @description Loads an object from S3 with support for encryption
+     * @param {S3Operation} inputs - Load operation parameters with array of keys
+     * @returns {Promise<string>} Concatenated content of all loaded objects
+     * @description Loads one or multiple objects from S3, processes them with DocumentLoader, and concatenates them with a separator
      */
     private async loadObject(inputs: S3Operation): Promise<string> {
-        const commandInput: GetObjectCommandInput = {
-            Bucket: inputs.bucket,
-            Key: inputs.key
-        };
-
-        if (inputs.encKey) {
-            const encKeyBuffer = Buffer.from(inputs.encKey);
-            const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
-            commandInput.SSECustomerAlgorithm = "AES256";
-            commandInput.SSECustomerKey = inputs.encKey;
-            commandInput.SSECustomerKeyMD5 = md5Hash;
+        if (!Array.isArray(inputs.key)) {
+            throw new Error('loadObjects requires an array of keys');
         }
 
-        try {
+        const separator = inputs.separator || '\n\n';
+        const tmpDir = path.join(os.tmpdir(), 'document-loader-s3');
+        await fs.mkdir(tmpDir, { recursive: true });
+
+        // Download all files to temporary directory
+        const tmpFiles: string[] = [];
+        for (const key of inputs.key) {
+            const commandInput: GetObjectCommandInput = {
+                Bucket: inputs.bucket,
+                Key: key
+            };
+
+            if (inputs.encKey) {
+                const encKeyBuffer = Buffer.from(inputs.encKey);
+                const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
+                commandInput.SSECustomerAlgorithm = "AES256";
+                commandInput.SSECustomerKey = inputs.encKey;
+                commandInput.SSECustomerKeyMD5 = md5Hash;
+            }
+
             const command = new GetObjectCommand(commandInput);
-            console.log(command)
-            console.log("debug load, before send")
             const response = await this.s3Client.send(command);
-            console.log("debug load, send passed")
             
-
-            // Create a temporary file path
-            const tmpDir = path.join(os.tmpdir(), 'document-loader-s3');
-            await fs.mkdir(tmpDir, { recursive: true });
-            const tmpFile = path.join(tmpDir, path.basename(inputs.key));
-
-            // Save the stream to a temporary file
+            const tmpFile = path.join(tmpDir, path.basename(key));
             const chunks: Uint8Array[] = [];
             for await (const chunk of response.Body as any) {
-              chunks.push(chunk);
+                chunks.push(chunk);
             }
             await fs.writeFile(tmpFile, Buffer.concat(chunks));
-
-            console.log("debug load, before parse")
-            console.log(tmpFile)
-
-            // Use DocumentLoader to load and parse the content
-            const loader = new DocumentLoader(tmpFile);
-            console.log("loader passed")
-            const result = await loader.loadAsString();
-            console.log("result passed")
-            
-            return result.content;
-        } catch (error) {
-            throw new Error(`Failed to load object from S3: ${(error as Error).message}`);
+            tmpFiles.push(tmpFile);
         }
-    }
 
+        // Use DocumentLoader to load all files
+        const results = await DocumentLoader.loadMultipleAsString(tmpFiles);
+
+        
+        // Concatenate all results with separator
+        return results.map(result => result.parsedContent).join(separator);
+    }
 
     /**
      * @method moveObject
@@ -389,7 +397,7 @@ export class S3Tool extends BaseTool {
             // Then delete the original object
             const deleteCommand = new DeleteObjectCommand({
                 Bucket: inputs.bucket,
-                Key: inputs.key
+                Key: inputs.key as string
             });
             await this.s3Client.send(deleteCommand);
 
@@ -410,13 +418,35 @@ export class S3Tool extends BaseTool {
         try {
             const command = new DeleteObjectCommand({
                 Bucket: inputs.bucket,
-                Key: inputs.key
+                Key: inputs.key as string
             });
             
             await this.s3Client.send(command);
             return `Successfully deleted s3://${inputs.bucket}/${inputs.key}`;
         } catch (error) {
             throw new Error(`Failed to delete object: ${(error as Error).message}`);
+        }
+    }
+
+    /**
+     * @method getSignedUrl
+     * @private
+     * @param {S3Operation} inputs - Operation parameters
+     * @returns {Promise<string>} Signed URL for the object
+     * @description Generates a signed URL for accessing an S3 object
+     */
+    private async getSignedUrl(inputs: S3Operation): Promise<string> {
+        const command = new GetObjectCommand({
+            Bucket: inputs.bucket,
+            Key: inputs.key as string,
+        });
+
+        try {
+            // Generate a signed URL that expires in 1 hour (3600 seconds)
+            const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
+            return signedUrl;
+        } catch (error) {
+            throw new Error(`Failed to generate signed URL: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
