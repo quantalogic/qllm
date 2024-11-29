@@ -1,167 +1,116 @@
-// demo-dynamic-s3.ts
+// demo-s3-load-pdf.ts
 import { S3Tool } from "qllm-lib/src/tools/s3.tool";
+import { DocumentLoader } from "qllm-lib/src/utils/document/document-loader";
+import path from 'path';
+import fs from 'fs/promises';
 import dotenv from 'dotenv';
 dotenv.config();
 
-async function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function demoS3Tool() {
-  try {
-    // Configuration setup
-    const config = {
-      aws_access_key_id: process.env.AWS_ACCESS_KEY_ID!,
-      aws_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY!,
-      aws_region: process.env.AWS_REGION!,
-      aws_endpoint_url: process.env.AWS_ENDPOINT_URL
-    };
-
-    // Validate configuration
-    if (!config.aws_access_key_id || !config.aws_secret_access_key || !config.aws_region) {
-      throw new Error('Missing required AWS credentials in environment variables');
-    }
-
-    const bucketName = process.env.AWS_BUCKET_NAME!;
-    if (!bucketName) {
-      throw new Error('Missing AWS_BUCKET_NAME in environment variables');
-    }
-
-    const s3Tool = new S3Tool(config);
-
-    // Test 1: Save Operation
-    console.log('1. Testing Save Operation');
+async function testS3PDFOperation() {
     try {
-      const saveResult = await s3Tool.execute({
-        operation: 'save',
-        bucket: bucketName,
-        key: 'test/demo-file.txt',
-        content: 'This is a test file content',
-        contentType: 'text/plain',
-        metadata: {
-          'created-by': 'demo-script',
-          'timestamp': new Date().toISOString()
-        },
-        tags: {
-          'environment': 'test',
-          'purpose': 'demonstration'
+        // Configuration setup
+        const config = {
+            aws_access_key_id: process.env.AWS_ACCESS_KEY_ID!,
+            aws_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY!,
+            aws_region: process.env.AWS_REGION!,
+            aws_endpoint_url: process.env.AWS_ENDPOINT_URL
+        };
+
+        // Validate configuration
+        if (!config.aws_access_key_id || !config.aws_secret_access_key || !config.aws_region) {
+            throw new Error('Missing required AWS credentials in environment variables');
         }
-      });
-      console.log('✅ Save successful:', saveResult);
+
+        const bucketName = process.env.AWS_BUCKET_NAME!;
+        if (!bucketName) {
+            throw new Error('Missing AWS_BUCKET_NAME in environment variables');
+        }
+
+        const s3Tool = new S3Tool(config);
+        const uploadDir = path.resolve(__dirname, '../../upload');
+        
+        // Get all files from the upload directory
+        const dirContents = await fs.readdir(uploadDir);
+        const files = dirContents
+            .filter(file => !file.includes('load-result')) // Exclude load-result files
+            .map(file => ({
+                path: path.join(uploadDir, file),
+                key: `test/${file}`,
+                contentType: file.endsWith('.pdf') ? 'application/pdf' : 
+                           file.endsWith('.json') ? 'application/json' : 
+                           'text/plain'
+            }));
+
+        console.log(`Found ${files.length} files to process:`, files.map(f => path.basename(f.path)).join(', '));
+
+        // Step 1: Save files to S3
+        console.log('\n1. Saving files to S3...');
+        try {
+            const saveResult = await s3Tool.execute({
+                operation: 'save',
+                bucket: bucketName,
+                key: files.map(f => f.key),
+                filePath: files.map(f => f.path),
+                contentType: files[0].contentType, // Note: in a real app, you'd handle different content types per file
+                metadata: {
+                    'created-by': 'multi-file-test',
+                    'timestamp': new Date().toISOString()
+                }
+            });
+            console.log('✅ Save results:', saveResult);
+
+            // Try to load the files using DocumentLoader
+            for (const file of files) {
+                try {
+                    const result = await DocumentLoader.quickLoadString(file.path);
+                    console.log(`✅ Local file ${path.basename(file.path)} content length:`, result.content.length);
+                } catch (error) {
+                    console.log(`ℹ️ Skipped loading ${path.basename(file.path)} (might be binary file)`);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Save operation failed:', (error as Error).message);
+            return;
+        }
+
+        // Step 2: Load all files from S3
+        try {
+            console.log('\n2. Loading all files from S3...');
+            const loadResult = await s3Tool.execute({
+                operation: 'load',
+                bucket: bucketName,
+                key: files.map(f => f.key),
+                separator: '\n--- Next File ---\n'
+            });
+
+            // Write the result to a file
+            const outputPath = path.join(uploadDir, 'load-result.txt');
+            await fs.writeFile(outputPath, loadResult, 'utf-8');
+            console.log('✅ All files loaded and written to:', outputPath);
+        } catch (error) {
+            console.error('❌ Load operation failed:', (error as Error).message);
+        }
+
+        // Step 3: Delete the files from S3
+        console.log('\n3. Deleting files from S3...');
+        try {
+            const deleteResult = await s3Tool.execute({
+                operation: 'delete',
+                bucket: bucketName,
+                key: files.map(f => f.key)
+            });
+            console.log('✅ Delete results:', deleteResult);
+        } catch (error) {
+            console.error('❌ Failed to delete files:', (error as Error).message);
+        }
+
     } catch (error) {
-      console.error('❌ Save failed:', (error as Error).message);
+        console.error('Operation failed:', (error as Error).message);
     }
-
-    // Small delay to ensure consistency
-    await delay(1000);
-
-    // Test 2: Try to save to the same location (should fail)
-    console.log('\n2. Testing Save to Existing Location');
-    try {
-      await s3Tool.execute({
-        operation: 'save',
-        bucket: bucketName,
-        key: 'test/demo-file.txt',
-        content: 'This should fail'
-      });
-      console.log('❌ Save should have failed but succeeded');
-    } catch (error) {
-      console.log('✅ Expected failure:', (error as Error).message);
-    }
-
-    // Test 3: Load Operation
-    console.log('\n3. Testing Load Operation');
-    try {
-      const loadResult = await s3Tool.execute({
-        operation: 'load',
-        bucket: bucketName,
-        key: 'test/demo-file.txt'
-      });
-      console.log('✅ Load successful. Content:', loadResult);
-    } catch (error) {
-      console.error('❌ Load failed:', (error as Error).message);
-    }
-
-    // Test 4: Move Operation
-    console.log('\n4. Testing Move Operation');
-    try {
-      const moveResult = await s3Tool.execute({
-        operation: 'move',
-        bucket: bucketName,
-        key: 'test/demo-file.txt',
-        destinationBucket: bucketName,
-        destinationKey: 'test/moved-demo-file.txt'
-      });
-      console.log('✅ Move successful:', moveResult);
-    } catch (error) {
-      console.error('❌ Move failed:', (error as Error).message);
-    }
-
-    await delay(1000);
-
-    // Test 5: Try to load from old location (should fail)
-    console.log('\n5. Testing Load from Old Location');
-    try {
-      await s3Tool.execute({
-        operation: 'load',
-        bucket: bucketName,
-        key: 'test/demo-file.txt'
-      });
-      console.log('❌ Load should have failed but succeeded');
-    } catch (error) {
-      console.log('✅ Expected failure:', (error as Error).message);
-    }
-
-    // Test 6: Load from new location
-    console.log('\n6. Testing Load from New Location');
-    try {
-      const loadResult = await s3Tool.execute({
-        operation: 'load',
-        bucket: bucketName,
-        key: 'test/moved-demo-file.txt'
-      });
-      console.log('✅ Load successful. Content:', loadResult);
-    } catch (error) {
-      console.error('❌ Load failed:', (error as Error).message);
-    }
-
-    // Test 7: Delete Operation
-    console.log('\n7. Testing Delete Operation');
-    try {
-      const deleteResult = await s3Tool.execute({
-        operation: 'delete',
-        bucket: bucketName,
-        key: 'test/moved-demo-file.txt'
-      });
-      console.log('✅ Delete successful:', deleteResult);
-    } catch (error) {
-      console.error('❌ Delete failed:', (error as Error).message);
-    }
-
-    await delay(1000);
-
-    // Test 8: Try to delete non-existent file
-    console.log('\n8. Testing Delete of Non-existent File');
-    try {
-      await s3Tool.execute({
-        operation: 'delete',
-        bucket: bucketName,
-        key: 'test/moved-demo-file.txt'
-      });
-      console.log('❌ Delete should have failed but succeeded');
-    } catch (error) {
-      console.log('✅ Expected failure:', (error as Error).message);
-    }
-
-    console.log('\n=== S3 Operations Test Completed ===\n');
-
-  } catch (error) {
-    console.error('\n❌ Demo failed:', error instanceof Error ? error.message : error);
-  }
 }
 
-// Run the demonstration
-console.log('Starting demonstration...');
-demoS3Tool()
-  .then(() => console.log('Demonstration completed successfully'))
-  .catch(error => console.error('Demonstration failed:', error));
+// Run the test
+console.log('Starting S3 operation test...');
+testS3PDFOperation()
+    .then(() => console.log('Test completed'))
+    .catch(error => console.error('Test failed:', error));

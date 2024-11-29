@@ -18,7 +18,6 @@ import {
     NotFound,
     S3ServiceException
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { BaseTool, ToolDefinition } from "./base-tool";
 import * as crypto from "crypto";
 import { DocumentLoader } from '../utils/document/document-loader';
@@ -54,7 +53,7 @@ interface S3Operation {
     /** Object key in the bucket */
     key: string | string[];
     /** Local file path (for save operations) */
-    filePath?: string;
+    filePath?: string | string[];
     /** Content to upload (for save operations) */
     content?: string;
     /** Content type of the object */
@@ -126,9 +125,9 @@ export class S3Tool extends BaseTool {
                     description: 'Object key(s) in the bucket'
                 },
                 filePath:{
-                    type: 'string',
+                    type: 'string | string[]',
                     required: false,
-                    description: 'Local file path'
+                    description: 'Local file path(s)'
                 },
                 content: {
                     type: 'string',
@@ -185,7 +184,7 @@ export class S3Tool extends BaseTool {
      * @throws {Error} If operation is invalid or fails
      * @description Executes the specified S3 operation
      */
-    async execute(inputs: S3Operation & { operation: 'save' | 'load' | 'move' | 'delete' | 'getSignedUrl' }): Promise<string> {
+    async execute(inputs: S3Operation & { operation: 'save' | 'load' | 'move' | 'delete' }): Promise<string> {
         try {
             await this.verifyOperation(inputs.operation, inputs.bucket, inputs.key);
 
@@ -198,8 +197,6 @@ export class S3Tool extends BaseTool {
                     return this.moveObject(inputs);
                 case 'delete':
                     return this.deleteObject(inputs);
-                case 'getSignedUrl':
-                    return this.getSignedUrl(inputs);
                 default:
                     throw new Error(`Unsupported operation: ${inputs.operation}`);
             }
@@ -222,30 +219,20 @@ export class S3Tool extends BaseTool {
             throw new Error('Both bucket and key must be provided');
         }
 
-        if (!['save','load', 'move', 'delete', 'getSignedUrl'].includes(operation)) {
+        if (!['save','load', 'move', 'delete'].includes(operation)) {
             throw new Error(`Invalid operation: ${operation}`);
         }
 
-        if (operation === 'load' && !Array.isArray(key)) {
-            throw new Error('load operation requires an array of keys');
+        if ((operation === 'load' || operation === 'delete' || operation === 'save') && !Array.isArray(key)) {
+            throw new Error(`${operation} operation requires an array of keys`);
         }
 
-        if (operation !== 'load' && Array.isArray(key)) {
+        if (operation !== 'load' && operation !== 'delete' && operation !== 'save' && Array.isArray(key)) {
             throw new Error(`${operation} operation requires a single key string`);
         }
 
-        if (operation === 'getSignedUrl' && Array.isArray(key)) {
-            throw new Error('getSignedUrl operation requires a single key');
-        }
-
-        try {
-            if (Array.isArray(key)) {
-                await Promise.all(key.map(k => this.checkFileExists(bucket, k)));
-            } else {
-                await this.checkFileExists(bucket, key);
-            }
-        } catch (error) {
-            throw new Error(`Failed to verify operation: ${(error as Error).message}`);
+        if (operation === 'move' && Array.isArray(key)) {
+            throw new Error('move operation requires a single key');
         }
     }
 
@@ -283,43 +270,53 @@ export class S3Tool extends BaseTool {
     /**
      * @method saveObject
      * @private
-     * @param {S3Operation} inputs - Save operation parameters
+     * @param {S3Operation} inputs - Save operation parameters with array of keys and file paths
      * @returns {Promise<string>} Result of the save operation
-     * @description Saves a file to S3 using streaming upload
+     * @description Saves multiple files to S3 using streaming upload
      */
     private async saveObject(inputs: S3Operation): Promise<string> {
-        if (!inputs.filePath) {
-            throw new Error('filePath must be provided for saveObject operation');
+        if (!Array.isArray(inputs.key)) {
+            throw new Error('saveObjects requires an array of keys');
         }
 
-        const commandInput: PutObjectCommandInput = {
-            Bucket: inputs.bucket,
-            Key: inputs.key as string,
-            Body: createReadStream(inputs.filePath),
-        };
-        
-        console.log("commandInput passed")
-
-        if (inputs.metadata) {
-            commandInput.Metadata = inputs.metadata;
+        if (!Array.isArray(inputs.filePath)) {
+            throw new Error('saveObjects requires an array of filePaths');
         }
 
-        if (inputs.tags) {
-            commandInput.Tagging = this.formatTags(inputs.tags);
+        if (inputs.key.length !== inputs.filePath.length) {
+            throw new Error('Number of keys must match number of filePaths');
         }
 
-        try {
-            console.log("try begin")
-            const command = new PutObjectCommand(commandInput);
-            console.log("command passed")
-            await this.s3Client.send(command);
-            console.log("send passed")
-            return `Successfully saved file ${inputs.filePath} to ${inputs.bucket}/${inputs.key}`;
-        } catch (error) {
-            throw new Error(`Failed to save file to S3: ${error instanceof Error ? error.message : String(error)}`);
+        const results: string[] = [];
+        for (let i = 0; i < inputs.key.length; i++) {
+            const key = inputs.key[i];
+            const filePath = inputs.filePath[i];
+
+            const commandInput: PutObjectCommandInput = {
+                Bucket: inputs.bucket,
+                Key: key,
+                Body: createReadStream(filePath),
+            };
+
+            if (inputs.metadata) {
+                commandInput.Metadata = inputs.metadata;
+            }
+
+            if (inputs.tags) {
+                commandInput.Tagging = this.formatTags(inputs.tags);
+            }
+
+            try {
+                const command = new PutObjectCommand(commandInput);
+                await this.s3Client.send(command);
+                results.push(`Successfully saved file ${filePath} to ${inputs.bucket}/${key}`);
+            } catch (error) {
+                results.push(`Failed to save file ${filePath} to ${inputs.bucket}/${key}: ${error instanceof Error ? error.message : String(error)}`);
+            }
         }
+
+        return results.join('\n');
     }
-
 
     /**
      * @method loadObject
@@ -410,44 +407,30 @@ export class S3Tool extends BaseTool {
     /**
      * @method deleteObject
      * @private
-     * @param {S3Operation} inputs - Delete operation parameters
+     * @param {S3Operation} inputs - Delete operation parameters with array of keys
      * @returns {Promise<string>} Result of the delete operation
-     * @description Deletes an object from S3
+     * @description Deletes multiple objects from S3
      */
     private async deleteObject(inputs: S3Operation): Promise<string> {
-        try {
-            const command = new DeleteObjectCommand({
-                Bucket: inputs.bucket,
-                Key: inputs.key as string
-            });
-            
-            await this.s3Client.send(command);
-            return `Successfully deleted s3://${inputs.bucket}/${inputs.key}`;
-        } catch (error) {
-            throw new Error(`Failed to delete object: ${(error as Error).message}`);
+        if (!Array.isArray(inputs.key)) {
+            throw new Error('deleteObjects requires an array of keys');
         }
-    }
 
-    /**
-     * @method getSignedUrl
-     * @private
-     * @param {S3Operation} inputs - Operation parameters
-     * @returns {Promise<string>} Signed URL for the object
-     * @description Generates a signed URL for accessing an S3 object
-     */
-    private async getSignedUrl(inputs: S3Operation): Promise<string> {
-        const command = new GetObjectCommand({
-            Bucket: inputs.bucket,
-            Key: inputs.key as string,
-        });
-
-        try {
-            // Generate a signed URL that expires in 1 hour (3600 seconds)
-            const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
-            return signedUrl;
-        } catch (error) {
-            throw new Error(`Failed to generate signed URL: ${error instanceof Error ? error.message : String(error)}`);
+        const results: string[] = [];
+        for (const key of inputs.key) {
+            try {
+                const command = new DeleteObjectCommand({
+                    Bucket: inputs.bucket,
+                    Key: key
+                });
+                await this.s3Client.send(command);
+                results.push(`Successfully deleted: ${key}`);
+            } catch (error) {
+                results.push(`Failed to delete ${key}: ${(error as Error).message}`);
+            }
         }
+
+        return results.join('\n');
     }
 
     /**

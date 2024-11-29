@@ -30,10 +30,7 @@
         "prepublishOnly": "pnpm run build",
         "start:exm": "ts-node src/template-workflow/ai_research_workflow.ts",
         "test:parsing": "ts-node src/utilities/demo-document-loader-multiplesFiles.ts",
-        "parseLocal": "ts-node src/utilities/demo-document-loader-local.ts",
-        "parseRemote": "ts-node src/utilities/demo-document-loader-remote.ts",
-        "test:s3tool": "ts-node src/tools/demo-s3-tool.ts",
-        "test:s3loadAndSave": "ts-node src/tools/demo-s3-load-save.ts"
+        "test:s3tool": "ts-node src/tools/demo-s3-tool.ts"
     },
     "repository": {
         "type": "git",
