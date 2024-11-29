@@ -216,7 +216,7 @@ export class DocumentLoader extends EventEmitter {
     // }
 
     // Check path length
-    if (filePath.length > 255) {
+    if (filePath.length > 510) {
         throw new Error('File path exceeds maximum length');
     }
 }
