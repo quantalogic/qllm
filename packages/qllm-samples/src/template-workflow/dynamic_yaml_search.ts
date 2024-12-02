@@ -22,6 +22,8 @@ async function main(): Promise<void> {
     steps: [
       {
         templateUrl: "https://github.com/novagen-conseil/qlstorage-test/blob/main/templates/fb156521-9b94-4937-acd0-8ce9cd6866c3/eabc7a8e-5415-4629-9542-2693b9e5beba/ai-story-generator.yaml",
+        name: "step 1",
+        description: "dezhbjk,l",
         provider: "openai",
         input: {
           genre: "{{genre}}",
@@ -36,6 +38,8 @@ async function main(): Promise<void> {
       },
       {
         templateUrl: "https://github.com/novagen-conseil/qlstorage-test/blob/main/templates/fb156521-9b94-4937-acd0-8ce9cd6866c3/eabc7a8e-5415-4629-9542-2693b9e5beba/scene-visualization-generator.yaml",
+        name: "step 2",
+        description: "dezefez",
         provider: "openai",
         input: {
           scene_text: "$generated_story",
@@ -52,6 +56,7 @@ async function main(): Promise<void> {
 
   try {
     // Load workflow
+    console.log("workflowDefinition : ", workflowDefinition)
     // const workflowDefinition = await workflowManager.loadWorkflow('https://github.com/YatchiYa/templates_prompts_qllm/blob/main/workflow.yaml');
     await workflowManager.loadWorkflow(workflowDefinition);
     console.log("\n✅ Workflow loaded successfully");
