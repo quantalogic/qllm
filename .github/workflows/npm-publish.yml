@@ -1,0 +1,54 @@
+name: Publish to NPM
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install
+        
+      - name: Run tests
+        run: |
+          cd packages/qllm-lib
+          pnpm test
+          cd ../qllm-cli
+          pnpm test
+          
+      - name: Build packages
+        run: |
+          cd packages/qllm-lib
+          pnpm run build:prod
+          cd ../qllm-cli
+          pnpm run build:prod
+          
+      - name: Publish qllm-lib
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+        run: |
+          cd packages/qllm-lib
+          pnpm publish --no-git-checks --access public
+          
+      - name: Publish qllm-cli
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+        run: |
+          cd packages/qllm-cli
+          pnpm publish --no-git-checks --access public
