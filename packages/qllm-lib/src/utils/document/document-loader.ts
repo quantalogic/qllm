@@ -23,13 +23,12 @@ import zlib from 'zlib';
 import { promisify } from 'util';
 import mime from 'mime-types';
 import { URL } from 'url';
-import { createHash } from 'crypto'; // New import statement
+import { createHash } from 'crypto';
 import { getHandlerForMimeType } from './format-handlers';
 import logger from '../logger';
 import { DocumentParser, LoadResult } from '../../types/document-types';
 import { ParserRegistry, DefaultParserRegistry } from './parsers/parser-registry';
-import { ContentValidator,ContentValidationOptions } from './content-validator';
-
+import { ContentValidator, ContentValidationOptions } from './content-validator';
 
 const gunzip = promisify(zlib.gunzip);
 
@@ -60,7 +59,6 @@ export interface DocumentLoaderOptions {
   maxFileSize?: number;
   validationOptions?: ContentValidationOptions;
 }
- 
 
 /**
  * Event handlers for document loading progress and status.
@@ -118,40 +116,49 @@ export class DocumentLoader extends EventEmitter {
    * Cancel token source for the current load operation.
    */
   private cancelTokenSource: CancelTokenSource | null = null;
+
+  /**
+   * Content validator instance.
+   */
   private contentValidator: ContentValidator;
 
-  constructor(inputPath: string, 
-    private parserRegistry: ParserRegistry = new DefaultParserRegistry(),
-    options: DocumentLoaderOptions = {}) {
+  /**
+   * Parser registry instance.
+   */
+  private parserRegistry: ParserRegistry;
 
+  constructor(
+    inputPath: string, 
+    parserRegistry: ParserRegistry = new DefaultParserRegistry(),
+    options: DocumentLoaderOptions = {}
+  ) {
     super();
-    // Validate input path immediately
     this.validateFilePath(inputPath);
     this.inputPath = inputPath;
+    this.parserRegistry = parserRegistry;
 
     this.options = {
-        chunkSize: 1024 * 1024,
-        encoding: 'utf-8',
-        timeout: 30000, // 30 seconds
-        headers: {},
-        maxRetries: 3,
-        retryDelay: 1000,
-        cacheDir: path.join(os.tmpdir(), 'document-loader-cache'),
-        proxy: '',
-        decompress: true,
-        useCache: false,
-        maxFileSize: 100 * 1024 * 1024, // 100MB
-        validationOptions: {
-          maxFileSize: 100 * 1024 * 1024,
-          allowedMimeTypes: ['text/plain', 'application/pdf', 'text/typescript','application/octet-stream','application/pdf'],
-          validateEncoding: true,
-          securityScanEnabled: true
+      chunkSize: 1024 * 1024,
+      encoding: 'utf-8',
+      timeout: 30000,
+      headers: {},
+      maxRetries: 3,
+      retryDelay: 1000,
+      cacheDir: path.join(os.tmpdir(), 'document-loader-cache'),
+      proxy: '',
+      decompress: true,
+      useCache: false,
+      maxFileSize: 100 * 1024 * 1024,
+      validationOptions: {
+        maxFileSize: 100 * 1024 * 1024,
+        allowedMimeTypes: ['text/plain', 'application/pdf', 'text/typescript', 'application/octet-stream', 'application/pdf'],
+        validateEncoding: true,
+        securityScanEnabled: true
       },
-        ...options,
+      ...options,
     };
 
     this.contentValidator = new ContentValidator(this.options.validationOptions);
-
   }
 
   /**
@@ -200,48 +207,41 @@ export class DocumentLoader extends EventEmitter {
 
   private validateFilePath(filePath: string): void {
     if (!filePath || typeof filePath !== 'string') {
-        throw new Error('File path must be a string');
+      throw new Error('File path must be a string');
     }
 
     // Basic security check to prevent directory traversal
     const normalizedPath = path.normalize(filePath);
     if (normalizedPath.includes('..')) {
-        throw new Error('File path cannot contain parent directory references');
+      throw new Error('File path cannot contain parent directory references');
     }
-
-    // // Check for suspicious characters
-    // const suspiciousChars = /[\0<>:"|?*]/;
-    // if (suspiciousChars.test(filePath)) {
-    //     throw new Error('File path contains invalid characters');
-    // }
 
     // Check path length
-    if (filePath.length > 255) {
-        throw new Error('File path exceeds maximum length');
+    if (filePath.length > 510) {
+      throw new Error('File path exceeds maximum length');
     }
-}
-
+  }
 
   private getParser(filename: string): DocumentParser | undefined {
     return this.parserRegistry.getParser(filename);
-}
+  }
 
   private getMimeType(filePath: string): string {
     const ext = path.extname(filePath).toLowerCase();
     // Override MIME type for TypeScript files
     if (ext === '.ts' || ext === '.tsx') {
-        return 'text/typescript';
+      return 'text/typescript';
     }
     return mime.lookup(filePath) || 'application/octet-stream';
-}
+  }
 
-private getRawGitHubUrl(url: string): string {
-  try {
+  private getRawGitHubUrl(url: string): string {
+    try {
       const githubUrl = new URL(url);
       
       // Check if it's a GitHub URL
       if (!githubUrl.hostname.includes('github.com')) {
-          throw new Error('Not a GitHub URL');
+        throw new Error('Not a GitHub URL');
       }
 
       // Convert github.com to raw.githubusercontent.com
@@ -255,176 +255,136 @@ private getRawGitHubUrl(url: string): string {
       
       // Check if we have enough parts (user, repo, blob/tree, branch, filepath)
       if (filteredParts.length < 5) {
-          throw new Error('Invalid GitHub URL format');
+        throw new Error('Invalid GitHub URL format');
       }
 
       // Remove 'blob' or 'tree' from path
       const blobIndex = filteredParts.findIndex(part => part === 'blob' || part === 'tree');
       if (blobIndex !== -1) {
-          filteredParts.splice(blobIndex, 1);
+        filteredParts.splice(blobIndex, 1);
       }
 
       // Construct raw URL
       return `https://raw.githubusercontent.com/${filteredParts.join('/')}`;
-  } catch (error) {
+    } catch (error) {
       throw new Error(`Failed to parse GitHub URL: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
-}
 
-
-private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
-  try {
+  private async loadFromFile(filePath: string): Promise<LoadResult<Buffer>> {
+    try {
       // Initial path processing
       const expandedPath = this.expandTilde(filePath);
       const absolutePath = path.resolve(expandedPath);
-      const mimeType = this.getMimeType(absolutePath) || 'application/octet-stream';
+      const mimeType = this.getMimeType(absolutePath);
 
       // Validate file existence and accessibility
       try {
-          await fs.access(absolutePath, fs.constants.R_OK);
+        await fs.access(absolutePath, fs.constants.R_OK);
       } catch (error) {
-          throw new Error(`File not accessible: ${filePath}`);
+        throw new Error(`File not accessible: ${filePath}`);
       }
 
       // Check cache if enabled
       if (this.options.useCache) {
-          const cachedPath = this.getCachePath(absolutePath);
-          if (await this.isCacheValid(absolutePath, cachedPath)) {
-              try {
-                  const content = await fs.readFile(cachedPath);
-                  const parsedContent = await this.parseContent(content, absolutePath);
-                  return { content, mimeType, parsedContent };
-              } catch (error) {
-                  // Cache read failed, continue with normal file loading
-                  logger.warn(`Cache read failed for ${filePath}, loading from source`);
-              }
+        const cachedPath = this.getCachePath(absolutePath);
+        if (await this.isCacheValid(absolutePath, cachedPath)) {
+          try {
+            const content = await fs.readFile(cachedPath);
+            const parsedContent = await this.parseContent(content, absolutePath);
+            return { content, mimeType, parsedContent };
+          } catch (error) {
+            logger.warn(`Cache read failed for ${filePath}, loading from source`);
           }
+        }
       }
 
       // Get file stats and validate size
       const fileStats = await fs.stat(absolutePath);
       if (fileStats.size > this.options.maxFileSize) {
-          throw new Error(
-              `File size (${fileStats.size} bytes) exceeds maximum allowed size (${this.options.maxFileSize} bytes)`
-          );
+        throw new Error(
+          `File size (${fileStats.size} bytes) exceeds maximum allowed size (${this.options.maxFileSize} bytes)`
+        );
       }
 
       // Load file in chunks with proper resource management
       let fileHandle: fs.FileHandle | undefined;
       try {
-          fileHandle = await fs.open(absolutePath, 'r');
-          const totalSize = fileStats.size;
-          let loadedSize = 0;
-          const chunks: Buffer[] = [];
+        fileHandle = await fs.open(absolutePath, 'r');
+        const totalSize = fileStats.size;
+        let loadedSize = 0;
+        const chunks: Buffer[] = [];
 
-          // Read file in chunks
-          while (loadedSize < totalSize) {
-              const buffer = Buffer.alloc(Math.min(this.options.chunkSize, totalSize - loadedSize));
-              const result = await fileHandle.read(buffer, 0, buffer.length, loadedSize);
-              
-              if (result.bytesRead <= 0) {
-                  break; // End of file or error
-              }
+        while (loadedSize < totalSize) {
+          const chunk = Buffer.alloc(Math.min(this.options.chunkSize, totalSize - loadedSize));
+          const { bytesRead } = await fileHandle.read(chunk, 0, chunk.length, loadedSize);
+          
+          if (bytesRead === 0) break;
+          
+          chunks.push(chunk.slice(0, bytesRead));
+          loadedSize += bytesRead;
+          
+          this.emit('progress', loadedSize / totalSize);
+        }
 
-              chunks.push(buffer.subarray(0, result.bytesRead));
-              loadedSize += result.bytesRead;
-              
-              // Emit progress
-              this.emit('progress', loadedSize / totalSize);
+        const content = Buffer.concat(chunks);
+        const parsedContent = await this.parseContent(content, absolutePath);
+        
+        // Cache content if enabled
+        if (this.options.useCache) {
+          await this.cacheContent(absolutePath, content);
+        }
 
-              // Check if operation was cancelled
-              if (this.cancelTokenSource?.token.reason) {
-                  throw new Error('Operation cancelled by user');
-              }
-          }
-
-          const content = Buffer.concat(chunks);
-
-          // Validate content size after reading
-          if (content.length !== totalSize) {
-              throw new Error(`File size mismatch: expected ${totalSize}, got ${content.length}`);
-          }
-
-          // Cache content if enabled
-          if (this.options.useCache) {
-              try {
-                  const cachedPath = this.getCachePath(absolutePath);
-                  await this.cacheContent(cachedPath, content);
-              } catch (error) {
-                  // Log cache write failure but continue
-                  logger.error(`Failed to cache content for ${filePath}: ${error}`);
-              }
-          }
-
-          // Parse content using appropriate parser
-          const parsedContent = await this.parseContent(content, absolutePath);
-
-          return { content, mimeType, parsedContent };
-
+        return { content, mimeType, parsedContent };
       } finally {
-          // Ensure file handle is always closed
-          if (fileHandle) {
-              await fileHandle.close().catch(error => {
-                  logger.error(`Failed to close file handle for ${filePath}: ${error}`);
-              });
-          }
+        if (fileHandle) {
+          await fileHandle.close().catch(error => {
+            logger.error('Error closing file handle:', error);
+          });
+        }
       }
-
-  } catch (error) {
-      // Transform and rethrow errors with context
-      const errorMessage = error instanceof Error ? 
-          error.message : 
-          `Unknown error: ${String(error)}`;
-      
-      throw new Error(`Failed to load file ${filePath}: ${errorMessage}`);
+    } catch (error) {
+      throw new Error(`Failed to load file ${filePath}: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
-}
-  
 
   private async validateContent(buffer: Buffer, filePath: string): Promise<void> {
     try {
-        const mimeType = this.getMimeType(filePath);
-        await this.contentValidator.validateContent(buffer, mimeType, filePath);
+      const mimeType = this.getMimeType(filePath);
+      await this.contentValidator.validateContent(buffer, mimeType, filePath);
     } catch (error) {
-        const errorMessage = error instanceof Error ? 
-            error.message : 
-            `Content validation failed: ${String(error)}`;
-        throw new Error(`Validation error for ${filePath}: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? 
+        error.message : 
+        `Content validation failed: ${String(error)}`;
+      throw new Error(`Validation error for ${filePath}: ${errorMessage}`);
     }
-}
+  }
 
-
-private async parseContent(buffer: Buffer, filePath: string): Promise<string | undefined> {
+  private async parseContent(buffer: Buffer, filePath: string): Promise<string | undefined> {
     const parser = this.getParser(filePath);
     if (!parser) {
-        return undefined;
+      return undefined;
     }
 
     try {
-        await this.validateContent(buffer, this.getMimeType(filePath));
-        return await parser.parse(buffer, filePath);
+      await this.validateContent(buffer, this.getMimeType(filePath));
+      return await parser.parse(buffer, filePath);
     } catch (error) {
-        this.emit('error', new Error(`Parsing error for ${filePath}: ${error}`));
-        throw error;
+      this.emit('error', new Error(`Parsing error for ${filePath}: ${error}`));
+      throw error;
     }
-}
+  }
 
-  /**
-   * Loads a document from a URL.
-   * 
-   * @param url URL to load.
-   * @returns Loaded document content and MIME type.
-   */
   private async loadFromUrl(url: string): Promise<LoadResult<Buffer>> {
     let finalUrl = url;
     
     // Convert GitHub URLs to raw content URLs
     if (url.includes('github.com')) {
-        try {
-            finalUrl = this.getRawGitHubUrl(url);
-        } catch (error) {
-            logger.warn(`Failed to convert GitHub URL, using original URL: ${error}`);
-        }
+      try {
+        finalUrl = this.getRawGitHubUrl(url);
+      } catch (error) {
+        logger.warn(`Failed to convert GitHub URL, using original URL: ${error}`);
+      }
     }
 
     if (this.options.useCache) {
@@ -451,9 +411,9 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
           cancelToken: this.cancelTokenSource.token,
           proxy: this.options.proxy
             ? {
-                host: this.options.proxy.split(':')[0],
-                port: parseInt(this.options.proxy.split(':')[1], 10),
-              }
+              host: this.options.proxy.split(':')[0],
+              port: parseInt(this.options.proxy.split(':')[1], 10),
+            }
             : undefined,
         };
 
@@ -486,24 +446,11 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
     throw new Error('Max retries reached');
   }
 
-  /**
-   * Gets the cache path for a given input path or URL.
-   * 
-   * @param key Input path or URL to get the cache path for.
-   * @returns Cache path.
-   */
   private getCachePath(key: string): string {
     const hash = createHash('md5').update(key).digest('hex');
     return path.join(this.options.cacheDir, hash);
   }
 
-  /**
-   * Checks if the cache is valid for a given input path or URL.
-   * 
-   * @param original Original input path or URL.
-   * @param cached Cached path to check.
-   * @returns True if the cache is valid, false otherwise.
-   */
   private async isCacheValid(original: string, cached: string): Promise<boolean> {
     try {
       const [originalStat, cachedStat] = await Promise.all([fs.stat(original), fs.stat(cached)]);
@@ -513,22 +460,11 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
     }
   }
 
-  /**
-   * Caches the content of a loaded document.
-   * 
-   * @param cachedPath Cached path to write to.
-   * @param content Document content to cache.
-   */
   private async cacheContent(cachedPath: string, content: Buffer): Promise<void> {
     await fs.mkdir(path.dirname(cachedPath), { recursive: true });
     await fs.writeFile(cachedPath, content);
   }
 
-  /**
-   * Loads a document as a string.
-   * 
-   * @returns Loaded document content and MIME type.
-   */
   public async loadAsString(): Promise<LoadResult<string>> {
     const { content: buffer, mimeType } = await this.loadAsBuffer();
     try {
@@ -560,11 +496,6 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
     }
   }
 
-  /**
-   * Loads a document as a buffer.
-   * 
-   * @returns Loaded document content and MIME type.
-   */
   public async loadAsBuffer(): Promise<LoadResult<Buffer>> {
     try {
       let result: LoadResult<Buffer>;
@@ -591,83 +522,48 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
     }
   }
 
-  /**
-   * Cancels the current load operation.
-   */
   public cancel(): void {
     if (this.cancelTokenSource) {
       this.cancelTokenSource.cancel('Operation cancelled by user');
     }
   }
 
-  /**
-   * Quickly loads a document as a string.
-   * 
-   * @param input Input path or URL to load.
-   * @param options Configuration options for the loader.
-   * @returns Loaded document content and MIME type.
-   */
   public static async quickLoadString(
     input: string,
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<string>> {
-    
     const defaultRegistry = new DefaultParserRegistry();
-    const loader = new DocumentLoader(input, defaultRegistry,options);
+    const loader = new DocumentLoader(input, defaultRegistry, options);
     return loader.loadAsString();
   }
 
-  /**
-   * Quickly loads a document as a buffer.
-   * 
-   * @param input Input path or URL to load.
-   * @param options Configuration options for the loader.
-   * @returns Loaded document content and MIME type.
-   */
   public static async quickLoadBuffer(
     input: string,
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<Buffer>> {
     const defaultRegistry = new DefaultParserRegistry();
-    const loader = new DocumentLoader(input, defaultRegistry,options);
+    const loader = new DocumentLoader(input, defaultRegistry, options);
     return loader.loadAsBuffer();
   }
 
-  /**
-   * Loads multiple documents as strings.
-   * 
-   * @param inputs Input paths or URLs to load.
-   * @param options Configuration options for the loader.
-   * @returns Loaded document contents and MIME types.
-   */
   public static async loadMultipleAsString(
     inputs: string[],
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<string>[]> {
     const defaultRegistry = new DefaultParserRegistry();
-    const loaders = inputs.map((input) => new DocumentLoader(input,defaultRegistry, options));
+    const loaders = inputs.map((input) => new DocumentLoader(input, defaultRegistry, options));
     return Promise.all(loaders.map((loader) => loader.loadAsString()));
   }
 
-  /**
-   * Loads multiple documents as buffers.
-   * 
-   * @param inputs Input paths or URLs to load.
-   * @param options Configuration options for the loader.
-   * @returns Loaded document contents and MIME types.
-   */
   public static async loadMultipleAsBuffer(
     inputs: string[],
     options?: DocumentLoaderOptions,
   ): Promise<LoadResult<Buffer>[]> {
     const defaultRegistry = new DefaultParserRegistry();
-    const loaders = inputs.map((input) => new DocumentLoader(input,defaultRegistry, options));
+    const loaders = inputs.map((input) => new DocumentLoader(input, defaultRegistry, options));
     return Promise.all(loaders.map((loader) => loader.loadAsBuffer()));
   }
 
-  /**
-   * Type-safe event emitter methods.
-   */
   public on<K extends keyof DocumentLoaderEvents>(
     event: K,
     listener: DocumentLoaderEvents[K],
@@ -681,5 +577,4 @@ private async parseContent(buffer: Buffer, filePath: string): Promise<string | u
   ): boolean {
     return super.emit(event, ...args);
   }
-  
 }
