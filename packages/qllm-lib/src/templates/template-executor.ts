@@ -207,8 +207,8 @@ export class TemplateExecutor extends EventEmitter {
                             encoding: 'utf-8',
                             useCache: true
                         });
-                        const { content } = await loader.loadAsString();
-                        return content;
+                        const { content,parsedContent } = await loader.loadAsString();
+                        return parsedContent || content;
                     }));
                     resolvedVariables[key] = contents.join('\n\n');
                     varDef["type"] = "string"
@@ -219,8 +219,8 @@ export class TemplateExecutor extends EventEmitter {
                         encoding: 'utf-8',
                         useCache: true
                     });
-                    const { content } = await loader.loadAsString();
-                    resolvedVariables[key] = content;
+                    const { content,parsedContent } = await loader.loadAsString();
+                    resolvedVariables[key] = parsedContent || content;
                     varDef["type"] = "string"
                 }
             } catch (error) {
@@ -388,8 +388,8 @@ export class TemplateExecutor extends EventEmitter {
         useCache: true
       });
       
-      const { content } = await documentLoader.loadAsString();
-      return content;
+      const { content, parsedContent } = await documentLoader.loadAsString();
+      return parsedContent || content;
     } catch (error) {
       this.handleExecutionError(`Failed to load file: ${error}`);
     }
