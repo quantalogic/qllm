@@ -14,10 +14,12 @@ import {
     DeleteObjectCommand,
     PutObjectCommandInput,
     GetObjectCommandInput,
+    DeleteObjectCommandInput,
     HeadObjectCommandOutput,
     NotFound,
     S3ServiceException
 } from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { BaseTool, ToolDefinition } from "./base-tool";
 import * as crypto from "crypto";
 import { DocumentLoader } from '../utils/document/document-loader';
@@ -25,6 +27,14 @@ import fs from 'fs/promises';
 import { createReadStream } from 'fs';
 import path from 'path';
 import os from 'os';
+import { v4 as uuidv4 } from 'uuid';
+import { Crypto } from "@peculiar/webcrypto";
+import { fromEnv } from "@aws-sdk/credential-providers";
+import { AwsCredentialIdentity } from "@aws-sdk/types";
+
+// Set up WebCrypto for Node.js environment
+global.crypto = new Crypto()
+
 
 /**
  * @interface S3Config
@@ -70,6 +80,8 @@ interface S3Operation {
     destinationKey?: string;
     /** Optional separator for multiple files */
     separator?: string;
+    /** Operation to perform (saveMultiple, loadMultiple, move, deleteMultiple, save, load, delete) */
+    operation: 'saveMultiple' | 'loadMultiple' | 'move' | 'deleteMultiple' | 'save' | 'load' | 'delete';
 }
 
 /**
@@ -77,7 +89,7 @@ interface S3Operation {
  * @extends BaseTool
  * @description A tool for interacting with AWS S3, supporting various operations with encryption capabilities
  */
-export class S3Tool extends BaseTool {
+class S3Tool extends BaseTool {
     private s3Client: S3Client;
 
     /**
@@ -85,14 +97,21 @@ export class S3Tool extends BaseTool {
      * @param {S3Config} config - Configuration object for the S3 client
      */
     constructor(config: S3Config) {
-        const clientConfig = {
-            region: config.aws_region,
-            credentials: {
+        const credentials = config.aws_access_key_id && config.aws_secret_access_key 
+            ? {
                 accessKeyId: config.aws_access_key_id,
                 secretAccessKey: config.aws_secret_access_key,
-            },
+              } as AwsCredentialIdentity
+            : fromEnv();
+
+        const clientConfig = {
+            region: config.aws_region || process.env.AWS_REGION,
+            credentials,
             ...(config.aws_endpoint_url && { endpoint: config.aws_endpoint_url }),
-            ...config.custom_options
+            ...config.custom_options,
+            requestHandler: new NodeHttpHandler(),
+            maxAttempts: 3,
+            retryMode: 'standard'
         };
         
         super(clientConfig);
@@ -112,7 +131,7 @@ export class S3Tool extends BaseTool {
                 operation: {
                     type: 'string',
                     required: true,
-                    description: 'The operation to perform (save, load, move, delete, getSignedUrl)'
+                    description: 'The operation to perform (saveMultiple, loadMultiple, move, deleteMultiple, save, load, delete)'
                 },
                 bucket: {
                     type: 'string',
@@ -179,22 +198,28 @@ export class S3Tool extends BaseTool {
 
     /**
      * @method execute
-     * @param {S3Operation & { operation: 'save' | 'load' | 'move' | 'delete' | 'getSignedUrl' }} inputs - Operation parameters
+     * @param {S3Operation} inputs - Operation parameters
      * @returns {Promise<string>} Result of the operation
      * @throws {Error} If operation is invalid or fails
      * @description Executes the specified S3 operation
      */
-    async execute(inputs: S3Operation & { operation: 'save' | 'load' | 'move' | 'delete' }): Promise<string> {
+    async execute(inputs: S3Operation): Promise<string> {
         try {
             await this.verifyOperation(inputs.operation, inputs.bucket, inputs.key);
 
             switch (inputs.operation) {
+                case 'saveMultiple':
+                    return this.saveObjects(inputs);
+                case 'loadMultiple':
+                    return this.loadObjects(inputs);
+                case 'move':
+                    return this.moveObject(inputs);
+                case 'deleteMultiple':
+                    return this.deleteObjects(inputs);
                 case 'save':
                     return this.saveObject(inputs);
                 case 'load':
                     return this.loadObject(inputs);
-                case 'move':
-                    return this.moveObject(inputs);
                 case 'delete':
                     return this.deleteObject(inputs);
                 default:
@@ -215,24 +240,26 @@ export class S3Tool extends BaseTool {
      * @description Verifies the validity of an S3 operation
      */
     private async verifyOperation(operation: string, bucket: string, key: string | string[]): Promise<void> {
-        if (!bucket || !key) {
-            throw new Error('Both bucket and key must be provided');
+        if (!bucket) {
+            throw new Error('bucket must be provided');
+        }
+        if (!key) {
+            throw new Error('key must be provided');
         }
 
-        if (!['save','load', 'move', 'delete'].includes(operation)) {
+        const multiOperations = ['saveMultiple', 'loadMultiple', 'deleteMultiple'];
+        const singleOperations = ['save', 'load', 'delete', 'move'];
+
+        if (![...multiOperations, ...singleOperations].includes(operation)) {
             throw new Error(`Invalid operation: ${operation}`);
         }
 
-        if ((operation === 'load' || operation === 'delete' || operation === 'save') && !Array.isArray(key)) {
+        if (multiOperations.includes(operation) && !Array.isArray(key)) {
             throw new Error(`${operation} operation requires an array of keys`);
         }
 
-        if (operation !== 'load' && operation !== 'delete' && operation !== 'save' && Array.isArray(key)) {
+        if (singleOperations.includes(operation) && Array.isArray(key)) {
             throw new Error(`${operation} operation requires a single key string`);
-        }
-
-        if (operation === 'move' && Array.isArray(key)) {
-            throw new Error('move operation requires a single key');
         }
     }
 
@@ -268,13 +295,13 @@ export class S3Tool extends BaseTool {
     }
 
     /**
-     * @method saveObject
+     * @method saveObjects
      * @private
      * @param {S3Operation} inputs - Save operation parameters with array of keys and file paths
      * @returns {Promise<string>} Result of the save operation
      * @description Saves multiple files to S3 using streaming upload
      */
-    private async saveObject(inputs: S3Operation): Promise<string> {
+    private async saveObjects(inputs: S3Operation): Promise<string> {
         if (!Array.isArray(inputs.key)) {
             throw new Error('saveObjects requires an array of keys');
         }
@@ -319,13 +346,13 @@ export class S3Tool extends BaseTool {
     }
 
     /**
-     * @method loadObject
+     * @method loadObjects
      * @private
      * @param {S3Operation} inputs - Load operation parameters with array of keys
      * @returns {Promise<string>} Concatenated content of all loaded objects
      * @description Loads one or multiple objects from S3, processes them with DocumentLoader, and concatenates them with a separator
      */
-    private async loadObject(inputs: S3Operation): Promise<string> {
+    private async loadObjects(inputs: S3Operation): Promise<string> {
         if (!Array.isArray(inputs.key)) {
             throw new Error('loadObjects requires an array of keys');
         }
@@ -365,9 +392,104 @@ export class S3Tool extends BaseTool {
         // Use DocumentLoader to load all files
         const results = await DocumentLoader.loadMultipleAsString(tmpFiles);
 
-        
         // Concatenate all results with separator
         return results.map(result => result.parsedContent).join(separator);
+    }
+
+    /**
+     * @method loadObject
+     * @private
+     * @param {S3Operation} inputs - Load operation parameters with single key
+     * @returns {Promise<string>} Content of the loaded object
+     * @description Loads an object from S3, processes it with DocumentLoader
+     */
+    private async loadObject(inputs: S3Operation): Promise<string> {
+        if (Array.isArray(inputs.key)) {
+            throw new Error('loadObject requires a single key');
+        }
+
+        const tmpDir = path.join(os.tmpdir(), 'document-loader-s3');
+        await fs.mkdir(tmpDir, { recursive: true });
+
+        const commandInput: GetObjectCommandInput = {
+            Bucket: inputs.bucket,
+            Key: inputs.key
+        };
+
+        if (inputs.encKey) {
+            const encKeyBuffer = Buffer.from(inputs.encKey);
+            const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
+            commandInput.SSECustomerAlgorithm = "AES256";
+            commandInput.SSECustomerKey = inputs.encKey;
+            commandInput.SSECustomerKeyMD5 = md5Hash;
+        }
+        console.log("Command Input:");
+        console.log(commandInput);
+        const command = new GetObjectCommand(commandInput);
+        console.log("Command:");
+        console.log(command);   
+        const response = await this.s3Client.send(command);
+             
+        // Save to temporary file
+        const tmpFile = path.join(tmpDir, path.basename(inputs.key));
+        const chunks: Uint8Array[] = [];
+        for await (const chunk of response.Body as any) {
+            chunks.push(chunk);
+        }
+        await fs.writeFile(tmpFile, Buffer.concat(chunks));
+
+        // Use DocumentLoader to load the file
+        const result = await DocumentLoader.quickLoadString(tmpFile);
+        return result.parsedContent || result.content;
+    }
+
+    /**
+     * @method saveObject
+     * @private
+     * @param {S3Operation} inputs - Save operation parameters with single key
+     * @returns {Promise<string>} Result of the save operation
+     * @description Saves a single file to S3
+     */
+    private async saveObject(inputs: S3Operation): Promise<string> {
+        if (Array.isArray(inputs.key)) {
+            throw new Error('saveObject requires a single key');
+        }
+
+        if (!inputs.filePath || Array.isArray(inputs.filePath)) {
+            throw new Error('saveObject requires a single filePath');
+        }
+
+        const commandInput: PutObjectCommandInput = {
+            Bucket: inputs.bucket,
+            Key: inputs.key,
+            Body: inputs.content ? inputs.content : createReadStream(inputs.filePath),
+        };
+
+        if (inputs.metadata) {
+            commandInput.Metadata = inputs.metadata;
+        }
+
+        if (inputs.tags) {
+            commandInput.Tagging = this.formatTags(inputs.tags);
+        }
+
+        if (inputs.encKey) {
+            const encKeyBuffer = Buffer.from(inputs.encKey);
+            const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
+            commandInput.SSECustomerAlgorithm = "AES256";
+            commandInput.SSECustomerKey = inputs.encKey;
+            commandInput.SSECustomerKeyMD5 = md5Hash;
+        }
+
+        try {
+            const command = new PutObjectCommand(commandInput);
+            await this.s3Client.send(command);
+            const source = inputs.content ? 'content' : inputs.filePath;
+            return `Successfully saved ${source} to ${inputs.bucket}/${inputs.key}`;
+        } catch (error) {
+            const source = inputs.content ? 'content' : inputs.filePath;
+            throw new Error(`Failed to save ${source} to ${inputs.bucket}/${inputs.key}: ${(error as Error).message}`);
+        }
     }
 
     /**
@@ -405,13 +527,13 @@ export class S3Tool extends BaseTool {
     }
 
     /**
-     * @method deleteObject
+     * @method deleteObjects
      * @private
      * @param {S3Operation} inputs - Delete operation parameters with array of keys
      * @returns {Promise<string>} Result of the delete operation
      * @description Deletes multiple objects from S3
      */
-    private async deleteObject(inputs: S3Operation): Promise<string> {
+    private async deleteObjects(inputs: S3Operation): Promise<string> {
         if (!Array.isArray(inputs.key)) {
             throw new Error('deleteObjects requires an array of keys');
         }
@@ -434,6 +556,30 @@ export class S3Tool extends BaseTool {
     }
 
     /**
+     * @method deleteObject
+     * @private
+     * @param {S3Operation} inputs - Delete operation parameters with single key
+     * @returns {Promise<string>} Result of the delete operation
+     * @description Deletes a single object from S3
+     */
+    private async deleteObject(inputs: S3Operation): Promise<string> {
+        if (Array.isArray(inputs.key)) {
+            throw new Error('deleteObject requires a single key');
+        }
+
+        try {
+            const command = new DeleteObjectCommand({
+                Bucket: inputs.bucket,
+                Key: inputs.key
+            });
+            await this.s3Client.send(command);
+            return `Successfully deleted: ${inputs.key}`;
+        } catch (error) {
+            throw new Error(`Failed to delete ${inputs.key}: ${(error as Error).message}`);
+        }
+    }
+
+    /**
      * @method formatTags
      * @private
      * @param {Record<string, string>} tags - Tags to format
@@ -446,3 +592,5 @@ export class S3Tool extends BaseTool {
             .join('&');
     }
 }
+
+export { S3Tool };

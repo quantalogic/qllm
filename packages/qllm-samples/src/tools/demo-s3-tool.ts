@@ -1,4 +1,4 @@
-// demo-s3-load-pdf.ts
+// demo-s3-tool.ts
 import { S3Tool } from "qllm-lib/src/tools/s3.tool";
 import { DocumentLoader } from "qllm-lib/src/utils/document/document-loader";
 import path from 'path';
@@ -6,7 +6,7 @@ import fs from 'fs/promises';
 import dotenv from 'dotenv';
 dotenv.config();
 
-async function testS3PDFOperation() {
+async function testS3Operations() {
     try {
         // Configuration setup
         const config = {
@@ -32,85 +32,98 @@ async function testS3PDFOperation() {
         // Get all files from the upload directory
         const dirContents = await fs.readdir(uploadDir);
         const files = dirContents
-            .filter(file => !file.includes('load-result')) // Exclude load-result files
+            .filter(file => !file.includes('load-result'))
             .map(file => ({
                 path: path.join(uploadDir, file),
-                key: `test/${file}`,
-                contentType: file.endsWith('.pdf') ? 'application/pdf' : 
-                           file.endsWith('.json') ? 'application/json' : 
-                           'text/plain'
+                key: `test/${file}`
             }));
 
         console.log(`Found ${files.length} files to process:`, files.map(f => path.basename(f.path)).join(', '));
 
-        // Step 1: Save files to S3
-        console.log('\n1. Saving files to S3...');
+        // Test 1: Multiple File Upload
+        console.log('\n1. Testing multiple file upload...');
         try {
             const saveResult = await s3Tool.execute({
-                operation: 'save',
+                operation: 'saveMultiple',
                 bucket: bucketName,
                 key: files.map(f => f.key),
                 filePath: files.map(f => f.path),
-                contentType: files[0].contentType, // Note: in a real app, you'd handle different content types per file
                 metadata: {
                     'created-by': 'multi-file-test',
                     'timestamp': new Date().toISOString()
                 }
             });
             console.log('✅ Save results:', saveResult);
-
-            // Try to load the files using DocumentLoader
-            for (const file of files) {
-                try {
-                    const result = await DocumentLoader.quickLoadString(file.path);
-                    console.log(`✅ Local file ${path.basename(file.path)} content length:`, result.content.length);
-                } catch (error) {
-                    console.log(`ℹ️ Skipped loading ${path.basename(file.path)} (might be binary file)`);
-                }
-            }
         } catch (error) {
-            console.error('❌ Save operation failed:', (error as Error).message);
+            console.error('❌ Multiple file upload failed:', (error as Error).message);
             return;
         }
 
-        // Step 2: Load all files from S3
+        // Test 2: Multiple File Download
         try {
-            console.log('\n2. Loading all files from S3...');
+            console.log('\n2. Testing multiple file download...');
             const loadResult = await s3Tool.execute({
-                operation: 'load',
+                operation: 'loadMultiple',
                 bucket: bucketName,
                 key: files.map(f => f.key),
                 separator: '\n--- Next File ---\n'
             });
 
-            // Write the result to a file
             const outputPath = path.join(uploadDir, 'load-result.txt');
             await fs.writeFile(outputPath, loadResult, 'utf-8');
-            console.log('✅ All files loaded and written to:', outputPath);
+            console.log('✅ Files loaded and written to:', outputPath);
         } catch (error) {
-            console.error('❌ Load operation failed:', (error as Error).message);
+            console.error('❌ Multiple file download failed:', (error as Error).message);
         }
 
-        // Step 3: Delete the files from S3
-        console.log('\n3. Deleting files from S3...');
+        // Test 3: Move Operation
+        try {
+            console.log('\n3. Testing move operation...');
+            const testFile = files[0];
+            const movedKey = `moved/${path.basename(testFile.key)}`;
+            
+            const moveResult = await s3Tool.execute({
+                operation: 'move',
+                bucket: bucketName,
+                key: testFile.key,
+                destinationBucket: bucketName,
+                destinationKey: movedKey
+            });
+            console.log('✅ Move result:', moveResult);
+
+            // Move it back
+            await s3Tool.execute({
+                operation: 'move',
+                bucket: bucketName,
+                key: movedKey,
+                destinationBucket: bucketName,
+                destinationKey: testFile.key
+            });
+        } catch (error) {
+            console.error('❌ Move operation failed:', (error as Error).message);
+        }
+
+        // Test 4: Multiple File Delete
+        console.log('\n4. Testing multiple file delete...');
         try {
             const deleteResult = await s3Tool.execute({
-                operation: 'delete',
+                operation: 'deleteMultiple',
                 bucket: bucketName,
                 key: files.map(f => f.key)
             });
             console.log('✅ Delete results:', deleteResult);
         } catch (error) {
-            console.error('❌ Failed to delete files:', (error as Error).message);
+            console.error('❌ Multiple file delete failed:', (error as Error).message);
         }
 
     } catch (error) {
-        console.error('Operation failed:', (error as Error).message);
+        console.error('Test failed:', (error as Error).message);
+        process.exit(1);
     }
 }
 
 // Run the test
-console.log('Starting S3 operation test...');
-testS3PDFOperation()
-    .then(() => console.log('Test completed'))
-    .catch(error => console.error('Test failed:', error));
+console.log('Starting S3 operations test...');
+testS3Operations()
+    .then(() => console.log('All tests completed'))
+    .catch(console.error);
