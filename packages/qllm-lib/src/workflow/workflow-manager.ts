@@ -12,7 +12,7 @@ import { TemplateDefinition, TemplateLoader } from '../templates';
 import { BaseTool, ToolDefinition } from "../tools/base-tool"
 import { GithubLoaderTool } from '../tools/github-loader';
 import { FileSaverTool } from '../tools/file-saver.tool';
-import { S3LoaderTool } from '../tools/s3-loader.tool';
+import { S3Tool } from '../tools/s3.tool';
 import { SlackStreamerTool } from '../tools/slack-streamer.tool';
 import { HtmlFormatterTool } from '../tools/html-formatter.tool';
 import { LocalLoaderTool } from '../tools/local-loader.tool';
@@ -50,7 +50,7 @@ export class WorkflowManager {
     // Register default tools
     this.registerToolFactory('githubLoader', GithubLoaderTool);
     this.registerToolFactory('fileSaver', FileSaverTool);
-    this.registerToolFactory('s3Loader', S3LoaderTool);
+    this.registerToolFactory('s3', S3Tool);
     this.registerToolFactory('slackStreamer', SlackStreamerTool);
     this.registerToolFactory('htmlFormatter', HtmlFormatterTool);
     this.registerToolFactory('localLoader', LocalLoaderTool);
