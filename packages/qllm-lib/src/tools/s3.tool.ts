@@ -28,12 +28,8 @@ import { createReadStream } from 'fs';
 import path from 'path';
 import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
-import { Crypto } from "@peculiar/webcrypto";
 import { fromEnv } from "@aws-sdk/credential-providers";
 import { AwsCredentialIdentity } from "@aws-sdk/types";
-
-// Set up WebCrypto for Node.js environment
-global.crypto = new Crypto()
 
 
 /**
