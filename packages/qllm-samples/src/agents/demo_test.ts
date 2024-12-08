@@ -8,17 +8,18 @@ async function main() {
   });
 
   // Initialize the RAG tool
-  const ragTool = new RAGTool('./documents', {
+  const ragTool = new RAGTool('./docs', {
     embedModel: {
       type: 'openai',
       options: {
-        modelType: 'text-embedding-ada-003'
+        modelType: 'text-embedding-ada-002'
       }
     },
     name: 'document_search',
     description: 'Search through project documentation',
     similarityTopK: 5
   });
+
 
   // Create the agent with the RAG tool
   const agent = AgentBuilder.create({
@@ -44,8 +45,7 @@ async function main() {
   // Test queries
   const queries = [
     "What are the main topics discussed in the documents?",
-    "Can you find any information about machine learning?",
-    "Summarize the key findings from the documents"
+    "tell me more about trump ?", 
   ];
 
   for (const query of queries) {

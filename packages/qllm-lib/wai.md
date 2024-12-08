@@ -5,6 +5,8 @@
 - src/agents/agent-builder.ts
 - src/agents/base-agent.ts
 - src/agents/agent-types.ts
+- src/agents/tools/rag-search.ts
+- src/agents/tools/index.ts
 - src/agents/templates/default-agent.yaml
 
 ## File: src/agents/agent-loader.ts
@@ -64,9 +66,9 @@ export class AgentLoader {
 
 - Extension: .ts
 - Language: typescript
-- Size: 180 bytes
-- Created: 2024-12-08 21:09:45
-- Modified: 2024-12-08 21:09:45
+- Size: 204 bytes
+- Created: 2024-12-08 22:03:01
+- Modified: 2024-12-08 22:03:01
 
 ### Code
 
@@ -78,6 +80,7 @@ export * from './agent-manager';
 export * from './agent-types';
 export * from './agent-loader';
 export * from './agent-builder';
+export * from "./tools"
 ```
 
 ## File: src/agents/agent-manager.ts
@@ -155,9 +158,9 @@ export class AgentManager {
 
 - Extension: .ts
 - Language: typescript
-- Size: 2027 bytes
-- Created: 2024-12-08 21:09:45
-- Modified: 2024-12-08 21:09:45
+- Size: 2112 bytes
+- Created: 2024-12-08 22:24:01
+- Modified: 2024-12-08 22:24:01
 
 ### Code
 
@@ -229,19 +232,19 @@ export class AgentBuilder {
       this.provider = provider;
       return this;
     }
-  
+    
     build(): Agent {
       if (!this.provider) {
         throw new Error('Provider must be set before building the agent');
       }
-  
-      if (!this.config.llmOptions) {
-        this.config.llmOptions = {
-            model:"gpt-4o-mini",
-        };
-      }
-  
-      return new Agent(this.config as AgentConfig, this.provider);
+      
+      return new Agent({
+        ...this.config,
+        tools: this.config.tools || [], // Currently using this.tools instead of config.tools
+        llmOptions: this.config.llmOptions || {
+          model: "gpt-4o-mini",
+        }
+      } as AgentConfig, this.provider);
     }
   }
 ```
@@ -250,14 +253,14 @@ export class AgentBuilder {
 
 - Extension: .ts
 - Language: typescript
-- Size: 4674 bytes
-- Created: 2024-12-08 21:09:45
-- Modified: 2024-12-08 21:09:45
+- Size: 6407 bytes
+- Created: 2024-12-08 22:37:00
+- Modified: 2024-12-08 22:37:00
 
 ### Code
 
 ```typescript
-import {  ChatMessage, ChatCompletionParams, ChatCompletionResponse } from '../types/llm-types';
+import { ChatMessage, ChatCompletionParams, ChatCompletionResponse } from '../types/llm-types';
 import { LLMProvider } from '../types';
 import { AgentConfig, AgentContext, AgentTool } from './agent-types';
 
@@ -277,13 +280,30 @@ export class Agent {
     };
     this.maxIterations = config.maxIterations || 20;
     this.maxExecutionTime = config.maxExecutionTime || 300;
-    
-    // Initialize tools if provided
+
     if (config.tools) {
       config.tools.forEach(tool => {
         this.context.tools.set(tool.name, tool);
       });
     }
+  }
+
+  protected async shouldUseTool(message: string): Promise<boolean> {
+    const toolNames = Array.from(this.context.tools.keys());
+    if (!toolNames.length) return false;
+    
+    const response = await this.provider.generateChatCompletion({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Should I use one of these tools: ${toolNames.join(', ')} to answer: "${message}"? Reply with just "yes" or "no"`
+        }
+      }],
+      options: { ...this.config.llmOptions }
+    });
+    
+    return response.text?.toLowerCase().includes('yes') ?? false;
   }
 
   async executeTool(toolName: string, inputs: Record<string, any>): Promise<any> {
@@ -295,23 +315,38 @@ export class Agent {
   }
 
   private extractResponseText(response: ChatCompletionResponse): string {
-    // If response has text content
     if (response.text) {
       return response.text;
     }
-    
-    // If response has refusal
     if (response.refusal) {
       return `Refusal: ${response.refusal}`;
     }
-
-    // Handle other cases
     return 'No response generated';
   }
 
   async chat(message: string): Promise<string> {
     const startTime = Date.now();
     let iterations = 0;
+
+    if (await this.shouldUseTool(message)) {
+      const tool = this.context.tools.get('rag_search');
+      if (tool) {
+        const result = await tool.execute({ query: message });
+        if (result.response) {
+          const response = await this.provider.generateChatCompletion({
+            messages: [{
+              role: 'user',
+              content: {
+                type: 'text',
+                text: `Based on this context: ${result.response}, answer: ${message}`
+              }
+            }],
+            options: this.config.llmOptions
+          });
+          return this.extractResponseText(response);
+        }
+      }
+    }
 
     while (iterations < this.maxIterations) {
       if (Date.now() - startTime > this.maxExecutionTime * 1000) {
@@ -320,7 +355,10 @@ export class Agent {
 
       const messages: ChatMessage[] = [
         ...this.getContextMessages(),
-        { role: 'user', content: { type: 'text', text: message } }
+        {
+          role: 'user',
+          content: { type: 'text', text: message }
+        }
       ];
 
       const params: ChatCompletionParams = {
@@ -333,39 +371,38 @@ export class Agent {
       };
 
       const response = await this.provider.generateChatCompletion(params);
-      
-        // Handle the response based on your ChatCompletionResponse type
-        const responseText = this.extractResponseText(response);
+      const responseText = this.extractResponseText(response);
 
-        if (this.config.memory) {
+      if (this.config.memory) {
         this.context.messages = messages;
         this.context.messages.push({
-            role: 'assistant',
-            content: { type: 'text', text: responseText }
+          role: 'assistant',
+          content: { type: 'text', text: responseText }
         });
-        }
+      }
 
-        return responseText;
+      return responseText;
     }
     throw new Error('Maximum iterations exceeded');
   }
 
   protected buildSystemPrompt(): string {
+    const toolDescriptions = Array.from(this.context.tools.values())
+      .map(tool => `- ${tool.name}: ${tool.description}`)
+      .join('\n');
+
     return `
 Role: ${this.config.role}
 Goal: ${this.config.goal}
 Backstory: ${this.config.backstory}
-
-Available Tools:
-${Array.from(this.context.tools.keys()).map(tool => `- ${tool}`).join('\n')}
-
+Available Tools: ${toolDescriptions}
 ${this.config.systemPrompt || ''}
     `.trim();
   }
 
   private getContextMessages(): ChatMessage[] {
     if (!this.config.memory) return [];
-    return this.context.messages.slice(-5); // Keep last 5 messages for context
+    return this.context.messages.slice(-5);
   }
 
   async addTool(tool: AgentTool): Promise<void> {
@@ -376,8 +413,31 @@ ${this.config.systemPrompt || ''}
     return this.context.tools.delete(toolName);
   }
 
-
   async *streamChat(message: string): AsyncGenerator<string> {
+    if (await this.shouldUseTool(message)) {
+      const tool = this.context.tools.get('rag_search');
+      if (tool) {
+        const result = await tool.execute({ query: message });
+        if (result.response) {
+          for await (const chunk of this.provider.streamChatCompletion({
+            messages: [{
+              role: 'user',
+              content: {
+                type: 'text',
+                text: `Based on this context: ${result.response}, answer: ${message}`
+              }
+            }],
+            options: this.config.llmOptions
+          })) {
+            if (chunk.text) {
+              yield chunk.text;
+            }
+          }
+          return;
+        }
+      }
+    }
+
     const startTime = Date.now();
     let iterations = 0;
 
@@ -388,8 +448,8 @@ ${this.config.systemPrompt || ''}
 
       const messages: ChatMessage[] = [
         ...this.getContextMessages(),
-        { 
-          role: 'user', 
+        {
+          role: 'user',
           content: { type: 'text', text: message }
         }
       ];
@@ -407,8 +467,6 @@ ${this.config.systemPrompt || ''}
         for await (const chunk of this.provider.streamChatCompletion(params)) {
           if (chunk.text) {
             yield chunk.text;
-            
-            // Store in context if memory is enabled
             if (this.config.memory) {
               this.context.messages = messages;
               this.context.messages.push({
@@ -427,7 +485,6 @@ ${this.config.systemPrompt || ''}
       }
     }
   }
-  
 }
 ```
 
@@ -435,9 +492,9 @@ ${this.config.systemPrompt || ''}
 
 - Extension: .ts
 - Language: typescript
-- Size: 1540 bytes
-- Created: 2024-12-08 21:16:59
-- Modified: 2024-12-08 21:16:59
+- Size: 1706 bytes
+- Created: 2024-12-08 22:36:33
+- Modified: 2024-12-08 22:36:33
 
 ### Code
 
@@ -503,10 +560,228 @@ export interface AgentTool {
   description: string;
   parameters: JSONSchemaType;
   execute: (inputs: Record<string, any>) => Promise<any>;
+  streamExecute?: (inputs: Record<string, any>) => AsyncGenerator<any>;
   cacheEnabled?: boolean;
   metadata?: Record<string, any>;
 }
 
+export interface ToolExecutionResult {
+  success: boolean;
+  output: any;
+  error?: string;
+}
+```
+
+## File: src/agents/tools/rag-search.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 4809 bytes
+- Created: 2024-12-08 22:39:01
+- Modified: 2024-12-08 22:39:01
+
+### Code
+
+```typescript
+import { 
+  OpenAI,
+  Settings,
+  SimpleDirectoryReader,
+  VectorStoreIndex,
+  HuggingFaceEmbedding,
+  OpenAIEmbedding,
+  HuggingFaceEmbeddingParams
+} from 'llamaindex';
+import { AgentTool } from '../agent-types';
+import { JSONSchemaType } from 'openai/lib/jsonschema';
+
+interface RAGToolConfig {
+  query: string;
+  topK?: number;
+}
+
+export class RAGTool implements AgentTool {
+  name: string;
+  description: string;
+  parameters: JSONSchemaType = {
+    type: 'object',
+    properties: {
+      query: {
+        type: 'string',
+        description: 'The search query to find relevant information'
+      },
+      topK: {
+        type: 'number',
+        description: 'Number of top results to return'
+      }
+    },
+    required: ['query']
+  };
+
+  private queryEngine: any;
+  private initialized: boolean = false;
+  private initializationPromise: Promise<void> | null = null;
+
+  constructor(
+    private directory: string,
+    private config: {
+      embedModel?: {
+        type: 'openai' | 'huggingface';
+        options: Record<string, any>;
+      };
+      name?: string;
+      description?: string;
+      similarityTopK?: number;
+      cacheEnabled?: boolean;
+    } = {}
+  ) {
+    this.name = config.name || 'rag_search';
+    this.description = config.description || `Search through documents in ${directory} using RAG`;
+    
+    this.config = {
+      ...config,
+      embedModel: config.embedModel || {
+        type: 'huggingface',
+        options: {
+          modelType: 'BAAI/bge-small-en-v1.5',
+          quantized: false
+        }
+      },
+      similarityTopK: config.similarityTopK || 3,
+      cacheEnabled: config.cacheEnabled ?? true
+    };
+  }
+
+  private async initializeOnce(): Promise<void> {
+    if (this.initialized) return;
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    this.initializationPromise = this.initialize();
+    await this.initializationPromise;
+    this.initialized = true;
+  }
+
+  private async initialize(): Promise<void> {
+    try {
+      if (this.config.embedModel?.type === 'openai') {
+        Settings.embedModel = new OpenAIEmbedding(this.config.embedModel.options);
+      } else {
+        const huggingFaceParams: HuggingFaceEmbeddingParams = {
+          modelType: 'BAAI/bge-small-en-v1.5',
+          ...this.config.embedModel?.options
+        };
+        Settings.embedModel = new HuggingFaceEmbedding(huggingFaceParams);
+      }
+
+      const reader = new SimpleDirectoryReader();
+      const documents = await reader.loadData(this.directory);
+      const index = await VectorStoreIndex.fromDocuments(documents);
+      
+      const retriever = await index.asRetriever({
+        similarityTopK: this.config.similarityTopK
+      });
+      
+      this.queryEngine = await index.asQueryEngine({
+        retriever
+      });
+    } catch (error) {
+      this.initialized = false;
+      this.initializationPromise = null;
+      throw new Error(`Failed to initialize RAG tool: ${error}`);
+    }
+  }
+
+  async execute(inputs: Record<string, any>): Promise<any> {
+    try {
+      await this.initializeOnce();
+
+      const response = await this.queryEngine.query({
+        query: inputs.query,
+        similarityTopK: inputs.topK || this.config.similarityTopK
+      });
+
+      if (!response || !response.response) {
+        return {
+          success: false,
+          error: 'No relevant information found'
+        };
+      }
+
+      return {
+        success: true,
+        response: response.response,
+        sources: response.sourceNodes?.map((node: any) => ({
+          content: node.text,
+          score: node.score || 0,
+          metadata: node.metadata
+        })) || []
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error
+      };
+    }
+  }
+
+  async *streamExecute(inputs: Record<string, any>): AsyncGenerator<any> {
+    try {
+      yield { type: 'status', message: 'Initializing RAG search...' };
+      await this.initializeOnce();
+
+      yield { type: 'status', message: 'Searching documents...' };
+      const response = await this.queryEngine.query({
+        query: inputs.query,
+        similarityTopK: inputs.topK || this.config.similarityTopK
+      });
+
+      if (response.sourceNodes?.length > 0) {
+        yield {
+          type: 'sources',
+          data: response.sourceNodes.map((node: any) => ({
+            content: node.text,
+            score: node.score || 0,
+            metadata: node.metadata
+          }))
+        };
+      }
+
+      if (response.response) {
+        yield {
+          type: 'response',
+          data: response.response
+        };
+      } else {
+        yield {
+          type: 'error',
+          message: 'No relevant information found'
+        };
+      }
+    } catch (error) {
+      yield {
+        type: 'error',
+        message: error
+      };
+    }
+  }
+}
+```
+
+## File: src/agents/tools/index.ts
+
+- Extension: .ts
+- Language: typescript
+- Size: 29 bytes
+- Created: 2024-12-08 22:02:46
+- Modified: 2024-12-08 22:02:46
+
+### Code
+
+```typescript
+
+export * from "./rag-search"
 ```
 
 ## File: src/agents/templates/default-agent.yaml

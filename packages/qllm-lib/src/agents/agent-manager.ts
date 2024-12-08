@@ -1,4 +1,4 @@
-import { LLMProvider } from '../types'; 
+import { LLMProvider } from '../types';
 import { Agent } from './base-agent';
 import { AgentConfig } from './agent-types';
 import * as yaml from 'js-yaml';
@@ -20,7 +20,6 @@ export class AgentManager {
     if (!agent) {
       throw new Error(`Agent ${name} not found`);
     }
-
     for await (const chunk of agent.streamChat(message)) {
       yield chunk;
     }
@@ -39,8 +38,8 @@ export class AgentManager {
   }
 
   async createFromTemplate(
-    name: string, 
-    templateName: string, 
+    name: string,
+    templateName: string,
     overrides: Partial<AgentConfig> = {}
   ): Promise<Agent> {
     const template = await this.loadTemplate(templateName);

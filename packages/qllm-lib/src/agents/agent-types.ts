@@ -59,6 +59,7 @@ export interface AgentTool {
   description: string;
   parameters: JSONSchemaType;
   execute: (inputs: Record<string, any>) => Promise<any>;
+  streamExecute?: (inputs: Record<string, any>) => AsyncGenerator<any>;
   cacheEnabled?: boolean;
   metadata?: Record<string, any>;
 }

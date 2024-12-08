@@ -73,7 +73,7 @@ export class AgentBuilder {
       
       return new Agent({
         ...this.config,
-        tools: this.tools,
+        tools: this.config.tools || [], // Currently using this.tools instead of config.tools
         llmOptions: this.config.llmOptions || {
           model: "gpt-4o-mini",
         }

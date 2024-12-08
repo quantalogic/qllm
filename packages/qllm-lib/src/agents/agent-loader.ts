@@ -1,13 +1,13 @@
 import { readFile } from 'fs/promises';
 import { load } from 'js-yaml';
-import { Agent } from './base-agent'; 
-import { LLMProvider } from '../types'; 
+import { Agent } from './base-agent';
+import { LLMProvider } from '../types';
 
 export class AgentLoader {
   async loadFromYaml(path: string, provider: LLMProvider): Promise<Agent> {
     const content = await readFile(path, 'utf-8');
     const config = load(content) as any;
-    
+
     return new Agent({
       role: config.name,
       goal: config.description,
@@ -21,7 +21,7 @@ export class AgentLoader {
           config.goal,
           config.backstory
         ),
-        streaming: true // Enable streaming by default
+        streaming: true
       }
     }, provider);
   }

@@ -12,7 +12,7 @@ import { z } from 'zod';
 // -------------------- Chat Message Types --------------------
 
 /** Valid roles for chat messages */
-export type ChatMessageRole = 'user' | 'assistant';
+export type ChatMessageRole = 'user' | 'assistant' | 'system';
 
 /** Supported content types for chat messages */
 export type ChatMessageContentType = 'text' | 'image_url';

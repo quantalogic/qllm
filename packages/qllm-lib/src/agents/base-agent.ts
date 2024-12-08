@@ -1,4 +1,4 @@
-import {  ChatMessage, ChatCompletionParams, ChatCompletionResponse } from '../types/llm-types';
+import { ChatMessage, ChatCompletionParams, ChatCompletionResponse } from '../types/llm-types';
 import { LLMProvider } from '../types';
 import { AgentConfig, AgentContext, AgentTool } from './agent-types';
 
@@ -18,8 +18,7 @@ export class Agent {
     };
     this.maxIterations = config.maxIterations || 20;
     this.maxExecutionTime = config.maxExecutionTime || 300;
-    
-    // Initialize tools if provided
+
     if (config.tools) {
       config.tools.forEach(tool => {
         this.context.tools.set(tool.name, tool);
@@ -27,26 +26,13 @@ export class Agent {
     }
   }
 
-  async executeTool(toolName: string, inputs: Record<string, any>): Promise<any> {
-    const tool = this.context.tools.get(toolName);
-    if (!tool) {
-      throw new Error(`Tool ${toolName} not found`);
-    }
-    return tool.execute(inputs);
-  }
-
   private extractResponseText(response: ChatCompletionResponse): string {
-    // If response has text content
     if (response.text) {
       return response.text;
     }
-    
-    // If response has refusal
     if (response.refusal) {
       return `Refusal: ${response.refusal}`;
     }
-
-    // Handle other cases
     return 'No response generated';
   }
 
@@ -54,6 +40,51 @@ export class Agent {
     const startTime = Date.now();
     let iterations = 0;
 
+    // Try using RAG tool first if available
+    const ragTool = this.context.tools.get('rag_search');
+    console.log("===== ragTool : ", ragTool)
+
+    if (ragTool) {
+      try {
+        const result = await ragTool.execute({ query: message });
+        console.log("===== result : ", result)
+
+
+        if (result.response) {
+          const messages: ChatMessage[] = [{
+            role: 'user',
+            content: { 
+              type: 'text', 
+              text: `Using context: ${result.response}, answer: ${message}` 
+            }
+          }];
+
+          const response = await this.provider.generateChatCompletion({
+            messages,
+            options: {
+              ...this.config.llmOptions,
+              systemMessage: this.buildSystemPrompt()
+            }
+          });
+
+          console.log("response : ", response)
+
+          const responseText = this.extractResponseText(response);
+          if (this.config.memory) {
+            this.context.messages = messages;
+            this.context.messages.push({
+              role: 'assistant',
+              content: { type: 'text', text: responseText }
+            });
+          }
+          return responseText;
+        }
+      } catch (error) {
+        console.error('RAG tool execution failed:', error);
+      }
+    }
+
+    // Fallback to regular chat
     while (iterations < this.maxIterations) {
       if (Date.now() - startTime > this.maxExecutionTime * 1000) {
         throw new Error('Execution time limit exceeded');
@@ -61,7 +92,10 @@ export class Agent {
 
       const messages: ChatMessage[] = [
         ...this.getContextMessages(),
-        { role: 'user', content: { type: 'text', text: message } }
+        { 
+          role: 'user', 
+          content: { type: 'text', text: message } 
+        }
       ];
 
       const params: ChatCompletionParams = {
@@ -74,43 +108,108 @@ export class Agent {
       };
 
       const response = await this.provider.generateChatCompletion(params);
-      
-        // Handle the response based on your ChatCompletionResponse type
-        const responseText = this.extractResponseText(response);
+      const responseText = this.extractResponseText(response);
 
-        if (this.config.memory) {
+      if (this.config.memory) {
         this.context.messages = messages;
         this.context.messages.push({
-            role: 'assistant',
-            content: { type: 'text', text: responseText }
+          role: 'assistant',
+          content: { type: 'text', text: responseText }
         });
-        }
+      }
 
-        return responseText;
+      return responseText;
     }
     throw new Error('Maximum iterations exceeded');
   }
 
+  async *streamChat(message: string): AsyncGenerator<string> {
+    const ragTool = this.context.tools.get('rag_search');
+    if (ragTool) {
+      try {
+        yield "Searching documents...\n";
+        const result = await ragTool.execute({ query: message });
+        
+        if (result.response) {
+          for await (const chunk of this.provider.streamChatCompletion({
+            messages: [{
+              role: 'user',
+              content: { 
+                type: 'text', 
+                text: `Using context: ${result.response}, answer: ${message}` 
+              }
+            }],
+            options: {
+              ...this.config.llmOptions,
+              systemMessage: this.buildSystemPrompt()
+            }
+          })) {
+            if (chunk.text) {
+              yield chunk.text;
+              if (this.config.memory) {
+                this.context.messages.push({
+                  role: 'assistant',
+                  content: { type: 'text', text: chunk.text }
+                });
+              }
+            }
+          }
+          return;
+        }
+      } catch (error) {
+        yield `Error searching documents: ${error}\n`;
+      }
+    }
+
+    // Fallback to regular streaming
+    const messages: ChatMessage[] = [
+      ...this.getContextMessages(),
+      { role: 'user', content: { type: 'text', text: message } }
+    ];
+
+    const params: ChatCompletionParams = {
+      messages,
+      options: {
+        ...this.provider.defaultOptions,
+        ...this.config.llmOptions,
+        systemMessage: this.buildSystemPrompt()
+      }
+    };
+
+    for await (const chunk of this.provider.streamChatCompletion(params)) {
+      if (chunk.text) {
+        yield chunk.text;
+        if (this.config.memory) {
+          this.context.messages = messages;
+          this.context.messages.push({
+            role: 'assistant',
+            content: { type: 'text', text: chunk.text }
+          });
+        }
+      }
+    }
+  }
+
   protected buildSystemPrompt(): string {
     const toolDescriptions = Array.from(this.context.tools.values())
-      .map(tool => `${tool.name}: ${tool.description}`)
+      .map(tool => `- ${tool.name}: ${tool.description}`)
       .join('\n');
 
-    return `
+    const sys_prompt =`
 Role: ${this.config.role}
 Goal: ${this.config.goal}
 Backstory: ${this.config.backstory}
-
-Available Tools:
-${toolDescriptions}
-
+Available Tools: ${toolDescriptions}
 ${this.config.systemPrompt || ''}
-    `.trim();
+    `.trim(); 
+
+    console.log("sys_prompt : ", sys_prompt)
+    return sys_prompt
   }
 
   private getContextMessages(): ChatMessage[] {
     if (!this.config.memory) return [];
-    return this.context.messages.slice(-5); // Keep last 5 messages for context
+    return this.context.messages.slice(-5);
   }
 
   async addTool(tool: AgentTool): Promise<void> {
@@ -120,57 +219,4 @@ ${this.config.systemPrompt || ''}
   async removeTool(toolName: string): Promise<boolean> {
     return this.context.tools.delete(toolName);
   }
-
-
-  async *streamChat(message: string): AsyncGenerator<string> {
-    const startTime = Date.now();
-    let iterations = 0;
-
-    while (iterations < this.maxIterations) {
-      if (Date.now() - startTime > this.maxExecutionTime * 1000) {
-        throw new Error('Execution time limit exceeded');
-      }
-
-      const messages: ChatMessage[] = [
-        ...this.getContextMessages(),
-        { 
-          role: 'user', 
-          content: { type: 'text', text: message }
-        }
-      ];
-
-      const params: ChatCompletionParams = {
-        messages,
-        options: {
-          ...this.provider.defaultOptions,
-          ...this.config.llmOptions,
-          systemMessage: this.buildSystemPrompt()
-        }
-      };
-
-      try {
-        for await (const chunk of this.provider.streamChatCompletion(params)) {
-          if (chunk.text) {
-            yield chunk.text;
-            
-            // Store in context if memory is enabled
-            if (this.config.memory) {
-              this.context.messages = messages;
-              this.context.messages.push({
-                role: 'assistant',
-                content: { type: 'text', text: chunk.text }
-              });
-            }
-          }
-        }
-        return;
-      } catch (error) {
-        iterations++;
-        if (iterations >= this.maxIterations) {
-          throw error;
-        }
-      }
-    }
-  }
-  
 }
