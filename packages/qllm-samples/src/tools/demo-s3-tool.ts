@@ -29,7 +29,114 @@ async function testS3Operations() {
         const s3Tool = new S3Tool(config);
         const uploadDir = path.resolve(__dirname, '../../upload');
         
-        // Get all files from the upload directory
+        // Test 0: Direct Content Upload with Different File Types
+        console.log('\n0. Testing direct content upload with different file types...');
+        
+        // Python file
+        try {
+            const pythonContent = `
+def hello_world():
+    print("Hello from Python!")
+    return 42
+`;
+            const pythonResult = await s3Tool.execute({
+                operation: 'save',
+                bucket: bucketName,
+                key: 'test/hello.py',
+                content: pythonContent,
+                contentType: 'text/python',
+                metadata: {
+                    'created-by': 'content-test',
+                    'language': 'python'
+                }
+            });
+            console.log('✅ Python file upload:', pythonResult);
+        } catch (error) {
+            console.error('❌ Python file upload failed:', (error as Error).message);
+        }
+
+        // TypeScript file
+        try {
+            const tsContent = `
+interface Greeting {
+    message: string;
+}
+
+function greet(greeting: Greeting): void {
+    console.log(greeting.message);
+}
+`;
+            const tsResult = await s3Tool.execute({
+                operation: 'save',
+                bucket: bucketName,
+                key: 'test/greeting.ts',
+                content: tsContent,
+                contentType: 'text/typescript',
+                metadata: {
+                    'created-by': 'content-test',
+                    'language': 'typescript'
+                }
+            });
+            console.log('✅ TypeScript file upload:', tsResult);
+        } catch (error) {
+            console.error('❌ TypeScript file upload failed:', (error as Error).message);
+        }
+
+        // JSON file
+        try {
+            const jsonContent = JSON.stringify({
+                name: "Test Config",
+                version: "1.0.0",
+                settings: {
+                    enabled: true,
+                    timeout: 30
+                }
+            }, null, 2);
+            const jsonResult = await s3Tool.execute({
+                operation: 'save',
+                bucket: bucketName,
+                key: 'test/config.json',
+                content: jsonContent,
+                contentType: 'application/json',
+                metadata: {
+                    'created-by': 'content-test',
+                    'type': 'configuration'
+                }
+            });
+            console.log('✅ JSON file upload:', jsonResult);
+        } catch (error) {
+            console.error('❌ JSON file upload failed:', (error as Error).message);
+        }
+
+        // YAML file
+        try {
+            const yamlContent = `
+version: '3'
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+`;
+            const yamlResult = await s3Tool.execute({
+                operation: 'save',
+                bucket: bucketName,
+                key: 'test/docker-compose.yaml',
+                content: yamlContent,
+                contentType: 'text/yaml',
+                metadata: {
+                    'created-by': 'content-test',
+                    'type': 'configuration'
+                }
+            });
+            console.log('✅ YAML file upload:', yamlResult);
+        } catch (error) {
+            console.error('❌ YAML file upload failed:', (error as Error).message);
+        }
+
+        // Get all files from the upload directory for the remaining tests
         const dirContents = await fs.readdir(uploadDir);
         const files = dirContents
             .filter(file => !file.includes('load-result'))
@@ -38,7 +145,7 @@ async function testS3Operations() {
                 key: `test/${file}`
             }));
 
-        console.log(`Found ${files.length} files to process:`, files.map(f => path.basename(f.path)).join(', '));
+        console.log(`\nFound ${files.length} files to process:`, files.map(f => path.basename(f.path)).join(', '));
 
         // Test 1: Multiple File Upload
         console.log('\n1. Testing multiple file upload...');
