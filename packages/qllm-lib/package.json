@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "3.13.1",
+  "version": "3.13.2",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",

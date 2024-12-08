@@ -39,6 +39,13 @@ jobs:
           cd ../qllm-cli
           pnpm run build:prod
           
+      - name: Configure npm
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          
       - name: Publish qllm-lib
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
