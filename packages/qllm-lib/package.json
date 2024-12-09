@@ -65,6 +65,7 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
+    "llamaindex": "latest",
     "@anthropic-ai/bedrock-sdk": "^0.10.2",
     "@anthropic-ai/sdk": "^0.27.0",
     "@aws-sdk/client-bedrock": "^3.645.0",

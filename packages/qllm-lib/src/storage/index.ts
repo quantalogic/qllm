@@ -37,7 +37,7 @@ export type StorageProviderName = 'in-memory' | 'sqlite';
  * const sqliteStorage = createStorageProvider('sqlite', { dbPath: './conversations.db' });
  * ```
  */
-export default function createStorageProvider(
+export function createStorageProvider(
   name: StorageProviderName,
   {
     dbPath,
@@ -58,3 +58,5 @@ export default function createStorageProvider(
   }
   return undefined; // Added return statement for cases not handled
 }
+
+export default createStorageProvider;

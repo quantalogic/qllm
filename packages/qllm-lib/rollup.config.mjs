@@ -43,6 +43,11 @@ export default {
   ],
   external: [
     'tiktoken',
+    'sqlite3',
+    'better-sqlite3',
+    'bindings',
+    '@datastax/astra-db-ts',
+    'llamaindex',
     /*    'openai',
     'groq-sdk',
     '@anthropic-ai/sdk',
