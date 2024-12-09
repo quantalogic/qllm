@@ -19,6 +19,7 @@ import { LocalLoaderTool } from '../tools/local-loader.tool';
 import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
 import { RedisSaverTool } from '../tools/redis-saver.tool';
 import { TextToJsonTool } from '../tools/text-to-json';
+import { JiraTool } from '../tools/jira.tools';
 
 /**
  * @class WorkflowManager
@@ -57,6 +58,7 @@ export class WorkflowManager {
     this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
     this.registerToolFactory('RedisSaver', RedisSaverTool);
     this.registerToolFactory('TextToJson', TextToJsonTool);
+    this.registerToolFactory("jiraHandler", JiraTool);
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
