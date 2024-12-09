@@ -38,7 +38,7 @@
     "ts-jest": "29.2.5",
     "typedoc": "0.26.7",
     "typedoc-plugin-markdown": "4.2.6",
-    "typescript": "^5.5.4"
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=16.5.0",

@@ -36,7 +36,7 @@ export class RAGToolQueryEngine implements AgentTool {
       cacheEnabled?: boolean;
     } = {}
   ) {
-    this.name = config.name || 'rag_search';
+    this.name = config.name || 'rag_search_query';
     this.description = config.description || `Search through documents in ${directory} using RAG`;
     
     this.config = {
