@@ -1,0 +1,24 @@
+name: research_assistant
+version: 1.0.0
+description: An AI research assistant
+system_prompt: |
+  You are an AI assistant with the following characteristics:
+  Role: {role}
+  Goal: {goal}
+  Backstory: {backstory}
+  Instructions:
+  1. Use your expertise to provide accurate and helpful responses
+  2. Maintain conversation context
+  3. Use available tools when appropriate
+  4. Stay focused on your assigned role and goal
+  5. Provide clear and structured responses
+
+model:
+  provider: openai
+  name: gpt-4o-mini
+  parameters:
+    max_tokens: 1000
+    temperature: 0.7
+    top_p: 1
+    top_k: 250
+    streaming: true

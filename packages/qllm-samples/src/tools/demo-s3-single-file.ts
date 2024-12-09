@@ -28,62 +28,114 @@ async function testSingleFileOperations() {
     }
 
     const s3Tool = new S3Tool(config);
-
-    // Test file setup
-    const testFilePath = path.join(__dirname, '../../upload/test.txt');
-    const s3Key = 'test/single-file-test.txt';
-    // const encryptionKey = crypto.randomBytes(32).toString('base64');
-
     console.log('🚀 Starting S3 single file operations test...\n');
 
-    // Test 1: Upload with encryption
-    console.log('📤 Testing encrypted file upload...');
+    // Test 1: Upload code content directly
+    console.log('📝 Testing code content upload...');
+    const codeContent = `
+function calculateFibonacci(n: number): number {
+    if (n <= 1) return n;
+    return calculateFibonacci(n - 1) + calculateFibonacci(n - 2);
+}
+
+console.log(calculateFibonacci(10));
+`;
+
     try {
-      const uploadResult = await s3Tool.execute({
+      const codeUploadResult = await s3Tool.execute({
         operation: 'save',
         bucket: bucketName,
-        key: s3Key,
-        filePath: testFilePath,
-        contentType: 'text/plain',
-        // encKey: encryptionKey,
+        key: 'test/fibonacci.ts',
+        content: codeContent,
+        contentType: 'text/typescript',
         metadata: {
-          'test-type': 'single-file-encryption',
+          'test-type': 'content-upload',
+          'language': 'typescript',
           'timestamp': new Date().toISOString()
         },
         tags: {
           'purpose': 'testing',
-          'encrypted': 'true'
+          'type': 'code'
         }
       });
-      console.log('✅ Upload result:', uploadResult);
+      console.log('✅ Code upload result:', codeUploadResult);
     } catch (error) {
-      console.error('❌ Upload failed:', (error as Error).message);
+      console.error('❌ Code upload failed:', (error as Error).message);
       throw error;
     }
 
-    // Test 2: Download with encryption
-    console.log('\n📥 Testing encrypted file download...');
+    // Test 2: Upload configuration content
+    console.log('\n⚙️ Testing configuration upload...');
+    const configContent = {
+      app: {
+        name: 'MyApp',
+        version: '1.0.0',
+        environment: 'development',
+        features: {
+          authentication: true,
+          logging: {
+            level: 'debug',
+            format: 'json'
+          }
+        }
+      },
+      database: {
+        host: 'localhost',
+        port: 5432,
+        name: 'myapp_db'
+      }
+    };
+
+    try {
+      const configUploadResult = await s3Tool.execute({
+        operation: 'save',
+        bucket: bucketName,
+        key: 'test/app-config.json',
+        content: JSON.stringify(configContent, null, 2),
+        contentType: 'application/json',
+        metadata: {
+          'test-type': 'content-upload',
+          'config-type': 'application',
+          'timestamp': new Date().toISOString()
+        },
+        tags: {
+          'purpose': 'testing',
+          'type': 'config'
+        }
+      });
+      console.log('✅ Config upload result:', configUploadResult);
+    } catch (error) {
+      console.error('❌ Config upload failed:', (error as Error).message);
+      throw error;
+    }
+
+    // Test 3: Download and verify content
+    console.log('\n📥 Testing content download...');
     try {
       const downloadResult = await s3Tool.execute({
         operation: 'load',
         bucket: bucketName,
-        key: s3Key,
-        // encKey: encryptionKey
+        key: 'test/app-config.json'
       });
-      console.log('✅ Download successful, content length:', downloadResult.length);
+      console.log('✅ Download successful, content:', downloadResult.slice(0, 100) + '...');
+      
+      // Parse and verify the JSON content
+      const parsedConfig = JSON.parse(downloadResult);
+      console.log('✅ Config verification:', 
+        parsedConfig.app.name === 'MyApp' ? 'Content matches' : 'Content mismatch');
     } catch (error) {
       console.error('❌ Download failed:', (error as Error).message);
       throw error;
     }
 
-    // Test 3: Move operation
+    // Test 4: Move operation
     console.log('\n🔄 Testing move operation...');
-    const movedKey = 'test/moved-single-file-test.txt';
+    const movedKey = 'test/moved-config.json';
     try {
       const moveResult = await s3Tool.execute({
         operation: 'move',
         bucket: bucketName,
-        key: s3Key,
+        key: 'test/app-config.json',
         destinationBucket: bucketName,
         destinationKey: movedKey
       });
@@ -93,24 +145,33 @@ async function testSingleFileOperations() {
       throw error;
     }
 
-    // Test 4: Delete operation
-    console.log('\n🗑️  Testing delete operation...');
+    // Test 5: Delete operations
+    console.log('\n🗑️  Testing delete operations...');
     try {
-      const deleteResult = await s3Tool.execute({
+      // Delete TypeScript file
+      const deleteCodeResult = await s3Tool.execute({
+        operation: 'delete',
+        bucket: bucketName,
+        key: 'test/fibonacci.ts'
+      });
+      console.log('✅ Code file delete result:', deleteCodeResult);
+
+      // Delete moved config file
+      const deleteConfigResult = await s3Tool.execute({
         operation: 'delete',
         bucket: bucketName,
         key: movedKey
       });
-      console.log('✅ Delete result:', deleteResult);
+      console.log('✅ Config file delete result:', deleteConfigResult);
     } catch (error) {
       console.error('❌ Delete failed:', (error as Error).message);
       throw error;
     }
 
-    console.log('\n🎉 All single file operations completed successfully!');
+    console.log('\n✨ All single file operations completed successfully!');
   } catch (error) {
-    console.error('❌ Test suite failed:', (error as Error).message);
-    process.exit(1);
+    console.error('\n❌ Test failed:', (error as Error).message);
+    throw error;
   }
 }
 

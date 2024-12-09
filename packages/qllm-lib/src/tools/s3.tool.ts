@@ -451,38 +451,74 @@ class S3Tool extends BaseTool {
             throw new Error('saveObject requires a single key');
         }
 
-        if (!inputs.filePath || Array.isArray(inputs.filePath)) {
+        if (!inputs.filePath && !inputs.content) {
+            throw new Error('Either filePath or content must be provided');
+        }
+
+        if (inputs.filePath && Array.isArray(inputs.filePath)) {
             throw new Error('saveObject requires a single filePath');
         }
 
-        const commandInput: PutObjectCommandInput = {
-            Bucket: inputs.bucket,
-            Key: inputs.key,
-            Body: inputs.content ? inputs.content : createReadStream(inputs.filePath),
-        };
-
-        if (inputs.metadata) {
-            commandInput.Metadata = inputs.metadata;
-        }
-
-        if (inputs.tags) {
-            commandInput.Tagging = this.formatTags(inputs.tags);
-        }
-
-        if (inputs.encKey) {
-            const encKeyBuffer = Buffer.from(inputs.encKey);
-            const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
-            commandInput.SSECustomerAlgorithm = "AES256";
-            commandInput.SSECustomerKey = inputs.encKey;
-            commandInput.SSECustomerKeyMD5 = md5Hash;
-        }
+        let localFilePath: string | undefined = inputs.filePath as string;
 
         try {
+            // Create temp directory if it doesn't exist
+            const tmpDir = path.join(os.tmpdir(), 'qllm-s3-tool');
+            await fs.mkdir(tmpDir, { recursive: true });
+
+            // If content is provided, save it locally first
+            if (inputs.content) {
+                const ext = path.extname(inputs.key) || this.getFileExtension(inputs.contentType);
+                localFilePath = path.join(tmpDir, `${uuidv4()}${ext}`);
+                await fs.writeFile(localFilePath, inputs.content, 'utf-8');
+            }
+
+            if (!localFilePath) {
+                throw new Error('No valid file path available for upload');
+            }
+
+            const commandInput: PutObjectCommandInput = {
+                Bucket: inputs.bucket,
+                Key: inputs.key,
+                Body: createReadStream(localFilePath),
+                ContentType: inputs.contentType
+            };
+
+            if (inputs.metadata) {
+                commandInput.Metadata = inputs.metadata;
+            }
+
+            if (inputs.tags) {
+                commandInput.Tagging = this.formatTags(inputs.tags);
+            }
+
+            if (inputs.encKey) {
+                const encKeyBuffer = Buffer.from(inputs.encKey);
+                const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
+                commandInput.SSECustomerAlgorithm = "AES256";
+                commandInput.SSECustomerKey = inputs.encKey;
+                commandInput.SSECustomerKeyMD5 = md5Hash;
+            }
+
             const command = new PutObjectCommand(commandInput);
             await this.s3Client.send(command);
+
+            // Clean up temp file if we created one
+            if (inputs.content && localFilePath !== inputs.filePath) {
+                await fs.unlink(localFilePath);
+            }
+
             const source = inputs.content ? 'content' : inputs.filePath;
             return `Successfully saved ${source} to ${inputs.bucket}/${inputs.key}`;
         } catch (error) {
+            // Clean up temp file if we created one and an error occurred
+            if (inputs.content && localFilePath && localFilePath !== inputs.filePath) {
+                try {
+                    await fs.unlink(localFilePath);
+                } catch (cleanupError) {
+                    console.warn('Failed to clean up temporary file:', cleanupError);
+                }
+            }
             const source = inputs.content ? 'content' : inputs.filePath;
             throw new Error(`Failed to save ${source} to ${inputs.bucket}/${inputs.key}: ${(error as Error).message}`);
         }
@@ -586,6 +622,34 @@ class S3Tool extends BaseTool {
         return Object.entries(tags)
             .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
             .join('&');
+    }
+
+    /**
+     * @method getFileExtension
+     * @private
+     * @param {string | undefined} contentType - MIME type of the content
+     * @returns {string} File extension including the dot
+     * @description Determines file extension based on content type
+     */
+    private getFileExtension(contentType?: string): string {
+        if (!contentType) return '';
+        
+        const extensionMap: Record<string, string> = {
+            'text/plain': '.txt',
+            'application/json': '.json',
+            'text/markdown': '.md',
+            'text/yaml': '.yaml',
+            'application/yaml': '.yaml',
+            'application/pdf': '.pdf',
+            'text/javascript': '.js',
+            'application/javascript': '.js',
+            'text/typescript': '.ts',
+            'application/x-typescript': '.ts',
+            'text/python': '.py',
+            'text/x-python': '.py'
+        };
+
+        return extensionMap[contentType] || '';
     }
 }
 

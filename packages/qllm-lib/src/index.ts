@@ -18,6 +18,11 @@ export * from './conversation';
 export * from './templates';
 
 export * from "./workflow";
+// agents
+export * from "./agents";
+
+// agents
+export * from "./storage";
 
 
 // Main classes and interfaces
