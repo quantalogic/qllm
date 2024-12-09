@@ -33,7 +33,8 @@
         "test:s3tool": "ts-node src/tools/demo-s3-tool.ts",
         "test:s3-single": "ts-node src/tools/demo-s3-single-file.ts",
         "dynamic-search-s3": "ts-node src/template-workflow/dynamic_yaml_search-with-s3tool.ts",
-        "test:s3-code-review": "ts-node src/template-workflow/s3-code-analysis.ts"
+        "test:s3-code-review": "ts-node src/template-workflow/s3-code-analysis.ts",
+        "test:jira-tool": "ts-node src/tools/demo-jira-tool.ts"
     },
     "repository": {
         "type": "git",
@@ -80,6 +81,7 @@
         "gradient-string": "^2.0.2",
         "html-to-text": "9.0.5",
         "jimp": "^0.22.12",
+        "jira.js": "4.0.2",
         "js-yaml": "^4.1.0",
         "kleur": "^4.1.5",
         "lru-cache": "^11.0.0",

@@ -24,7 +24,7 @@ async function main(): Promise<void> {
     console.log('AWS_BUCKET_NAME:', process.env.AWS_BUCKET_NAME);
 
     // Load workflow
-    await workflowManager.loadWorkflow("https://raw.githubusercontent.com/jluongg/templates_prompts_qllm/refs/heads/main/s3-content-writer.yaml");
+    await workflowManager.loadWorkflow("https://raw.githubusercontent.com/jluongg/templates_prompts_qllm/refs/heads/main/s3-content-writer2.yaml");
     console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables
@@ -39,7 +39,7 @@ async function main(): Promise<void> {
       // Pass keys directly as strings to avoid template substitution issues
       load_key: "input/s3_content_test_tool.txt",
       save_key: "output/s3_content_test_tool.txt",
-      local_save_path: path.join(process.cwd(), 'result.txt')
+      local_save_path: "s3_content_test_tool.txt"
     };
 
     // Debug: Print parameters
