@@ -63,6 +63,7 @@ export class WorkflowManager {
     this.registerToolFactory('LocalProjectLoader', RAGToolWithEmbedding);
     this.registerToolFactory("jiraHandler", JiraTool);
     this.registerToolFactory('LocalProjectLoader', RAGToolWithEmbedding);
+    this.registerToolFactory("jiraHandler", JiraTool);
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
