@@ -32,7 +32,7 @@
     "espree": "10.1.0",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
-    "rollup": "4.21.1",
+    "rollup": "4.22.4",
     "rollup-plugin-analyzer": "4.0.0",
     "rollup-plugin-gzip": "4.0.1",
     "ts-jest": "29.2.5",
