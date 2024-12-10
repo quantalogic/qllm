@@ -24,13 +24,13 @@ interface S3ToLocalConfig {
     aws_region?: string;
     /** Optional AWS endpoint URL for custom endpoints */
     aws_endpoint_url?: string;
-    /** S3 bucket name */
-    bucket: string;
 }
 
 interface S3ToLocalInput {
     /** S3 keys string separated by separator */
     keys: string;
+    /** S3 bucket name */
+    bucket: string;
     /** Separator for multiple keys (defaults to comma) */
     separator?: string;
     /** Encryption key for server-side encryption */
@@ -48,7 +48,6 @@ interface S3ToLocalInput {
  */
 export class S3ToLocalTool extends BaseTool {
     private s3Client: S3Client;
-    private bucket: string;
     private downloadedFiles: Set<string> = new Set();
     private exitCleanupFiles: Set<string> = new Set();
 
@@ -71,7 +70,6 @@ export class S3ToLocalTool extends BaseTool {
         
         super();
         this.s3Client = new S3Client(clientConfig);
-        this.bucket = config.bucket;
 
         // Register cleanup on process exit
         process.on('exit', () => {
@@ -109,6 +107,11 @@ export class S3ToLocalTool extends BaseTool {
                     type: 'string',
                     required: true,
                     description: 'S3 keys string separated by separator'
+                },
+                bucket: {
+                    type: 'string',
+                    required: true,
+                    description: 'S3 bucket name'
                 },
                 separator: {
                     type: 'string',
@@ -207,7 +210,7 @@ export class S3ToLocalTool extends BaseTool {
                 const localPath = path.join(baseDir, `${uniqueId}-${baseFileName}${fileExt}`);
 
                 const commandInput: GetObjectCommandInput = {
-                    Bucket: this.bucket,
+                    Bucket: inputs.bucket,
                     Key: key
                 };
 
