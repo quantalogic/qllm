@@ -36,7 +36,8 @@
         "test:s3-code-review": "ts-node src/template-workflow/s3-code-analysis.ts",
         "test:jira-tool": "ts-node src/tools/demo-jira-tool.ts",
         "test:jira-createBulk": "ts-node src/tools/demo-jira-createBulk.ts",
-        "test:workflow-jira-simple" : "ts-node src/template-workflow/create_verify_jira.ts"
+        "test:workflow-jira-simple" : "ts-node src/template-workflow/create_verify_jira.ts",
+        "test:s3-to-local": "ts-node src/tools/demo-s3-to-local.ts"
     },
     "repository": {
         "type": "git",
