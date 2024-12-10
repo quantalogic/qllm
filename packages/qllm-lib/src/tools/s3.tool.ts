@@ -115,6 +115,15 @@ class S3Tool extends BaseTool {
     }
 
     /**
+     * @method getDescription
+     * @description Returns a description of what the tool does
+     * @returns {string} Tool description
+     */
+    public getDescription(): string {
+        return 'A tool for AWS S3 operations including file upload, download, move, and delete with support for encryption, metadata, and tagging.';
+    }
+
+    /**
      * @method getDefinition
      * @returns {ToolDefinition} Tool definition object containing name, description, input/output specifications
      * @description Provides the tool's definition including all required and optional parameters
