@@ -437,17 +437,10 @@ export class JiraTool extends BaseTool {
           description: 'Array of component names'
         },
         issues: {
-<<<<<<< HEAD
           type: 'array | string',
           required: false,
           description: 'Array of issues for bulk creation or JSON string, not working yet'
         }
-=======
-          type: 'array',
-          required: false,
-          description: 'Array of issues for bulk creation',
-        },
->>>>>>> 998ef47 (Intragting jira tool to workflow, remains to add getDefinition)
       },
       output: {
         type: 'object',
