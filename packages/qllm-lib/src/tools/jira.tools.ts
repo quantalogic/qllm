@@ -364,79 +364,88 @@ export class JiraTool extends BaseTool {
   }
 
   /**
+   * @method getDescription
+   * @description Returns a description of what the tool does
+   * @returns {string} Tool description
+   */
+  public getDescription(): string {
+    return 'A tool for managing Jira issues and projects. Supports creating, updating, deleting, and retrieving issues, with options for bulk operations.';
+  }
+
+  /**
    * @method getDefinition
    * @description Get the tool definition
    */
   getDefinition(): ToolDefinition {
     return {
-      name: 'jira',
-      description: 'Tool for interacting with Jira',
+      name: 'jira-tool',
+      description: 'Tool for interacting with Jira to manage issues and projects',
       input: {
         operation: {
           type: 'string',
           required: true,
-          description: 'Operation to perform',
+          description: 'The operation to perform (create, update, delete, get, createBulk)'
         },
         issueKey: {
           type: 'string',
           required: false,
-          description: 'Issue key (required for get, update, delete)',
+          description: 'Issue key (required for get, update, delete operations)'
         },
         projectKey: {
           type: 'string',
           required: false,
-          description: 'Project key (required for create)',
+          description: 'Project key (required for create operation)'
         },
         summary: {
           type: 'string',
           required: false,
-          description: 'Issue summary',
+          description: 'Issue summary'
         },
         description: {
           type: 'string',
           required: false,
-          description: 'Issue description',
+          description: 'Issue description'
         },
         issueType: {
           type: 'string',
           required: false,
-          description: 'Issue type (required for create)',
+          description: 'Issue type (required for create operation)'
         },
         assignee: {
           type: 'string',
           required: false,
-          description: 'Assignee email',
+          description: 'Assignee email'
         },
         storyPoints: {
           type: 'number',
           required: false,
-          description: 'Story points',
+          description: 'Story points for the issue'
         },
         priority: {
           type: 'string',
           required: false,
-          description: 'Priority name (e.g., \'High\', \'Medium\', \'Low\')',
+          description: 'Priority name (e.g., High, Medium, Low)'
         },
         labels: {
           type: 'array',
           required: false,
-          description: 'Array of label strings',
+          description: 'Array of label strings'
         },
         components: {
           type: 'array',
           required: false,
-          description: 'Array of component names',
+          description: 'Array of component names'
         },
         issues: {
-          type: 'array',
+          type: 'array | string',
           required: false,
-          description: 'Array of issues for bulk creation',
-        },
+          description: 'Array of issues for bulk creation or JSON string, not working yet'
+        }
       },
       output: {
         type: 'object',
-        description: 'Result of the Jira operation',
-      },
+        description: 'Response containing issue details or operation result'
+      }
     };
   }
 }
