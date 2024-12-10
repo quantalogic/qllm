@@ -59,7 +59,6 @@ export class WorkflowManager {
     this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
     this.registerToolFactory('RedisSaver', RedisSaverTool);
     this.registerToolFactory('TextToJson', TextToJsonTool);
-    this.registerToolFactory("jiraHandler", JiraTool);
     this.registerToolFactory('LocalProjectLoader', RAGToolWithEmbedding);
     this.registerToolFactory("jiraHandler", JiraTool);
   }
