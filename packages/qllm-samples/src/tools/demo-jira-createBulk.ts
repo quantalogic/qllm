@@ -1,4 +1,4 @@
-import { JiraTool } from "qllm-lib/src/tools/jira.tools";
+import { JiraTool } from "qllm-lib/src/tools/jira.tool";
 import dotenv from 'dotenv';
 dotenv.config();
 
