@@ -18,6 +18,7 @@ import { HtmlFormatterTool } from '../tools/html-formatter.tool';
 import { LocalLoaderTool } from '../tools/local-loader.tool';
 import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
 import { RedisSaverTool } from '../tools/redis-saver.tool';
+import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
 import { TextToJsonTool } from '../tools/text-to-json';
 
 /**
@@ -57,6 +58,7 @@ export class WorkflowManager {
     this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
     this.registerToolFactory('RedisSaver', RedisSaverTool);
     this.registerToolFactory('TextToJson', TextToJsonTool);
+    this.registerToolFactory('LocalProjectLoader', RAGToolWithEmbedding);
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
