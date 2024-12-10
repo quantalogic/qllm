@@ -5,3 +5,5 @@ export * from "./local-project-loader";
 export * from "./s3.tool";
 export * from "./fileoverview-rag";
 export * from "./jira.tools"
+export * from "./fileoverview-rag";
+
