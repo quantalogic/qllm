@@ -18,6 +18,7 @@ import { LocalLoaderTool } from '../tools/local-loader.tool';
 import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
 import { RedisSaverTool } from '../tools/redis-saver.tool';
 import { TextToJsonTool } from '../tools/text-to-json';
+import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
 import { LocalProjectLoaderTool } from '../tools/local-project-loader'; 
 import { JiraTool } from '../tools/jira.tools';
 
@@ -58,6 +59,7 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
     this.registerToolFactory('RedisSaver', RedisSaverTool);
     this.registerToolFactory('TextToJson', TextToJsonTool);
+    this.registerToolFactory('FileOverviewRAG', RAGToolWithEmbedding);
     this.registerToolFactory('LocalProjectLoader', LocalProjectLoaderTool);
     this.registerToolFactory("jiraHandler",JiraTool);
   }
