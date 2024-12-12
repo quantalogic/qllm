@@ -62,7 +62,10 @@ export class WorkflowManager {
     this.registerToolFactory('TextToJson', TextToJsonTool);
     this.registerToolFactory('LocalProjectLoader', RAGToolWithEmbedding);
     this.registerToolFactory('JiraTool', JiraTool); 
+<<<<<<< HEAD
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
+=======
+>>>>>>> caee28c (jira tool --update (#80))
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
