@@ -66,6 +66,7 @@ export class AgentBuilder {
       return this;
     }
     
+    // build the agent that should be updated to take the yaml configs too
     build(): Agent {
       if (!this.provider) {
         throw new Error('Provider must be set before building the agent');
