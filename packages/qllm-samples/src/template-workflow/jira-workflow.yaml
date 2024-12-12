@@ -1,0 +1,22 @@
+name: jira_simple
+description: Create a Jira ticket and print the ticket
+defaultProvider: openai
+
+# Debug: First step - Create ticket
+steps:
+    - tool: JiraTool #JiraTool
+      input:
+          operation: "create"
+          projectKey: "{{projectKey}}"
+          summary: "{{summary}}"
+          description: "{{description}}"
+          issueType: "{{issueType}}"
+          storyPoints: "{{storyPoints}}"
+      output: createdTicket
+
+    # Debug: Second step - Verify ticket
+    - tool: JiraTool #JiraTool
+      input:
+          operation: "get"
+          issueKey: "$createdTicket"
+      output: verifiedTicket
