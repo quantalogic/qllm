@@ -20,6 +20,7 @@ import { RedisSaverTool } from '../tools/redis-saver.tool';
 import { TextToJsonTool } from '../tools/text-to-json';
 import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
 import { LocalProjectLoaderTool } from '../tools/local-project-loader'; 
+import { JiraTool } from '../tools/jira.tools'; 
 
 /**
  * @class WorkflowExecutor
@@ -60,6 +61,7 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('TextToJson', TextToJsonTool);
     this.registerToolFactory('FileOverviewRAG', RAGToolWithEmbedding);
     this.registerToolFactory('LocalProjectLoader', LocalProjectLoaderTool);
+    this.registerToolFactory('JiraTool', JiraTool); 
   }
 
 
