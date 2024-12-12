@@ -1,0 +1,253 @@
+import { 
+    S3Client, 
+    GetObjectCommand,
+    GetObjectCommandInput
+} from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
+import { BaseTool, ToolDefinition } from "./base-tool";
+import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { fromEnv } from "@aws-sdk/credential-providers";
+import { AwsCredentialIdentity } from "@aws-sdk/types";
+import * as crypto from 'crypto';
+import dotenv from 'dotenv';
+dotenv.config();
+
+interface S3ToLocalConfig {
+    /** AWS access key ID */
+    aws_access_key_id?: string;
+    /** AWS secret access key */
+    aws_secret_access_key?: string;
+    /** AWS region */
+    aws_region?: string;
+    /** Optional AWS endpoint URL for custom endpoints */
+    aws_endpoint_url?: string;
+}
+
+interface S3ToLocalInput {
+    /** S3 keys string separated by separator */
+    keys: string;
+    /** S3 bucket name */
+    bucket: string;
+    /** Separator for multiple keys (defaults to comma) */
+    separator?: string;
+    /** Encryption key for server-side encryption */
+    encKey?: string;
+    /** Time in milliseconds after which files should be deleted (defaults to 1 hour) */
+    cleanupAfter?: number;
+    /** Whether to clean up immediately after workflow completion (defaults to true in workflow context) */
+    cleanupOnExit?: boolean;
+}
+
+/**
+ * @class S3ToLocalTool
+ * @extends BaseTool
+ * @description Tool for downloading files from S3 to local /tmp directory
+ */
+export class S3ToLocalTool extends BaseTool {
+    private s3Client: S3Client;
+    private downloadedFiles: Set<string> = new Set();
+    private exitCleanupFiles: Set<string> = new Set();
+
+    constructor(config: S3ToLocalConfig) {
+        const credentials = config.aws_access_key_id && config.aws_secret_access_key 
+            ? {
+                accessKeyId: config.aws_access_key_id,
+                secretAccessKey: config.aws_secret_access_key,
+              } as AwsCredentialIdentity
+            : fromEnv();
+
+        const clientConfig = {
+            region: config.aws_region || process.env.AWS_REGION,
+            credentials,
+            ...(config.aws_endpoint_url && { endpoint: config.aws_endpoint_url }),
+            requestHandler: new NodeHttpHandler(),
+            maxAttempts: 3,
+            retryMode: 'standard'
+        };
+        
+        super();
+        this.s3Client = new S3Client(clientConfig);
+
+        // Register cleanup on process exit
+        process.on('exit', () => {
+            this.cleanupExitFiles();
+        });
+
+        // Handle interrupts
+        process.on('SIGINT', () => {
+            console.log('\nCleaning up files marked for exit cleanup...');
+            this.cleanupExitFiles();
+            process.exit();
+        });
+    }
+
+    /**
+     * @method getDescription
+     * @description Returns a description of what the tool does
+     * @returns {string} Tool description
+     */
+    public getDescription(): string {
+        return 'Downloads files from S3 to local /tmp directory with unique identifiers.';
+    }
+
+    /**
+     * @method getDefinition
+     * @returns {ToolDefinition} Tool definition object
+     * @description Provides the tool's definition including all required parameters
+     */
+    getDefinition(): ToolDefinition {
+        return {
+            name: 's3-to-local-tool',
+            description: 'Downloads files from S3 to local /tmp directory',
+            input: {
+                keys: {
+                    type: 'string',
+                    required: true,
+                    description: 'S3 keys string separated by separator'
+                },
+                bucket: {
+                    type: 'string',
+                    required: true,
+                    description: 'S3 bucket name'
+                },
+                separator: {
+                    type: 'string',
+                    required: false,
+                    description: 'Separator for multiple keys (defaults to comma)'
+                },
+                encKey: {
+                    type: 'string',
+                    required: false,
+                    description: 'Encryption key for server-side encryption'
+                },
+                cleanupAfter: {
+                    type: 'number',
+                    required: false,
+                    description: 'Time in milliseconds after which files should be deleted (defaults to 1 hour)'
+                },
+                cleanupOnExit: {
+                    type: 'boolean',
+                    required: false,
+                    description: 'Whether to clean up immediately after workflow completion (defaults to true in workflow context)'
+                }
+            },
+            output: {
+                type: 'object',
+                description: 'Object containing array of downloaded file paths'
+            }
+        };
+    }
+
+    /**
+     * @method cleanupExitFiles
+     * @private
+     * @description Cleans up files marked for cleanup on exit
+     */
+    private cleanupExitFiles(): void {
+        for (const filePath of this.exitCleanupFiles) {
+            try {
+                fs.unlinkSync(filePath);
+                console.log(`Cleaned up file on exit: ${filePath}`);
+            } catch (error) {
+                console.error(`Error cleaning up file ${filePath}:`, error);
+            }
+        }
+        this.exitCleanupFiles.clear();
+    }
+
+    /**
+     * @method scheduleCleanup
+     * @private
+     * @param {string} filePath - Path to the file to cleanup
+     * @param {number} delay - Delay in milliseconds before cleanup
+     * @param {boolean} cleanupOnExit - Whether to clean up on exit
+     */
+    private async scheduleCleanup(filePath: string, delay: number, cleanupOnExit: boolean): Promise<void> {
+        // Add file to tracking set
+        this.downloadedFiles.add(filePath);
+        
+        if (cleanupOnExit) {
+            this.exitCleanupFiles.add(filePath);
+        } else if (delay > 0) {
+            setTimeout(async () => {
+                try {
+                    await fsPromises.unlink(filePath);
+                    this.downloadedFiles.delete(filePath);
+                    console.log(`Cleaned up file after delay: ${filePath}`);
+                } catch (error) {
+                    console.error(`Error cleaning up file ${filePath}:`, error);
+                }
+            }, delay);
+        }
+    }
+
+    /**
+     * @method execute
+     * @param {S3ToLocalInput} inputs - Input parameters
+     * @returns {Promise<{ files: string[] }>} Array of downloaded file paths
+     */
+    async execute(inputs: S3ToLocalInput): Promise<{ files: string[] }> {
+        const separator = inputs.separator || ',';
+        const keys = inputs.keys.split(separator).map(key => key.trim()).filter(key => key.length > 0);
+        const cleanupDelay = inputs.cleanupOnExit ? 0 : (inputs.cleanupAfter || 3600000); // Default to 1 hour if not cleaning up on exit
+        const cleanupOnExit = inputs.cleanupOnExit ?? true; // Default to true if not specified
+        
+        const downloadedFiles: string[] = [];
+        
+        // Create the s3_to_local directory if it doesn't exist
+        const baseDir = '/tmp/s3_to_local';
+        await fsPromises.mkdir(baseDir, { recursive: true });
+        
+        for (const key of keys) {
+            try {
+                const uniqueId = uuidv4();
+                const fileName = path.basename(key);
+                const fileExt = path.extname(fileName);
+                const baseFileName = path.basename(fileName, fileExt);
+                const localPath = path.join(baseDir, `${uniqueId}-${baseFileName}${fileExt}`);
+
+                const commandInput: GetObjectCommandInput = {
+                    Bucket: inputs.bucket,
+                    Key: key
+                };
+
+                // Add encryption if encKey is provided
+                if (inputs.encKey) {
+                    const encKeyBuffer = Buffer.from(inputs.encKey);
+                    const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
+                    commandInput.SSECustomerAlgorithm = "AES256";
+                    commandInput.SSECustomerKey = inputs.encKey;
+                    commandInput.SSECustomerKeyMD5 = md5Hash;
+                }
+
+                const response = await this.s3Client.send(new GetObjectCommand(commandInput));
+                
+                if (!response.Body) {
+                    throw new Error(`No body in response for key: ${key}`);
+                }
+
+                // Convert the readable stream to a buffer
+                const chunks: Uint8Array[] = [];
+                for await (const chunk of response.Body as any) {
+                    chunks.push(chunk);
+                }
+                const buffer = Buffer.concat(chunks);
+
+                // Write the buffer to the local file
+                await fsPromises.writeFile(localPath, buffer);
+                downloadedFiles.push(localPath);
+
+                // Schedule cleanup
+                await this.scheduleCleanup(localPath, cleanupDelay, cleanupOnExit);
+            } catch (error) {
+                console.error(`Error downloading file ${key}:`, error);
+                throw error;
+            }
+        }
+
+        return { files: downloadedFiles };
+    }
+}

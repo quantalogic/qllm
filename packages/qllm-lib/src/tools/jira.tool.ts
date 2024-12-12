@@ -3,7 +3,7 @@ import { Version3Client } from "jira.js";
 
 export interface JiraInput {
   /** Operation to perform */
-  operation: 'create' | 'update' | 'delete' | 'get';
+  operation: 'create' | 'update' | 'delete' | 'get' | 'createBulk';
   /** Issue key (required for get, update, delete) */
   issueKey?: string;
   /** Project key (required for create) */
@@ -24,6 +24,8 @@ export interface JiraInput {
   labels?: string[];
   /** Array of component names */
   components?: string[];
+  /** Array of issues for bulk creation */
+  issues?: Array<Omit<JiraInput, 'operation' | 'issues'>> | string;
 }
 
 interface JiraIssueResponse {
@@ -69,6 +71,28 @@ interface JiraIssueResponse {
   };
 }
 
+interface WorkflowStepResult {
+  response: string;
+  outputVariables: {
+    id: string;
+    key: string;
+    self: string;
+  };
+}
+
+/**
+ * @interface JiraConfig
+ * @description Configuration options for Jira client
+ */
+interface JiraConfig {  
+  /** Jira host URL */
+  host: string;
+  /** Jira email */
+  email: string;
+  /** Jira token */
+  token: string;
+}
+
 /**
  * @class JiraTool
  * @extends BaseTool
@@ -77,18 +101,32 @@ interface JiraIssueResponse {
 export class JiraTool extends BaseTool {
   private client: Version3Client;
 
-  constructor(config: { host: string; email: string; token: string }) {
-    super();
-    this.client = new Version3Client({
-      host: config.host,
+  /**
+   * @constructor
+   * @param {JiraConfig} config - Configuration object for the Jira client
+   */
+  constructor(config?: JiraConfig) {
+    const host = config?.host || process.env.JIRA_HOST;
+    const email = config?.email || process.env.JIRA_MAIL;
+    const token = config?.token || process.env.JIRA_TOKEN;
+
+    if (!host || !email || !token) {
+      throw new Error('Missing required Jira configuration. Please provide either config parameters or set JIRA_HOST, JIRA_MAIL, and JIRA_TOKEN environment variables.');
+    }
+
+    const clientConfig = {
+      host,
       authentication: {
         basic: {
-          email: config.email,
-          apiToken: config.token,
+          email,
+          apiToken: token,
         },
       },
-    });
+    };
+    super(clientConfig);
+    this.client = new Version3Client(clientConfig);
   }
+
 
   /**
    * @method execute
@@ -98,6 +136,14 @@ export class JiraTool extends BaseTool {
     switch (input.operation) {
       case 'create':
         return this.createIssue(input);
+      case 'createBulk':
+        if (!input.issues) {
+          throw new Error('No issues provided for bulk creation');
+        }
+        const issues = typeof input.issues === 'string' ? JSON.parse(input.issues) : input.issues;
+        return Promise.all(issues.map((issue: Omit<JiraInput, 'operation' | 'issues'>) => 
+          this.createIssue({ ...issue, operation: 'create' })
+        ));
       case 'update':
         return this.updateIssue(input);
       case 'delete':
@@ -253,54 +299,76 @@ export class JiraTool extends BaseTool {
    * @description Gets a Jira issue
    */
   private async getIssue(input: JiraInput): Promise<JiraIssueResponse> {
-    if (!input.issueKey) {
-      throw new Error('Issue key is required for get operation');
+    let issueKey = input.issueKey;
+    
+    // Handle if issueKey is a response object from createIssue
+    if (issueKey && typeof issueKey === 'object') {
+      const result = issueKey as WorkflowStepResult | any;
+      
+      // Try to get key from outputVariables first
+      if (result.outputVariables?.key) {
+        issueKey = result.outputVariables.key;
+      } 
+      // Then try response field if it exists
+      else if (result.response) {
+        try {
+          // Try parsing if response is a string
+          if (typeof result.response === 'string') {
+            const parsed = JSON.parse(result.response);
+            issueKey = parsed.key;
+          } 
+          // If response is already an object, try to get key directly
+          else if (typeof result.response === 'object') {
+            issueKey = result.response.key;
+          }
+        } catch (e) {
+          console.warn('Failed to parse response:', e);
+        }
+      }
+      // Finally try to get key directly from result if it exists
+      else if (result.key) {
+        issueKey = result.key;
+      }
     }
 
-    const issueDetails = await this.client.issues.getIssue({
-      issueIdOrKey: input.issueKey,
-      fields: [
-        'summary',
-        'status',
-        'assignee',
-        'reporter',
-        'description',
-        'issuetype',
-        'created',
-        'updated',
-        'priority',
-        'components',
-        'labels',
-        'subtasks',
-        'customfield_10016' // Story points
-      ],
-      expand: ['renderedFields', 'names', 'schema', 'transitions', 'operations', 'editmeta', 'changelog']
-    });
+    if (!issueKey || typeof issueKey !== 'string') {
+      throw new Error('Issue key is required for get operation and could not be resolved from input');
+    }
 
+    const issue = await this.client.issues.getIssue({ issueIdOrKey: issueKey });
     return {
-      key: issueDetails.key,
+      key: issue.key,
       fields: {
-        summary: issueDetails.fields.summary,
+        summary: issue.fields.summary,
         status: {
-          name: issueDetails.fields.status?.name || 'Unknown',
-          statusCategory: issueDetails.fields.status?.statusCategory
+          name: issue.fields.status?.name || 'Unknown',
+          statusCategory: issue.fields.status?.statusCategory
         },
         issuetype: {
-          name: issueDetails.fields.issuetype?.name || 'Unknown',
-          iconUrl: issueDetails.fields.issuetype?.iconUrl
+          name: issue.fields.issuetype?.name || 'Unknown',
+          iconUrl: issue.fields.issuetype?.iconUrl
         },
-        assignee: issueDetails.fields.assignee,
-        reporter: issueDetails.fields.reporter,
-        priority: issueDetails.fields.priority,
-        description: issueDetails.fields.description,
-        created: issueDetails.fields.created,
-        updated: issueDetails.fields.updated,
-        customfield_10016: issueDetails.fields.customfield_10016,
-        components: issueDetails.fields.components,
-        labels: issueDetails.fields.labels || [],
-        subtasks: issueDetails.fields.subtasks || []
+        assignee: issue.fields.assignee,
+        reporter: issue.fields.reporter,
+        priority: issue.fields.priority,
+        description: issue.fields.description,
+        created: issue.fields.created,
+        updated: issue.fields.updated,
+        customfield_10016: issue.fields.customfield_10016,
+        components: issue.fields.components,
+        labels: issue.fields.labels || [],
+        subtasks: issue.fields.subtasks || []
       }
     };
+  }
+
+  /**
+   * @method getDescription
+   * @description Returns a description of what the tool does
+   * @returns {string} Tool description
+   */
+  public getDescription(): string {
+    return 'A tool for managing Jira issues and projects. Supports creating, updating, deleting, and retrieving issues, with options for bulk operations.';
   }
 
   /**
@@ -309,69 +377,74 @@ export class JiraTool extends BaseTool {
    */
   getDefinition(): ToolDefinition {
     return {
-      name: 'jira',
-      description: 'Tool for interacting with Jira',
+      name: 'jira-tool',
+      description: 'Tool for interacting with Jira to manage issues and projects',
       input: {
         operation: {
           type: 'string',
           required: true,
-          description: 'Operation to perform',
+          description: 'The operation to perform (create, update, delete, get, createBulk)'
         },
         issueKey: {
           type: 'string',
           required: false,
-          description: 'Issue key (required for get, update, delete)',
+          description: 'Issue key (required for get, update, delete operations)'
         },
         projectKey: {
           type: 'string',
           required: false,
-          description: 'Project key (required for create)',
+          description: 'Project key (required for create operation)'
         },
         summary: {
           type: 'string',
           required: false,
-          description: 'Issue summary',
+          description: 'Issue summary'
         },
         description: {
           type: 'string',
           required: false,
-          description: 'Issue description',
+          description: 'Issue description'
         },
         issueType: {
           type: 'string',
           required: false,
-          description: 'Issue type (required for create)',
+          description: 'Issue type (required for create operation)'
         },
         assignee: {
           type: 'string',
           required: false,
-          description: 'Assignee email',
+          description: 'Assignee email'
         },
         storyPoints: {
           type: 'number',
           required: false,
-          description: 'Story points',
+          description: 'Story points for the issue'
         },
         priority: {
           type: 'string',
           required: false,
-          description: 'Priority name (e.g., \'High\', \'Medium\', \'Low\')',
+          description: 'Priority name (e.g., High, Medium, Low)'
         },
         labels: {
           type: 'array',
           required: false,
-          description: 'Array of label strings',
+          description: 'Array of label strings'
         },
         components: {
           type: 'array',
           required: false,
-          description: 'Array of component names',
+          description: 'Array of component names'
         },
+        issues: {
+          type: 'array | string',
+          required: false,
+          description: 'Array of issues for bulk creation or JSON string, not working yet'
+        }
       },
       output: {
         type: 'object',
-        description: 'Result of the Jira operation',
-      },
+        description: 'Response containing issue details or operation result'
+      }
     };
   }
 }
