@@ -20,8 +20,7 @@ import { RedisSaverTool } from '../tools/redis-saver.tool';
 import { TextToJsonTool } from '../tools/text-to-json';
 import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
 import { LocalProjectLoaderTool } from '../tools/local-project-loader'; 
-import { JiraTool } from '../tools/jira.tool';
-import { S3ToLocalTool } from '../tools/s3_to_local.tool';
+import { JiraTool } from '../tools/jira.tools'; 
 
 /**
  * @class WorkflowExecutor
@@ -62,8 +61,7 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('TextToJson', TextToJsonTool);
     this.registerToolFactory('FileOverviewRAG', RAGToolWithEmbedding);
     this.registerToolFactory('LocalProjectLoader', LocalProjectLoaderTool);
-    this.registerToolFactory("jiraHandler",JiraTool);
-    this.registerToolFactory('s3ToLocal', S3ToLocalTool);
+    this.registerToolFactory('JiraTool', JiraTool); 
   }
 
 
@@ -284,19 +282,9 @@ export class WorkflowExecutor extends EventEmitter {
           if (value.startsWith('$')) {
             // Handle reference to previous step output
             const varName = value.slice(1);
-            const result = context.results[varName];
-            if (result?.response) {
-              try {
-                // Try to parse the response if it's a JSON string
-                const parsed = JSON.parse(result.response);
-                resolved[key] = parsed.key;
-              } catch (e) {
-                // If parsing fails, use the outputVariables
-                resolved[key] = result.outputVariables?.key;
-              }
-            } else {
-              resolved[key] = result;
-            }
+            resolved[key] = context.results[varName]?.response || 
+                           context.results[varName]?.outputVariables || 
+                           context.results[varName];
           } else if (value.match(/\{\{.*\}\}/)) {
             // Handle template variables
             resolved[key] = this.resolveTemplateVariables(value, context.variables);
