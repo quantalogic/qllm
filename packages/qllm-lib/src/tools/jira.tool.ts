@@ -106,7 +106,6 @@ export class JiraTool extends BaseTool {
    * @param {JiraConfig} config - Configuration object for the Jira client
    */
   constructor(config?: JiraConfig) {
-    super();
     const host = config?.host || process.env.JIRA_HOST;
     const email = config?.email || process.env.JIRA_MAIL;
     const token = config?.token || process.env.JIRA_TOKEN;
@@ -124,7 +123,7 @@ export class JiraTool extends BaseTool {
         },
       },
     };
-
+    super(clientConfig);
     this.client = new Version3Client(clientConfig);
   }
 

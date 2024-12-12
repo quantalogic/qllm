@@ -11,16 +11,16 @@ async function main(): Promise<void> {
     console.log('\n🔍 Debug: ALL Environment variables:');
     console.log(process.env);
 
-    // Debug: Print specific Jira variables
-    console.log('\n🔍 Debug: Jira Environment variables:');
-    console.log('JIRA_HOST:', process.env.JIRA_HOST);
-    console.log('JIRA_MAIL:', process.env.JIRA_MAIL);
-    console.log('JIRA_TOKEN:', process.env.JIRA_TOKEN);
+    // // Debug: Print specific Jira variables
+    // console.log('\n🔍 Debug: Jira Environment variables:');
+    // console.log('JIRA_HOST:', process.env.JIRA_HOST);
+    // console.log('JIRA_MAIL:', process.env.JIRA_MAIL);
+    // console.log('JIRA_TOKEN:', process.env.JIRA_TOKEN);
 
-    // Validate configuration
-    if (!process.env.JIRA_HOST || !process.env.JIRA_MAIL || !process.env.JIRA_TOKEN) {
-      throw new Error('Missing required Jira configuration in environment variables');
-    }
+    // // Validate configuration
+    // if (!process.env.JIRA_HOST || !process.env.JIRA_MAIL || !process.env.JIRA_TOKEN) {
+    //   throw new Error('Missing required Jira configuration in environment variables');
+    // }
 
     // Create providers
     const providers = {
@@ -34,9 +34,10 @@ async function main(): Promise<void> {
     const workflowManager = new WorkflowManager(providers); 
 
     // Load workflow from local file
-    const workflowPath = path.join(__dirname, 'jira-workflow.yaml');
-    console.log('\n🔍 Debug: Loading workflow from:', workflowPath);
-    await workflowManager.loadWorkflow(workflowPath);
+    // const workflowPath = path.join(__dirname, 'jira-workflow.yaml');
+    // console.log('\n🔍 Debug: Loading workflow from:', workflowPath);
+    // await workflowManager.loadWorkflow(workflowPath);
+    await workflowManager.loadWorkflow('https://raw.githubusercontent.com/jluongg/templates_prompts_qllm/refs/heads/main/jira-simple-bis.yaml');
     console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables
