@@ -63,9 +63,13 @@ export class WorkflowManager {
     this.registerToolFactory('LocalProjectLoader', RAGToolWithEmbedding);
     this.registerToolFactory('JiraTool', JiraTool); 
 <<<<<<< HEAD
+<<<<<<< HEAD
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
 =======
 >>>>>>> caee28c (jira tool --update (#80))
+=======
+    this.registerToolFactory('s3ToLocal', S3ToLocalTool);
+>>>>>>> 4818062 (resolve conflicts with master)
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {

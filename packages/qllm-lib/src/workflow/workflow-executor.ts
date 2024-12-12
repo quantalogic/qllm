@@ -63,10 +63,7 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('FileOverviewRAG', RAGToolWithEmbedding);
     this.registerToolFactory('LocalProjectLoader', LocalProjectLoaderTool);
     this.registerToolFactory('JiraTool', JiraTool); 
-<<<<<<< HEAD
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
-=======
->>>>>>> caee28c (jira tool --update (#80))
   }
 
 
