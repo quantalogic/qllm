@@ -1,7 +1,7 @@
 import { createLLMProvider, WorkflowManager } from "qllm-lib";
-import dotenv from 'dotenv';
 import path from 'path';
-dotenv.config();
+// import dotenv from 'dotenv';
+// dotenv.config();
 
 async function main(): Promise<void> {
   try {
@@ -9,18 +9,18 @@ async function main(): Promise<void> {
 
     // Debug: Print ALL environment variables
     console.log('\n🔍 Debug: ALL Environment variables:');
-    console.log(process.env);
+    // console.log(process.env);
 
     // Debug: Print specific Jira variables
     console.log('\n🔍 Debug: Jira Environment variables:');
-    console.log('JIRA_HOST:', process.env.JIRA_HOST);
-    console.log('JIRA_MAIL:', process.env.JIRA_MAIL);
-    console.log('JIRA_TOKEN:', process.env.JIRA_TOKEN);
+    // console.log('JIRA_HOST:', process.env.JIRA_HOST);
+    // console.log('JIRA_MAIL:', process.env.JIRA_MAIL);
+    // console.log('JIRA_TOKEN:', process.env.JIRA_TOKEN);
 
-    // Validate configuration
-    if (!process.env.JIRA_HOST || !process.env.JIRA_MAIL || !process.env.JIRA_TOKEN) {
-      throw new Error('Missing required Jira configuration in environment variables');
-    }
+    // // Validate configuration
+    // if (!process.env.JIRA_HOST || !process.env.JIRA_MAIL || !process.env.JIRA_TOKEN) {
+    //   throw new Error('Missing required Jira configuration in environment variables');
+    // }
 
     // Create providers
     const providers = {
@@ -31,7 +31,7 @@ async function main(): Promise<void> {
     };
 
     // Initialize workflow manager
-    const workflowManager = new WorkflowManager(providers); 
+    const workflowManager = new WorkflowManager(providers);
 
     // Load workflow from local file
     const workflowPath = path.join(__dirname, 'jira-workflow.yaml');
@@ -53,7 +53,7 @@ async function main(): Promise<void> {
 
     console.log('\n🔍 Debug: Starting workflow execution...');
     const workflowResult = await workflowManager.runWorkflow(
-      "jira_simple", 
+      "jira_simple",
       workflowInput,
       {
         onStepStart: async (step: any, index: number) => {

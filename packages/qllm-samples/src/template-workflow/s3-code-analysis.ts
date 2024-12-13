@@ -1,7 +1,8 @@
 import { dot } from "node:test/reporters";
-import { createLLMProvider, WorkflowManager, WorkflowDefinition } from "qllm-lib";
+import { createLLMProvider, WorkflowManager, WorkflowDefinition, WorkflowStep, WorkflowExecutionResult } from "qllm-lib";
 import dotenv from 'dotenv';
 import path from 'path';
+import { readFile } from 'fs/promises';
 dotenv.config();
 
 async function main(): Promise<void> {
@@ -21,15 +22,16 @@ async function main(): Promise<void> {
 
     // Debug: Print environment variables
     console.log('🔍 Debug: Environment variables:');
-    console.log('AWS_BUCKET_NAME:', process.env.AWS_BUCKET_NAME);
+    console.log('AWS_S3_BUCKET_NAME:', process.env.AWS_S3_BUCKET_NAME);
 
     // Load workflow
-    await workflowManager.loadWorkflow("https://raw.githubusercontent.com/jluongg/templates_prompts_qllm/refs/heads/main/s3-review-code.yaml");
+    const workflowPath = path.join(__dirname, 's3-code-analysis.yaml');
+    await workflowManager.loadWorkflow(workflowPath);
     console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables
     const workflowInput = {
-      bucket_name: process.env.AWS_BUCKET_NAME!,
+      bucket_name: process.env.AWS_S3_BUCKET_NAME!,
       // Pass keys directly as strings to avoid template substitution issues
       load_key: "input/s3.tool.ts",
       save_key: "output/s3tool_analysis.txt",
@@ -60,34 +62,25 @@ async function main(): Promise<void> {
           // Check both input and inputs
           const stepInputs = step.inputs || step.input;
           if (stepInputs) {
-            console.log('Step Inputs:', {
-              operation: stepInputs.operation,
-              bucket: stepInputs.bucket,
-              key: stepInputs.key,
-              types: {
-                bucket: typeof stepInputs.bucket,
-                key: typeof stepInputs.key,
-                step: typeof step,
-                inputs: typeof stepInputs
-              },
-              templates: {
-                bucket: stepInputs.bucket?.includes('{{') || stepInputs.bucket?.includes('${'),
-                key: stepInputs.key?.includes('{{') || stepInputs.key?.includes('${')
-              }
-            });
-            if (index===0) {
-              console.log('\n🔍 Debug - template_content value:', stepInputs.output);
-            }
-          } else {
-            console.log('⚠️ No inputs found in step');
+            console.log('🔍 Debug - Step Inputs:', typeof stepInputs, JSON.stringify(stepInputs, null, 2));
           }
         },
-        onStepComplete: (step: any, index: number, stepResult: any) => {
-          console.log(`\n✅ Completed step ${index + 1}:`, {
-            name: step.name,
-            type: step.type,
-            result: stepResult
+        onStepComplete: (step: WorkflowStep, index: number, result: WorkflowExecutionResult) => {
+          console.log(`\n✅ Step ${index + 1} completed`);
+          console.log('🔍 Debug - Step Result:', {
+            type: typeof result,
+            isNull: result === null,
+            isUndefined: result === undefined,
+            constructor: result?.constructor?.name,
+            response: result?.response ? typeof result.response : 'N/A',
+            outputVariables: result?.outputVariables ? Object.keys(result.outputVariables) : [],
           });
+          if (result?.response) {
+            console.log('🔍 Debug - Response Preview:', result.response.slice(0, 100));
+          }
+          if (result?.outputVariables) {
+            console.log('🔍 Debug - Output Variables:', result.outputVariables);
+          }
         },
         onStreamChunk: (chunk: string) => {
           process.stdout.write(chunk);

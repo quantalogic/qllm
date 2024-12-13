@@ -12,25 +12,26 @@ import { v4 as uuidv4 } from 'uuid';
 import { fromEnv } from "@aws-sdk/credential-providers";
 import { AwsCredentialIdentity } from "@aws-sdk/types";
 import * as crypto from 'crypto';
+import { S3Config } from "../types/s3-types";
 import dotenv from 'dotenv';
 dotenv.config();
 
-interface S3ToLocalConfig {
-    /** AWS access key ID */
-    aws_access_key_id?: string;
-    /** AWS secret access key */
-    aws_secret_access_key?: string;
-    /** AWS region */
-    aws_region?: string;
-    /** Optional AWS endpoint URL for custom endpoints */
-    aws_endpoint_url?: string;
-}
+// interface S3ToLocalConfig {
+//     /** AWS access key ID */
+//     aws_s3_access_key?: string;
+//     /** AWS secret access key */
+//     aws_s3_secret_key?: string;
+//     /** AWS region */
+//     aws_s3_bucket_region?: string;
+//     /** Optional AWS endpoint URL for custom endpoints */
+//     aws_s3_endpoint_url?: string;
+// }
 
 interface S3ToLocalInput {
     /** S3 keys string separated by separator */
     keys: string;
     /** S3 bucket name */
-    bucket: string;
+    bucket_name: string;
     /** Separator for multiple keys (defaults to comma) */
     separator?: string;
     /** Encryption key for server-side encryption */
@@ -51,18 +52,22 @@ export class S3ToLocalTool extends BaseTool {
     private downloadedFiles: Set<string> = new Set();
     private exitCleanupFiles: Set<string> = new Set();
 
-    constructor(config: S3ToLocalConfig) {
-        const credentials = config.aws_access_key_id && config.aws_secret_access_key 
+    constructor(config: S3Config) {
+        const credentials = config.aws_s3_access_key && config.aws_s3_secret_key 
             ? {
-                accessKeyId: config.aws_access_key_id,
-                secretAccessKey: config.aws_secret_access_key,
+                accessKeyId: config.aws_s3_access_key,
+                secretAccessKey: config.aws_s3_secret_key,
               } as AwsCredentialIdentity
-            : fromEnv();
+            : {
+                accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+                secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+              } as AwsCredentialIdentity;
 
         const clientConfig = {
-            region: config.aws_region || process.env.AWS_REGION,
+            region: config.aws_s3_bucket_region || process.env.AWS_S3_BUCKET_REGION,
             credentials,
-            ...(config.aws_endpoint_url && { endpoint: config.aws_endpoint_url }),
+            ...(config.aws_s3_endpoint_url && { endpoint: config.aws_s3_endpoint_url }),
+            ...(process.env.AWS_S3_ENDPOINT_URL && { endpoint: process.env.AWS_S3_ENDPOINT_URL }),
             requestHandler: new NodeHttpHandler(),
             maxAttempts: 3,
             retryMode: 'standard'
@@ -108,7 +113,7 @@ export class S3ToLocalTool extends BaseTool {
                     required: true,
                     description: 'S3 keys string separated by separator'
                 },
-                bucket: {
+                bucket_name: {
                     type: 'string',
                     required: true,
                     description: 'S3 bucket name'
@@ -210,7 +215,7 @@ export class S3ToLocalTool extends BaseTool {
                 const localPath = path.join(baseDir, `${uniqueId}-${baseFileName}${fileExt}`);
 
                 const commandInput: GetObjectCommandInput = {
-                    Bucket: inputs.bucket,
+                    Bucket: inputs.bucket_name,
                     Key: key
                 };
 

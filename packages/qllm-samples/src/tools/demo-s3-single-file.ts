@@ -11,20 +11,20 @@ async function testSingleFileOperations() {
   try {
     // Configuration setup
     const config = {
-      aws_access_key_id: process.env.AWS_ACCESS_KEY_ID!,
-      aws_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY!,
-      aws_region: process.env.AWS_REGION!,
-      aws_endpoint_url: process.env.AWS_ENDPOINT_URL
+      aws_s3_access_key: process.env.AWS_S3_ACCESS_KEY!,
+      aws_s3_secret_key: process.env.AWS_S3_SECRET_KEY!,
+      aws_s3_bucket_region: process.env.AWS_S3_BUCKET_REGION!,
+      aws_s3_endpoint_url: process.env.AWS_S3_ENDPOINT_URL
     };
 
     // Validate configuration
-    if (!config.aws_access_key_id || !config.aws_secret_access_key || !config.aws_region) {
+    if (!config.aws_s3_access_key || !config.aws_s3_secret_key || !config.aws_s3_bucket_region) {
       throw new Error('Missing required AWS credentials in environment variables');
     }
 
-    const bucketName = process.env.AWS_BUCKET_NAME!;
+    const bucketName = process.env.AWS_S3_BUCKET_NAME!;
     if (!bucketName) {
-      throw new Error('Missing AWS_BUCKET_NAME in environment variables');
+      throw new Error('Missing AWS_S3_BUCKET_NAME in environment variables');
     }
 
     const s3Tool = new S3Tool(config);
@@ -44,7 +44,7 @@ console.log(calculateFibonacci(10));
     try {
       const codeUploadResult = await s3Tool.execute({
         operation: 'save',
-        bucket: bucketName,
+        bucket_name: bucketName,
         key: 'test/fibonacci.ts',
         content: codeContent,
         contentType: 'text/typescript',
@@ -89,7 +89,7 @@ console.log(calculateFibonacci(10));
     try {
       const configUploadResult = await s3Tool.execute({
         operation: 'save',
-        bucket: bucketName,
+        bucket_name: bucketName,
         key: 'test/app-config.json',
         content: JSON.stringify(configContent, null, 2),
         contentType: 'application/json',
@@ -114,7 +114,7 @@ console.log(calculateFibonacci(10));
     try {
       const downloadResult = await s3Tool.execute({
         operation: 'load',
-        bucket: bucketName,
+        bucket_name: bucketName,
         key: 'test/app-config.json'
       });
       console.log('✅ Download successful, content:', downloadResult.slice(0, 100) + '...');
@@ -134,7 +134,7 @@ console.log(calculateFibonacci(10));
     try {
       const moveResult = await s3Tool.execute({
         operation: 'move',
-        bucket: bucketName,
+        bucket_name: bucketName,
         key: 'test/app-config.json',
         destinationBucket: bucketName,
         destinationKey: movedKey
@@ -151,7 +151,7 @@ console.log(calculateFibonacci(10));
       // Delete TypeScript file
       const deleteCodeResult = await s3Tool.execute({
         operation: 'delete',
-        bucket: bucketName,
+        bucket_name: bucketName,
         key: 'test/fibonacci.ts'
       });
       console.log('✅ Code file delete result:', deleteCodeResult);
@@ -159,7 +159,7 @@ console.log(calculateFibonacci(10));
       // Delete moved config file
       const deleteConfigResult = await s3Tool.execute({
         operation: 'delete',
-        bucket: bucketName,
+        bucket_name: bucketName,
         key: movedKey
       });
       console.log('✅ Config file delete result:', deleteConfigResult);

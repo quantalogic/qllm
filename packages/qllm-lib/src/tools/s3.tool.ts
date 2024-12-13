@@ -30,24 +30,25 @@ import os from 'os';
 import { v4 as uuidv4 } from 'uuid';
 import { fromEnv } from "@aws-sdk/credential-providers";
 import { AwsCredentialIdentity } from "@aws-sdk/types";
+import { S3Config } from "../types/s3-types";
 
 
-/**
- * @interface S3Config
- * @description Configuration options for S3 client
- */
-interface S3Config {
-    /** AWS access key ID */
-    aws_access_key_id: string;
-    /** AWS secret access key */
-    aws_secret_access_key: string;
-    /** AWS region */
-    aws_region: string;
-    /** Optional AWS endpoint URL for custom endpoints */
-    aws_endpoint_url?: string;
-    /** Additional S3 client options */
-    custom_options?: Record<string, any>;
-}
+// /**
+//  * @interface S3Config
+//  * @description Configuration options for S3 client
+//  */
+// interface S3Config {
+//     /** AWS access key ID */
+//     aws_s3_access_key_id?: string;
+//     /** AWS secret access key */
+//     aws_s3_secret_access_key?: string;
+//     /** AWS region */
+//     aws_s3_bucket_region?: string;
+//     /** Optional AWS endpoint URL for custom endpoints */
+//     aws_s3_endpoint_url?: string;
+//     /** Additional S3 client options */
+//     custom_options?: Record<string, any>;
+// }
 
 /**
  * @interface S3Operation
@@ -55,7 +56,7 @@ interface S3Config {
  */
 interface S3Operation {
     /** S3 bucket name */
-    bucket: string;
+    bucket_name: string;
     /** Object key in the bucket */
     key: string | string[];
     /** Local file path (for save operations) */
@@ -93,17 +94,21 @@ class S3Tool extends BaseTool {
      * @param {S3Config} config - Configuration object for the S3 client
      */
     constructor(config: S3Config) {
-        const credentials = config.aws_access_key_id && config.aws_secret_access_key 
+        const credentials = config.aws_s3_access_key && config.aws_s3_secret_key 
             ? {
-                accessKeyId: config.aws_access_key_id,
-                secretAccessKey: config.aws_secret_access_key,
+                accessKeyId: config.aws_s3_access_key,
+                secretAccessKey: config.aws_s3_secret_key,
               } as AwsCredentialIdentity
-            : fromEnv();
+            : {
+                accessKeyId: process.env.AWS_S3_ACCESS_KEY,
+                secretAccessKey: process.env.AWS_S3_SECRET_KEY,
+              } as AwsCredentialIdentity;
 
         const clientConfig = {
-            region: config.aws_region || process.env.AWS_REGION,
+            region: config.aws_s3_bucket_region || process.env.AWS_S3_BUCKET_REGION,
             credentials,
-            ...(config.aws_endpoint_url && { endpoint: config.aws_endpoint_url }),
+            ...(config.aws_s3_endpoint_url && { endpoint: config.aws_s3_endpoint_url }),
+            ...(process.env.AWS_S3_ENDPOINT_URL && { endpoint: process.env.AWS_S3_ENDPOINT_URL }),
             ...config.custom_options,
             requestHandler: new NodeHttpHandler(),
             maxAttempts: 3,
@@ -138,7 +143,7 @@ class S3Tool extends BaseTool {
                     required: true,
                     description: 'The operation to perform (saveMultiple, loadMultiple, move, deleteMultiple, save, load, delete)'
                 },
-                bucket: {
+                bucket_name: {
                     type: 'string',
                     required: true,
                     description: 'S3 bucket name'
@@ -210,7 +215,7 @@ class S3Tool extends BaseTool {
      */
     async execute(inputs: S3Operation): Promise<string> {
         try {
-            await this.verifyOperation(inputs.operation, inputs.bucket, inputs.key);
+            await this.verifyOperation(inputs.operation, inputs.bucket_name, inputs.key);
 
             switch (inputs.operation) {
                 case 'saveMultiple':
@@ -325,7 +330,7 @@ class S3Tool extends BaseTool {
             const filePath = inputs.filePath[i];
 
             const commandInput: PutObjectCommandInput = {
-                Bucket: inputs.bucket,
+                Bucket: inputs.bucket_name,
                 Key: key,
                 Body: createReadStream(filePath),
             };
@@ -341,9 +346,9 @@ class S3Tool extends BaseTool {
             try {
                 const command = new PutObjectCommand(commandInput);
                 await this.s3Client.send(command);
-                results.push(`Successfully saved file ${filePath} to ${inputs.bucket}/${key}`);
+                results.push(`Successfully saved file ${filePath} to ${inputs.bucket_name}/${key}`);
             } catch (error) {
-                results.push(`Failed to save file ${filePath} to ${inputs.bucket}/${key}: ${error instanceof Error ? error.message : String(error)}`);
+                results.push(`Failed to save file ${filePath} to ${inputs.bucket_name}/${key}: ${error instanceof Error ? error.message : String(error)}`);
             }
         }
 
@@ -370,7 +375,7 @@ class S3Tool extends BaseTool {
         const tmpFiles: string[] = [];
         for (const key of inputs.key) {
             const commandInput: GetObjectCommandInput = {
-                Bucket: inputs.bucket,
+                Bucket: inputs.bucket_name,
                 Key: key
             };
 
@@ -417,7 +422,7 @@ class S3Tool extends BaseTool {
         await fs.mkdir(tmpDir, { recursive: true });
 
         const commandInput: GetObjectCommandInput = {
-            Bucket: inputs.bucket,
+            Bucket: inputs.bucket_name,
             Key: inputs.key
         };
 
@@ -443,9 +448,10 @@ class S3Tool extends BaseTool {
         }
         await fs.writeFile(tmpFile, Buffer.concat(chunks));
 
-        // Use DocumentLoader to load the file
+        // Use DocumentLoader to load the file and ensure we return a string
         const result = await DocumentLoader.quickLoadString(tmpFile);
-        return result.parsedContent || result.content;
+        
+        return String(result.parsedContent || result.content || '');
     }
 
     /**
@@ -487,7 +493,7 @@ class S3Tool extends BaseTool {
             }
 
             const commandInput: PutObjectCommandInput = {
-                Bucket: inputs.bucket,
+                Bucket: inputs.bucket_name,
                 Key: inputs.key,
                 Body: createReadStream(localFilePath),
                 ContentType: inputs.contentType
@@ -518,7 +524,7 @@ class S3Tool extends BaseTool {
             }
 
             const source = inputs.content ? 'content' : inputs.filePath;
-            return `Successfully saved ${source} to ${inputs.bucket}/${inputs.key}`;
+            return `Successfully saved ${source} to ${inputs.bucket_name}/${inputs.key}`;
         } catch (error) {
             // Clean up temp file if we created one and an error occurred
             if (inputs.content && localFilePath && localFilePath !== inputs.filePath) {
@@ -529,7 +535,7 @@ class S3Tool extends BaseTool {
                 }
             }
             const source = inputs.content ? 'content' : inputs.filePath;
-            throw new Error(`Failed to save ${source} to ${inputs.bucket}/${inputs.key}: ${(error as Error).message}`);
+            throw new Error(`Failed to save ${source} to ${inputs.bucket_name}/${inputs.key}: ${(error as Error).message}`);
         }
     }
 
@@ -548,7 +554,7 @@ class S3Tool extends BaseTool {
         try {
             // First copy the object to new location
             const copyCommand = new CopyObjectCommand({
-                CopySource: `${inputs.bucket}/${inputs.key}`,
+                CopySource: `${inputs.bucket_name}/${inputs.key}`,
                 Bucket: inputs.destinationBucket,
                 Key: inputs.destinationKey
             });
@@ -556,7 +562,7 @@ class S3Tool extends BaseTool {
 
             // Then delete the original object
             const deleteCommand = new DeleteObjectCommand({
-                Bucket: inputs.bucket,
+                Bucket: inputs.bucket_name,
                 Key: inputs.key as string
             });
             await this.s3Client.send(deleteCommand);
@@ -583,7 +589,7 @@ class S3Tool extends BaseTool {
         for (const key of inputs.key) {
             try {
                 const command = new DeleteObjectCommand({
-                    Bucket: inputs.bucket,
+                    Bucket: inputs.bucket_name,
                     Key: key
                 });
                 await this.s3Client.send(command);
@@ -610,7 +616,7 @@ class S3Tool extends BaseTool {
 
         try {
             const command = new DeleteObjectCommand({
-                Bucket: inputs.bucket,
+                Bucket: inputs.bucket_name,
                 Key: inputs.key
             });
             await this.s3Client.send(command);
