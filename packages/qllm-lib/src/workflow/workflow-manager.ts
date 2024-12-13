@@ -22,6 +22,7 @@ import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
 import { TextToJsonTool } from '../tools/text-to-json';
 import { JiraTool } from '../tools/jira.tool'; 
 import { S3ToLocalTool } from '../tools/s3_to_local.tool';
+import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 
 /**
  * @class WorkflowManager
@@ -62,14 +63,8 @@ export class WorkflowManager {
     this.registerToolFactory('TextToJson', TextToJsonTool);
     this.registerToolFactory('LocalProjectLoader', RAGToolWithEmbedding);
     this.registerToolFactory('JiraTool', JiraTool); 
-<<<<<<< HEAD
-<<<<<<< HEAD
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
-=======
->>>>>>> caee28c (jira tool --update (#80))
-=======
-    this.registerToolFactory('s3ToLocal', S3ToLocalTool);
->>>>>>> 4818062 (resolve conflicts with master)
+    this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
