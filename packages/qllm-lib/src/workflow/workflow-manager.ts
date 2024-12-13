@@ -22,6 +22,7 @@ import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
 import { TextToJsonTool } from '../tools/text-to-json';
 import { JiraTool } from '../tools/jira.tool'; 
 import { S3ToLocalTool } from '../tools/s3_to_local.tool';
+import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 
 /**
  * @class WorkflowManager
@@ -63,6 +64,7 @@ export class WorkflowManager {
     this.registerToolFactory('LocalProjectLoader', RAGToolWithEmbedding);
     this.registerToolFactory('JiraTool', JiraTool); 
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
+    this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {

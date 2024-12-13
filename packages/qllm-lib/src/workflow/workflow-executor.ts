@@ -22,6 +22,7 @@ import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
 import { LocalProjectLoaderTool } from '../tools/local-project-loader'; 
 import { JiraTool } from '../tools/jira.tool'; 
 import { S3ToLocalTool } from '../tools/s3_to_local.tool';
+import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 
 /**
  * @class WorkflowExecutor
@@ -64,6 +65,7 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('LocalProjectLoader', LocalProjectLoaderTool);
     this.registerToolFactory('JiraTool', JiraTool); 
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
+    this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
   }
 
 
