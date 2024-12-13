@@ -25,8 +25,8 @@ async function main(): Promise<void> {
     console.log('AWS_S3_BUCKET_NAME:', process.env.AWS_S3_BUCKET_NAME);
 
     // Load workflow
-    const workflowPath = path.join(__dirname, 's3-code-analysis.yaml');
-    await workflowManager.loadWorkflow(workflowPath);
+    // const workflowPath = path.join(__dirname, 's3-code-analysis-bis.yaml');
+    await workflowManager.loadWorkflow("https://raw.githubusercontent.com/jluongg/templates_prompts_qllm/refs/heads/main/s3-review-code2.yaml");
     console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables
