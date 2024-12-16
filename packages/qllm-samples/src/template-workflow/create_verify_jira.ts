@@ -1,7 +1,5 @@
 import { createLLMProvider, WorkflowManager } from "qllm-lib";
 import path from 'path';
-// import dotenv from 'dotenv';
-// dotenv.config();
 
 async function main(): Promise<void> {
   try {
