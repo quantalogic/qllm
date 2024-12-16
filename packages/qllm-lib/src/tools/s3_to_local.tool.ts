@@ -16,17 +16,6 @@ import { S3Config } from "../types/s3-types";
 import dotenv from 'dotenv';
 dotenv.config();
 
-// interface S3ToLocalConfig {
-//     /** AWS access key ID */
-//     aws_s3_access_key?: string;
-//     /** AWS secret access key */
-//     aws_s3_secret_key?: string;
-//     /** AWS region */
-//     aws_s3_bucket_region?: string;
-//     /** Optional AWS endpoint URL for custom endpoints */
-//     aws_s3_endpoint_url?: string;
-// }
-
 interface S3ToLocalInput {
     /** S3 keys string separated by separator */
     keys: string;
