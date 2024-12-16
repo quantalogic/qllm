@@ -1,7 +1,5 @@
 import { createLLMProvider, WorkflowManager } from "qllm-lib";
-import dotenv from 'dotenv';
 import path from 'path';
-dotenv.config();
 
 async function main(): Promise<void> {
   try {
@@ -9,7 +7,7 @@ async function main(): Promise<void> {
 
     // Debug: Print ALL environment variables
     console.log('\n🔍 Debug: ALL Environment variables:');
-    console.log(process.env);
+    // console.log(process.env);
 
     // // Debug: Print specific Jira variables
     // console.log('\n🔍 Debug: Jira Environment variables:');
@@ -31,7 +29,7 @@ async function main(): Promise<void> {
     };
 
     // Initialize workflow manager
-    const workflowManager = new WorkflowManager(providers); 
+    const workflowManager = new WorkflowManager(providers);
 
     // Load workflow from local file
     // const workflowPath = path.join(__dirname, 'jira-workflow.yaml');
@@ -54,7 +52,7 @@ async function main(): Promise<void> {
 
     console.log('\n🔍 Debug: Starting workflow execution...');
     const workflowResult = await workflowManager.runWorkflow(
-      "jira_simple", 
+      "jira_simple",
       workflowInput,
       {
         onStepStart: async (step: any, index: number) => {

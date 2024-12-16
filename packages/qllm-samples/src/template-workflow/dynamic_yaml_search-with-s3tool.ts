@@ -21,10 +21,10 @@ async function main(): Promise<void> {
 
     // Debug: Print environment variables
     console.log('🔍 Debug: Environment variables:');
-    console.log('AWS_BUCKET_NAME:', process.env.AWS_BUCKET_NAME);
+    console.log('AWS_BUCKET_NAME:', process.env.AWS_S3_BUCKET_NAME);
 
     // Load workflow
-    await workflowManager.loadWorkflow("https://raw.githubusercontent.com/jluongg/templates_prompts_qllm/refs/heads/main/s3-content-writer2.yaml");
+    await workflowManager.loadWorkflow("https://raw.githubusercontent.com/jluongg/templates_prompts_qllm/refs/heads/main/s3-content-writer.yaml");
     console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables
@@ -35,7 +35,7 @@ async function main(): Promise<void> {
       target_audience: "young adults",
       visual_style: "cinematic",
       atmospheric_mood: "mysterious",
-      bucket_name: process.env.AWS_BUCKET_NAME!,
+      bucket_name: process.env.AWS_S3_BUCKET_NAME!,
       // Pass keys directly as strings to avoid template substitution issues
       load_key: "input/s3_content_test_tool.txt",
       save_key: "output/s3_content_test_tool.txt",
@@ -68,16 +68,16 @@ async function main(): Promise<void> {
           if (stepInputs) {
             console.log('Step Inputs:', {
               operation: stepInputs.operation,
-              bucket: stepInputs.bucket,
+              bucket_name: stepInputs.bucket_name,
               key: stepInputs.key,
               types: {
-                bucket: typeof stepInputs.bucket,
+                bucket_name: typeof stepInputs.bucket_name,
                 key: typeof stepInputs.key,
                 step: typeof step,
                 inputs: typeof stepInputs
               },
               templates: {
-                bucket: stepInputs.bucket?.includes('{{') || stepInputs.bucket?.includes('${'),
+                bucket: stepInputs.bucket_name?.includes('{{') || stepInputs.bucket_name?.includes('${'),
                 key: stepInputs.key?.includes('{{') || stepInputs.key?.includes('${')
               }
             });

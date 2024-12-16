@@ -1,5 +1,7 @@
 import { BaseTool, ToolDefinition } from "./base-tool";
 import { Version3Client } from "jira.js";
+import path from 'path';
+
 
 export interface JiraInput {
   /** Operation to perform */

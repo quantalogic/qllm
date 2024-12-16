@@ -9,12 +9,12 @@ async function main(): Promise<void> {
 
     // Debug: Print relevant environment variables
     console.log('\n Debug: AWS Environment variables:');
-    console.log('AWS_REGION:', process.env.AWS_REGION);
-    console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_ACCESS_KEY_ID ? ' Set' : ' Not set');
-    console.log('AWS_SECRET_ACCESS_KEY:', process.env.AWS_SECRET_ACCESS_KEY ? ' Set' : ' Not set');
+    console.log('AWS_REGION:', process.env.AWS_S3_BUCKET_REGION);
+    console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_S3_ACCESS_KEY ? ' Set' : ' Not set');
+    console.log('AWS_SECRET_ACCESS_KEY:', process.env.AWS_S3_SECRET_KEY ? ' Set' : ' Not set');
 
     // Validate AWS configuration
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_REGION) {
+    if (!process.env.AWS_S3_ACCESS_KEY || !process.env.AWS_S3_SECRET_KEY || !process.env.AWS_S3_BUCKET_REGION) {
       throw new Error('Missing required AWS configuration in environment variables');
     }
 
@@ -38,7 +38,7 @@ async function main(): Promise<void> {
     // Define workflow input variables
     const workflowInput = {
       // Pass keys directly as strings to avoid template substitution issues
-      s3_bucket: process.env.AWS_BUCKET_NAME!,
+      s3_bucket: process.env.AWS_S3_BUCKET_NAME!,
       s3_keys: "test/hello.py,test/greeting.ts",
       s3_separator : ",",
       template_content: "mystery",

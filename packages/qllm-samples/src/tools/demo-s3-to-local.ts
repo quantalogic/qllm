@@ -17,7 +17,7 @@ async function main() {
         console.log('\nExample 1: Download single file (workflow-style)');
         const singleFileResult = await s3ToLocalTool.execute({
             keys: 'output/s3_content_test_tool.txt',
-            bucket: process.env.AWS_BUCKET_NAME!,
+            bucket_name: process.env.AWS_S3_BUCKET_NAME!,
         });
         console.log('Downloaded file:', singleFileResult.files[0]);
         console.log('File will be cleaned up when the process exits');
@@ -26,7 +26,7 @@ async function main() {
         console.log('\nExample 2: Download multiple files (standalone-style)');
         const multipleFilesResult = await s3ToLocalTool.execute({
             keys: 'output/s3_content_test_tool.txt | test/docker-compose.yaml | test/hello.py | test/greeting.ts | test/config.json',
-            bucket: process.env.AWS_BUCKET_NAME!,
+            bucket_name: process.env.AWS_S3_BUCKET_NAME!,
             separator: ' | ',
             cleanupAfter: 60000, // 1 minute
             cleanupOnExit: false // Use timed cleanup instead
@@ -39,7 +39,7 @@ async function main() {
         try {
             await s3ToLocalTool.execute({
                 keys: 'non/existent/file.txt',
-                bucket: process.env.AWS_BUCKET_NAME!,
+                bucket_name: process.env.AWS_S3_BUCKET_NAME!,
                 cleanupOnExit: true
             });
         } catch (error: any) {

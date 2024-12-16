@@ -38,7 +38,9 @@
         "test:jira-createBulk": "ts-node src/tools/demo-jira-createBulk.ts",
         "test:workflow-jira-simple" : "ts-node src/template-workflow/create_verify_jira.ts",
         "test:s3-to-local": "ts-node src/tools/demo-s3-to-local.ts",
-        "test:workflow-s3-to-local": "ts-node src/template-workflow/s3_to_local_workflow.ts"
+        "test:workflow-s3-to-local": "ts-node src/template-workflow/s3_to_local_workflow.ts",
+        "test:remove-local": "ts-node src/tools/demo-remove-from-local.ts",
+        "test:workflow-local": "ts-node src/template-workflow/workflow_local.ts"
     },
     "repository": {
         "type": "git",
