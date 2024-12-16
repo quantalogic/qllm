@@ -4,18 +4,21 @@
  * @module file-saver
  */
 
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
+import { existsSync } from "fs";
+import * as path from "path";
 import { BaseTool, ToolDefinition } from "./base-tool";
 
 /**
  * @class FileSaverTool
  * @extends BaseTool
- * @description A tool for saving content to local files with configurable encoding options
+ * @description A tool for saving content to local files with configurable encoding options.
+ * Automatically creates parent directories if they don't exist.
  * 
  * @example
  * const saver = new FileSaverTool();
  * await saver.execute({
- *   path: './output.txt',
+ *   path: './nested/dir/output.txt',
  *   content: 'Hello, World!',
  *   encoding: 'utf-8'
  * });
@@ -36,8 +39,8 @@ export class FileSaverTool extends BaseTool {
    */
   getDefinition(): ToolDefinition {
     return {
-      name: 'file-saver',
-      description: 'Saves content to local file',
+      name: 'fileSaver',
+      description: 'Saves content to local file, creating directories if needed',
       input: {
         path: { 
           type: 'string', 
@@ -74,13 +77,26 @@ export class FileSaverTool extends BaseTool {
    * 
    * @example
    * const result = await fileSaver.execute({
-   *   path: './data.txt',
+   *   path: './nested/dir/data.txt',
    *   content: 'Sample content',
    *   encoding: 'utf-8'
    * });
    */
   async execute(inputs: Record<string, any>) {
-    await writeFile(inputs.path, inputs.content, inputs.encoding || 'utf-8');
-    return inputs.path;
+    try {
+      // Get the directory path
+      const dirPath = path.dirname(inputs.path);
+
+      // Create directory if it doesn't exist
+      if (!existsSync(dirPath)) {
+        await mkdir(dirPath, { recursive: true });
+      }
+
+      // Write the file
+      await writeFile(inputs.path, inputs.content, inputs.encoding || 'utf-8');
+      return inputs.path;
+    } catch (error) {
+      throw new Error(`Failed to save file ${inputs.path}: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 }

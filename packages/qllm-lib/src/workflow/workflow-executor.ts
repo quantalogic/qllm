@@ -22,6 +22,7 @@ import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
 import { LocalProjectLoaderTool } from '../tools/local-project-loader'; 
 import { JiraTool } from '../tools/jira.tool'; 
 import { S3ToLocalTool } from '../tools/s3_to_local.tool';
+import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 
 /**
  * @class WorkflowExecutor
@@ -64,6 +65,7 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('LocalProjectLoader', LocalProjectLoaderTool);
     this.registerToolFactory('JiraTool', JiraTool); 
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
+    this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
   }
 
 
@@ -232,17 +234,25 @@ export class WorkflowExecutor extends EventEmitter {
    * @param {WorkflowExecutionResult} executionResult - Results from step execution
    * @param {WorkflowExecutionContext} context - Current execution context
    */
-  private storeStepResults(
+  private async storeStepResults(
     step: WorkflowStep,
     executionResult: WorkflowExecutionResult,
     context: WorkflowExecutionContext
-  ): void {
+  ): Promise<void> {
     if (typeof step.output === 'string') {
       context.results[step.output] = executionResult;
+      // Store tool name in variables for later reference
+      if (step.tool) {
+        context.variables[step.output] = { tool: step.tool };
+      }
     } else {
       Object.entries(step.output).forEach(([key, varName]) => {
         if (typeof varName === 'string') {
           context.results[varName] = executionResult.outputVariables[key];
+          // Store tool name in variables for later reference
+          if (step.tool) {
+            context.variables[varName] = { tool: step.tool };
+          }
         }
       });
     }
@@ -285,17 +295,30 @@ export class WorkflowExecutor extends EventEmitter {
             // Handle reference to previous step output
             const varName = value.slice(1);
             const result = context.results[varName];
-            if (result?.response) {
-              try {
-                // Try to parse the response if it's a JSON string
-                const parsed = JSON.parse(result.response);
-                resolved[key] = parsed.key;
-              } catch (e) {
-                // If parsing fails, use the outputVariables
-                resolved[key] = result.outputVariables?.key;
+            
+            // Get the tool name from the previous step's result
+            const toolName = Object.keys(context.results).find(key => key === varName);
+            const isJiraTool = toolName && context.variables[toolName]?.tool === 'JiraTool';
+            
+            // Special handling for JiraTool
+            if (isJiraTool) {
+              if (result?.response) {
+                try {
+                  // Try to parse the response if it's a JSON string
+                  const parsed = JSON.parse(result.response);
+                  resolved[key] = parsed.key;
+                } catch (e) {
+                  // If parsing fails, use the outputVariables
+                  resolved[key] = result.outputVariables?.key;
+                }
+              } else {
+                resolved[key] = result;
               }
             } else {
-              resolved[key] = result;
+              // For all other tools, use the original behavior
+              resolved[key] = result?.response || 
+                            result?.outputVariables || 
+                            result;
             }
           } else if (value.match(/\{\{.*\}\}/)) {
             // Handle template variables

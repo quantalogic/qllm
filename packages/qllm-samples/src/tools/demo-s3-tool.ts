@@ -10,20 +10,21 @@ async function testS3Operations() {
     try {
         // Configuration setup
         const config = {
-            aws_access_key_id: process.env.AWS_ACCESS_KEY_ID!,
-            aws_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY!,
-            aws_region: process.env.AWS_REGION!,
-            aws_endpoint_url: process.env.AWS_ENDPOINT_URL
+            // aws_s3_access_key_id: process.env.AWS_ACCESS_KEY_ID!,
+            // aws_s3_access_key_id: process.env.AWS_ACCESS_KEY_ID!,
+            // aws_s3_secret_access_key: process.env.AWS_SECRET_ACCESS_KEY!,
+            // aws_s3_bucket_region: process.env.AWS_REGION!,
+            // aws_s3_endpoint_url: process.env.AWS_ENDPOINT_URL
         };
 
         // Validate configuration
-        if (!config.aws_access_key_id || !config.aws_secret_access_key || !config.aws_region) {
-            throw new Error('Missing required AWS credentials in environment variables');
-        }
+        // if (!config.aws_s3_access_key_id || !config.aws_s3_secret_access_key || !config.aws_s3_bucket_region) {
+        //     throw new Error('Missing required AWS credentials in environment variables');
+        // }
 
-        const bucketName = process.env.AWS_BUCKET_NAME!;
+        const bucketName = process.env.AWS_S3_BUCKET_NAME!;
         if (!bucketName) {
-            throw new Error('Missing AWS_BUCKET_NAME in environment variables');
+            throw new Error('Missing AWS_S3_BUCKET_NAME in environment variables');
         }
 
         const s3Tool = new S3Tool(config);
@@ -41,7 +42,7 @@ def hello_world():
 `;
             const pythonResult = await s3Tool.execute({
                 operation: 'save',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: 'test/hello.py',
                 content: pythonContent,
                 contentType: 'text/python',
@@ -68,7 +69,7 @@ function greet(greeting: Greeting): void {
 `;
             const tsResult = await s3Tool.execute({
                 operation: 'save',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: 'test/greeting.ts',
                 content: tsContent,
                 contentType: 'text/typescript',
@@ -94,7 +95,7 @@ function greet(greeting: Greeting): void {
             }, null, 2);
             const jsonResult = await s3Tool.execute({
                 operation: 'save',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: 'test/config.json',
                 content: jsonContent,
                 contentType: 'application/json',
@@ -122,7 +123,7 @@ services:
 `;
             const yamlResult = await s3Tool.execute({
                 operation: 'save',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: 'test/docker-compose.yaml',
                 content: yamlContent,
                 contentType: 'text/yaml',
@@ -138,10 +139,20 @@ services:
 
         // Get all files from the upload directory for the remaining tests
         const dirContents = await fs.readdir(uploadDir);
-        const files = dirContents
-            .filter(file => !file.includes('load-result'))
-            .map(file => ({
-                path: path.join(uploadDir, file),
+        
+        // Get file stats to filter out directories
+        const fileStats = await Promise.all(
+            dirContents.map(async (file) => {
+                const filePath = path.join(uploadDir, file);
+                const stats = await fs.stat(filePath);
+                return { file, filePath, isDirectory: stats.isDirectory() };
+            })
+        );
+
+        const files = fileStats
+            .filter(({ file, isDirectory }) => !isDirectory && !file.includes('load-result'))
+            .map(({ file, filePath }) => ({
+                path: filePath,
                 key: `test/${file}`
             }));
 
@@ -152,7 +163,7 @@ services:
         try {
             const saveResult = await s3Tool.execute({
                 operation: 'saveMultiple',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: files.map(f => f.key),
                 filePath: files.map(f => f.path),
                 metadata: {
@@ -171,7 +182,7 @@ services:
             console.log('\n2. Testing multiple file download...');
             const loadResult = await s3Tool.execute({
                 operation: 'loadMultiple',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: files.map(f => f.key),
                 separator: '\n--- Next File ---\n'
             });
@@ -191,7 +202,7 @@ services:
             
             const moveResult = await s3Tool.execute({
                 operation: 'move',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: testFile.key,
                 destinationBucket: bucketName,
                 destinationKey: movedKey
@@ -201,7 +212,7 @@ services:
             // Move it back
             await s3Tool.execute({
                 operation: 'move',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: movedKey,
                 destinationBucket: bucketName,
                 destinationKey: testFile.key
@@ -215,7 +226,7 @@ services:
         try {
             const deleteResult = await s3Tool.execute({
                 operation: 'deleteMultiple',
-                bucket: bucketName,
+                bucket_name: bucketName,
                 key: files.map(f => f.key)
             });
             console.log('✅ Delete results:', deleteResult);
