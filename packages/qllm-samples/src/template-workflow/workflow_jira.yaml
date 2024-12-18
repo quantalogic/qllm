@@ -21,8 +21,7 @@ steps:
     input: 
       operation: createFromTemplate
       templateJson: "$feature_templates"
-      templateVariables:
-        project_key: "{{project_key}}"
-        feature_name: "{{feature_name}}"
+      project_key: "{{project_key}}"
+      feature_name: "{{feature_name}}"
     output:
       feature_tickets: feature_tickets

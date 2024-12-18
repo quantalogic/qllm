@@ -25,7 +25,9 @@ interface EnhancedJiraInput {
   operation: 'createFromTemplate';
   templateJson?: any;
   ticketData?: JiraTicketTemplate;
-  templateVariables?: Record<string, string>;
+  project_key?: string;
+  feature_name?: string;
+  [key: string]: any;  // Allow for additional template variables
 }
 
 export class EnhancedJiraTool extends BaseTool {
@@ -48,7 +50,19 @@ export class EnhancedJiraTool extends BaseTool {
     console.log('EnhancedJiraTool: input:', input);
     
     if (input.operation === 'createFromTemplate') {
-      const templates = Array.isArray(input.templateJson) ? input.templateJson : [input.ticketData];
+      let templateJson = input.templateJson;
+      
+      // If templateJson is a string, parse it
+      if (typeof templateJson === 'string') {
+        try {
+          templateJson = JSON.parse(templateJson);
+        } catch (error) {
+          console.error('Failed to parse templateJson:', error);
+          throw new Error('Invalid templateJson format');
+        }
+      }
+      
+      const templates = Array.isArray(templateJson) ? templateJson : [input.ticketData];
       
       const results = [];
       for (const template of templates) {
@@ -59,17 +73,34 @@ export class EnhancedJiraTool extends BaseTool {
           // Handle both direct fields and nested structure
           const fields = template.fields || template;
           
+          // Replace any template variables in fields
+          const processedFields = { ...fields };
+          Object.keys(input).forEach(key => {
+            if (key !== 'operation' && key !== 'templateJson' && key !== 'ticketData') {
+              const value = input[key];
+              if (typeof value === 'string') {
+                Object.keys(processedFields).forEach(fieldKey => {
+                  if (typeof processedFields[fieldKey] === 'string') {
+                    processedFields[fieldKey] = processedFields[fieldKey].replace(
+                      new RegExp(`{{${key}}}`, 'g'),
+                      value
+                    );
+                  }
+                });
+              }
+            }
+          });
+          
           const jiraInput: JiraInput = {
-            operation: 'create' as const,  // Type assertion to satisfy the union type
-            projectKey: fields.projectKey,
-            summary: fields.summary,
-            description: fields.description,
-            // Handle different issuetype formats
-            issueType: typeof fields.issuetype === 'string' ? 
-              fields.issuetype : 
-              (fields.issuetype?.name || fields.issueType),
-            storyPoints: fields.storyPoints,
-            labels: fields.labels
+            operation: 'create' as const,
+            projectKey: processedFields.projectKey,
+            summary: processedFields.summary,
+            description: processedFields.description,
+            issueType: typeof processedFields.issuetype === 'string' ? 
+              processedFields.issuetype : 
+              (processedFields.issuetype?.name || processedFields.issueType),
+            storyPoints: processedFields.storyPoints,
+            labels: processedFields.labels
           };
 
           console.log('\n🔍 Debug - Jira input:', jiraInput);
@@ -128,10 +159,15 @@ export class EnhancedJiraTool extends BaseTool {
           required: false,
           description: 'Direct ticket data object'
         },
-        templateVariables: {
-          type: 'object',
+        project_key: {
+          type: 'string',
           required: false,
-          description: 'Variables to replace in the template'
+          description: 'Project key for the Jira tickets'
+        },
+        feature_name: {
+          type: 'string',
+          required: false,
+          description: 'Name of the feature being implemented'
         }
       },
       output: {
