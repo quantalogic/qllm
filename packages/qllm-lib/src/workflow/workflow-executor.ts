@@ -18,11 +18,14 @@ import { LocalLoaderTool } from '../tools/local-loader.tool';
 import { MongoDBSaverTool } from '../tools/mongodb-saver.tool';
 import { RedisSaverTool } from '../tools/redis-saver.tool';
 import { TextToJsonTool } from '../tools/text-to-json';
-import { RAGToolWithEmbedding } from '../tools/fileoverview-rag';
+import { RAGToolWithEmbedding } from '../tools/llamaindex-rag-v1';
 import { LocalProjectLoaderTool } from '../tools/local-project-loader'; 
+import { RAGTool } from '../tools/llamaindex-rag.tool';
 import { JiraTool } from '../tools/jira.tool'; 
 import { S3ToLocalTool } from '../tools/s3_to_local.tool';
 import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
+import { ApiServerCallTool } from '../tools/api-server-call.tool';
+import { EnhancedJiraTool } from '../tools/enhanced-jira.tool';
 
 /**
  * @class WorkflowExecutor
@@ -61,11 +64,15 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('MongoDBSaver', MongoDBSaverTool);
     this.registerToolFactory('RedisSaver', RedisSaverTool);
     this.registerToolFactory('TextToJson', TextToJsonTool);
+    this.registerToolFactory('LlamaIndexRAGV1', RAGToolWithEmbedding);
+    this.registerToolFactory('RAGToolV2', RAGTool); 
     this.registerToolFactory('FileOverviewRAG', RAGToolWithEmbedding);
     this.registerToolFactory('LocalProjectLoader', LocalProjectLoaderTool);
     this.registerToolFactory('JiraTool', JiraTool); 
+    this.registerToolFactory('EnhancedJira', EnhancedJiraTool); 
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
     this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
+    this.registerToolFactory('ApiServerCall', ApiServerCallTool);
   }
 
 

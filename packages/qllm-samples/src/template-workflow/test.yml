@@ -1,0 +1,22 @@
+name: s3_to_local
+description: Download file from S3 and save it to local
+defaultProvider: openai
+
+steps:
+    - tool: s3ToLocal
+      input:
+          keys: "{{s3_keys}}"
+          bucket_name: "{{s3_bucket}}"
+          separator: "{{s3_separator}}"
+      output: s3_files
+
+    - templateUrl: https://github.com/novagen-conseil/qlstorage-test/blob/main/templates/fb156521-9b94-4937-acd0-8ce9cd6866c3/eabc7a8e-5415-4629-9542-2693b9e5beba/ai-story-generator.yaml
+      provider: openai
+      input:
+          genre: "{{template_content}}"
+          theme: "{{theme}}"
+          word_count: "{{word_count}}"
+          target_audience: "{{target_audience}}"
+      output:
+          story: generated_story
+          story_elements: story_elements
