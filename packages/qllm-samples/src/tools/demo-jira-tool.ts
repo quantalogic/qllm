@@ -1,5 +1,5 @@
 // demo-jira-tool.ts
-import { JiraTool } from "qllm-lib/src/tools/jira.tool";
+import { JiraTool } from "qllm-lib";
 import dotenv from 'dotenv';
 dotenv.config();
 

@@ -24,30 +24,14 @@ async function main(): Promise<void> {
 
     // Define workflow input variables
     const workflowInput = {
-      project_key: "DEMO",
+      project_key: "DEM",
       feature_name: "User Authentication System",
-      feature_overview: "Implement a secure user authentication system with login, registration, and password reset functionality.",
-      feature_requirements: `- User registration with email verification
-- Login with email and password
-- Password reset functionality
-- Remember me option
-- Social media login integration`,
-      technical_requirements: `- Use JWT for authentication
-- Implement password hashing with bcrypt
-- Set up OAuth2 for social login
-- Create secure session management
-- Implement rate limiting for auth endpoints`,
-      api_endpoints: `POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/forgot-password
-POST /api/auth/reset-password
-GET /api/auth/verify-email
+      feature_overview: "Implement a secure user authentication system with login.",
+      feature_requirements: `- User registration with email verification`,
+      technical_requirements: `- Use JWT for authentication`,
+      api_endpoints: `POST /api/auth/login 
 POST /api/auth/social-login`,
-      test_scenarios: `1. Test registration with valid/invalid data
-2. Verify email verification flow
-3. Test password reset process
-4. Verify social login integration
-5. Test rate limiting and security measures`
+      test_scenarios: `1. Verify social login integration `
     };
 
     // Execute workflow with progress tracking
