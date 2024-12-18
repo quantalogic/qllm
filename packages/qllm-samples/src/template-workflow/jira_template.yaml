@@ -28,37 +28,34 @@ content: >
   ## Test Scenarios:
   {{test_scenarios}}
 
-  ## Ticket Structure:
-  
-     ```json
-     [
-       {
-         "fields": {
-           "project": {"key": "project_key"},
-           "summary": "[Frontend] Implement feature_name UI Components",
-           "description": "Implement the frontend components for feature_name.\n\nRequirements:\nfeature_requirements\n\nAPI Endpoints:\napi_endpoints",
-           "issuetype": {"name": "Story"},
-           "customfield_10014": "feature_name",
-           "priority": {"name": "High"},
-           "customfield_10016": 8
-         }
-       },
-       {
-         "fields": {
-           "project": {"key": "project_key"},
-           "summary": "[Backend] Implement feature_name Services",
-           "description": "Implement the backend services for feature_name.\n\nTechnical Requirements:\ntechnical_requirements\n\nAPI Endpoints:\napi_endpoints",
-           "issuetype": {"name": "Story"},
-           "customfield_10014": "feature_name",
-           "priority": {"name": "High"},
-           "customfield_10016": 13
-         }
-       }
-     ]
-     ```
+  !! make sure to include the output feature_tickets variable in the output section, use xml tag !!!
+  <feature_tickets>
 
-  Note: Ensure all tickets are properly linked to the epic and contain appropriate
-  story points and priority levels.
+  [
+    {
+      "fields": {
+        "project": {"key": "{{project_key}}"},
+        "summary": "[Frontend] Implement {{feature_name}} UI Components",
+        "description": "Implement the frontend components for {{feature_name}}.\n\nRequirements:\n{{feature_requirements}}\n\nAPI Endpoints:\n{{api_endpoints}}",
+        "issuetype": {"name": "Story"},
+        "priority": {"name": "High"},
+        "customfield_10016": 8,
+        "labels": ["frontend", "ui"]
+      }
+    },
+    {
+      "fields": {
+        "project": {"key": "{{project_key}}"},
+        "summary": "[Backend] Implement {{feature_name}} Services",
+        "description": "Implement the backend services for {{feature_name}}.\n\nTechnical Requirements:\n{{technical_requirements}}\n\nAPI Endpoints:\n{{api_endpoints}}",
+        "issuetype": {"name": "Story"},
+        "priority": {"name": "High"},
+        "customfield_10016": 13,
+        "labels": ["backend", "api"]
+      }
+    },...
+  ] 
+  </feature_tickets>
 
 input_variables:
   project_key:

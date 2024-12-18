@@ -19,7 +19,7 @@ async function main(): Promise<void> {
   const workflowManager = new WorkflowManager(providers); 
   try {
     // Load workflow from local file
-    await workflowManager.loadWorkflow("https://raw.githubusercontent.com/YatchiYa/templates_prompts_qllm/refs/heads/main/jiraaa.yaml");
+    await workflowManager.loadWorkflow("/home/yarab/Bureau/qllm/packages/qllm-samples/src/template-workflow/workflow_jira.yaml");
     console.log("✅ Workflow loaded successfully");
 
     // Define workflow input variables
