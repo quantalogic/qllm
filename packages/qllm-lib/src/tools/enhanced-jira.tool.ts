@@ -1,20 +1,13 @@
 import { BaseTool, ToolDefinition } from "./base-tool";
 import { Version3Client } from "jira.js";
+import { JiraTool } from "./jira.tool";
 
-/**
- * @interface EnhancedJiraConfig
- * @description Configuration options for Jira client
- */
 interface EnhancedJiraConfig {
   host: string;
   email: string;
   token: string;
 }
 
-/**
- * @interface JiraTicketTemplate
- * @description Structure for a Jira ticket template
- */
 interface JiraTicketTemplate {
   projectKey: string;
   summary: string;
@@ -28,25 +21,15 @@ interface JiraTicketTemplate {
   customFields?: Record<string, any>;
 }
 
-/**
- * @interface EnhancedJiraInput
- * @description Enhanced input structure for Jira operations
- */
 interface EnhancedJiraInput {
-  operation: 'create' | 'update' | 'delete' | 'get' | 'createFromTemplate';
-  issueKey?: string;
-  templateJson?: string;
+  operation: 'createFromTemplate';
+  templateJson?: any;
   ticketData?: JiraTicketTemplate;
   templateVariables?: Record<string, string>;
 }
 
-/**
- * @class EnhancedJiraTool
- * @extends BaseTool
- * @description Enhanced tool for interacting with Jira, with improved template handling
- */
 export class EnhancedJiraTool extends BaseTool {
-  private client: Version3Client;
+  private jiraTool: JiraTool;
 
   constructor(config?: EnhancedJiraConfig) {
     const host = config?.host || process.env.JIRA_HOST;
@@ -54,54 +37,54 @@ export class EnhancedJiraTool extends BaseTool {
     const token = config?.token || process.env.JIRA_TOKEN;
 
     if (!host || !email || !token) {
-      throw new Error('Missing required Jira configuration');
+      throw new Error('Missing required Jira configuration. Please provide either config parameters or set JIRA_HOST, JIRA_MAIL, and JIRA_TOKEN environment variables.');
     }
 
-    const clientConfig = {
-      host,
-      authentication: {
-        basic: {
-          email,
-          apiToken: token,
-        },
-      },
-    };
-    super(clientConfig);
-    this.client = new Version3Client(clientConfig);
+    super({ host, email, token });
+    this.jiraTool = new JiraTool({ host, email, token });
   }
 
-  /**
-   * @method parseTemplate
-   * @description Parse a JSON template string and replace variables
-   */
-  private parseTemplate(templateJson: string, variables?: Record<string, string>): JiraTicketTemplate[] {
+  private parseTemplate(templateJson: any, variables?: Record<string, string>): JiraTicketTemplate[] {
     try {
-      let template = JSON.parse(templateJson);
-      
-      // Handle both single ticket and array of tickets
+      let template = typeof templateJson === 'string' ? JSON.parse(templateJson) : templateJson;
       const tickets = Array.isArray(template) ? template : [template];
-      
+
       return tickets.map(ticket => {
         const parsedTicket = { ...ticket };
         
-        // Replace template variables if provided
+        // If the ticket has a fields structure, extract it
+        if ('fields' in parsedTicket) {
+          const fields = parsedTicket.fields;
+          parsedTicket.projectKey = fields.project?.key;
+          parsedTicket.summary = fields.summary;
+          parsedTicket.description = typeof fields.description === 'string' ? 
+            fields.description : 
+            fields.description?.content?.[0]?.content?.[0]?.text;
+          parsedTicket.issueType = fields.issuetype.name;
+          parsedTicket.priority = fields.priority?.name;
+          parsedTicket.storyPoints = fields.customfield_10016;
+          parsedTicket.labels = fields.labels;
+          parsedTicket.components = fields.components?.map((c:any) => c.name).filter(Boolean);
+        }
+
         if (variables) {
           for (const [key, value] of Object.entries(variables)) {
             const placeholder = `{{${key}}}`;
-            parsedTicket.summary = parsedTicket.summary?.replace(placeholder, value);
-            parsedTicket.description = parsedTicket.description?.replace(placeholder, value);
             
-            // Handle custom fields
-            if (parsedTicket.customFields) {
-              for (const [fieldKey, fieldValue] of Object.entries(parsedTicket.customFields)) {
-                if (typeof fieldValue === 'string') {
-                  parsedTicket.customFields[fieldKey] = fieldValue.replace(placeholder, value);
-                }
-              }
+            if (typeof parsedTicket.summary === 'string') {
+              parsedTicket.summary = parsedTicket.summary.replace(placeholder, value);
+            }
+            
+            if (typeof parsedTicket.description === 'string') {
+              parsedTicket.description = parsedTicket.description.replace(placeholder, value);
+            }
+
+            if (key === 'project_key' && !parsedTicket.projectKey) {
+              parsedTicket.projectKey = value;
             }
           }
         }
-        
+
         return parsedTicket;
       });
     } catch (error) {
@@ -109,104 +92,53 @@ export class EnhancedJiraTool extends BaseTool {
     }
   }
 
-  /**
-   * @method createFromTemplate
-   * @description Create Jira issues from a template
-   */
   private async createFromTemplate(input: EnhancedJiraInput): Promise<any> {
     if (!input.templateJson && !input.ticketData) {
       throw new Error('Either templateJson or ticketData must be provided');
     }
 
     try {
-      let tickets: JiraTicketTemplate[];
-      
-      if (input.templateJson) {
-        tickets = this.parseTemplate(input.templateJson, input.templateVariables);
-      } else {
-        tickets = [input.ticketData!];
-      }
+      const tickets = input.templateJson ? 
+        this.parseTemplate(input.templateJson, input.templateVariables) : 
+        [input.ticketData!];
 
-      const results = await Promise.all(
-        tickets.map(async (ticket) => {
-          const fields: any = {
-            project: { key: ticket.projectKey },
-            summary: ticket.summary,
-            issuetype: { name: ticket.issueType },
-            description: ticket.description ? {
-              type: "doc",
-              version: 1,
-              content: [
-                {
-                  type: "paragraph",
-                  content: [{ text: ticket.description, type: "text" }]
-                }
-              ]
-            } : undefined
-          };
+      console.log('Creating issues from template:', tickets);
 
-          // Handle assignee
-          if (ticket.assignee) {
-            const users = await this.client.userSearch.findUsers({
-              query: ticket.assignee
-            });
-            if (users[0]) {
-              fields.assignee = { accountId: users[0].accountId };
-            }
-          }
-
-          // Handle other fields
-          if (ticket.storyPoints) fields.customfield_10016 = ticket.storyPoints;
-          if (ticket.priority) fields.priority = { name: ticket.priority };
-          if (ticket.labels) fields.labels = ticket.labels;
-          if (ticket.components) {
-            const projectComponents = await this.client.projects.getProject({
-              projectIdOrKey: ticket.projectKey,
-              expand: 'components'
-            });
-            
-            const validComponents = projectComponents.components || [];
-            const componentMap = new Map(
-              validComponents
-                .filter((c): c is { id: string; name: string } => Boolean(c?.id && c?.name))
-                .map(c => [c.name.toLowerCase(), c.id])
-            );
-
-            fields.components = ticket.components
-              .filter(name => componentMap.has(name.toLowerCase()))
-              .map(name => ({ id: componentMap.get(name.toLowerCase()) }));
-          }
-
-          // Handle custom fields
-          if (ticket.customFields) {
-            for (const [key, value] of Object.entries(ticket.customFields)) {
-              fields[key] = value;
-            }
-          }
-
-          return await this.client.issues.createIssue({ fields });
-        })
-      );
+      // Use the working JiraTool to create issues
+      const results = await this.jiraTool.execute({
+        operation: 'createBulk',
+        issues: tickets.map(ticket => ({
+          operation: 'create',
+          projectKey: ticket.projectKey,
+          summary: ticket.summary,
+          description: ticket.description,
+          issueType: ticket.issueType,
+          assignee: ticket.assignee,
+          storyPoints: ticket.storyPoints,
+          priority: ticket.priority,
+          labels: ticket.labels,
+          components: ticket.components
+        }))
+      });
 
       return {
         success: true,
         created: results.length,
-        issues: results.map(result => ({
+        issues: results.map((result:any) => ({
           key: result.key,
           id: result.id,
           self: result.self
         }))
       };
     } catch (error) {
+      console.error('Template processing error:', error);
       throw new Error(`Failed to create issues from template: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
-  /**
-   * @method execute
-   * @description Execute the Jira operation
-   */
   async execute(input: EnhancedJiraInput): Promise<any> {
+    console.log('EnhancedJiraTool: input:', input);
+    
     switch (input.operation) {
       case 'createFromTemplate':
         return this.createFromTemplate(input);
@@ -215,10 +147,6 @@ export class EnhancedJiraTool extends BaseTool {
     }
   }
 
-  /**
-   * @method getDefinition
-   * @description Get the tool definition
-   */
   getDefinition(): ToolDefinition {
     return {
       name: 'enhanced-jira-tool',
@@ -252,10 +180,6 @@ export class EnhancedJiraTool extends BaseTool {
     };
   }
 
-  /**
-   * @method getDescription
-   * @description Returns a description of what the tool does
-   */
   public getDescription(): string {
     return 'Enhanced Jira tool that supports creating issues from JSON templates with variable substitution';
   }
