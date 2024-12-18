@@ -24,7 +24,7 @@ async function main(): Promise<void> {
 
     // Define workflow input variables
     const workflowInput = {
-      project_key: "DEM",
+      project_key: "QUAN",
       feature_name: "User Authentication System",
       feature_overview: "Implement a secure user authentication system with login.",
       feature_requirements: `- User registration with email verification`,
