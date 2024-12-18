@@ -43,7 +43,7 @@ async function main(): Promise<void> {
           name: "analyze_files",
           description: "Analyze downloaded files using RAG",
           input: {
-            directory: "{{#js}}steps.download_files.outputVariables.success ? steps.download_files.outputVariables.directory : ''{{/js}}",
+            directory: "$download_result",
             query: "{{query}}",
             embedModel: "openai",
             topK: "5"
