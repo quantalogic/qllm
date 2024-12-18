@@ -1,4 +1,4 @@
-import { S3ToLocalTool } from 'qllm-lib/src/tools/s3_to_local.tool';
+import { S3ToLocalTool } from 'qllm-lib';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -16,23 +16,25 @@ async function main() {
         // Example 1: Download a single file with cleanup on exit (workflow-style)
         console.log('\nExample 1: Download single file (workflow-style)');
         const singleFileResult = await s3ToLocalTool.execute({
-            keys: 'output/s3_content_test_tool.txt',
-            bucket_name: process.env.AWS_S3_BUCKET_NAME!,
-        });
-        console.log('Downloaded file:', singleFileResult.files[0]);
-        console.log('File will be cleaned up when the process exits');
-
-        // Example 2: Download multiple files with timed cleanup (standalone-style)
-        console.log('\nExample 2: Download multiple files (standalone-style)');
-        const multipleFilesResult = await s3ToLocalTool.execute({
-            keys: 'output/s3_content_test_tool.txt | test/docker-compose.yaml | test/hello.py | test/greeting.ts | test/config.json',
+            keys: "2297fde2-cede-4a08-a78c-0aaee8f15570-475c618e-189f-4b3c-93a4-750d9a2ec938-acr.pdf | 2297fde2-cede-4a08-a78c-0aaee8f15570-475c618e-189f-4b3c-93a4-750d9a2ec938-11-03-08_pleading_v-ep_fr.pdf",
             bucket_name: process.env.AWS_S3_BUCKET_NAME!,
             separator: ' | ',
             cleanupAfter: 60000, // 1 minute
             cleanupOnExit: false // Use timed cleanup instead
         });
-        console.log('Downloaded files:', multipleFilesResult.files);
-        console.log('Files will be automatically deleted after 1 minute');
+        console.log('Downloaded directory:', singleFileResult); 
+        console.log('File will be cleaned up when the process exits');
+
+        // Example 2: Download multiple files with timed cleanup (standalone-style)
+        /* console.log('\nExample 2: Download multiple files (standalone-style)');
+        const multipleFilesResult = await s3ToLocalTool.execute({
+            keys: "file1.txt | file2.txt | file3.txt",
+            bucket_name: process.env.AWS_S3_BUCKET_NAME!,
+            separator: ' | ',
+            cleanupAfter: 60000, // 1 minute
+            cleanupOnExit: false // Use timed cleanup instead
+        }); 
+        console.log('Downloaded directory:', multipleFilesResult);
 
         // Example 3: Error handling demonstration
         console.log('\nExample 3: Error handling');
@@ -48,7 +50,7 @@ async function main() {
             } else {
                 console.error('Expected error for non-existent file:', String(error));
             }
-        }
+        } */
 
         // Keep the process running to demonstrate both cleanup methods
         console.log('\nFiles have been downloaded.');

@@ -15,7 +15,7 @@ async function main(): Promise<void> {
       console.log("\n📚 Running search with OpenAI embeddings...");
       const resultOpenAI = await ragTool.execute({
         directory: './docs',
-        query: "Explain the concept discuessed in my files",
+        query: "Give me the main points discussed in my document, and improve them to have a better understanding of the topic, generate a full article",
         embedModel: "openai",
         topK: "5"
       });

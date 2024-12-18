@@ -1,0 +1,28 @@
+name: jira_template_workflow
+version: '2.0'
+description: Generate and create Jira tickets from template
+defaultProvider: openai
+steps:
+  - name: Generate Ticket Templates
+    templateUrl: /home/yarab/Bureau/qllm/packages/qllm-samples/src/template-workflow/jira_template.yaml
+    provider: openai
+    input:
+      project_key: "{{project_key}}"
+      feature_name: "{{feature_name}}"
+      feature_overview: "{{feature_overview}}"
+      feature_requirements: "{{feature_requirements}}"
+      technical_requirements: "{{technical_requirements}}"
+      api_endpoints: "{{api_endpoints}}"
+      test_scenarios: "{{test_scenarios}}"
+    output: 
+      feature_tickets: feature_templates
+
+  - tool: EnhancedJira
+    input: 
+      operation: createFromTemplate
+      templateJson: "$feature_templates"
+      templateVariables:
+        project_key: "{{project_key}}"
+        feature_name: "{{feature_name}}"
+    output:
+      feature_tickets: feature_tickets
