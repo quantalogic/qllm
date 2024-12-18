@@ -25,6 +25,7 @@ import { JiraTool } from '../tools/jira.tool';
 import { S3ToLocalTool } from '../tools/s3_to_local.tool';
 import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 import { ApiServerCallTool } from '../tools/api-server-call.tool';
+import { EnhancedJiraTool } from '../tools/enhanced-jira.tool';
 
 /**
  * @class WorkflowManager
@@ -66,6 +67,7 @@ export class WorkflowManager {
     this.registerToolFactory('LlamaIndexRAGV1', RAGToolWithEmbedding);
     this.registerToolFactory('RAGToolV2', RAGTool); 
     this.registerToolFactory('JiraTool', JiraTool); 
+    this.registerToolFactory('EnhancedJira', EnhancedJiraTool); 
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
     this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
     this.registerToolFactory('ApiServerCall', ApiServerCallTool);

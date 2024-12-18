@@ -1,0 +1,108 @@
+name: jira_project_setup
+version: '2.0'
+description: Create a structured set of Jira tickets for a project feature
+author: youcef
+content: >
+  # Project Feature Setup: {{feature_name}}
+
+  This workflow will create a structured set of Jira tickets for implementing {{feature_name}}.
+  The tickets will be organized under an epic and will cover different aspects of the implementation.
+
+  ## Project Details:
+  - Project Key: {{project_key}}
+  - Feature Name: {{feature_name}}
+  - Epic Name: {{feature_name}} Implementation
+
+  ## Feature Overview:
+  {{feature_overview}}
+
+  ## Feature Requirements:
+  {{feature_requirements}}
+
+  ## Technical Requirements:
+  {{technical_requirements}}
+
+  ## API Endpoints:
+  {{api_endpoints}}
+
+  ## Test Scenarios:
+  {{test_scenarios}}
+
+  ## Ticket Structure:
+  
+     ```json
+     [
+       {
+         "fields": {
+           "project": {"key": "project_key"},
+           "summary": "[Frontend] Implement feature_name UI Components",
+           "description": "Implement the frontend components for feature_name.\n\nRequirements:\nfeature_requirements\n\nAPI Endpoints:\napi_endpoints",
+           "issuetype": {"name": "Story"},
+           "customfield_10014": "feature_name",
+           "priority": {"name": "High"},
+           "customfield_10016": 8
+         }
+       },
+       {
+         "fields": {
+           "project": {"key": "project_key"},
+           "summary": "[Backend] Implement feature_name Services",
+           "description": "Implement the backend services for feature_name.\n\nTechnical Requirements:\ntechnical_requirements\n\nAPI Endpoints:\napi_endpoints",
+           "issuetype": {"name": "Story"},
+           "customfield_10014": "feature_name",
+           "priority": {"name": "High"},
+           "customfield_10016": 13
+         }
+       }
+     ]
+     ```
+
+  Note: Ensure all tickets are properly linked to the epic and contain appropriate
+  story points and priority levels.
+
+input_variables:
+  project_key:
+    type: string
+    description: The Jira project key
+    place_holder: PROJ
+  feature_name:
+    type: string
+    description: Name of the feature to be implemented
+    place_holder: User Authentication System
+  feature_overview:
+    type: string
+    description: High-level overview of the feature
+    place_holder: Implement a secure user authentication system
+  feature_requirements:
+    type: string
+    description: Detailed feature requirements
+    place_holder: |
+      - User registration with email verification
+      - Login with email and password
+      - Password reset functionality
+  technical_requirements:
+    type: string
+    description: Technical specifications and requirements
+    place_holder: |
+      - Use JWT for authentication
+      - Implement password hashing
+      - Set up OAuth2 integration
+  api_endpoints:
+    type: string
+    description: List of API endpoints to be implemented
+    place_holder: |
+      POST /api/auth/register
+      POST /api/auth/login
+      POST /api/auth/reset-password
+  test_scenarios:
+    type: string
+    description: Test scenarios to verify the feature
+    place_holder: |
+      1. Test registration flow
+      2. Verify email verification
+      3. Test password reset process
+
+output_variables:
+  feature_tickets:
+    type: array
+    description: Array of created feature implementation tickets
