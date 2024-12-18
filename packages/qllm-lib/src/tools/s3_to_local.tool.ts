@@ -129,8 +129,8 @@ export class S3ToLocalTool extends BaseTool {
                 }
             },
             output: {
-                type: 'object',
-                description: 'Object containing array of downloaded file paths'
+                type: 'string',
+                description: 'Path to the unique directory containing downloaded files',
             }
         };
     }
@@ -181,27 +181,23 @@ export class S3ToLocalTool extends BaseTool {
     /**
      * @method execute
      * @param {S3ToLocalInput} inputs - Input parameters
-     * @returns {Promise<{ files: string[] }>} Array of downloaded file paths
+     * @returns {Promise<string>} Path to the unique directory containing downloaded files
      */
-    async execute(inputs: S3ToLocalInput): Promise<{ files: string[] }> {
+    async execute(inputs: S3ToLocalInput): Promise<string> {
         const separator = inputs.separator || ',';
         const keys = inputs.keys.split(separator).map(key => key.trim()).filter(key => key.length > 0);
         const cleanupDelay = inputs.cleanupOnExit ? 0 : (inputs.cleanupAfter || 3600000); // Default to 1 hour if not cleaning up on exit
         const cleanupOnExit = inputs.cleanupOnExit ?? true; // Default to true if not specified
         
-        const downloadedFiles: string[] = [];
-        
-        // Create the s3_to_local directory if it doesn't exist
+        // Create the s3_to_local directory with a unique subfolder
         const baseDir = '/tmp/s3_to_local';
-        await fsPromises.mkdir(baseDir, { recursive: true });
+        const uniqueDir = path.join(baseDir, uuidv4());
+        await fsPromises.mkdir(uniqueDir, { recursive: true });
         
         for (const key of keys) {
             try {
-                const uniqueId = uuidv4();
                 const fileName = path.basename(key);
-                const fileExt = path.extname(fileName);
-                const baseFileName = path.basename(fileName, fileExt);
-                const localPath = path.join(baseDir, `${uniqueId}-${baseFileName}${fileExt}`);
+                const localPath = path.join(uniqueDir, fileName);
 
                 const commandInput: GetObjectCommandInput = {
                     Bucket: inputs.bucket_name,
@@ -232,9 +228,8 @@ export class S3ToLocalTool extends BaseTool {
 
                 // Write the buffer to the local file
                 await fsPromises.writeFile(localPath, buffer);
-                downloadedFiles.push(localPath);
 
-                // Schedule cleanup
+                // Schedule cleanup for individual files
                 await this.scheduleCleanup(localPath, cleanupDelay, cleanupOnExit);
             } catch (error) {
                 console.error(`Error downloading file ${key}:`, error);
@@ -242,6 +237,6 @@ export class S3ToLocalTool extends BaseTool {
             }
         }
 
-        return { files: downloadedFiles };
+        return uniqueDir;
     }
 }

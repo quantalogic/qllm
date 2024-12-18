@@ -122,7 +122,7 @@ export class RAGToolWithEmbedding extends BaseTool {
       }
 
       const reader = new SimpleDirectoryReader();
-      const documents = await reader.loadData(directory);
+      const documents = await reader.loadData(JSON.parse(directory));
       
       if (!documents || documents.length === 0) {
         throw new Error('No documents found in directory');
@@ -174,10 +174,16 @@ export class RAGToolWithEmbedding extends BaseTool {
         success: true,
         response: response.response,
         sources: response.sourceNodes?.map((node: any) => ({
+          fileName: node.metadata?.file_name || 'Unknown',
           content: node.text,
           score: node.score || 0,
-          metadata: node.metadata
-        })) || []
+          metadata: {
+            ...node.metadata,
+            start_char_idx: undefined,
+            end_char_idx: undefined,
+            text: undefined
+          }
+        })).filter((source: any) => source.score > 0) || []
       };
     } catch (error) {
       return {
