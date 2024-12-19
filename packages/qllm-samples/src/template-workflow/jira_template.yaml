@@ -32,25 +32,21 @@ content: >
   <feature_tickets>
 
   [
-    {
-      "fields": {
+    { 
         "projectKey": {{project_key}},
         "summary": "[Frontend] Implement {{feature_name}} UI Components",
         "description": "Implement the frontend components for {{feature_name}}.\n\nRequirements:\n{{feature_requirements}}\n\nAPI Endpoints:\n{{api_endpoints}}",
         "issuetype": Task,
         "storyPoints": 5,
-        "labels": ["frontend", "ui"]
-      }
+        "labels": ["frontend", "ui"] 
     },
-    {
-      "fields": {
+    { 
         "projectKey": {{project_key}},
         "summary": "[Backend] Implement {{feature_name}} Services",
         "description": "Implement the backend services for {{feature_name}}.\n\nTechnical Requirements:\n{{technical_requirements}}\n\nAPI Endpoints:\n{{api_endpoints}}",
         "issuetype": Task,
         "storyPoints": 5,
-        "labels": ["backend", "api"]
-      }
+        "labels": ["backend", "api"] 
     },...
   ] 
   </feature_tickets>
