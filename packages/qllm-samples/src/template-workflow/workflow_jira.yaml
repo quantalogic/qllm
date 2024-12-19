@@ -23,5 +23,8 @@ steps:
       templateJson: "$feature_templates"
       project_key: "{{project_key}}"
       feature_name: "{{feature_name}}"
+      host: "{{host}}"
+      email: "{{email}}"
+      token: "{{token}}"
     output:
       feature_tickets: feature_tickets

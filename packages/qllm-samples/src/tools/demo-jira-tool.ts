@@ -73,9 +73,9 @@ async function testJiraOperations() {
         if (fetchedIssue.fields.priority) {
             console.log('Priority:', fetchedIssue.fields.priority.name);
         }
-        if (fetchedIssue.fields.customfield_10016) {
+        /* if (fetchedIssue.fields.customfield_10016 && fetchedIssue.fields.customfield_10016) {
             console.log('Story Points:', fetchedIssue.fields.customfield_10016);
-        }
+        } */
         if (fetchedIssue.fields.components?.length) {
             console.log('Components:', fetchedIssue.fields.components.map((c: { name?: string }) => c.name).join(', '));
         }

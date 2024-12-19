@@ -15,19 +15,14 @@ async function main(): Promise<void> {
   const workflowManager = new WorkflowManager(providers); 
   try {
     // Load workflow
-    await workflowManager.loadWorkflow('/home/yarab/Bureau/qllm/packages/qllm-samples/src/template-workflow/git.yaml');
+    await workflowManager.loadWorkflow('https://raw.githubusercontent.com/YatchiYa/templates_prompts_qllm/refs/heads/main/code-review-source-github.yaml');
     console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables
     const workflowInput = {
       input: "https://github.com/YatchiYa/argon-react-native",
-      excludePatterns: '**/node_modules/**, **/dist/**, **/*.test.js, **/*.spec.ts, **/*.md,.test.ts,/temp/,*.log,*/argon.json',
-      //path: "/home/youcef/Bureau/github-repo-analysis.txt",
-      include: "**/*.ts, **/*.js",
-      returnLocalPath: true,
-      embedModel: "openai",
-      topK: "5",
-      query: "Give me the main points functions and classes in this code, and improve them to have a better understanding of the topic, generate a full article",
+      excludePatterns: '.test.ts,/temp/,*.log,*/argon.json',
+      path: "/home/youcef/Bureau/github-repo-analysis.txt",
     };
 
     // Execute workflow with progress tracking
