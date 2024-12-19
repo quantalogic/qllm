@@ -29,8 +29,7 @@ async function main(): Promise<void> {
       feature_overview: "Implement a secure user authentication system with login.",
       feature_requirements: `- User registration with email verification`,
       technical_requirements: `- Use JWT for authentication`,
-      api_endpoints: `POST /api/auth/login 
-POST /api/auth/social-login`,
+      api_endpoints: `POST /api/auth/login`,
       test_scenarios: `1. Verify social login integration `
     };
 

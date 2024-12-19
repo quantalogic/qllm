@@ -47,7 +47,7 @@ export class EnhancedJiraTool extends BaseTool {
   } 
 
   async execute(input: EnhancedJiraInput): Promise<any> {
-    console.log('EnhancedJiraTool: input:', input);
+    console.log('EnhancedJiraTool: input.templateJson:', input.templateJson);
     
     if (input.operation === 'createFromTemplate') {
       let templateJson = input.templateJson;
@@ -56,6 +56,7 @@ export class EnhancedJiraTool extends BaseTool {
       if (typeof templateJson === 'string') {
         try {
           templateJson = JSON.parse(templateJson);
+          console.log('==> Parsed EnhancedJiraTool: templateJson:', templateJson);
         } catch (error) {
           console.error('Failed to parse templateJson:', error);
           throw new Error('Invalid templateJson format');
@@ -70,11 +71,14 @@ export class EnhancedJiraTool extends BaseTool {
         console.log("=========== template : ", template);
         
         try {
-          // Handle both direct fields and nested structure
-          const fields = template.fields || template;
+          if (!template) {
+            throw new Error('Template is undefined');
+          }
+
+          // Each template is already a flat object, no need to check for fields
+          const processedFields = { ...template };
           
-          // Replace any template variables in fields
-          const processedFields = { ...fields };
+          // Replace template variables in all string fields
           Object.keys(input).forEach(key => {
             if (key !== 'operation' && key !== 'templateJson' && key !== 'ticketData') {
               const value = input[key];
@@ -96,9 +100,7 @@ export class EnhancedJiraTool extends BaseTool {
             projectKey: processedFields.projectKey,
             summary: processedFields.summary,
             description: processedFields.description,
-            issueType: typeof processedFields.issuetype === 'string' ? 
-              processedFields.issuetype : 
-              (processedFields.issuetype?.name || processedFields.issueType),
+            issueType: processedFields.issuetype || processedFields.issueType,
             storyPoints: processedFields.storyPoints,
             labels: processedFields.labels
           };
@@ -118,14 +120,14 @@ export class EnhancedJiraTool extends BaseTool {
           results.push({
             success: true,
             key: result.key,
-            summary: fields.summary
+            summary: processedFields.summary
           });
         } catch (error) {
           console.error('Failed to create Jira issue:', error);
           results.push({
             success: false,
             error: error instanceof Error ? error.message : String(error),
-            summary: template.fields?.summary || template.summary
+            summary: template.summary
           });
         }
       }
