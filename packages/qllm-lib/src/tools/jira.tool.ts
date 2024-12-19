@@ -60,7 +60,7 @@ interface JiraIssueResponse {
     description?: any;
     created?: string;
     updated?: string;
-    customfield_10016?: number; // Story points
+    //customfield_10016?: number; // Story points
     components?: Array<{ name?: string }>;
     labels?: string[];
     subtasks?: Array<{
@@ -88,11 +88,11 @@ interface WorkflowStepResult {
  */
 interface JiraConfig {  
   /** Jira host URL */
-  host: string;
+  host?: string;
   /** Jira email */
-  email: string;
+  email?: string;
   /** Jira token */
-  token: string;
+  token?: string;
 }
 
 /**
@@ -204,9 +204,9 @@ export class JiraTool extends BaseTool {
       }
 
       // Handle story points
-      if (typeof input.storyPoints === 'number') {
+      /* if (input.storyPoints && typeof input.storyPoints === 'number') {
         fields.customfield_10016 = input.storyPoints;
-      }
+      } */
 
       // Handle priority
       if (input.priority) {
@@ -356,7 +356,7 @@ export class JiraTool extends BaseTool {
         description: issue.fields.description,
         created: issue.fields.created,
         updated: issue.fields.updated,
-        customfield_10016: issue.fields.customfield_10016,
+        //customfield_10016: issue.fields.customfield_10016,
         components: issue.fields.components,
         labels: issue.fields.labels || [],
         subtasks: issue.fields.subtasks || []

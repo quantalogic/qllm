@@ -24,13 +24,16 @@ async function main(): Promise<void> {
 
     // Define workflow input variables
     const workflowInput = {
-      project_key: "QUAN",
+      project_key: "DEM",
       feature_name: "User Authentication System",
       feature_overview: "Implement a secure user authentication system with login.",
-      feature_requirements: `- User registration with email verification`,
+      feature_requirements: `- User login with email verification`,
       technical_requirements: `- Use JWT for authentication`,
       api_endpoints: `POST /api/auth/login`,
-      test_scenarios: `1. Verify social login integration `
+      test_scenarios: `1. Verify social login integration `,
+      host: 'https://novagenlab.atlassian.net/',
+      email: 'yarab@novagen.tech',
+      token: 'ATATT3xFfGF0MNMZY52cSRWkQlQmsNgD8bBK3cFy2v3Fgl0sQofoM_J-eVSVYlMqNn5akZqx6iyPOPfV3AZzB-ENm9JHb7RP2q1N7OsREkfkGrkYksqU11NByKUVFnDn_hUStBEk-OYssguz7IctkEnVJu5vbdSUW1QI2FF6CdOkziplEQyo5ko=81F6497C',
     };
 
     // Execute workflow with progress tracking

@@ -46,7 +46,16 @@ export class EnhancedJiraTool extends BaseTool {
     this.jiraTool = new JiraTool({ host, email, token });
   } 
 
-  async execute(input: EnhancedJiraInput): Promise<any> {
+  async execute(input: EnhancedJiraInput & Partial<EnhancedJiraConfig>): Promise<any> {
+    // Reinitialize JiraTool with input credentials if provided
+    if (input.host || input.email || input.token) {
+      this.jiraTool = new JiraTool({
+        host: input.host || process.env.JIRA_HOST,
+        email: input.email || process.env.JIRA_MAIL,
+        token: input.token || process.env.JIRA_TOKEN
+      });
+    }
+
     console.log('EnhancedJiraTool: input.templateJson:', input.templateJson);
     
     if (input.operation === 'createFromTemplate') {
@@ -144,37 +153,52 @@ export class EnhancedJiraTool extends BaseTool {
   getDefinition(): ToolDefinition {
     return {
       name: 'enhanced-jira-tool',
-      description: 'Enhanced tool for creating Jira issues from templates',
+      description: 'Enhanced Jira tool for creating tickets from templates',
       input: {
         operation: {
           type: 'string',
           required: true,
-          description: 'The operation to perform (currently only supports createFromTemplate)'
+          description: 'Operation to perform (createFromTemplate)'
         },
-        templateJson: {
+        host: {
           type: 'string',
           required: false,
-          description: 'JSON string containing the ticket template(s)'
+          description: 'Jira host URL. If not provided, uses JIRA_HOST environment variable'
+        },
+        email: {
+          type: 'string',
+          required: false,
+          description: 'Jira account email. If not provided, uses JIRA_MAIL environment variable'
+        },
+        token: {
+          type: 'string',
+          required: false,
+          description: 'Jira API token. If not provided, uses JIRA_TOKEN environment variable'
+        },
+        templateJson: {
+          type: 'any',
+          required: false,
+          description: 'JSON template for creating tickets'
         },
         ticketData: {
           type: 'object',
           required: false,
-          description: 'Direct ticket data object'
+          description: 'Direct ticket data if not using template'
         },
         project_key: {
           type: 'string',
           required: false,
-          description: 'Project key for the Jira tickets'
+          description: 'Project key for template variables'
         },
         feature_name: {
           type: 'string',
           required: false,
-          description: 'Name of the feature being implemented'
+          description: 'Feature name for template variables'
         }
       },
       output: {
         type: 'object',
-        description: 'Response containing created issues details'
+        description: 'Results of ticket creation'
       }
     };
   }

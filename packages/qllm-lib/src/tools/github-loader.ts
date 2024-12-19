@@ -22,6 +22,8 @@ export class GithubLoaderTool extends BaseTool {
   private rateLimitDelay: number = 1000; // 1 second delay between requests
   private tmpDir: string;
   private git: SimpleGit; 
+  private downloadedRepos: Set<string> = new Set();
+  private exitCleanupRepos: Set<string> = new Set();
 
   /**
    * @constructor
@@ -35,8 +37,20 @@ export class GithubLoaderTool extends BaseTool {
       auth: config.authToken || process.env.GITHUB_TOKEN,
       retry: { enabled: true }
     });
-    this.tmpDir = path.join(process.cwd(), 'tmp');
+    this.tmpDir = '/tmp/github_loader';
     this.git = simpleGit();
+
+    // Register cleanup on process exit
+    process.on('exit', () => {
+      this.cleanupExitRepos();
+    });
+
+    // Handle interrupts
+    process.on('SIGINT', () => {
+      console.log('\nCleaning up repositories marked for exit cleanup...');
+      this.cleanupExitRepos();
+      process.exit();
+    });
   }
 
   /**
@@ -47,7 +61,7 @@ export class GithubLoaderTool extends BaseTool {
   getDefinition(): ToolDefinition {
       return {
           name: 'github-loader',
-          description: 'Loads content from GitHub repositories',
+          description: 'Loads content from GitHub repositories with options to return content or local path',
           input: {
               repositoryUrl: {
                   type: 'string',
@@ -68,11 +82,26 @@ export class GithubLoaderTool extends BaseTool {
                   type: 'string',
                   required: false,
                   description: 'Comma-separated list of files, folders, or extensions to include'
+              },
+              returnLocalPath: {
+                  type: 'boolean',
+                  required: false,
+                  description: 'If true, returns the path to cloned repository instead of content'
+              },
+              cleanupAfter: {
+                  type: 'number',
+                  required: false,
+                  description: 'Time in milliseconds after which repository should be deleted (defaults to 1 hour)'
+              },
+              cleanupOnExit: {
+                  type: 'boolean',
+                  required: false,
+                  description: 'Whether to clean up immediately after process completion (defaults to true)'
               }
           },
           output: {
               type: 'object',
-              description: 'Repository contents with file metadata and content'
+              description: 'Repository contents with file metadata and content, or path to cloned repository'
           }
       };
   }
@@ -556,57 +585,98 @@ ${content}
   }
     
   /**
+   * @private
+   * @method cleanupExitRepos
+   * @returns {Promise<void>}
+   * @description Cleans up repositories marked for exit cleanup
+   */
+  private async cleanupExitRepos(): Promise<void> {
+    for (const repoPath of this.exitCleanupRepos) {
+      try {
+        await fs.rm(repoPath, { recursive: true, force: true });
+        console.log(`Cleaned up repository on exit: ${repoPath}`);
+      } catch (error) {
+        console.error(`Error cleaning up repository ${repoPath}:`, error);
+      }
+    }
+    this.exitCleanupRepos.clear();
+  }
+
+  /**
+   * @private
+   * @method scheduleCleanup
+   * @param {string} repoPath - Path to the repository to clean up
+   * @param {number} delay - Time in milliseconds after which repository should be deleted
+   * @param {boolean} cleanupOnExit - Whether to clean up immediately after process completion
+   * @returns {Promise<void>}
+   * @description Schedules cleanup of a repository based on the provided parameters
+   */
+  private async scheduleCleanup(repoPath: string, delay: number, cleanupOnExit: boolean): Promise<void> {
+    // Add repository to tracking set
+    this.downloadedRepos.add(repoPath);
+    
+    if (cleanupOnExit) {
+      this.exitCleanupRepos.add(repoPath);
+    } else if (delay > 0) {
+      setTimeout(async () => {
+        try {
+          await fs.rm(repoPath, { recursive: true, force: true });
+          this.downloadedRepos.delete(repoPath);
+          console.log(`Cleaned up repository after delay: ${repoPath}`);
+        } catch (error) {
+          console.error(`Error cleaning up repository ${repoPath}:`, error);
+        }
+      }, delay);
+    }
+  }
+
+  /**
    * @method execute
    * @param {Record<string, any>} inputs - Input parameters including repository URL and patterns
-   * @returns {Promise<Record<string, any>>} Processing results including content and statistics
+   * @returns {Promise<Record<string, any> | string>} Processing results including content and statistics, or path string if returnLocalPath is true
    * @description Main execution method that processes a GitHub repository
    * @throws {Error} If repository processing fails
    */
-  async execute(inputs: Record<string, any>): Promise<Record<string, any>> {
+  async execute(inputs: Record<string, any>): Promise<Record<string, any> | string> {
+    const excludePatterns = this.parsePatternString(inputs.excludePatterns);
+    const includePatterns = this.parsePatternString(inputs.includePatterns);
+    const returnLocalPath = inputs.returnLocalPath ?? false;
+    const cleanupDelay = inputs.cleanupOnExit ? 0 : (inputs.cleanupAfter || 3600000); // Default to 1 hour if not cleaning up on exit
+    const cleanupOnExit = inputs.cleanupOnExit ?? true; // Default to true if not specified
+
     try {
-        const { repositoryUrl, excludePatterns, includePatterns } = inputs;
-        const excludeList = this.parsePatternString(excludePatterns);
-        const includeList = this.parsePatternString(includePatterns);
+      await this.initTempDirectory();
+      const repoPath = await this.cloneRepository(inputs.repositoryUrl);
+      
+      // Schedule cleanup based on parameters
+      await this.scheduleCleanup(repoPath, cleanupDelay, cleanupOnExit);
 
-        const { owner, repo } = this.parseGithubUrl(repositoryUrl);
-        console.log(`\n📦 Processing repository: ${owner}/${repo}`);
+      if (returnLocalPath) {
+        return repoPath; // Return just the path string
+      }
 
-        // Initialize temp directory
-        await this.initTempDirectory();
+      const files = await this.getAllLocalFiles(repoPath, repoPath, excludePatterns, includePatterns);
+      const results = [];
 
-        // Clone repository
-        const repoPath = await this.cloneRepository(repositoryUrl);
-
-        // Get all files with filtering
-        const files = await this.getAllLocalFiles(repoPath, repoPath, excludeList, includeList);
-
-        let output = `# Repository: ${owner}/${repo}\n\n`;
-        output += `Generated at: ${new Date().toISOString()}\n\n`;
-        output += '# Table of Contents\n';
-        files.forEach(file => output += `- ${file.path}\n`);
-        output += '\n';
-
-        let processedFiles = 0;
-        for (const file of files) {
-            processedFiles++;
-            console.log(`📄 [${processedFiles}/${files.length}] Processing: ${file.path}`);
-            const fullPath = path.join(repoPath, file.path);
-            const content = await this.readLocalFile(fullPath);
-            output += this.formatFileInfo(file, content);
+      for (const file of files) {
+        if (!this.isBinaryFile(file.path)) {
+          const content = await this.readLocalFile(path.join(repoPath, file.path));
+          results.push(this.formatFileInfo(file, content));
         }
+      }
 
-        // Cleanup
-        await this.cleanupTempDirectory(repoPath);
-
-        return {
-            content: output,
-            fileCount: processedFiles,
-            repository: `${owner}/${repo}`,
-            totalFiles: files.length
-        };
+      return {
+        content: results.join('\n\n'),
+        stats: {
+          totalFiles: files.length,
+          processedFiles: results.length,
+          excludedPatterns: excludePatterns,
+          includedPatterns: includePatterns
+        }
+      };
     } catch (error) {
-        console.error('Error processing repository:', error);
-        throw new Error(`Failed to process repository: ${error}`);
+      console.error('Error processing repository:', error);
+      throw error;
     }
   }
 
