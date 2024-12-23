@@ -26,6 +26,7 @@ import { S3ToLocalTool } from '../tools/s3_to_local.tool';
 import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 import { ApiServerCallTool } from '../tools/api-server-call.tool';
 import { EnhancedJiraTool } from '../tools/enhanced-jira.tool';
+import { CustomApiServerCallTool } from '../tools/custom-api-server-call.tool';
 
 /**
  * @class WorkflowManager
@@ -71,6 +72,7 @@ export class WorkflowManager {
     this.registerToolFactory('s3ToLocal', S3ToLocalTool);
     this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
     this.registerToolFactory('ApiServerCall', ApiServerCallTool);
+    this.registerToolFactory('CustomApiServerCall', CustomApiServerCallTool);
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
