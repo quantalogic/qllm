@@ -83,14 +83,18 @@ export class ApiServerCallTool extends BaseTool {
     const { url, method, token, data, headers = {} } = inputs;
 
     try {
+      // Parse JSON strings if needed
+      const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+      const parsedHeaders = typeof headers === 'string' ? JSON.parse(headers) : headers;
+
       const config: AxiosRequestConfig = {
         url,
         method: method as Method,
         headers: {
-          ...headers,
+          ...parsedHeaders,
           ...(token && { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` })
         },
-        ...(data && { data })
+        ...(parsedData && { data: parsedData })
       };
 
       const response = await axios(config);

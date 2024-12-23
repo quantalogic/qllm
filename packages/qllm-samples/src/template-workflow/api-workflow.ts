@@ -27,39 +27,22 @@ async function main(): Promise<void> {
       steps: [
         {
           tool: "ApiServerCall",
-          name: "fetch_posts",
-          description: "Fetch posts from JSONPlaceholder API",
+          name: "test",
+          description: "test create embed",
           input: {
-            url: "https://jsonplaceholder.typicode.com/posts",
-            method: "GET"
-          },
-          output: "posts_data"
-        },
-        {
-          tool: "ApiServerCall",
-          name: "fetch_user",
-          description: "Fetch specific user details",
-          input: {
-            url: "https://jsonplaceholder.typicode.com/users/{{userId}}",
-            method: "GET"
-          },
-          output: "user_data"
-        },
-        {
-          tool: "ApiServerCall",
-          name: "create_post",
-          description: "Create a new post",
-          input: {
-            url: "https://jsonplaceholder.typicode.com/posts",
+            url: "http://localhost:8001/api/raglite/documents/upload_folder",
             method: "POST",
             data: JSON.stringify({
-              title: "{{generated_title}}",
-              body: "{{generated_body}}",
-              userId: "$user_data.id"
+              repository: "{{repository}}"
+            }),
+            headers: JSON.stringify({
+              "accept": "application/json",
+              "Content-Type": "application/json"
             })
           },
-          output: "new_post"
-        }
+          output: "status_code"
+        },
+
       ]
     };
 
@@ -71,7 +54,8 @@ async function main(): Promise<void> {
     const workflowInput = {
       userId: "1",
       generated_title: "Example API Workflow Post",
-      generated_body: "This post was created through our API workflow"
+      generated_body: "This post was created through our API workflow",
+      repository: "/tmp/s3_to_local/FRGTY"
     };
 
     // Execute workflow with progress tracking
