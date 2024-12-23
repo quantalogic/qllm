@@ -1,99 +1,89 @@
-import { createLLMProvider, WorkflowManager, WorkflowDefinition } from "qllm-lib";
+import { createLLMProvider, WorkflowManager } from "qllm-lib";
 import dotenv from 'dotenv';
-import path from 'path';
 
 dotenv.config();
 
 async function main(): Promise<void> {
-  console.log("\n🔍 Starting API Workflow Demo");
-
-  // Create providers
-  const providers = {
-    openai: createLLMProvider({
-      name: "openai",
-      apiKey: process.env.OPENAI_API_KEY
-    })
-  };
-
-  // Initialize workflow manager
-  const workflowManager = new WorkflowManager(providers);
-
   try {
-    // Define the workflow
-    const workflowDefinition: WorkflowDefinition = {
-      name: "api_analysis_workflow",
-      description: "Fetch data from an API and analyze it using LLM",
-      defaultProvider: "openai",
-      steps: [
-        {
-          tool: "ApiServerCall",
-          name: "test",
-          description: "test create embed",
-          input: {
-            url: "http://localhost:8001/api/raglite/documents/upload_folder",
-            method: "POST",
-            data: JSON.stringify({
-              repository: "{{repository}}"
-            }),
-            headers: JSON.stringify({
-              "accept": "application/json",
-              "Content-Type": "application/json"
-            })
-          },
-          output: "status_code"
-        },
+    console.log("\n🔍 Debug - Starting workflow execution");
 
-      ]
+    // Create providers
+    const providers = {
+      openai: createLLMProvider({
+        name: "openai",
+        apiKey: process.env.OPENAI_API_KEY
+      })
     };
 
-    // Register the workflow
-    await workflowManager.loadWorkflow(workflowDefinition);
-    console.log("\n✅ Workflow registered successfully");
+    // Initialize workflow manager
+    const workflowManager = new WorkflowManager(providers);
+
+    // Load workflow from GitHub
+    await workflowManager.loadWorkflow('https://raw.githubusercontent.com/YatchiYa/templates_prompts_qllm/main/workflows/efdefc0e-c759-49f1-90c8-1b9ecb199dc5/db3e4127-6a77-42ca-80cb-b9ef7f983ff3/fd-.yaml');
+    console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables
     const workflowInput = {
-      userId: "1",
-      generated_title: "Example API Workflow Post",
-      generated_body: "This post was created through our API workflow",
-      repository: "/tmp/s3_to_local/FRGTY"
+      data: JSON.stringify({
+        repository: "/tmp/s3_to_local/FRGTY"
+      }),
+      headers: JSON.stringify({
+        "Content-Type": "application/json",
+        "accept": "application/json"
+      })
     };
 
-    // Execute workflow with progress tracking
-    const result = await workflowManager.runWorkflow(
-      "api_analysis_workflow",
+    // Debug: Print workflow input
+    console.log('\n🔍 Debug: Workflow input:', JSON.stringify(workflowInput, null, 2));
+
+    console.log('\n🔍 Debug: Starting workflow execution...');
+    const workflowResult = await workflowManager.runWorkflow(
+      "fd ",
       workflowInput,
       {
-        onStepStart: (step, index) => {
-          console.log(`\n🔍 Starting step ${index + 1}: ${step.name}`);
+        onStepStart: async (step: any, index: number) => {
+          console.log('\n🔍 Debug - Starting step', index + 1);
+          console.log('Step configuration:', JSON.stringify(step, null, 2));
         },
-        onStepComplete: (step, index, result) => {
-          console.log(`\n✅ Completed step ${index + 1}: ${step.name}`);
-          console.log(`Result:`, result);
+        onStepComplete: (step: any, index: number, stepResult: any) => {
+          console.log(`\n✅ Step ${index + 1} completed`);
+          console.log('Step result:', JSON.stringify(stepResult, null, 2));
         },
         onStreamChunk: (chunk: string) => {
-          process.stdout.write(chunk);
+          console.log('\n🔍 Debug - Stream chunk received:', chunk);
+        },
+        onToolExecution: (toolName: string, inputs: any) => {
+          console.log('\n🔍 Debug - Tool execution:');
+          console.log('Tool:', toolName);
+          console.log('Inputs:', JSON.stringify(inputs, null, 2));
         }
       }
     );
 
-    console.log("\n🎉 Workflow completed successfully");
-    console.log("\nFinal Results:", JSON.stringify(result, null, 2));
+    console.log("\n✅ Workflow execution completed");
+    console.log('Final result:', JSON.stringify(workflowResult, null, 2));
 
   } catch (error) {
-    console.error("\n❌ Error:", error);
-    throw error;
+    console.error('\n❌ Error during workflow execution:', error);
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Stack trace:', error.stack);
+    }
+    process.exit(1);
   }
 }
 
 // Error handling
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('🚨 Unhandled Rejection:', reason);
+  console.error('\n🔍 Debug: Unhandled rejection:', reason);
+  if (reason instanceof Error) {
+    console.error('Error name:', reason.name);
+    console.error('Error message:', reason.message);
+    console.error('Stack trace:', reason.stack);
+  }
+  process.exit(1);
 });
 
 // Run the main function
-if (require.main === module) {
-  main().catch((error) => {
-    console.error("\n💥 Fatal Error:", error);
-    process.exit(1);
-  });
-}
+main();
