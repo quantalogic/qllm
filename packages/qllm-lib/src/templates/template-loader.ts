@@ -45,16 +45,31 @@ import { loadContent, resolveIncludedContent } from '../utils/document/document-
 import fetch from 'node-fetch';
 import { readFile } from 'fs/promises';
 
+export interface TemplateLoaderConfig {
+  githubToken?: string;
+  githubApiVersion?: string;
+  s3Config?: {
+    accessKeyId?: string;
+    secretAccessKey?: string;
+    region?: string;
+  };
+}
+
 export class TemplateLoader {
   private static templateCache: Map<string, TemplateDefinitionWithResolvedContent> = new Map();
+  private static config: TemplateLoaderConfig = {};
 
-  static async load(source: string): Promise<TemplateDefinitionWithResolvedContent> {
+  static configure(config: TemplateLoaderConfig) {
+    this.config = { ...this.config, ...config };
+  }
+
+  static async load(source: string, headers?: Record<string, string>): Promise<TemplateDefinitionWithResolvedContent> {
     // Check cache first
     if (this.templateCache.has(source)) {
       return this.templateCache.get(source)!;
     }
 
-    const content = await this.fetchContent(source);
+    const content = await this.fetchContent(source, headers);
     const builder = getBuilder(content);
     const template = builder.build();
     const resolvedContent = await resolveIncludedContent(template.content, source);
@@ -64,18 +79,28 @@ export class TemplateLoader {
     return result;
   }
 
-  static async loadAsBuilder(source: string): Promise<TemplateDefinitionBuilder> {
-    const content = await this.fetchContent(source);
+  static async loadAsBuilder(source: string, headers?: Record<string, string>): Promise<TemplateDefinitionBuilder> {
+    const content = await this.fetchContent(source, headers);
     const builder = getBuilder(content);
     const resolvedContent = await resolveIncludedContent(builder.build().content, source);
 
     return builder.setResolvedContent(resolvedContent);
   }
 
-  private static async fetchContent(source: string): Promise<{ mimeType: string; content: string }> {
+  private static async fetchContent(source: string, headers?: Record<string, string>): Promise<{ mimeType: string; content: string }> {
     if (source.startsWith('http')) {
       const url = this.parseTemplateUrl(source);
-      const response = await fetch(url);
+      const requestHeaders = {
+        ...headers,
+        ...(this.config.githubToken && source.includes('github.com')
+          ? { 
+              'Authorization': `Bearer ${this.config.githubToken}`,
+              'X-GitHub-Api-Version': this.config.githubApiVersion || '2022-11-28'
+            }
+          : {})
+      };
+
+      const response = await fetch(url, { headers: requestHeaders });
       if (!response.ok) {
         throw new Error(`Failed to fetch template: ${response.statusText}`);
       }
@@ -90,8 +115,10 @@ export class TemplateLoader {
   }
 
   private static parseTemplateUrl(url: string): string {
-    if (url.startsWith('https://github.com/')) {
+    if (url.includes('github.com')) {
       return this.githubUrlToRaw(url);
+    } else if (url.startsWith('https://raw.githubusercontent.com/')) {
+      return url;
     } else if (url.startsWith('https://s3.amazonaws.com/') || url.includes('.s3.amazonaws.com/')) {
       return this.parseS3Url(url);
     } else if (url.includes('drive.google.com')) {
@@ -101,12 +128,19 @@ export class TemplateLoader {
   }
 
   private static githubUrlToRaw(url: string): string {
+    // Transform github.com URLs to raw.githubusercontent.com
     return url
       .replace('github.com', 'raw.githubusercontent.com')
       .replace('/blob/', '/');
   }
 
   private static parseS3Url(url: string): string {
+    if (this.config.s3Config) {
+      const { accessKeyId, secretAccessKey, region } = this.config.s3Config;
+      // If S3 credentials are provided, you might want to generate a signed URL here
+      // This would require the aws-sdk package
+      // For now, we'll just return the encoded URI
+    }
     return encodeURI(url);
   }
 
