@@ -8,7 +8,7 @@ import { parse } from 'yaml';
 import { WorkflowExecutor } from './workflow-executor';
 import { WorkflowDefinition, WorkflowExecutionResult, WorkflowStep } from '../types/workflow-types';
 import { LLMProvider } from '../types';
-import { TemplateDefinition, TemplateLoader } from '../templates';
+import { TemplateDefinition, TemplateLoader, TemplateLoaderConfig } from '../templates';
 import { BaseTool, ToolDefinition } from "../tools/base-tool"
 import { GithubLoaderTool } from '../tools/github-loader';
 import { FileSaverTool } from '../tools/file-saver.tool';
@@ -38,22 +38,29 @@ export class WorkflowManager {
   private providers: Record<string, LLMProvider>;
   private templateCache: Map<string, TemplateDefinition>;
   private toolFactories: Map<string, new (...args: any[]) => BaseTool>;
+  private authConfig?: TemplateLoaderConfig;
 
   /**
    * @constructor
    * @param {Record<string, LLMProvider>} providers - Map of LLM providers
    * @param {Record<string, BaseTool>} [tools] - Optional map of pre-configured tools
+   * @param {TemplateLoaderConfig} [authConfig] - Optional authentication configuration
    */
   constructor(
     providers: Record<string, LLMProvider>,
-    tools?: Record<string, BaseTool>
+    tools?: Record<string, BaseTool>,
+    authConfig?: TemplateLoaderConfig
   ) {
-    this.workflowExecutor = new WorkflowExecutor();
+    this.workflowExecutor = new WorkflowExecutor(authConfig);
     this.workflows = new Map();
     this.providers = providers;
     this.templateCache = new Map();
     this.toolFactories = new Map();
+    this.authConfig = authConfig;
 
+    if (authConfig) {
+      TemplateLoader.configure(authConfig);
+    }
 
     // Register default tools
     this.registerToolFactory('githubLoader', GithubLoaderTool);
@@ -152,7 +159,27 @@ export class WorkflowManager {
     let content: string;
     
     if (path.startsWith('http')) {
-      const response = await fetch(path);
+      // Prepare headers for authentication
+      const headers: Record<string, string> = {
+        'Accept': 'application/vnd.github.v3.raw'
+      };
+
+      // Add authentication headers if configured
+      if (this.authConfig) {
+        if (this.authConfig.githubToken && path.includes('github.com')) {
+          headers['Authorization'] = `Bearer ${this.authConfig.githubToken}`;
+        }
+        if (this.authConfig.headers) {
+          Object.assign(headers, this.authConfig.headers);
+        }
+      }
+
+      // Convert GitHub blob URL to raw URL if needed
+      if (path.includes('github.com') && path.includes('/blob/')) {
+        path = path.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+      }
+
+      const response = await fetch(path, { headers });
       if (!response.ok) {
         throw new Error(`Failed to fetch workflow: ${response.statusText}`);
       }
@@ -230,5 +257,15 @@ export class WorkflowManager {
     } finally {
       this.workflowExecutor.removeAllListeners();
     }
+  }
+
+  /**
+   * Updates the authentication configuration for private repositories
+   * @param {TemplateLoaderConfig} config - The new authentication configuration
+   */
+  updateAuthConfig(config: TemplateLoaderConfig): void {
+    this.authConfig = config;
+    TemplateLoader.configure(config);
+    this.workflowExecutor.updateAuthConfig(config);
   }
 }

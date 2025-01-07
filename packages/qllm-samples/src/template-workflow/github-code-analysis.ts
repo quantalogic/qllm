@@ -15,7 +15,7 @@ async function main(): Promise<void> {
   const workflowManager = new WorkflowManager(providers); 
   try {
     // Load workflow
-    await workflowManager.loadWorkflow('/home/yarab/Bureau/qllm/packages/qllm-samples/src/template-workflow/git.yaml');
+    await workflowManager.loadWorkflow('./git.yaml');
     console.log("\n✅ Workflow loaded successfully");
 
     // Define workflow input variables

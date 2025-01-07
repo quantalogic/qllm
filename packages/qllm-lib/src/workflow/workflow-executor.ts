@@ -7,7 +7,7 @@ import { TemplateExecutor } from '../templates/template-executor';
 import { WorkflowDefinition, WorkflowStep, WorkflowExecutionContext, WorkflowExecutionResult } from '../types/workflow-types';
 import { LLMProvider } from '../types';
 import { logger } from '../utils/logger';
-import { TemplateLoader } from '../templates';
+import { TemplateLoader, TemplateLoaderConfig } from '../templates';
 import { BaseTool } from '../tools/base-tool';
 import { GithubLoaderTool } from '../tools/github-loader';
 import { FileSaverTool } from '../tools/file-saver.tool';
@@ -43,17 +43,20 @@ export class WorkflowExecutor extends EventEmitter {
   private templateExecutor: TemplateExecutor;
   private toolFactories: Map<string, new (...args: any[]) => BaseTool>;
   private toolInstances: Map<string, BaseTool>;
+  private authConfig?: TemplateLoaderConfig;
   
   /**
    * @constructor
    * Initializes the WorkflowExecutor and registers default tool factories
+   * @param {TemplateLoaderConfig} [authConfig] - Optional authentication configuration
    */
-  constructor() {
+  constructor(authConfig?: TemplateLoaderConfig) {
     super();
     this.templateExecutor = new TemplateExecutor();
     this.setupTemplateExecutorEvents();
     this.toolFactories = new Map();
     this.toolInstances = new Map();
+    this.authConfig = authConfig;
     
     // Register default tool factories
     this.registerToolFactory('githubLoader', GithubLoaderTool);
@@ -179,7 +182,7 @@ export class WorkflowExecutor extends EventEmitter {
     }
 
     const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
-    const tool = new ToolClass(resolvedInput.config || {});
+    const tool = this.createTool(step.tool, resolvedInput.config || {});
     
     this.emit('toolExecution', step.tool, resolvedInput);
     const result = await tool.execute(resolvedInput);
@@ -344,6 +347,44 @@ export class WorkflowExecutor extends EventEmitter {
     }
 
   /**
+   * Updates the authentication configuration and propagates it to relevant tools
+   * @param {TemplateLoaderConfig} config - The new authentication configuration
+   */
+  updateAuthConfig(config: TemplateLoaderConfig): void {
+    this.authConfig = config;
+    
+    // Update auth config for existing tool instances that support it
+    for (const [name, tool] of this.toolInstances.entries()) {
+      if ('updateAuthConfig' in tool && typeof tool.updateAuthConfig === 'function') {
+        tool.updateAuthConfig(config);
+      }
+    }
+  }
+
+  /**
+   * Creates a tool instance from registered factory with auth config
+   * @private
+   * @param {string} name - The name of the tool to create
+   * @param {any} config - Configuration for the tool instance
+   * @returns {BaseTool} The created tool instance
+   * @throws {Error} If tool factory is not found
+   */
+  private createTool(name: string, config: any): BaseTool {
+    const ToolClass = this.toolFactories.get(name);
+    if (!ToolClass) {
+      throw new Error(`Tool factory "${name}" not found`);
+    }
+
+    // Merge auth config with tool config if tool supports it
+    const toolConfig = {
+      ...config,
+      authConfig: this.authConfig
+    };
+
+    return new ToolClass(toolConfig);
+  }
+
+  /**
    * @method getAvailableTools
    * @description Returns information about all registered tools in the workflow executor
    * @returns {Array<{name: string, description: string}>} Array of available tools with their names and descriptions
@@ -396,7 +437,7 @@ export class WorkflowExecutor extends EventEmitter {
 
     // Create new instance
     try {
-      const instance = new ToolClass({});
+      const instance = this.createTool(toolName, {});
       this.toolInstances.set(toolName, instance);
       return instance;
     } catch (error) {

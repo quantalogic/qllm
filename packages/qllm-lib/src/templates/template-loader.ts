@@ -48,6 +48,13 @@ import { readFile } from 'fs/promises';
 export interface TemplateLoaderConfig {
   githubToken?: string;
   githubApiVersion?: string;
+  headers?: Record<string, string>;
+  auth?: {
+    type: 'bearer' | 'basic' | 'token';
+    token?: string;
+    username?: string;
+    password?: string;
+  };
   s3Config?: {
     accessKeyId?: string;
     secretAccessKey?: string;
@@ -90,15 +97,44 @@ export class TemplateLoader {
   private static async fetchContent(source: string, headers?: Record<string, string>): Promise<{ mimeType: string; content: string }> {
     if (source.startsWith('http')) {
       const url = this.parseTemplateUrl(source);
-      const requestHeaders = {
-        ...headers,
-        ...(this.config.githubToken && source.includes('github.com')
-          ? { 
-              'Authorization': `Bearer ${this.config.githubToken}`,
-              'X-GitHub-Api-Version': this.config.githubApiVersion || '2022-11-28'
-            }
-          : {})
+      let requestHeaders: Record<string, string> = {
+        ...headers
       };
+
+      // Handle GitHub specific authentication
+      if (source.includes('github.com')) {
+        if (this.config.githubToken) {
+          requestHeaders['Authorization'] = `Bearer ${this.config.githubToken}`;
+          requestHeaders['X-GitHub-Api-Version'] = this.config.githubApiVersion || '2022-11-28';
+        }
+      }
+
+      // Handle general authentication
+      if (this.config.auth) {
+        switch (this.config.auth.type) {
+          case 'bearer':
+            if (this.config.auth.token) {
+              requestHeaders['Authorization'] = `Bearer ${this.config.auth.token}`;
+            }
+            break;
+          case 'basic':
+            if (this.config.auth.username && this.config.auth.password) {
+              const credentials = Buffer.from(`${this.config.auth.username}:${this.config.auth.password}`).toString('base64');
+              requestHeaders['Authorization'] = `Basic ${credentials}`;
+            }
+            break;
+          case 'token':
+            if (this.config.auth.token) {
+              requestHeaders['Authorization'] = `Token ${this.config.auth.token}`;
+            }
+            break;
+        }
+      }
+
+      // Add any additional configured headers
+      if (this.config.headers) {
+        requestHeaders = { ...requestHeaders, ...this.config.headers };
+      }
 
       const response = await fetch(url, { headers: requestHeaders });
       if (!response.ok) {

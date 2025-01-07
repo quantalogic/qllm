@@ -60,7 +60,7 @@ async function executeTemplate(templateDefinition: TemplateDefinition) {
         // Execute the template
         const provider = createLLMProvider({ name: "openai" });
        const templateDefinitionUrl = "https://github.com/YatchiYa/templates_prompts_qllm/blob/main/templates/a4a411b9-ecdc-47d2-beab-5578a8b27340/94e3b578-a85b-4836-b756-c861f9173858/sssss.yaml"; 
-       const headers = { Authorization: `Bearer ${"ghp_quidezzQ0l3M1d5DXHQbvBAsHF1uxYN622QFHgb"}` };
+       const headers = { Authorization: `Bearer ${"token"}` };
        
        // Use the built-in TemplateLoader which handles authenticated requests
        const templateDefinition = await TemplateLoader.load(templateDefinitionUrl, headers);
