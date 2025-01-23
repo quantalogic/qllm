@@ -367,9 +367,55 @@ export class TemplateExecutor extends EventEmitter {
     template: TemplateDefinition,
     response: string,
   ): Record<string, any> {
-    if (!template.output_variables) return { qllm_response: response };
-    const extractedVariables = OutputVariableExtractor.extractVariables(template, response);
-    return { qllm_response: response, ...extractedVariables };
+    // If no output variables defined, return the entire response
+    if (!template.output_variables) {
+      return { qllm_response: response };
+    }
+
+    try {
+      // Try to extract variables using OutputVariableExtractor
+      const extractedVariables = OutputVariableExtractor.extractVariables(template, response);
+      return { qllm_response: response, ...extractedVariables };
+    } catch (error) {
+      // If extraction fails, handle each output variable individually
+      const result: Record<string, any> = { qllm_response: response };
+      
+      // For each defined output variable, try to extract it or use the entire response
+      for (const [key, variable] of Object.entries(template.output_variables)) {
+        if (key in result) continue;
+        
+        // If this is the only output variable and extraction failed, use the entire response
+        if (Object.keys(template.output_variables).length === 1) {
+          result[key] = this.transformValue(response.trim(), variable.type);
+        } else if ('default' in variable) {
+          result[key] = variable.default;
+        }
+      }
+      
+      return result;
+    }
+  }
+
+  private transformValue(value: string, type: string): any {
+    try {
+      switch (type) {
+        case 'string':
+          return value;
+        case 'integer':
+          return parseInt(value, 10);
+        case 'float':
+          return parseFloat(value);
+        case 'boolean':
+          return value.toLowerCase() === 'true';
+        case 'array':
+        case 'object':
+          return JSON.parse(value);
+        default:
+          return value;
+      }
+    } catch {
+      return value;
+    }
   }
 
   private handleExecutionError(error: any): never {

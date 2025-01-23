@@ -148,7 +148,7 @@ export class OutputVariableExtractor {
   }
 
   /**
-   * Extracts a single variable from the output using XML-like tags.
+   * Extracts a single variable from the output using XML-like tags or key-value pairs.
    * 
    * @private
    * @param {string} key - The variable name
@@ -157,9 +157,27 @@ export class OutputVariableExtractor {
    * @returns {string | null} Extracted value or null if not found
    */
   private extractVariable(key: string, _variable: OutputVariable, output: string): string | null {
-    const regex = new RegExp(`<${key}>(.+?)</${key}>`, 's');
-    const match = output.match(regex);
-    return match ? match[1].trim() : null;
+    // First try XML-like tags
+    const xmlRegex = new RegExp(`<${key}>(.+?)</${key}>`, 's');
+    const xmlMatch = output.match(xmlRegex);
+    if (xmlMatch) {
+      return xmlMatch[1].trim();
+    }
+
+    // If no XML tags found, try to find the value in the output
+    // Look for patterns like "key: value" or "key = value"
+    const valueRegex = new RegExp(`${key}\\s*[:=]\\s*(.+?)(?=\\n|$)`, 'i');
+    const valueMatch = output.match(valueRegex);
+    if (valueMatch) {
+      return valueMatch[1].trim();
+    }
+
+    // If still not found, consider the entire output as the value if this is the only output variable
+    if (Object.keys(_variable).length === 1) {
+      return output.trim();
+    }
+
+    return null;
   }
 
   /**
