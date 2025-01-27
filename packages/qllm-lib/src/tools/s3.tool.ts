@@ -32,6 +32,7 @@ import { fromEnv } from "@aws-sdk/credential-providers";
 import { AwsCredentialIdentity } from "@aws-sdk/types";
 import { S3Config } from "../types/s3-types";
 
+const encKey = process.env.AWS_S3_ENCRYPTION_KEY;
 /**
  * @interface S3Operation
  * @description Parameters for S3 operations
@@ -150,11 +151,11 @@ class S3Tool extends BaseTool {
                     required: false,
                     description: 'Content type of the object'
                 },
-                encKey: {
+                /* encKey: {
                     type: 'string',
                     required: false,
                     description: 'Encryption key for server-side encryption'
-                },
+                }, */
                 metadata: {
                     type: 'object',
                     required: false,
@@ -361,11 +362,11 @@ class S3Tool extends BaseTool {
                 Key: key
             };
 
-            if (inputs.encKey) {
-                const encKeyBuffer = Buffer.from(inputs.encKey);
+            if (encKey) {
+                const encKeyBuffer = Buffer.from(encKey);
                 const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
                 commandInput.SSECustomerAlgorithm = "AES256";
-                commandInput.SSECustomerKey = inputs.encKey;
+                commandInput.SSECustomerKey = encKey;
                 commandInput.SSECustomerKeyMD5 = md5Hash;
             }
 
@@ -408,11 +409,11 @@ class S3Tool extends BaseTool {
             Key: inputs.key
         };
 
-        if (inputs.encKey) {
-            const encKeyBuffer = Buffer.from(inputs.encKey);
+        if (encKey) {
+            const encKeyBuffer = Buffer.from(encKey);
             const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
             commandInput.SSECustomerAlgorithm = "AES256";
-            commandInput.SSECustomerKey = inputs.encKey;
+            commandInput.SSECustomerKey = encKey;
             commandInput.SSECustomerKeyMD5 = md5Hash;
         }
         console.log("Command Input:");
@@ -489,11 +490,11 @@ class S3Tool extends BaseTool {
                 commandInput.Tagging = this.formatTags(inputs.tags);
             }
 
-            if (inputs.encKey) {
-                const encKeyBuffer = Buffer.from(inputs.encKey);
+            if (encKey) {
+                const encKeyBuffer = Buffer.from(encKey);
                 const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
                 commandInput.SSECustomerAlgorithm = "AES256";
-                commandInput.SSECustomerKey = inputs.encKey;
+                commandInput.SSECustomerKey = encKey;
                 commandInput.SSECustomerKeyMD5 = md5Hash;
             }
 

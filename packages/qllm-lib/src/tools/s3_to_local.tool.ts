@@ -16,6 +16,8 @@ import { S3Config } from "../types/s3-types";
 import dotenv from 'dotenv';
 dotenv.config();
 
+const encKey = process.env.AWS_S3_ENCRYPTION_KEY;
+
 interface S3ToLocalInput {
     /** S3 keys string separated by separator */
     keys: string;
@@ -112,11 +114,11 @@ export class S3ToLocalTool extends BaseTool {
                     required: false,
                     description: 'Separator for multiple keys (defaults to comma)'
                 },
-                encKey: {
+                /* encKey: {
                     type: 'string',
                     required: false,
                     description: 'Encryption key for server-side encryption'
-                },
+                }, */
                 cleanupAfter: {
                     type: 'number',
                     required: false,
@@ -205,11 +207,11 @@ export class S3ToLocalTool extends BaseTool {
                 };
 
                 // Add encryption if encKey is provided
-                if (inputs.encKey) {
-                    const encKeyBuffer = Buffer.from(inputs.encKey);
+                if (encKey) {
+                    const encKeyBuffer = Buffer.from(encKey);
                     const md5Hash = crypto.createHash("md5").update(encKeyBuffer).digest("base64");
                     commandInput.SSECustomerAlgorithm = "AES256";
-                    commandInput.SSECustomerKey = inputs.encKey;
+                    commandInput.SSECustomerKey = encKey;
                     commandInput.SSECustomerKeyMD5 = md5Hash;
                 }
 
