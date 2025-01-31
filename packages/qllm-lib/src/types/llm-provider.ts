@@ -86,6 +86,16 @@ export class RateLimitError extends LLMProviderError {}
 export class InvalidRequestError extends LLMProviderError {}
 
 /**
+ * Options for configuring an AI provider with optional configuration and API key
+ */
+export interface ProviderOptions<Config = Record<string, unknown>> {
+  /** Optional configuration specific to the provider */
+  config?: Config;
+  /** API key for authentication with the provider */
+  apiKey?: string;
+}
+
+/**
  * Abstract base class implementing common LLM provider functionality.
  * Provides default implementations and utility methods for concrete providers.
  */

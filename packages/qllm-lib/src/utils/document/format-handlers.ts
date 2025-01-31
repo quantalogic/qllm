@@ -23,7 +23,6 @@ import { FormatHandler } from '../../types/document-types';  // Import from docu
 
 export { FormatHandler };  // Re-export the type
 
-console.log("In format-handlers")
 
 /**
  * Registry of available format handlers.

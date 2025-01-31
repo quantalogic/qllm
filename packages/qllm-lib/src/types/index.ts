@@ -5,3 +5,4 @@ export * from './workflow-types';
 export * from './file-handler';
 export * from './models-cost'; 
 export {MemoryOptions} from './storage'; 
+export {ProviderOptions} from './llm-provider';

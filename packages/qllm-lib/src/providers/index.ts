@@ -20,6 +20,7 @@
  * - Perplexity: Advanced language models
  * - Mistral: Efficient language models
  * - OpenRouter: Multi-model gateway
+ * - OVH: OVH provider
  */
 
 import { EmbeddingProvider, LLMProvider } from '../types/index';
@@ -31,6 +32,7 @@ import { GroqProvider } from './qroq';
 import { PerplexityProvider } from './perplexity';
 import { MistralProvider } from './mistral';
 import { OpenRouterProvider } from './openrouter';
+import { OVHProvider } from './ovh';
 
 /**
  * Returns a sorted list of all available provider names supported by the library.
@@ -38,7 +40,7 @@ import { OpenRouterProvider } from './openrouter';
  * @returns {string[]} Array of provider names in alphabetical order
  * @example
  * const providers = getListProviderNames();
- * // Returns: ['anthropic', 'aws-anthropic', 'groq', 'mistral', 'ollama', 'openai', 'openrouter', 'perplexity']
+ * // Returns: ['anthropic', 'aws-anthropic', 'groq', 'mistral', 'ollama', 'openai', 'openrouter', 'ovh', 'perplexity']
  */
 export const getListProviderNames = (): string[] => {
   const listProviders = [
@@ -49,6 +51,7 @@ export const getListProviderNames = (): string[] => {
     'aws-anthropic',
     'perplexity',
     'mistral',
+    'ovh',
     'openrouter',
   ].sort();
   return listProviders;
@@ -73,7 +76,7 @@ export const getListProviderNames = (): string[] => {
  * // Create an Anthropic provider
  * const anthropic = await getLLMProvider('anthropic');
  */
-export async function getLLMProvider(providerName: string): Promise<LLMProvider> {
+export async function getLLMProvider(providerName: string, options?: any): Promise<LLMProvider> {
   switch (providerName) {
     case 'openai':
       return new OpenAIProvider();
@@ -89,6 +92,11 @@ export async function getLLMProvider(providerName: string): Promise<LLMProvider>
       return new PerplexityProvider();
     case 'mistral':
       return new MistralProvider();
+    case 'ovh':
+      return new OVHProvider({
+        apiKey: options?.apiKey,
+        config: { model: options?.model || 'DeepSeek-R1-Distill-Llama-70B' }
+      });
     case 'openrouter':
       return new OpenRouterProvider();
     default:
