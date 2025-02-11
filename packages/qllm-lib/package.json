@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "3.14.0",
+  "version": "3.14.1",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -85,7 +85,7 @@
     "ioredis": "5.4.1",
     "jira.js": "^2.19.1",
     "js-yaml": "^4.1.0",
-    "llamaindex": "latest",
+    "llamaindex": "0.8.31",
     "mammoth": "1.8.0",
     "marked": "15.0.2",
     "mime-types": "^2.1.35",
