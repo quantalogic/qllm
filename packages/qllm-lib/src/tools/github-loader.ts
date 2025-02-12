@@ -28,13 +28,12 @@ export class GithubLoaderTool extends BaseTool {
   /**
    * @constructor
    * @param {Record<string, any>} config - Configuration object for the GitHub loader
-   * @param {string} [config.authToken] - GitHub authentication token
    * @throws {Error} If unable to initialize Octokit client
    */
   constructor(config: Record<string, any>) {
     super(config);
+    // Initialize without token, will be set in execute if provided
     this.octokit = new Octokit({
-      auth: config.authToken || process.env.GITHUB_TOKEN,
       retry: { enabled: true }
     });
     this.tmpDir = '/tmp/github_loader';
@@ -72,6 +71,11 @@ export class GithubLoaderTool extends BaseTool {
                   type: 'string',
                   required: false,
                   description: 'GitHub authentication token'
+              },
+              branch: {
+                  type: 'string',
+                  required: false,
+                  description: 'Branch to clone (defaults to "main")'
               },
               excludePatterns: {
                   type: 'string',
@@ -158,22 +162,72 @@ export class GithubLoaderTool extends BaseTool {
    * @private
    * @method cloneRepository
    * @param {string} repositoryUrl - URL of the GitHub repository to clone
+   * @param {string} [branch] - Branch to clone (defaults to "main")
    * @returns {Promise<string>} Path to the cloned repository
    * @throws {Error} If cloning fails
    * @description Clones a GitHub repository to a local temporary directory
    */
-  private async cloneRepository(repositoryUrl: string): Promise<string> {
+  private async cloneRepository(repositoryUrl: string, branch?: string): Promise<string> {
     const { owner, repo } = this.parseGithubUrl(repositoryUrl);
     const repoPath = path.join(this.tmpDir, `${owner}-${repo}`);
 
     try {
-      // Clean up existing directory if it exists
-      await this.cleanupTempDirectory(repoPath);
+      // Ensure thorough cleanup of existing directory
+      try {
+        const stats = await fs.stat(repoPath);
+        if (stats.isDirectory()) {
+          console.log(`📂 Found existing repository at ${repoPath}, removing...`);
+          await fs.rm(repoPath, { recursive: true, force: true });
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      } catch (err) {
+        // Directory doesn't exist, which is fine
+      }
+
+      // Double check directory is gone
+      try {
+        await fs.access(repoPath);
+        console.log('Directory still exists, attempting final cleanup...');
+        await fs.rm(repoPath, { recursive: true, force: true });
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (err) {
+        // Directory doesn't exist, which is what we want
+      }
       
-      // Clone the repository
-      console.log(`📥 Cloning repository: ${repositoryUrl}`);
-      await this.git.clone(repositoryUrl, repoPath);
-      console.log(`✅ Repository cloned to: ${repoPath}`);
+      // Prepare the repository URL with authentication if token is available
+      const authToken = this.config.authToken;
+      const authenticatedUrl = authToken 
+        ? `https://${authToken}@github.com/${owner}/${repo}.git`
+        : repositoryUrl;
+
+      // Clone the repository with specified branch
+      console.log(`📥 Cloning repository: https://github.com/${owner}/${repo}${branch ? ` (branch: ${branch})` : ''}`);
+      const cloneOptions = ['clone'];
+      if (branch) {
+        cloneOptions.push('-b', branch);
+      }
+      cloneOptions.push(authenticatedUrl, repoPath);
+      
+      try {
+        await this.git.raw(cloneOptions);
+        console.log(`✅ Repository cloned to: ${repoPath}`);
+      } catch (cloneError) {
+        // If clone fails, ensure cleanup and throw error
+        try {
+          await fs.rm(repoPath, { recursive: true, force: true });
+        } catch (cleanupError) {
+          // Ignore cleanup errors at this point
+        }
+
+        // Type check the error before accessing its properties
+        if (cloneError && typeof cloneError === 'object' && 'message' in cloneError) {
+          const errorMessage = cloneError.message as string;
+          if (errorMessage.includes('Authentication failed') || errorMessage.includes('could not read Username')) {
+            throw new Error(`Authentication failed. Please check your GitHub token. The repository might be private and require valid authentication.`);
+          }
+        }
+        throw cloneError;
+      }
       
       return repoPath;
     } catch (error) {
@@ -238,7 +292,7 @@ export class GithubLoaderTool extends BaseTool {
       '.DS_Store',
       'package-lock.json',
       'yarn.lock',
-      '.git/**',
+      '.db',
       'node_modules/**',
       '.env*',
       '*.log',
@@ -263,6 +317,7 @@ export class GithubLoaderTool extends BaseTool {
       '*.7z',
       '*.jar',
       '*.war',
+      '*.ear',
       '*.class',
       '*.dll',
       '*.exe',
@@ -638,15 +693,28 @@ ${content}
    * @throws {Error} If repository processing fails
    */
   async execute(inputs: Record<string, any>): Promise<Record<string, any> | string> {
+    // Handle authentication token
+    const authToken = inputs.token || inputs.authToken; // Support both token formats
+    if (authToken) {
+      // Update Octokit instance with token
+      this.octokit = new Octokit({
+        auth: authToken,
+        retry: { enabled: true }
+      });
+      // Store token in config for Git authentication
+      this.config.authToken = authToken;
+    }
+
     const excludePatterns = this.parsePatternString(inputs.excludePatterns);
     const includePatterns = this.parsePatternString(inputs.includePatterns);
     const returnLocalPath = inputs.returnLocalPath ?? false;
     const cleanupDelay = inputs.cleanupOnExit ? 0 : (inputs.cleanupAfter || 3600000); // Default to 1 hour if not cleaning up on exit
     const cleanupOnExit = inputs.cleanupOnExit ?? true; // Default to true if not specified
+    const branch = inputs.branch || 'main';
 
     try {
       await this.initTempDirectory();
-      const repoPath = await this.cloneRepository(inputs.repositoryUrl);
+      const repoPath = await this.cloneRepository(inputs.input || inputs.repositoryUrl, branch);
       
       // Schedule cleanup based on parameters
       await this.scheduleCleanup(repoPath, cleanupDelay, cleanupOnExit);

@@ -122,36 +122,67 @@ export class WorkflowExecutor extends EventEmitter {
     initialInput: Record<string, any>,
     toolFactories: Map<string, new (...args: any[]) => BaseTool>
   ): Promise<Record<string, WorkflowExecutionResult>> {
+    logger.info(`[WorkflowExecutor] Starting workflow execution: ${workflow.name}`);
+    logger.debug(`[WorkflowExecutor] Initial input:`, initialInput);
+    logger.debug(`[WorkflowExecutor] Number of steps: ${workflow.steps.length}`);
+
     this.toolFactories = toolFactories;
     const context: WorkflowExecutionContext = {
       variables: { ...initialInput },
       results: {}
     };
 
-    logger.info(`Executing workflow: ${workflow.name}`);
-
     for (const [index, step] of workflow.steps.entries()) {
+      logger.info(`[WorkflowExecutor] Starting step ${index + 1}/${workflow.steps.length}: ${step.tool || 'template'}`);
+      logger.debug(`[WorkflowExecutor] Step details:`, { 
+        tool: step.tool,
+        template: step.templateUrl || (step.template ? 'inline template' : undefined),
+        input: step.input
+      });
+
       this.emit('stepStart', step, index);
-      logger.info(`Step ${index + 1}`);
   
       try {
         let executionResult: WorkflowExecutionResult;
 
         if (step.tool) {
+          logger.info(`[WorkflowExecutor] Executing tool step: ${step.tool}`);
           executionResult = await this.executeToolStep(step, context);
         } else {
+          logger.info(`[WorkflowExecutor] Executing template step with provider: ${step.provider || workflow.defaultProvider}`);
           executionResult = await this.executeTemplateStep(step, context, providers, workflow.defaultProvider);
         }
   
+        logger.debug(`[WorkflowExecutor] Step ${index + 1} execution result:`, executionResult);
         this.storeStepResults(step, executionResult, context);
         this.emit('stepComplete', step, index, executionResult);
-        logger.info(`Completed step ${index + 1}`);
+        logger.info(`[WorkflowExecutor] Completed step ${index + 1}/${workflow.steps.length}`);
   
       } catch (error) {
+        logger.error(`[WorkflowExecutor] Error in step ${index + 1}:`, error);
+        logger.error(`[WorkflowExecutor] Step details at failure:`, {
+          stepType: step.tool ? 'tool' : 'template',
+          tool: step.tool,
+          template: step.templateUrl || (step.template ? 'inline template' : undefined),
+          input: step.input,
+          provider: step.provider
+        });
+        logger.error(`[WorkflowExecutor] Context at failure:`, {
+          availableVariables: Object.keys(context.variables),
+          availableResults: Object.keys(context.results)
+        });
+        if (error instanceof Error) {
+          logger.error(`[WorkflowExecutor] Error stack:`, error.stack);
+          logger.error(`[WorkflowExecutor] Error name:`, error.name);
+          logger.error(`[WorkflowExecutor] Error message:`, error.message);
+        }
         this.emit('stepError', step, index, error as Error);
         throw error;
       }
     }
+
+    logger.info(`[WorkflowExecutor] Workflow execution completed: ${workflow.name}`);
+    logger.debug(`[WorkflowExecutor] Final context results:`, context.results);
   
     return context.results;
   }
@@ -172,21 +203,31 @@ export class WorkflowExecutor extends EventEmitter {
     step: WorkflowStep, 
     context: WorkflowExecutionContext
   ): Promise<WorkflowExecutionResult> {
+    logger.info(`[WorkflowExecutor] Starting tool step execution: ${step.tool}`);
+
     if (!step.tool) {
+      logger.error(`[WorkflowExecutor] Tool step execution failed: Tool name not specified`);
       throw new Error('Tool name not specified');
     }
 
     const ToolClass = this.toolFactories.get(step.tool);
     if (!ToolClass) {
+      logger.error(`[WorkflowExecutor] Tool step execution failed: Tool factory "${step?.tool}" not found`);
       throw new Error(`Tool factory "${step?.tool}" not found`);
     }
 
+    logger.debug(`[WorkflowExecutor] Resolving tool inputs for ${step.tool}`);
     const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
+    logger.debug(`[WorkflowExecutor] Resolved inputs:`, resolvedInput);
+
     const tool = this.createTool(step.tool, resolvedInput.config || {});
+    logger.debug(`[WorkflowExecutor] Created tool instance: ${step.tool}`);
     
     this.emit('toolExecution', step.tool, resolvedInput);
+    logger.info(`[WorkflowExecutor] Executing tool: ${step.tool}`);
     const result = await tool.execute(resolvedInput);
     
+    logger.debug(`[WorkflowExecutor] Tool execution completed:`, result);
     return {
       response: JSON.stringify(result),
       outputVariables: result
@@ -210,21 +251,29 @@ export class WorkflowExecutor extends EventEmitter {
     providers: Record<string, LLMProvider>,
     defaultProvider?: string
   ): Promise<WorkflowExecutionResult> {
+    logger.info(`[WorkflowExecutor] Starting template step execution`);
+
     if (step.templateUrl && !step.template) {
+      logger.debug(`[WorkflowExecutor] Loading template from URL: ${step.templateUrl}`);
       step.template = await TemplateLoader.load(step.templateUrl);
     }
 
     if (!step.template) {
+      logger.error(`[WorkflowExecutor] Template step execution failed: No template found`);
       throw new Error('No template found for step');
     }
 
+    logger.debug(`[WorkflowExecutor] Resolving template inputs`);
     const resolvedInput = await this.resolveStepInputs(step.input || {}, context);
-    const provider = providers[step.provider || defaultProvider || ''];
+    logger.debug(`[WorkflowExecutor] Resolved inputs:`, resolvedInput);
 
+    const provider = providers[step.provider || defaultProvider || ''];
     if (!provider) {
+      logger.error(`[WorkflowExecutor] Template step execution failed: Provider not found`);
       throw new Error('Provider not found');
     }
 
+    logger.info(`[WorkflowExecutor] Executing template with provider: ${step.provider || defaultProvider}`);
     const result = await this.templateExecutor.execute({
       template: step.template,
       provider,
@@ -232,6 +281,7 @@ export class WorkflowExecutor extends EventEmitter {
       stream: true
     });
 
+    logger.debug(`[WorkflowExecutor] Template execution completed:`, result);
     return {
       response: result.response,
       outputVariables: result.outputVariables
@@ -251,23 +301,31 @@ export class WorkflowExecutor extends EventEmitter {
     executionResult: WorkflowExecutionResult,
     context: WorkflowExecutionContext
   ): Promise<void> {
+    logger.debug(`[WorkflowExecutor] Storing step results`);
+
     if (typeof step.output === 'string') {
+      logger.debug(`[WorkflowExecutor] Storing single output: ${step.output}`);
       context.results[step.output] = executionResult;
-      // Store tool name in variables for later reference
       if (step.tool) {
         context.variables[step.output] = { tool: step.tool };
       }
     } else {
+      logger.debug(`[WorkflowExecutor] Storing multiple outputs:`, step.output);
       Object.entries(step.output).forEach(([key, varName]) => {
         if (typeof varName === 'string') {
+          logger.debug(`[WorkflowExecutor] Storing output ${key} to ${varName}`);
           context.results[varName] = executionResult.outputVariables[key];
-          // Store tool name in variables for later reference
           if (step.tool) {
             context.variables[varName] = { tool: step.tool };
           }
         }
       });
     }
+
+    logger.debug(`[WorkflowExecutor] Updated context:`, { 
+      results: Object.keys(context.results),
+      variables: Object.keys(context.variables)
+    });
   }
 
   /**
@@ -299,41 +357,46 @@ export class WorkflowExecutor extends EventEmitter {
       inputs: Record<string, string | number | boolean>,
       context: WorkflowExecutionContext
     ): Promise<Record<string, any>> {
+      logger.debug(`[WorkflowExecutor] Resolving step inputs:`, inputs);
       const resolved: Record<string, any> = {};
     
       for (const [key, value] of Object.entries(inputs)) {
+        logger.debug(`[WorkflowExecutor] Resolving input: ${key}`);
+        
         if (typeof value === 'string') {
           if (value.startsWith('$')) {
-            // Handle reference to previous step output
             const varName = value.slice(1);
+            logger.debug(`[WorkflowExecutor] Resolving reference: ${varName}`);
             const result = context.results[varName];
             
-            // Get the tool name from the previous step's result
             const toolName = Object.keys(context.results).find(key => key === varName);
             const isJiraTool = toolName && context.variables[toolName]?.tool === 'JiraTool';
             
-            // Special handling for JiraTool
             if (isJiraTool) {
+              logger.debug(`[WorkflowExecutor] Special handling for JiraTool result`);
               if (result?.response) {
                 try {
-                  // Try to parse the response if it's a JSON string
                   const parsed = JSON.parse(result.response);
                   resolved[key] = parsed.key;
                 } catch (e) {
-                  // If parsing fails, use the outputVariables
+                  logger.error(`[WorkflowExecutor] Failed to parse JiraTool response:`, e);
+                  logger.error(`[WorkflowExecutor] JiraTool response details:`, {
+                    rawResponse: result?.response,
+                    outputVariables: result?.outputVariables
+                  });
+                  logger.warn(`[WorkflowExecutor] Falling back to outputVariables.key`);
                   resolved[key] = result.outputVariables?.key;
                 }
               } else {
                 resolved[key] = result;
               }
             } else {
-              // For all other tools, use the original behavior
               resolved[key] = result?.response || 
                             result?.outputVariables || 
                             result;
             }
           } else if (value.match(/\{\{.*\}\}/)) {
-            // Handle template variables
+            logger.debug(`[WorkflowExecutor] Resolving template variables in: ${value}`);
             resolved[key] = this.resolveTemplateVariables(value, context.variables);
           } else {
             resolved[key] = value;
@@ -342,7 +405,8 @@ export class WorkflowExecutor extends EventEmitter {
           resolved[key] = value;
         }
       }
-    
+  
+      logger.debug(`[WorkflowExecutor] Resolved inputs:`, resolved);
       return resolved;
     }
 
