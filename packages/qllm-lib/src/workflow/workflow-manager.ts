@@ -23,6 +23,7 @@ import { RAGToolWithEmbedding } from '../tools/llamaindex-rag-v1';
 import { RAGTool } from '../tools/llamaindex-rag.tool';
 import { TextToJsonTool } from '../tools/text-to-json';
 import { JiraTool } from '../tools/jira.tool'; 
+import { BitbucketLoaderTool } from '../tools/bitbucket-loader';
 import { S3ToLocalTool } from '../tools/s3_to_local.tool';
 import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 import { ApiServerCallTool } from '../tools/api-server-call.tool';
@@ -92,6 +93,7 @@ export class WorkflowManager {
     this.registerToolFactory('ApiServerCall', ApiServerCallTool);
     this.registerToolFactory('CustomApiServerCall', CustomApiServerCallTool);
     this.registerToolFactory('gitlabLoader', GitlabLoaderTool);
+    this.registerToolFactory('BitbucketLoader', BitbucketLoaderTool);
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {

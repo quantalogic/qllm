@@ -28,6 +28,7 @@ import { ApiServerCallTool } from '../tools/api-server-call.tool';
 import { EnhancedJiraTool } from '../tools/enhanced-jira.tool';
 import { CustomApiServerCallTool } from '../tools/custom-api-server-call.tool';
 import { GitlabLoaderTool } from '../tools/gitlab-loader';
+import { BitbucketLoaderTool } from '../tools/bitbucket-loader';
 
 /**
  * @class WorkflowExecutor
@@ -80,6 +81,8 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('ApiServerCall', ApiServerCallTool);
     this.registerToolFactory('CustomApiServerCall', CustomApiServerCallTool);
     this.registerToolFactory('gitlabLoader', GitlabLoaderTool);
+    this.registerToolFactory('BitbucketLoader', BitbucketLoaderTool);
+    
   }
 
 

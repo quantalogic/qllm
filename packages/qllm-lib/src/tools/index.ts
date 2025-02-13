@@ -3,6 +3,7 @@ import { S3ToLocalTool } from "./s3_to_local.tool";
 export * from "./base-tool";
 export * from "./github-loader";
 export * from "./gitlab-loader";
+export * from "./bitbucket-loader";
 export * from "./file-saver.tool"; 
 export * from "./local-project-loader"; 
 export * from "./s3.tool";
