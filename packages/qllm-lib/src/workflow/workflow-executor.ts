@@ -27,6 +27,7 @@ import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 import { ApiServerCallTool } from '../tools/api-server-call.tool';
 import { EnhancedJiraTool } from '../tools/enhanced-jira.tool';
 import { CustomApiServerCallTool } from '../tools/custom-api-server-call.tool';
+import { GitlabLoaderTool } from '../tools/gitlab-loader';
 
 /**
  * @class WorkflowExecutor
@@ -78,6 +79,7 @@ export class WorkflowExecutor extends EventEmitter {
     this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
     this.registerToolFactory('ApiServerCall', ApiServerCallTool);
     this.registerToolFactory('CustomApiServerCall', CustomApiServerCallTool);
+    this.registerToolFactory('gitlabLoader', GitlabLoaderTool);
   }
 
 

@@ -105,6 +105,8 @@ export class TemplateManager {
    * @param {TemplateManagerConfig} config - Configuration options
    */
   constructor(config: TemplateManagerConfig) {
+    logger.info('Initializing TemplateManager');
+    logger.debug(`Setting template directory to: ${config.promptDirectory}`);
     this.templateDir = config.promptDirectory;
   }
 
@@ -115,7 +117,9 @@ export class TemplateManager {
    * @throws {TemplateManagerError} If directory initialization fails
    */
   async init(): Promise<void> {
+    logger.info('Starting TemplateManager initialization');
     await this.ensureTemplateDirectory();
+    logger.info('TemplateManager initialization completed successfully');
   }
 
   /**
@@ -125,7 +129,10 @@ export class TemplateManager {
    * @returns {Promise<string[]>} List of template names (without extension)
    */
   async listTemplates(): Promise<string[]> {
-    return this.getYamlFilesInDirectory();
+    logger.info('Listing all available templates');
+    const templates = await this.getYamlFilesInDirectory();
+    logger.debug(`Found ${templates.length} templates`);
+    return templates;
   }
 
   /**
@@ -135,9 +142,19 @@ export class TemplateManager {
    * @returns {Promise<TemplateDefinition | null>} Template if found, null otherwise
    */
   async getTemplate(name: string): Promise<TemplateDefinition | null> {
+    logger.info(`Loading template: ${name}`);
     const filePath = this.getFilePath(name);
+    logger.debug(`Attempting to load template from: ${filePath}`);
+    
     try {
-      return await TemplateLoader.load(filePath);
+      const template = await TemplateLoader.load(filePath);
+      if (template) {
+        logger.debug(`Template "${name}" loaded successfully`);
+        logger.debug(`Template details - Version: ${template.version}, Variables: ${Object.keys(template.input_variables || {}).length}`);
+      } else {
+        logger.debug(`Template "${name}" not found`);
+      }
+      return template;
     } catch (error) {
       this.handleTemplateReadError(error, name);
       return null;
@@ -152,12 +169,23 @@ export class TemplateManager {
    * @throws {TemplateManagerError} If save operation fails
    */
   async saveTemplate(template: TemplateDefinition): Promise<void> {
+    logger.info(`Saving template: ${template.name}`);
+    logger.debug(`Template details - Version: ${template.version}, Variables: ${Object.keys(template.input_variables || {}).length}`);
+    
     const templateBuilder = TemplateDefinitionBuilder.fromTemplate(template);
     const filePath = this.getFilePath(template.name);
+    
     try {
       const content = templateBuilder.toYAML();
+      logger.debug(`Writing template to file: ${filePath}`);
       await fs.writeFile(filePath, content, 'utf-8');
-      logger.info(`Saved template ${template.name} to ${filePath}`);
+      logger.info(`Successfully saved template ${template.name}`);
+      
+      // Update cache if exists
+      if (this.fileCache.has(filePath)) {
+        logger.debug(`Updating cache for template: ${template.name}`);
+        this.fileCache.set(filePath, content);
+      }
     } catch (error) {
       this.handleTemplateSaveError(error, template.name);
     }
@@ -171,10 +199,20 @@ export class TemplateManager {
    * @throws {TemplateManagerError} If deletion fails
    */
   async deleteTemplate(name: string): Promise<void> {
+    logger.info(`Deleting template: ${name}`);
     const filePath = this.getFilePath(name);
+    
     try {
+      logger.debug(`Attempting to delete file: ${filePath}`);
       await fs.unlink(filePath);
-      logger.info(`Deleted template ${name} from ${filePath}`);
+      
+      // Clear cache if exists
+      if (this.fileCache.has(filePath)) {
+        logger.debug(`Clearing cache for template: ${name}`);
+        this.fileCache.delete(filePath);
+      }
+      
+      logger.info(`Successfully deleted template: ${name}`);
     } catch (error) {
       this.handleTemplateDeleteError(error, name);
     }
@@ -189,16 +227,24 @@ export class TemplateManager {
    * @throws {TemplateManagerError} If template not found or update fails
    */
   async updateTemplate(name: string, updatedTemplate: Partial<TemplateDefinition>): Promise<void> {
+    logger.info(`Updating template: ${name}`);
+    logger.debug(`Update details:`, updatedTemplate);
+    
     const existingTemplate = await this.getTemplate(name);
     if (!existingTemplate) {
+      logger.error(`Template ${name} not found for update`);
       ErrorManager.throw(TemplateManagerError, `Template ${name} not found`);
     }
+    
+    logger.debug(`Merging existing template with updates`);
     const mergedTemplate: TemplateDefinition = {
       ...existingTemplate,
       ...updatedTemplate,
     };
 
+    logger.debug(`Saving merged template`);
     await this.saveTemplate(mergedTemplate);
+    logger.info(`Successfully updated template: ${name}`);
   }
 
   /**
@@ -208,11 +254,15 @@ export class TemplateManager {
    * @returns {Promise<boolean>} True if template exists, false otherwise
    */
   async templateExists(name: string): Promise<boolean> {
+    logger.debug(`Checking existence of template: ${name}`);
     const filePath = this.getFilePath(name);
+    
     try {
       await fs.access(filePath);
+      logger.debug(`Template ${name} exists`);
       return true;
     } catch {
+      logger.debug(`Template ${name} does not exist`);
       return false;
     }
   }
@@ -225,12 +275,25 @@ export class TemplateManager {
    * @throws {TemplateManagerError} If directory is invalid
    */
   async setPromptDirectory(directory: string): Promise<void> {
+    logger.info(`Setting new prompt directory: ${directory}`);
+    
     try {
       const expandedDir = path.resolve(directory);
+      logger.debug(`Resolved directory path: ${expandedDir}`);
+      
+      logger.debug(`Validating directory: ${expandedDir}`);
       await this.validateDirectory(expandedDir);
+      
       this.templateDir = expandedDir;
-      logger.info(`Prompt directory set to: ${expandedDir}`);
+      logger.info(`Successfully set prompt directory to: ${expandedDir}`);
+      
+      // Clear cache when changing directory
+      if (this.fileCache.size > 0) {
+        logger.debug(`Clearing template cache due to directory change`);
+        this.fileCache.clear();
+      }
     } catch (error) {
+      logger.error(`Failed to set prompt directory: ${error}`);
       ErrorManager.throw(TemplateManagerError, `Failed to set prompt directory: ${error}`);
     }
   }
@@ -243,9 +306,10 @@ export class TemplateManager {
    * @throws {TemplateManagerError} If directory creation fails
    */
   private async ensureTemplateDirectory(): Promise<void> {
+    logger.debug(`Ensuring template directory exists: ${this.templateDir}`);
     try {
       await fs.mkdir(this.templateDir, { recursive: true });
-      logger.debug(`Ensured template directory exists: ${this.templateDir}`);
+      logger.info(`Template directory ready: ${this.templateDir}`);
     } catch (error) {
       logger.error(`Failed to initialize template directory: ${error}`);
       ErrorManager.throw(TemplateManagerError, `Failed to initialize template directory: ${error}`);
@@ -259,12 +323,18 @@ export class TemplateManager {
    * @returns {Promise<string[]>} List of template names (without extension)
    */
   private async getYamlFilesInDirectory(): Promise<string[]> {
+    logger.debug(`Scanning directory for YAML files: ${this.templateDir}`);
     try {
-      logger.debug(`Scanning directory: ${this.templateDir}`);
       const files = await fs.readdir(this.templateDir);
+      logger.debug(`Found ${files.length} total files`);
+      
       const yamlFiles = files.filter((file) => file.endsWith('.yaml'));
-      logger.debug(`Found ${yamlFiles.length} YAML files in ${this.templateDir}`);
-      return yamlFiles.map((file) => path.basename(file, '.yaml'));
+      logger.debug(`Found ${yamlFiles.length} YAML files`);
+      
+      const templateNames = yamlFiles.map((file) => path.basename(file, '.yaml'));
+      logger.debug(`Template names: ${templateNames.join(', ')}`);
+      
+      return templateNames;
     } catch (error) {
       logger.error(`Failed to read directory ${this.templateDir}: ${error}`);
       return [];
@@ -279,7 +349,9 @@ export class TemplateManager {
    * @returns {string} Full file path
    */
   private getFilePath(name: string): string {
-    return path.join(this.templateDir, `${name}.yaml`);
+    const filePath = path.join(this.templateDir, `${name}.yaml`);
+    logger.debug(`Resolved file path for template "${name}": ${filePath}`);
+    return filePath;
   }
 
   /**
@@ -290,11 +362,19 @@ export class TemplateManager {
    * @returns {Promise<string>} File contents
    */
   private async readFile(filePath: string): Promise<string> {
+    logger.debug(`Reading file: ${filePath}`);
+    
     if (this.fileCache.has(filePath)) {
+      logger.debug(`Cache hit for file: ${filePath}`);
       return this.fileCache.get(filePath)!;
     }
+    
+    logger.debug(`Cache miss, reading from disk: ${filePath}`);
     const content = await fs.readFile(filePath, 'utf-8');
+    
+    logger.debug(`Caching content for: ${filePath}`);
     this.fileCache.set(filePath, content);
+    
     return content;
   }
 
@@ -306,8 +386,15 @@ export class TemplateManager {
    * @param {string} name - Template name
    */
   private handleTemplateReadError(error: any, name: string): void {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      logger.error(`Failed to read template ${name}: ${error}`);
+    const errorCode = (error as NodeJS.ErrnoException).code;
+    if (errorCode !== 'ENOENT') {
+      logger.error(`Failed to read template ${name}:`, {
+        error: error.message,
+        code: errorCode,
+        stack: error.stack
+      });
+    } else {
+      logger.debug(`Template ${name} not found (ENOENT)`);
     }
   }
 
@@ -320,7 +407,11 @@ export class TemplateManager {
    * @throws {TemplateManagerError} Always throws with error details
    */
   private handleTemplateSaveError(error: any, name: string): void {
-    logger.error(`Failed to save template ${name}: ${error}`);
+    logger.error(`Failed to save template ${name}:`, {
+      error: error.message,
+      code: (error as NodeJS.ErrnoException).code,
+      stack: error.stack
+    });
     ErrorManager.throw(TemplateManagerError, `Failed to save template ${name}: ${error}`);
   }
 
@@ -333,9 +424,16 @@ export class TemplateManager {
    * @throws {TemplateManagerError} If error is not ENOENT
    */
   private handleTemplateDeleteError(error: any, name: string): void {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      logger.error(`Failed to delete template ${name}: ${error}`);
+    const errorCode = (error as NodeJS.ErrnoException).code;
+    if (errorCode !== 'ENOENT') {
+      logger.error(`Failed to delete template ${name}:`, {
+        error: error.message,
+        code: errorCode,
+        stack: error.stack
+      });
       ErrorManager.throw(TemplateManagerError, `Failed to delete template ${name}: ${error}`);
+    } else {
+      logger.debug(`Template ${name} already deleted or does not exist (ENOENT)`);
     }
   }
 
@@ -348,9 +446,19 @@ export class TemplateManager {
    * @throws {TemplateManagerError} If path is not a directory
    */
   private async validateDirectory(dir: string): Promise<void> {
-    const stats = await fs.stat(dir);
-    if (!stats.isDirectory()) {
-      ErrorManager.throw(TemplateManagerError, 'Specified path is not a directory');
+    logger.debug(`Validating directory: ${dir}`);
+    try {
+      const stats = await fs.stat(dir);
+      if (!stats.isDirectory()) {
+        logger.error(`Path is not a directory: ${dir}`);
+        ErrorManager.throw(TemplateManagerError, 'Specified path is not a directory');
+      }
+      logger.debug(`Directory validation successful: ${dir}`);
+    } catch (error) {
+      logger.error(`Directory validation failed: ${dir}`, {
+        error: error,
+      });
+      throw error;
     }
   }
 }

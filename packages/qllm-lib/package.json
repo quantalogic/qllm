@@ -1,6 +1,6 @@
 {
   "name": "qllm-lib",
-  "version": "3.14.3",
+  "version": "3.14.8",
   "description": "Core library providing robust AI engineering functionalities tailored for Large Language Model (LLM) applications, enabling developers to build, deploy, and optimize AI solutions with ease.",
   "keywords": [
     "ai",
@@ -74,6 +74,7 @@
     "@aws-sdk/client-sts": "^3.645.0",
     "@aws-sdk/credential-providers": "^3.645.0",
     "@aws-sdk/types": "^3.696.0",
+    "@gitbeaker/rest": "42.1.0",
     "@mistralai/mistralai": "1.0.4",
     "@octokit/rest": "21.0.2",
     "@peculiar/webcrypto": "1.5.0",

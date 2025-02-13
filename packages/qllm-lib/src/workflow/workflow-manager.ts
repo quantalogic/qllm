@@ -11,6 +11,7 @@ import { LLMProvider } from '../types';
 import { TemplateDefinition, TemplateLoader, TemplateLoaderConfig } from '../templates';
 import { BaseTool, ToolDefinition } from "../tools/base-tool"
 import { GithubLoaderTool } from '../tools/github-loader';
+import { GitlabLoaderTool } from '../tools/gitlab-loader';
 import { FileSaverTool } from '../tools/file-saver.tool';
 import { S3Tool } from '../tools/s3.tool';
 import { SlackStreamerTool } from '../tools/slack-streamer.tool';
@@ -26,7 +27,7 @@ import { S3ToLocalTool } from '../tools/s3_to_local.tool';
 import { RemoveFromLocalTool } from '../tools/remove_from_local.tool';
 import { ApiServerCallTool } from '../tools/api-server-call.tool';
 import { EnhancedJiraTool } from '../tools/enhanced-jira.tool';
-import { CustomApiServerCallTool } from '../tools/custom-api-server-call.tool';
+import { CustomApiServerCallTool } from '../tools/custom-api-server-call.tool'; 
 import { logger } from '../utils/logger';
 
 /**
@@ -90,6 +91,7 @@ export class WorkflowManager {
     this.registerToolFactory('removeFromLocal', RemoveFromLocalTool);
     this.registerToolFactory('ApiServerCall', ApiServerCallTool);
     this.registerToolFactory('CustomApiServerCall', CustomApiServerCallTool);
+    this.registerToolFactory('gitlabLoader', GitlabLoaderTool);
   }
   
   registerToolFactory(name: string, toolClass: new (...args: any[]) => BaseTool): void {
