@@ -6,7 +6,7 @@ import { createFunctionToolFromZod } from "qllm-lib";
 // Test configuration for Google Gemini models
 const googleModels = {
     embeddingModelName: "", // Google doesn't support embeddings yet
-    visionModelName: "gemini-1.0-pro-vision",
+    visionModelName: "",//Not supported yet
     toolModelName: "gemini-1.5-flash",
     textModelName: "gemini-1.5-flash",
 };
@@ -131,7 +131,11 @@ async function testCompletionWithTool(
     const weatherSchema = z.object({
         location: z.string().describe("The city and country to get weather for"),
         unit: z.enum(["celsius", "fahrenheit"]).describe("Temperature unit"),
-    });
+    }).describe("Get weather information for a location");
+
+    // Debug: Log the schema
+    console.log('Weather schema:', weatherSchema);
+    console.log('Weather schema shape:', weatherSchema.shape);
 
     const tools: Tool[] = [
         createFunctionToolFromZod({
@@ -141,6 +145,9 @@ async function testCompletionWithTool(
             strict: true,
         }),
     ];
+
+    // Debug: Log the generated tool schema
+    console.log('Generated tool schema:', JSON.stringify(tools[0], null, 2));
 
     const response = await provider.generateChatCompletion({
         options,

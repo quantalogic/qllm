@@ -18,39 +18,40 @@ export type GoogleModelConfig = {
   endpoint: string;
 };
 
+const BASE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
+const DEFAULT_CONTEXT_LENGTH = 1024 * 32; // 32K tokens
+
+const createGeminiModel = (
+  id: GoogleModelKey,
+  name: string,
+  contextLength: number = DEFAULT_CONTEXT_LENGTH,
+): GoogleModelConfig => ({
+  id,
+  name,
+  parameterCount: '1T',
+  contextLength,
+  type: 'Chat Completion',
+  endpoint: `${BASE_ENDPOINT}/${id}:generateContent`,
+});
+
 export const GOOGLE_MODELS: Record<GoogleModelKey, GoogleModelConfig> = {
-  'gemini-1.5-pro': {
-    id: 'gemini-1.5-pro',
-    name: 'Gemini 1.5 Pro',
-    parameterCount: '1T',
-    contextLength: 1024 * 1024, // 1M tokens
-    type: 'Chat Completion',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
-  },
-  'gemini-1.5-flash': {
-    id: 'gemini-1.5-flash',
-    name: 'Gemini 1.5 Flash',
-    parameterCount: '1T',
-    contextLength: 1024 * 32, // 32K tokens
-    type: 'Chat Completion',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
-  },
-  'gemini-1.0-pro': {
-    id: 'gemini-1.0-pro',
-    name: 'Gemini 1.0 Pro',
-    parameterCount: '1T',
-    contextLength: 1024 * 32, // 32K tokens
-    type: 'Chat Completion',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent',
-  },
-  'gemini-1.0-pro-vision': {
-    id: 'gemini-1.0-pro-vision',
-    name: 'Gemini 1.0 Pro Vision',
-    parameterCount: '1T',
-    contextLength: 1024 * 32, // 32K tokens
-    type: 'Chat Completion',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-vision:generateContent',
-  },
+  'gemini-1.5-pro': createGeminiModel(
+    'gemini-1.5-pro',
+    'Gemini 1.5 Pro',
+    1024 * 1024, // 1M tokens
+  ),
+  'gemini-1.5-flash': createGeminiModel(
+    'gemini-1.5-flash',
+    'Gemini 1.5 Flash'
+  ),
+  'gemini-1.0-pro': createGeminiModel(
+    'gemini-1.0-pro',
+    'Gemini 1.0 Pro'
+  ),
+  'gemini-1.0-pro-vision': createGeminiModel(
+    'gemini-1.0-pro-vision',
+    'Gemini 1.0 Pro Vision'
+  ),
 };
 
 export const ALL_GOOGLE_MODELS: Record<GoogleModelKey, GoogleModelConfig> = {

@@ -269,13 +269,50 @@ export class GoogleProvider implements LLMProvider {
   ) {
     if (!tools?.length) return undefined;
 
-    return tools.map(tool => ({
-      functionDeclarations: [{
-        name: tool.function.name,
-        description: tool.function.description,
-        parameters: tool.function.parameters,
-      }],
-    }));
+    return tools.map(tool => {
+      const rawParameters = tool.function.parameters || { type: 'object', properties: {} };
+      
+      // Transform the schema to ensure it has the required structure
+      const googleParameters: {
+        type: string;
+        properties: Record<string, any>;
+        required: string[];
+        description?: string;
+      } = {
+        type: 'object',
+        properties: {},
+        required: [],
+      };
+
+      // Handle description if present
+      if ('description' in rawParameters) {
+        googleParameters.description = rawParameters.description;
+      }
+
+      // Copy properties and required fields directly
+      if (rawParameters.type === 'object') {
+        googleParameters.properties = rawParameters.properties || {};
+        googleParameters.required = rawParameters.required || [];
+      }
+
+      // Ensure we have at least one property
+      if (Object.keys(googleParameters.properties).length === 0) {
+        // Add a fallback property if none exist
+        googleParameters.properties.input = {
+          type: 'string',
+          description: 'Input parameter',
+        };
+        googleParameters.required = ['input'];
+      }
+
+      return {
+        functionDeclarations: [{
+          name: tool.function.name,
+          description: tool.function.description,
+          parameters: googleParameters,
+        }],
+      };
+    });
   }
 
   /**
