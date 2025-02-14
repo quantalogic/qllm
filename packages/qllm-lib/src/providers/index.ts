@@ -33,6 +33,7 @@ import { PerplexityProvider } from './perplexity';
 import { MistralProvider } from './mistral';
 import { OpenRouterProvider } from './openrouter';
 import { OVHProvider } from './ovh';
+import { GoogleProvider  } from './google';
 
 /**
  * Returns a sorted list of all available provider names supported by the library.
@@ -53,6 +54,7 @@ export const getListProviderNames = (): string[] => {
     'mistral',
     'ovh',
     'openrouter',
+    'google'
   ].sort();
   return listProviders;
 };
@@ -99,6 +101,8 @@ export async function getLLMProvider(providerName: string, options?: any): Promi
       });
     case 'openrouter':
       return new OpenRouterProvider();
+    case 'google':
+      return new GoogleProvider();
     default:
       throw new Error(`Provider "${providerName}" not found.`);
   }
