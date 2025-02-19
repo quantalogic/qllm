@@ -92,7 +92,7 @@
         "pptx-parser": "1.1.7-beta.9",
         "prompts": "^2.4.2",
         "pino-pretty": "^10.3.1",
-        "@quantalogic/qllm-lib": "workspace:*",
+        "qllm-lib": "workspace:*",
         "readline": "^1.3.0",
         "screenshot-desktop": "^1.15.0",
         "table": "^6.8.2",
