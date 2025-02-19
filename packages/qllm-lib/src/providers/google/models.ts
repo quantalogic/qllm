@@ -7,7 +7,9 @@ export type GoogleModelKey =
   | 'gemini-1.5-pro'
   | 'gemini-1.5-flash'
   | 'gemini-1.0-pro'
-  | 'gemini-1.0-pro-vision';
+  | 'gemini-1.0-pro-vision'
+  | 'gemini-2.0-flash'
+  ;
 
 export type GoogleModelConfig = {
   id: string;
@@ -18,7 +20,7 @@ export type GoogleModelConfig = {
   endpoint: string;
 };
 
-const BASE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
+const BASE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_CONTEXT_LENGTH = 1024 * 32; // 32K tokens
 
 const createGeminiModel = (
@@ -31,7 +33,7 @@ const createGeminiModel = (
   parameterCount: '1T',
   contextLength,
   type: 'Chat Completion',
-  endpoint: `${BASE_ENDPOINT}/${id}:generateContent`,
+  endpoint: `${BASE_ENDPOINT}/models/${id}:generateContent`,
 });
 
 export const GOOGLE_MODELS: Record<GoogleModelKey, GoogleModelConfig> = {
@@ -52,10 +54,14 @@ export const GOOGLE_MODELS: Record<GoogleModelKey, GoogleModelConfig> = {
     'gemini-1.0-pro-vision',
     'Gemini 1.0 Pro Vision'
   ),
+  'gemini-2.0-flash': createGeminiModel(
+    'gemini-2.0-flash',
+    'Gemini 2.0 Flash'
+  ),
 };
 
 export const ALL_GOOGLE_MODELS: Record<GoogleModelKey, GoogleModelConfig> = {
   ...GOOGLE_MODELS,
 };
 
-export const DEFAULT_GOOGLE_MODEL: GoogleModelKey = 'gemini-1.5-flash';
+export const DEFAULT_GOOGLE_MODEL: GoogleModelKey = 'gemini-2.0-flash';

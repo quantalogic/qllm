@@ -53,6 +53,7 @@ export class GoogleProvider implements LLMProvider {
    * @throws {AuthenticationError} When no API key is found
    */
   constructor(private key?: string) {
+
     const apiKey = key ?? process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       throw new AuthenticationError('Google API key GOOGLE_API_KEY is required', 'Google');
@@ -101,47 +102,43 @@ export class GoogleProvider implements LLMProvider {
       const apiKey = this.getKey();
       const endpoint = ALL_GOOGLE_MODELS[model as GoogleModelKey].endpoint;
       
+      console.log('Preparing request...');
+      const requestBody = {
+        contents: messages.map(msg => {
+          const content = Array.isArray(msg.content) ? msg.content[0] : msg.content;
+          const text = content.type === 'text' ? content.text : '';
+          if (!text.trim() && msg.role === 'assistant') {
+            return { role: msg.role };
+          }
+          return { role: msg.role, parts: [{ text }] };
+        }),
+        tools: this.prepareGoogleTools(tools),
+      };
+
       const response = await fetch(`${endpoint}?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contents: messages.map(msg => {
-            const content = Array.isArray(msg.content) ? msg.content[0] : msg.content;
-            return {
-              parts: [{ text: content.type === 'text' ? content.text : content.url }],
-              role: msg.role === 'assistant' ? 'model' : msg.role,
-            };
-          }),
-          tools: this.prepareGoogleTools(tools),
-          generationConfig: {
-            maxOutputTokens: options?.maxTokens || this.defaultOptions.maxTokens,
-            temperature: options?.temperature,
-            topP: options?.topProbability,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Unknown error');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
-      const candidates = result.candidates || [];
-      const firstCandidate = candidates[0];
-
-      if (!firstCandidate) {
-        throw new Error('No completion generated');
-      }
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      const toolCalls = data?.candidates?.[0]?.content?.tool_calls?.map(this.extractToolCallsResult) || [];
 
       return {
         model,
-        text: firstCandidate.content?.parts?.[0]?.text || null,
+        text,
         refusal: null,
-        finishReason: firstCandidate.finishReason || null,
-        toolCalls: this.extractToolCallsResult(firstCandidate.content?.parts?.[0]?.functionCall),
+        toolCalls: toolCalls.flat(),
+        finishReason: data?.candidates?.[0]?.finishReason || null,
+        usage: undefined,
+        outputVariables: text ? this.extractOutputVariables(text) : undefined,
       };
     } catch (error) {
       this.handleError(error);
@@ -169,65 +166,42 @@ export class GoogleProvider implements LLMProvider {
       const apiKey = this.getKey();
       const endpoint = ALL_GOOGLE_MODELS[model as GoogleModelKey].endpoint;
       
+      const requestBody = {
+        contents: messages.map(msg => {
+          const content = Array.isArray(msg.content) ? msg.content[0] : msg.content;
+          const text = content.type === 'text' ? content.text : '';
+          if (!text.trim() && msg.role === 'assistant') {
+            return { role: msg.role };
+          }
+          return { role: msg.role, parts: [{ text }] };
+        }),
+        tools: this.prepareGoogleTools(tools),
+      };
+
       const response = await fetch(`${endpoint}?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contents: messages.map(msg => {
-            const content = Array.isArray(msg.content) ? msg.content[0] : msg.content;
-            return {
-              parts: [{ text: content.type === 'text' ? content.text : content.url }],
-              role: msg.role === 'assistant' ? 'model' : msg.role,
-            };
-          }),
-          tools: this.prepareGoogleTools(tools),
-          generationConfig: {
-            maxOutputTokens: options?.maxTokens || this.defaultOptions.maxTokens,
-            temperature: options?.temperature,
-            topP: options?.topProbability,
-          },
-          stream: true,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'Unknown error');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Stream not available');
-      }
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+      const toolCalls = data?.candidates?.[0]?.content?.tool_calls?.map(this.extractToolCallsResult) || [];
 
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.trim() === '') continue;
-          if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.slice(6));
-            const candidate = data.candidates?.[0];
-            if (candidate) {
-              yield {
-                model,
-                text: candidate.content?.parts?.[0]?.text || null,
-                finishReason: candidate.finishReason || null,
-              };
-            }
-          }
-        }
-      }
+      // For now, Google's API doesn't support true streaming, so we simulate it
+      yield {
+        model,
+        text,
+        finishReason: data?.candidates?.[0]?.finishReason || null,
+        toolCalls: toolCalls.flat(),
+        outputVariables: text ? this.extractOutputVariables(text) : undefined,
+      };
     } catch (error) {
       this.handleError(error);
     }
@@ -333,6 +307,31 @@ export class GoogleProvider implements LLMProvider {
         arguments: JSON.stringify(functionCall.args),
       },
     }];
+  }
+
+  /**
+   * Extracts output variables from a response text.
+   * 
+   * @param {string} text - Response text
+   * @returns {Record<string, string>} Extracted output variables
+   * @private
+   */
+  private extractOutputVariables(text: string): Record<string, string> {
+    const variables: Record<string, string> = {};
+    const tagPattern = /<(\w+)>([\s\S]*?)<\/\1>/g;
+    let match;
+    
+    while ((match = tagPattern.exec(text)) !== null) {
+      const [_, name, value] = match;
+      variables[name] = value.trim();
+    }
+
+    // Also include the full response as qllm_response
+    if (text.trim()) {
+      variables.qllm_response = text.trim();
+    }
+    
+    return variables;
   }
 
   /**
