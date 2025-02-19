@@ -20,6 +20,21 @@ export type GoogleModelConfig = {
   endpoint: string;
 };
 
+export type GoogleModelResponse = {
+  models: Array<{
+    name: string;
+    version: string;
+    displayName: string;
+    description: string;
+    inputTokenLimit: number;
+    outputTokenLimit: number;
+    supportedGenerationMethods: string[];
+    temperature: { minValue: number; maxValue: number };
+    topP: { minValue: number; maxValue: number };
+    topK: { minValue: number; maxValue: number };
+  }>;
+};
+
 const BASE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta';
 const DEFAULT_CONTEXT_LENGTH = 1024 * 32; // 32K tokens
 
@@ -65,3 +80,49 @@ export const ALL_GOOGLE_MODELS: Record<GoogleModelKey, GoogleModelConfig> = {
 };
 
 export const DEFAULT_GOOGLE_MODEL: GoogleModelKey = 'gemini-2.0-flash';
+
+/**
+ * Fetches available models from Google AI API and merges them with existing models
+ * @param apiKey - Google API key for authentication
+ * @returns Promise<Record<GoogleModelKey, GoogleModelConfig>>
+ */
+export async function fetchGoogleModels(apiKey: string): Promise<Record<GoogleModelKey, GoogleModelConfig>> {
+  try {
+    const response = await fetch(`${BASE_ENDPOINT}/models`, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.warn('Failed to fetch models from Google API, using default models');
+      return ALL_GOOGLE_MODELS;
+    }
+
+    const data = await response.json() as GoogleModelResponse;
+    const dynamicModels = { ...ALL_GOOGLE_MODELS };
+
+    // Only add models that support generateContent and match our existing model pattern
+    for (const model of data.models) {
+      const modelId = model.name.split('/').pop() as string;
+      if (modelId && 
+          model.supportedGenerationMethods.includes('generateContent') && 
+          modelId.startsWith('gemini-')) {
+        dynamicModels[modelId as GoogleModelKey] = {
+          id: modelId,
+          name: model.displayName || modelId,
+          parameterCount: 'Unknown',
+          contextLength: model.inputTokenLimit || DEFAULT_CONTEXT_LENGTH,
+          type: 'Chat Completion',
+          endpoint: `${BASE_ENDPOINT}/models/${modelId}:generateContent`,
+        };
+      }
+    }
+
+    return dynamicModels;
+  } catch (error) {
+    console.warn('Failed to fetch Google models, using default models:', error);
+    return ALL_GOOGLE_MODELS;
+  }
+}

@@ -23,7 +23,7 @@ import {
   ToolCall,
 } from '../../types';
 
-import { ALL_GOOGLE_MODELS, DEFAULT_GOOGLE_MODEL, GoogleModelKey } from './models';
+import { ALL_GOOGLE_MODELS, DEFAULT_GOOGLE_MODEL, GoogleModelKey, GoogleModelConfig, fetchGoogleModels } from './models';
 
 /** Default maximum tokens for model responses */
 const DEFAULT_MAX_TOKENS = 1024 * 4;
@@ -45,6 +45,7 @@ export class GoogleProvider implements LLMProvider {
   private baseURL: string;
   private modelConfig: typeof ALL_GOOGLE_MODELS[GoogleModelKey];
   private modelKey: GoogleModelKey;
+  private availableModels: Record<GoogleModelKey, GoogleModelConfig>;
 
   /**
    * Creates an instance of GoogleProvider.
@@ -53,20 +54,41 @@ export class GoogleProvider implements LLMProvider {
    * @throws {AuthenticationError} When no API key is found
    */
   constructor(private key?: string) {
-
     const apiKey = key ?? process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       throw new AuthenticationError('Google API key GOOGLE_API_KEY is required', 'Google');
     }
+
     this.modelKey = DEFAULT_GOOGLE_MODEL;
     this.modelConfig = ALL_GOOGLE_MODELS[this.modelKey];
+    this.availableModels = ALL_GOOGLE_MODELS;
     this.baseURL = this.modelConfig.endpoint;
+
+    // Initialize models asynchronously
+    this.initializeModels(apiKey);
   }
 
   defaultOptions: LLMOptions = {
     model: DEFAULT_GOOGLE_MODEL,
     maxTokens: DEFAULT_MAX_TOKENS,
   };
+
+  /**
+   * Initializes the available models by fetching from Google AI API
+   * Falls back to hardcoded models if the API call fails
+   */
+  private async initializeModels(apiKey: string): Promise<void> {
+    try {
+      this.availableModels = await fetchGoogleModels(apiKey);
+      // Update model config if the current model exists in the new list
+      if (this.modelKey in this.availableModels) {
+        this.modelConfig = this.availableModels[this.modelKey];
+        this.baseURL = this.modelConfig.endpoint;
+      }
+    } catch (error) {
+      console.warn('Failed to initialize Google models, using default models:', error);
+    }
+  }
 
   /**
    * Retrieves the API key from constructor or environment.
@@ -76,11 +98,10 @@ export class GoogleProvider implements LLMProvider {
    * @private
    */
   private getKey(): string {
-    const apiKey = this.key ?? process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      throw new AuthenticationError('Google API key GOOGLE_API_KEY is required', 'Google');
+    if (!this.key) {
+      throw new AuthenticationError('Google API key is required', 'Google');
     }
-    return apiKey;
+    return this.key;
   }
 
   /**
@@ -95,12 +116,12 @@ export class GoogleProvider implements LLMProvider {
       const { options, messages, tools } = params;
       const model = options?.model || this.defaultOptions.model;
       
-      if (!(model in ALL_GOOGLE_MODELS)) {
+      if (!(model in this.availableModels)) {
         throw new InvalidRequestError(`Model ${model} not supported by Google`, 'Google');
       }
 
       const apiKey = this.getKey();
-      const endpoint = ALL_GOOGLE_MODELS[model as GoogleModelKey].endpoint;
+      const endpoint = this.availableModels[model as GoogleModelKey].endpoint;
       
       console.log('Preparing request...');
       const requestBody = {
@@ -159,12 +180,12 @@ export class GoogleProvider implements LLMProvider {
       const { options, messages, tools } = params;
       const model = options?.model || this.defaultOptions.model;
       
-      if (!(model in ALL_GOOGLE_MODELS)) {
+      if (!(model in this.availableModels)) {
         throw new InvalidRequestError(`Model ${model} not supported by Google`, 'Google');
       }
 
       const apiKey = this.getKey();
-      const endpoint = ALL_GOOGLE_MODELS[model as GoogleModelKey].endpoint;
+      const endpoint = this.availableModels[model as GoogleModelKey].endpoint;
       
       const requestBody = {
         contents: messages.map(msg => {
@@ -208,20 +229,15 @@ export class GoogleProvider implements LLMProvider {
   }
 
   /**
-   * Lists available Google models.
+   * Lists available models.
    * 
    * @returns {Promise<Model[]>} Array of available models
    */
   async listModels(): Promise<Model[]> {
-    return Object.entries(ALL_GOOGLE_MODELS).map(([id, config]) => ({
+    return Object.entries(this.availableModels).map(([id, config]) => ({
       id,
-      name: config.name,
-      provider: this.name,
-      supported_features: {
-        chat_completion: true,
-        streaming: true,
-        function_calling: true,
-      },
+      description: config.name,
+      created: new Date(),
     }));
   }
 
