@@ -93,6 +93,7 @@ export type ChatCompletionResponse = {
   toolCalls?: ToolCall[];
   finishReason: string | null;
   usage?: Usage;
+  outputVariables?: Record<string, string>;
 };
 
 /**
@@ -102,6 +103,8 @@ export type ChatStreamCompletionResponse = {
   model: string;
   text: string | null;
   finishReason: string | null;
+  toolCalls?: ToolCall[];
+  outputVariables?: Record<string, string>;
 };
 
 // -------------------- Embedding Types --------------------

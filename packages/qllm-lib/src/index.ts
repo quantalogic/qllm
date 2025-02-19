@@ -31,8 +31,11 @@ import { OpenAIProvider } from './providers/openai';
 import { AnthropicProvider } from './providers/anthropic';
 import { OllamaProvider } from './providers/ollama';
 import { GroqProvider } from './providers/qroq';
+import { GoogleProvider } from './providers/google';
+import { OVHProvider } from './providers/ovh';
 import { TemplateManager } from './templates/template-manager';
 import { TemplateLoader } from './templates';
+
 
 // Factory function for creating providers
 export function createLLMProvider({
@@ -53,6 +56,10 @@ export function createLLMProvider({
       return new OllamaProvider(url);
     case 'groq':
       return new GroqProvider(apiKey);
+    case 'ovh':
+      return new OVHProvider({ apiKey });
+    case 'google':
+      return new GoogleProvider(apiKey);
     default:
       throw new Error(`Unsupported provider: ${name}`);
   }

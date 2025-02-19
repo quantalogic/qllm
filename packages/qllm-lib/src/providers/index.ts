@@ -33,6 +33,7 @@ import { PerplexityProvider } from './perplexity';
 import { MistralProvider } from './mistral';
 import { OpenRouterProvider } from './openrouter';
 import { OVHProvider } from './ovh';
+import { GoogleProvider  } from './google/index';
 
 /**
  * Returns a sorted list of all available provider names supported by the library.
@@ -53,6 +54,7 @@ export const getListProviderNames = (): string[] => {
     'mistral',
     'ovh',
     'openrouter',
+    'google'
   ].sort();
   return listProviders;
 };
@@ -97,6 +99,8 @@ export async function getLLMProvider(providerName: string, options?: any): Promi
         apiKey: options?.apiKey,
         config: { model: options?.model || 'DeepSeek-R1-Distill-Llama-70B' }
       });
+    case 'google':
+      return new GoogleProvider(options?.apiKey);
     case 'openrouter':
       return new OpenRouterProvider();
     default:
