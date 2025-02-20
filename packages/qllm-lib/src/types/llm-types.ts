@@ -140,7 +140,6 @@ export interface GenerationOptions {
   /** Maximum number of tokens to generate */
   maxTokens?: number;
   /** Controls randomness: 0 = deterministic, 1 = very random */
-  max_completion_tokens?: number;
   temperature?: number;
   /** Nucleus sampling: only consider tokens with top_p cumulative probability */
   topProbability?: number;

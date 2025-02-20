@@ -123,7 +123,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
   /** Default options for LLM requests */
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
-    max_completion_tokens: DEFAULT_MAX_COMPLETION_TOKENS_STANDARD,
+    maxTokens: DEFAULT_MAX_COMPLETION_TOKENS_STANDARD,
   };
 
   /**
@@ -148,7 +148,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       stop: options.stop,
-      max_completion_tokens: options.max_completion_tokens,
+      max_completion_tokens: options.maxTokens,
     };
 
     const filteredOptions = Object.fromEntries(
@@ -212,7 +212,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         parallel_tool_calls: parallelToolCalls,
         response_format: responseFormat,
         tool_choice: toolChoice,
-        max_completion_tokens: options.max_completion_tokens || defaultTokens,
+        max_completion_tokens: options.maxTokens || defaultTokens,
         ...filteredOptions,
         // Ensure logprobs is a boolean
         logprobs: typeof options.logprobs === 'boolean' ? options.logprobs : undefined,
@@ -292,7 +292,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
         parallel_tool_calls: parallelToolCalls,
         response_format: responseFormat,
         tool_choice: toolChoice,
-        max_completion_tokens: options.max_completion_tokens || defaultTokens,
+        max_completion_tokens: options.maxTokens || defaultTokens,
         ...filteredOptions,
         // Ensure logprobs is a boolean
         logprobs: typeof options.logprobs === 'boolean' ? options.logprobs : undefined,
