@@ -44,13 +44,13 @@ export class OVHProvider implements LLMProvider {
 
   defaultOptions: LLMOptions = {
     model: 'DeepSeek-R1-Distill-Llama-70B',
-    max_completion_tokens: DEFAULT_MAX_COMPLETION_TOKENS,
+    maxTokens: DEFAULT_MAX_COMPLETION_TOKENS,
   };
 
   private getOptions(options: LLMOptions): LLMOptions {
     const filteredOptions: LLMOptions = {
       model: this.modelConfig.id,
-      max_completion_tokens: options.max_completion_tokens || DEFAULT_MAX_COMPLETION_TOKENS,
+      maxTokens: options.maxTokens || DEFAULT_MAX_COMPLETION_TOKENS,
       temperature: options.temperature,
     };
 
