@@ -18,7 +18,7 @@ import {
 } from '../../types';
 import { ALL_OVH_MODELS, DEFAULT_OVH_MODEL, OVHModelConfig, OVHModelKey } from './models';
 
-const DEFAULT_MAX_TOKENS = 64*1024;
+const DEFAULT_MAX_COMPLETION_TOKENS = 64*1024;
 
 export class OVHProvider implements LLMProvider {
   private openAIProvider: OpenAIProvider;
@@ -44,13 +44,13 @@ export class OVHProvider implements LLMProvider {
 
   defaultOptions: LLMOptions = {
     model: 'DeepSeek-R1-Distill-Llama-70B',
-    maxTokens: DEFAULT_MAX_TOKENS,
+    maxTokens: DEFAULT_MAX_COMPLETION_TOKENS,
   };
 
   private getOptions(options: LLMOptions): LLMOptions {
     const filteredOptions: LLMOptions = {
       model: this.modelConfig.id,
-      maxTokens: options.maxTokens || DEFAULT_MAX_TOKENS,
+      maxTokens: options.maxTokens || DEFAULT_MAX_COMPLETION_TOKENS,
       temperature: options.temperature,
     };
 
