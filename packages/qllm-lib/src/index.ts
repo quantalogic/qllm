@@ -59,7 +59,7 @@ export function createLLMProvider({
     case 'ovh':
       return new OVHProvider({ apiKey });
     case 'google':
-      return new GoogleProvider(apiKey);
+      return new GoogleProvider({ apiKey });
     default:
       throw new Error(`Unsupported provider: ${name}`);
   }
