@@ -21,6 +21,7 @@ import {
   ChatCompletionParams,
   ChatStreamCompletionResponse,
   ToolCall,
+  ProviderOptions,
 } from '../../types';
 
 import { ALL_GOOGLE_MODELS, DEFAULT_GOOGLE_MODEL, GoogleModelKey, GoogleModelConfig, fetchGoogleModels } from './models';
@@ -45,23 +46,41 @@ export class GoogleProvider implements LLMProvider {
   private baseURL: string;
   private modelConfig: typeof ALL_GOOGLE_MODELS[GoogleModelKey];
   private modelKey: GoogleModelKey;
-  private availableModels: Record<GoogleModelKey, GoogleModelConfig>;
+  private availableModels: Record<GoogleModelKey, GoogleModelConfig> = ALL_GOOGLE_MODELS;
+  private key: string;
 
   /**
    * Creates an instance of GoogleProvider.
    * 
-   * @param {string} [key] - Optional API key. If not provided, falls back to GOOGLE_API_KEY environment variable
+   * @param {string | ProviderOptions<{ model: GoogleModelKey }>} options - API key or provider options
    * @throws {AuthenticationError} When no API key is found
    */
-  constructor(private key?: string) {
-    const apiKey = key ?? process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      throw new AuthenticationError('Google API key GOOGLE_API_KEY is required', 'Google');
+  constructor(options?: string | ProviderOptions<{ model: GoogleModelKey }>) {
+    let apiKey: string | undefined;
+    let modelKey = DEFAULT_GOOGLE_MODEL;
+
+    if (typeof options === 'string') {
+      apiKey = options;
+    } else if (options) {
+      apiKey = options.apiKey;
+      modelKey = options.config?.model || DEFAULT_GOOGLE_MODEL;
     }
 
-    this.modelKey = DEFAULT_GOOGLE_MODEL;
+    // Try environment variable if no API key provided
+    apiKey = apiKey ?? process.env.GOOGLE_API_KEY;
+    
+    if (!apiKey) {
+      throw new AuthenticationError('Google API key not found. Set GOOGLE_API_KEY environment variable or provide it in options.', 'Google');
+    }
+
+    this.key = apiKey;
+    this.modelKey = modelKey;
     this.modelConfig = ALL_GOOGLE_MODELS[this.modelKey];
-    this.availableModels = ALL_GOOGLE_MODELS;
+    
+    if (!this.modelConfig) {
+      throw new Error(`Model key '${this.modelKey}' not found. Available keys: ${Object.keys(ALL_GOOGLE_MODELS).join(', ')}`);
+    }
+    
     this.baseURL = this.modelConfig.endpoint;
 
     // Initialize models asynchronously
@@ -91,20 +110,6 @@ export class GoogleProvider implements LLMProvider {
   }
 
   /**
-   * Retrieves the API key from constructor or environment.
-   * 
-   * @returns {string} The Google API key
-   * @throws {AuthenticationError} When no API key is found
-   * @private
-   */
-  private getKey(): string {
-    if (!this.key) {
-      throw new AuthenticationError('Google API key is required', 'Google');
-    }
-    return this.key;
-  }
-
-  /**
    * Generates a chat completion using Google's Gemini models.
    * 
    * @param {ChatCompletionParams} params - Parameters for the chat completion
@@ -120,7 +125,7 @@ export class GoogleProvider implements LLMProvider {
         throw new InvalidRequestError(`Model ${model} not supported by Google`, 'Google');
       }
 
-      const apiKey = this.getKey();
+      const apiKey = this.key;
       const endpoint = this.availableModels[model as GoogleModelKey].endpoint;
       
       console.log('Preparing request...');
@@ -184,7 +189,7 @@ export class GoogleProvider implements LLMProvider {
         throw new InvalidRequestError(`Model ${model} not supported by Google`, 'Google');
       }
 
-      const apiKey = this.getKey();
+      const apiKey = this.key;
       const endpoint = this.availableModels[model as GoogleModelKey].endpoint;
       
       const requestBody = {
