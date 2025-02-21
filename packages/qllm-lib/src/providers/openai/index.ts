@@ -43,8 +43,10 @@ import {
 } from 'openai/resources/chat/completions';
 import { createBase64Url, imageToBase64 } from '../../utils/images/image-to-base64';
 
-/** Default maximum number of tokens for completion requests */
-const DEFAULT_MAX_TOKENS = 1024 * 8;
+/** Default maximum number of tokens for completion requests for reasoning models */
+const DEFAULT_MAX_COMPLETION_TOKENS_REASONING = 25000;
+/** Default maximum number of tokens for completion requests for standard models */
+const DEFAULT_MAX_COMPLETION_TOKENS_STANDARD = 1024 * 8;
 /** Default model for chat completions */
 const DEFAULT_MODEL = 'gpt-4o-mini';
 /** Default model for embeddings */
@@ -121,7 +123,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
   /** Default options for LLM requests */
   defaultOptions: LLMOptions = {
     model: DEFAULT_MODEL,
-    maxTokens: DEFAULT_MAX_TOKENS,
+    maxTokens: DEFAULT_MAX_COMPLETION_TOKENS_STANDARD,
   };
 
   /**
@@ -146,9 +148,7 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       stop: options.stop,
-      // Remove logprobs from here
-      // logprobs: options.logitBias,
-      // top_logprobs: options.topLogprobs,
+      max_completion_tokens: options.maxTokens,
     };
 
     const filteredOptions = Object.fromEntries(
@@ -200,13 +200,19 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       const model = options.model || DEFAULT_MODEL;
       const filteredOptions = this.getFilteredOptions(options);
 
+      // Determine if it's a reasoning model (o1, o3)
+      const isReasoningModel = model.startsWith('o1-') || model.startsWith('o3-');
+      const defaultTokens = isReasoningModel ? 
+        DEFAULT_MAX_COMPLETION_TOKENS_REASONING : 
+        DEFAULT_MAX_COMPLETION_TOKENS_STANDARD;
+
       const chatRequest: ChatCompletionCreateParamsNonStreamingOpenAI = {
         messages: formattedMessages,
         tools: formattedTools,
         parallel_tool_calls: parallelToolCalls,
         response_format: responseFormat,
         tool_choice: toolChoice,
-        max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
+        max_completion_tokens: options.maxTokens || defaultTokens,
         ...filteredOptions,
         // Ensure logprobs is a boolean
         logprobs: typeof options.logprobs === 'boolean' ? options.logprobs : undefined,
@@ -274,19 +280,26 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
       const model = options.model || DEFAULT_MODEL;
       const filteredOptions = this.getFilteredOptions(options);
 
+      // Determine if it's a reasoning model (o1, o3)
+      const isReasoningModel = model.startsWith('o1-') || model.startsWith('o3-');
+      const defaultTokens = isReasoningModel ? 
+        DEFAULT_MAX_COMPLETION_TOKENS_REASONING : 
+        DEFAULT_MAX_COMPLETION_TOKENS_STANDARD;
+
       const chatRequest: ChatCompletionCreateParamsStreamingOpenAI = {
         messages: formattedMessages,
         tools: formattedTools,
         parallel_tool_calls: parallelToolCalls,
         response_format: responseFormat,
         tool_choice: toolChoice,
-        max_tokens: options.maxTokens || DEFAULT_MAX_TOKENS,
+        max_completion_tokens: options.maxTokens || defaultTokens,
         ...filteredOptions,
         // Ensure logprobs is a boolean
         logprobs: typeof options.logprobs === 'boolean' ? options.logprobs : undefined,
         model: model,
         stream: true,
       };
+
       const stream = await this.client.chat.completions.create(chatRequest);
 
       for await (const chunk of stream) {
