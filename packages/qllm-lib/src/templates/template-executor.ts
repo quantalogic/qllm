@@ -57,7 +57,7 @@ import { logger } from '../utils';
 import { ErrorManager } from '../utils/error';
 import { TemplateValidator } from './template-validator';
 import { ChatMessage, LLMProvider } from '../types';
-import { createLLMProvider } from '..';
+import { createLLMProvider, getLLMProvider } from '..';
 import {
   findIncludeStatements,
   resolveIncludedContent,
@@ -115,7 +115,7 @@ export class TemplateExecutor extends EventEmitter {
     this.emit('executionStart', { template, variables });
 
     const executionProvider =
-      provider || (providerOptions.model && createLLMProvider({ name: providerOptions.model }));
+      provider || (providerOptions.model && await getLLMProvider(providerOptions.model));
 
     if (!executionProvider) {
       logger.error('LLMProvider not provided and could not be created from model name');
