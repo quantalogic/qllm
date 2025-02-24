@@ -88,9 +88,8 @@ export const DEFAULT_GOOGLE_MODEL: GoogleModelKey = 'gemini-2.0-flash';
  */
 export async function fetchGoogleModels(apiKey: string): Promise<Record<GoogleModelKey, GoogleModelConfig>> {
   try {
-    const response = await fetch(`${BASE_ENDPOINT}/models`, {
+    const response = await fetch(`${BASE_ENDPOINT}/models?key=${apiKey}`, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
     });
