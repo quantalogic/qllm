@@ -114,8 +114,12 @@ export class TemplateExecutor extends EventEmitter {
     
     this.emit('executionStart', { template, variables });
 
+    const providerName = provider?.name || "";
+
     const executionProvider =
-      provider || (providerOptions.model && await getLLMProvider(providerOptions.model));
+      providerOptions.model
+        ? await getLLMProvider(providerName.toLocaleLowerCase(), providerOptions.model)
+        : provider;
 
     if (!executionProvider) {
       logger.error('LLMProvider not provided and could not be created from model name');
