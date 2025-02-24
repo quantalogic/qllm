@@ -35,7 +35,7 @@ import { DEFAULT_MAX_TOKENS, DEFAULT_MODEL } from './constants';
  */
 export class AnthropicProvider extends BaseLLMProvider {
   private client: Anthropic | AnthropicBedrock;
-  public readonly name = 'aws-anthropic';
+  public readonly name: string;
   public readonly version = '1.0.0';
 
   /**
@@ -48,6 +48,8 @@ export class AnthropicProvider extends BaseLLMProvider {
    */
   constructor({ apiKey, client }: { apiKey?: string; client?: AnthropicBedrock } = {}) {
     super();
+    this.name = 'Anthropic'; // Default to regular Anthropic
+    
     if (!client) {
       const key = apiKey ?? process.env.ANTHROPIC_API_KEY;
       if (!key) {
@@ -56,6 +58,7 @@ export class AnthropicProvider extends BaseLLMProvider {
       this.client = new Anthropic({ apiKey: key });
     } else {
       this.client = client;
+      this.name = 'aws-anthropic'; // Override for AnthropicBedrock
     }
   }
 
