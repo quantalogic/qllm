@@ -35,7 +35,7 @@ import { DEFAULT_MAX_TOKENS, DEFAULT_MODEL } from './constants';
  */
 export class AnthropicProvider extends BaseLLMProvider {
   private client: Anthropic | AnthropicBedrock;
-  public readonly name = 'Anthropic';
+  public readonly name = 'aws-anthropic';
   public readonly version = '1.0.0';
 
   /**
