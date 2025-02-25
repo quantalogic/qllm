@@ -94,7 +94,7 @@
     "node-fetch": "^2.7.0",
     "node-gyp": "^10.2.0",
     "ollama": "^0.5.8",
-    "openai": "^4.56.0",
+    "openai": "^4.85.4",
     "pdf-parse": "1.1.1",
     "pptx-parser": "1.1.7-beta.9",
     "sanitize-html": "2.13.1",
