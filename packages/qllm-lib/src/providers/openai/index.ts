@@ -127,6 +127,38 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
   };
 
   /**
+   * List of models that don't support the temperature parameter
+   * @private
+   */
+  private readonly modelsWithoutTemperature = ['o3-mini', 'o3-preview', 'o3-small', 'o3-medium', 'o3-large'];
+
+  /**
+   * List of models that don't support the top_p parameter
+   * @private
+   */
+  private readonly modelsWithoutTopP = ['o3-mini', 'o3-preview', 'o3-small', 'o3-medium', 'o3-large'];
+
+  /**
+   * Checks if a model supports the temperature parameter
+   * @private
+   * @param {string} model - The model to check
+   * @returns {boolean} Whether the model supports temperature
+   */
+  private supportsTemperature(model: string): boolean {
+    return !this.modelsWithoutTemperature.some(m => model.includes(m));
+  }
+
+  /**
+   * Checks if a model supports the top_p parameter
+   * @private
+   * @param {string} model - The model to check
+   * @returns {boolean} Whether the model supports top_p
+   */
+  private supportsTopP(model: string): boolean {
+    return !this.modelsWithoutTopP.some(m => model.includes(m));
+  }
+
+  /**
    * Filters and formats LLM options for OpenAI API requests.
    * Removes undefined and null values, and handles special cases.
    * 
@@ -141,15 +173,25 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
    * - Handling special cases like logprobs
    */
   private getFilteredOptions(options: LLMOptions): LLMOptions {
-    const optionsToInclude = {
-      temperature: options.temperature,
-      top_p: options.topProbability,
+    const model = options.model || DEFAULT_MODEL;
+    
+    const optionsToInclude: Record<string, any> = {
       seed: options.seed,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       stop: options.stop,
       max_completion_tokens: options.maxTokens,
     };
+    
+    // Only include temperature if the model supports it
+    if (this.supportsTemperature(model) && options.temperature !== undefined) {
+      optionsToInclude.temperature = options.temperature;
+    }
+
+    // Only include top_p if the model supports it
+    if (this.supportsTopP(model) && options.topProbability !== undefined) {
+      optionsToInclude.top_p = options.topProbability;
+    }
 
     const filteredOptions = Object.fromEntries(
       Object.entries(optionsToInclude)
