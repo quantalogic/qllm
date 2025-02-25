@@ -10,6 +10,7 @@
  * It supports text generation with features like streaming responses and tool/function calling.
  */
 
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   LLMProvider,
   AuthenticationError,
@@ -21,7 +22,6 @@ import {
   ChatCompletionParams,
   ChatStreamCompletionResponse,
   ToolCall,
-  ProviderOptions,
 } from '../../types';
 
 import { ALL_GOOGLE_MODELS, DEFAULT_GOOGLE_MODEL, GoogleModelKey, GoogleModelConfig, fetchGoogleModels } from './models';
@@ -43,45 +43,28 @@ const DEFAULT_MAX_TOKENS = 1024 * 4;
 export class GoogleProvider implements LLMProvider {
   public readonly version = '1.0.0';
   public readonly name = 'Google';
-  private baseURL: string;
   private modelConfig: typeof ALL_GOOGLE_MODELS[GoogleModelKey];
   private modelKey: GoogleModelKey;
-  private availableModels: Record<GoogleModelKey, GoogleModelConfig> = ALL_GOOGLE_MODELS;
-  private key: string;
+  private availableModels: Record<GoogleModelKey, GoogleModelConfig>;
+  private genAI: GoogleGenerativeAI;
 
   /**
    * Creates an instance of GoogleProvider.
    * 
-   * @param {string | ProviderOptions<{ model: GoogleModelKey }>} options - API key or provider options
+   * @param {string} [key] - Optional API key. If not provided, falls back to GOOGLE_API_KEY environment variable
    * @throws {AuthenticationError} When no API key is found
    */
-  constructor(options?: string | ProviderOptions<{ model: GoogleModelKey }>) {
-    let apiKey: string | undefined;
-    let modelKey = DEFAULT_GOOGLE_MODEL;
-
-    if (typeof options === 'string') {
-      apiKey = options;
-    } else if (options) {
-      apiKey = options.apiKey;
-      modelKey = options.config?.model || DEFAULT_GOOGLE_MODEL;
-    }
-
-    // Try environment variable if no API key provided
-    apiKey = apiKey ?? process.env.GOOGLE_API_KEY;
-    
-    if (!apiKey) {
-      throw new AuthenticationError('Google API key not found. Set GOOGLE_API_KEY environment variable or provide it in options.', 'Google');
-    }
-
+  constructor(private key?: string) {
+    const apiKey = key ?? process.env.GOOGLE_API_KEY;
     this.key = apiKey;
-    this.modelKey = modelKey;
-    this.modelConfig = ALL_GOOGLE_MODELS[this.modelKey];
-    
-    if (!this.modelConfig) {
-      throw new Error(`Model key '${this.modelKey}' not found. Available keys: ${Object.keys(ALL_GOOGLE_MODELS).join(', ')}`);
+    if (!apiKey) {
+      throw new AuthenticationError('Google API key GOOGLE_API_KEY is required', 'Google');
     }
-    
-    this.baseURL = this.modelConfig.endpoint;
+
+    this.modelKey = DEFAULT_GOOGLE_MODEL;
+    this.modelConfig = ALL_GOOGLE_MODELS[this.modelKey];
+    this.availableModels = ALL_GOOGLE_MODELS;
+    this.genAI = new GoogleGenerativeAI(apiKey);
 
     // Initialize models asynchronously
     this.initializeModels(apiKey);
@@ -102,11 +85,24 @@ export class GoogleProvider implements LLMProvider {
       // Update model config if the current model exists in the new list
       if (this.modelKey in this.availableModels) {
         this.modelConfig = this.availableModels[this.modelKey];
-        this.baseURL = this.modelConfig.endpoint;
       }
     } catch (error) {
       console.warn('Failed to initialize Google models, using default models:', error);
     }
+  }
+
+  /**
+   * Retrieves the API key from constructor or environment.
+   * 
+   * @returns {string} The Google API key
+   * @throws {AuthenticationError} When no API key is found
+   * @private
+   */
+  private getKey(): string {
+    if (!this.key) {
+      throw new AuthenticationError('Google API key is required', 'Google');
+    }
+    return this.key;
   }
 
   /**
@@ -125,44 +121,19 @@ export class GoogleProvider implements LLMProvider {
         throw new InvalidRequestError(`Model ${model} not supported by Google`, 'Google');
       }
 
-      const apiKey = this.key;
-      const endpoint = this.availableModels[model as GoogleModelKey].endpoint;
-      
-      console.log('Preparing request...');
-      const requestBody = {
-        contents: messages.map(msg => {
-          const content = Array.isArray(msg.content) ? msg.content[0] : msg.content;
-          const text = content.type === 'text' ? content.text : '';
-          if (!text.trim() && msg.role === 'assistant') {
-            return { role: msg.role };
-          }
-          return { role: msg.role, parts: [{ text }] };
-        }),
-        tools: this.prepareGoogleTools(tools),
-      };
+      const genModel = this.genAI.getGenerativeModel({ model });
+      const prompt = this.convertMessagesToPrompt(messages);
 
-      const response = await fetch(`${endpoint}?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-      const toolCalls = data?.candidates?.[0]?.content?.tool_calls?.map(this.extractToolCallsResult) || [];
+      const result = await genModel.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
 
       return {
         model,
         text,
         refusal: null,
-        toolCalls: toolCalls.flat(),
-        finishReason: data?.candidates?.[0]?.finishReason || null,
+        toolCalls: [],
+        finishReason: null,
         usage: undefined,
         outputVariables: text ? this.extractOutputVariables(text) : undefined,
       };
@@ -189,19 +160,27 @@ export class GoogleProvider implements LLMProvider {
         throw new InvalidRequestError(`Model ${model} not supported by Google`, 'Google');
       }
 
-      const apiKey = this.key;
+      const apiKey = this.getKey();
       const endpoint = this.availableModels[model as GoogleModelKey].endpoint;
       
+      // Convert messages to Google's expected format
+      const contents = messages.map(msg => {
+        const content = Array.isArray(msg.content) ? msg.content[0] : msg.content;
+        const text = content.type === 'text' ? content.text : '';
+        return {
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text }]
+        };
+      }).filter(msg => msg.parts[0].text.trim() !== '');
+
       const requestBody = {
-        contents: messages.map(msg => {
-          const content = Array.isArray(msg.content) ? msg.content[0] : msg.content;
-          const text = content.type === 'text' ? content.text : '';
-          if (!text.trim() && msg.role === 'assistant') {
-            return { role: msg.role };
-          }
-          return { role: msg.role, parts: [{ text }] };
-        }),
-        tools: this.prepareGoogleTools(tools),
+        contents,
+        generationConfig: {
+          maxOutputTokens: options?.maxTokens || this.defaultOptions.maxTokens,
+          temperature: options?.temperature || 0.7,
+          topP: options?.topProbability || 0.8,
+          topK: options?.topKTokens || 40,
+        },
       };
 
       const response = await fetch(`${endpoint}?key=${apiKey}`, {
@@ -213,20 +192,36 @@ export class GoogleProvider implements LLMProvider {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorData)}`);
       }
 
       const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-      const toolCalls = data?.candidates?.[0]?.content?.tool_calls?.map(this.extractToolCallsResult) || [];
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!text) {
+        throw new Error('No text generated from the model');
+      }
 
-      // For now, Google's API doesn't support true streaming, so we simulate it
+      // Split the response into words and yield them with small delays to simulate streaming
+      const words = text.split(/(\s+)/);
+      for (const word of words) {
+        yield {
+          model,
+          text: word,
+          toolCalls: [],
+          finishReason: null,
+        };
+        // Add a small delay between words to simulate streaming
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+
+      // Yield final chunk with finish reason
       yield {
         model,
-        text,
-        finishReason: data?.candidates?.[0]?.finishReason || null,
-        toolCalls: toolCalls.flat(),
-        outputVariables: text ? this.extractOutputVariables(text) : undefined,
+        text: '',
+        toolCalls: [],
+        finishReason: data?.candidates?.[0]?.finishReason || 'stop',
       };
     } catch (error) {
       this.handleError(error);
@@ -353,6 +348,22 @@ export class GoogleProvider implements LLMProvider {
     }
     
     return variables;
+  }
+
+  /**
+   * Converts messages to a prompt for the Google API.
+   * 
+   * @param {ChatCompletionParams['messages']} messages - Messages to convert
+   * @returns {string} Converted prompt
+   * @private
+   */
+  private convertMessagesToPrompt(messages: ChatCompletionParams['messages']): string {
+    return messages
+      .map(msg => {
+        const content = Array.isArray(msg.content) ? msg.content[0] : msg.content;
+        return content.type === 'text' ? content.text : '';
+      })
+      .join('\n\n');
   }
 
   /**

@@ -99,10 +99,10 @@ export async function getLLMProvider(providerName: string, options?: any): Promi
         apiKey: options?.apiKey,
         config: { model: options?.model || 'DeepSeek-R1-Distill-Llama-70B' }
       });
-    case 'google':
-      return new GoogleProvider(options?.apiKey);
     case 'openrouter':
       return new OpenRouterProvider();
+    case 'google':
+      return new GoogleProvider();
     default:
       throw new Error(`Provider "${providerName}" not found.`);
   }
