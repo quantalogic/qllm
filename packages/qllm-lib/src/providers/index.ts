@@ -81,7 +81,7 @@ export const getListProviderNames = (): string[] => {
 export async function getLLMProvider(providerName: string, options?: any): Promise<LLMProvider> {
   switch (providerName) {
     case 'openai':
-      return new OpenAIProvider();
+      return new OpenAIProvider(options?.apiKey, options?.baseUrl);
     case 'ollama':
       return new OllamaProvider();
     case 'groq':
