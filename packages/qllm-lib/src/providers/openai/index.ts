@@ -117,7 +117,10 @@ export class OpenAIProvider implements LLMProvider, EmbeddingProvider {
     if (!apiKey) {
       throw new Error('OpenAI API key not found in environment variables');
     }
-    this.client = new OpenAI({ apiKey, baseURL: baseUrl });
+    this.client = new OpenAI({ 
+      apiKey, 
+      baseURL: baseUrl ?? process.env.OPENAI_BASE_URL ?? 'https://api.openai.com/v1'
+    });
   }
 
   /** Default options for LLM requests */
