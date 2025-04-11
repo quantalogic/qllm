@@ -42,11 +42,24 @@ export async function getAwsCredential() {
  * @returns {Promise<AnthropicProvider>} Configured Anthropic provider instance
  * @throws {Error} When required AWS credentials are not available
  */
-export const createAwsBedrockAnthropicProvider = async () => {
+export const createAwsBedrockAnthropicProvider = async (options?: {
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  sessionToken?: string;
+  region?: string;
+}) => {
   let client;
 
   try {
-    if (process.env.AWS_BEDROCK_PROFILE) {
+    if (options?.accessKeyId && options?.secretAccessKey) {
+      // Use provided credentials
+      client = new AnthropicBedrock({
+        awsAccessKey: options.accessKeyId,
+        awsSecretKey: options.secretAccessKey,
+        awsSessionToken: options.sessionToken,
+        awsRegion: options.region || region(),
+      });
+    } else if (process.env.AWS_BEDROCK_PROFILE) {
       // Clear static credentials if using profile
       delete process.env.AWS_ACCESS_KEY_ID;
       delete process.env.AWS_SECRET_ACCESS_KEY;
