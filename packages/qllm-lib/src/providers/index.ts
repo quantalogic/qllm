@@ -85,22 +85,27 @@ export async function getLLMProvider(providerName: string, options?: any): Promi
     case 'ollama':
       return new OllamaProvider();
     case 'groq':
-      return new GroqProvider();
+      return new GroqProvider(options?.apiKey);
     case 'anthropic':
-      return new AnthropicProvider();
+      return new AnthropicProvider(options?.apiKey);
     case 'aws-anthropic':
-      return await createAwsBedrockAnthropicProvider();
+      return await createAwsBedrockAnthropicProvider({
+        accessKeyId: options?.awsAccessKeyId,
+        secretAccessKey: options?.awsSecretAccessKey,
+        sessionToken: options?.awsSessionToken,
+        region: options?.awsRegion,
+      });
     case 'perplexity':
-      return new PerplexityProvider();
+      return new PerplexityProvider(options?.apiKey);
     case 'mistral':
-      return new MistralProvider();
+      return new MistralProvider(options?.apiKey);
     case 'ovh':
       return new OVHProvider({
         apiKey: options?.apiKey,
         config: { model: options?.model || 'DeepSeek-R1-Distill-Llama-70B' }
       });
     case 'openrouter':
-      return new OpenRouterProvider();
+      return new OpenRouterProvider(options?.apiKey);
     case 'google':
       return new GoogleProvider(options?.apiKey);
     default:
