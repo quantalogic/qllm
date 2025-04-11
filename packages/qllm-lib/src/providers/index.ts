@@ -102,7 +102,7 @@ export async function getLLMProvider(providerName: string, options?: any): Promi
     case 'openrouter':
       return new OpenRouterProvider();
     case 'google':
-      return new GoogleProvider();
+      return new GoogleProvider(options?.apiKey);
     default:
       throw new Error(`Provider "${providerName}" not found.`);
   }
